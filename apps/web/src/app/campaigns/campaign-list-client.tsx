@@ -122,7 +122,7 @@ export default function CampaignListClient() {
         if (clearSessionIfUnauthorized(error, token)) return;
         const errorMessage = error instanceof ApiError && error.status === 400
           ? dateFilterError ?? "날짜 형식이 올바르지 않습니다."
-          : "캠페인을 불러오지 못했습니다.";
+          : "행사를 불러오지 못했습니다.";
         setSearchState({ identity: requestIdentity, status: "error", response: null, errorMessage });
       });
 
@@ -171,13 +171,13 @@ export default function CampaignListClient() {
             함께 만드는 작은 변화
           </h1>
           <p className="mx-auto mt-4 max-w-xl" style={{ color: "var(--foreground-muted)" }}>
-            모집중인 캠페인에 참여하거나, 다가올 캠페인을 미리 둘러보세요.
+            모집중인 행사에 참여하거나, 다가올 행사를 미리 둘러보세요.
           </p>
         </motion.div>
 
         <div className="mb-4 flex items-center justify-between gap-4">
           <p className="text-[13px]" style={{ color: "var(--foreground-muted)" }}>
-            {currentState.status === "success" && response ? `검색 결과 ${response.totalElements.toLocaleString()}개` : "캠페인 검색"}
+            {currentState.status === "success" && response ? `검색 결과 ${response.totalElements.toLocaleString()}개` : "행사 검색"}
           </p>
           <button
             type="button"
@@ -185,7 +185,7 @@ export default function CampaignListClient() {
             className="shrink-0 rounded-full px-4 py-2 text-[13px] font-medium transition-transform hover:-translate-y-0.5"
             style={{ background: "var(--accent)", color: "var(--surface-dark)" }}
           >
-            + 캠페인 만들기
+            + 행사 만들기
           </button>
         </div>
 
@@ -210,7 +210,7 @@ export default function CampaignListClient() {
         {currentState.status === "error" ? (
           <StatePanel>
             <p style={{ color: "var(--foreground-muted)" }}>
-              {currentState.errorMessage ?? "캠페인을 불러오지 못했습니다."}
+              {currentState.errorMessage ?? "행사를 불러오지 못했습니다."}
             </p>
             <button
               type="button"
@@ -225,11 +225,11 @@ export default function CampaignListClient() {
 
         {currentState.status === "success" && response?.content.length === 0 ? (
           <ListEmptyState
-            title={campaignHasActiveFilters(urlState) ? "조건에 맞는 캠페인이 없어요." : "아직 등록된 캠페인이 없어요."}
+            title={campaignHasActiveFilters(urlState) ? "조건에 맞는 행사가 없어요." : "아직 등록된 행사가 없어요."}
             description={
               campaignHasActiveFilters(urlState)
                 ? "다른 검색어를 입력하거나 필터를 초기화해보세요."
-                : "첫 캠페인을 만들거나 잠시 후 다시 확인해보세요."
+                : "첫 행사를 만들거나 잠시 후 다시 확인해보세요."
             }
             action={
               campaignHasActiveFilters(urlState) ? (
@@ -239,7 +239,7 @@ export default function CampaignListClient() {
                   className="rounded-full px-5 py-2 text-[13px] font-medium"
                   style={{ background: "var(--accent)", color: "var(--surface-dark)" }}
                 >
-                  전체 캠페인 보기
+                  전체 행사 보기
                 </button>
               ) : (
                 <button
@@ -248,7 +248,7 @@ export default function CampaignListClient() {
                   className="rounded-full px-5 py-2 text-[13px] font-medium"
                   style={{ background: "var(--accent)", color: "var(--surface-dark)" }}
                 >
-                  캠페인 만들기
+                  행사 만들기
                 </button>
               )
             }

@@ -4,16 +4,16 @@ import { FallbackImage } from "./fallback-image";
 
 describe("FallbackImage", () => {
   it("이미지를 alt와 함께 렌더한다", () => {
-    render(<FallbackImage src="https://example.com/a.jpg" alt="캠페인 이미지" />);
-    const img = screen.getByRole("img", { name: "캠페인 이미지" });
+    render(<FallbackImage src="https://example.com/a.jpg" alt="행사 이미지" />);
+    const img = screen.getByRole("img", { name: "행사 이미지" });
     expect(img).toHaveProperty("src", "https://example.com/a.jpg");
   });
 
   it("로드 실패 시 같은 이름의 대체 요소로 전환된다", () => {
-    render(<FallbackImage src="https://example.com/broken.jpg" alt="캠페인 이미지" />);
+    render(<FallbackImage src="https://example.com/broken.jpg" alt="행사 이미지" />);
     fireEvent.error(screen.getByRole("img"));
 
-    expect(screen.queryByRole("img", { name: "캠페인 이미지" })).toBeTruthy();
+    expect(screen.queryByRole("img", { name: "행사 이미지" })).toBeTruthy();
     expect(document.querySelector("img")).toBeNull();
   });
 

@@ -114,7 +114,7 @@ export default function MyPageClient() {
                   </section>
                   <section>
                     <h2 className="mb-6 text-[15px] font-medium" style={{ color: "var(--foreground)" }}>
-                      저장한 캠페인
+                      저장한 행사
                     </h2>
                     <SavedCampaignsGrid page={savedCampaignPage} onPageChange={setSavedCampaignPage} />
                   </section>

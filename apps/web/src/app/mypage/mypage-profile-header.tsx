@@ -67,7 +67,7 @@ export function MypageProfileHeader({ profile }: { profile: UserProfile }) {
               {profile.verified ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/15 px-2.5 py-1 text-[11px] text-[var(--accent)]">
                   <CheckCircle2 size={12} aria-hidden />
-                  인증 사용자
+                  후기 작성자
                 </span>
               ) : (
                 <span
@@ -105,7 +105,7 @@ export function MypageProfileHeader({ profile }: { profile: UserProfile }) {
                 style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
               >
                 <Plus size={13} aria-hidden />
-                캠페인 만들기
+                행사 만들기
               </Link>
               <Link
                 href="/profile/edit"

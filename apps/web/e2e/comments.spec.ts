@@ -41,7 +41,7 @@ test("게시글 댓글을 작성·수정·삭제할 수 있다", async ({ page }
   await expect(page.getByText(updatedText)).not.toBeVisible();
 });
 
-test("캠페인 댓글을 작성·수정·삭제할 수 있다", async ({ page }) => {
+test("행사 댓글을 작성·수정·삭제할 수 있다", async ({ page }) => {
   const stamp = Date.now();
   await signup(page, "e2e-camp-comment");
 
@@ -58,20 +58,20 @@ test("캠페인 댓글을 작성·수정·삭제할 수 있다", async ({ page }
   await page.getByLabel("모집 종료일").fill(addDays(7));
   await page.getByLabel("진행 시작일").fill(addDays(8));
   await page.getByLabel("진행 종료일").fill(addDays(14));
-  await page.getByRole("button", { name: "캠페인 등록" }).click();
+  await page.getByRole("button", { name: "행사 등록" }).click();
   await page.waitForURL("**/campaigns/c-*");
 
   // 상세는 내용/댓글 탭 구조 — 댓글 탭으로 전환
   await page.getByRole("button", { name: "댓글", exact: true }).click();
 
   // 작성
-  const commentText = `E2E 캠페인 댓글 ${stamp}`;
+  const commentText = `E2E 행사 댓글 ${stamp}`;
   await page.getByPlaceholder("댓글을 입력해주세요.").fill(commentText);
   await page.getByRole("button", { name: "댓글 등록" }).click();
   await expect(page.getByText(commentText)).toBeVisible();
 
   // 수정
-  const updatedText = `E2E 캠페인 댓글 수정 ${stamp}`;
+  const updatedText = `E2E 행사 댓글 수정 ${stamp}`;
   await page.getByRole("button", { name: /댓글 수정/ }).click();
   await page.getByLabel("댓글 수정 내용").fill(updatedText);
   await page.getByRole("button", { name: "저장", exact: true }).click();

@@ -150,7 +150,7 @@ data class AdminDailyStat(
     val reports: Long,
 )
 
-@Schema(description = "관리자 일별 통계 (가입·게시글·캠페인·신고 추이)")
+@Schema(description = "관리자 일별 통계 (가입·게시글·행사·신고 추이)")
 data class AdminStatsResponse(
     val days: Int,
     val daily: List<AdminDailyStat>,

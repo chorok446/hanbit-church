@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_CAMPAIGN_COMPOSE_VALUES, validateCampaignCompose } from "@/data/campaigns";
 
 describe("validateCampaignCompose", () => {
-  const base = { ...DEFAULT_CAMPAIGN_COMPOSE_VALUES, title: "테스트 캠페인" };
+  const base = { ...DEFAULT_CAMPAIGN_COMPOSE_VALUES, title: "테스트 행사" };
 
   it("rejects empty title", () => {
     const result = validateCampaignCompose({ ...base, title: "  " });
@@ -29,6 +29,6 @@ describe("validateCampaignCompose", () => {
   it("accepts valid payload", () => {
     const result = validateCampaignCompose(base);
     expect(result.ok).toBe(true);
-    if (result.ok) expect(result.payload.title).toBe("테스트 캠페인");
+    if (result.ok) expect(result.payload.title).toBe("테스트 행사");
   });
 });

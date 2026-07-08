@@ -49,13 +49,13 @@ export function NotificationSettingsForm({ embedded = false }: { embedded?: bool
               알림 설정
             </h2>
             <p className="mt-0.5 text-[12px] opacity-60" style={{ color: "var(--foreground)" }}>
-              캠페인 관련 알림 수신 여부를 설정합니다.
+              행사 관련 알림 수신 여부를 설정합니다.
             </p>
           </div>
         </div>
 
         <div className="flex items-center justify-between py-2.5">
-          <span id="campaign-notify-label" className="text-[13px]" style={{ color: "var(--foreground)" }}>캠페인 알림</span>
+          <span id="campaign-notify-label" className="text-[13px]" style={{ color: "var(--foreground)" }}>행사 알림</span>
           <button
             type="button"
             role="switch"

@@ -9,7 +9,7 @@ import { useAuthSession } from "@/lib/use-auth-session";
 import { useCommentTargetScroll } from "@/lib/use-comment-target-scroll";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 
-/** 게시글/캠페인 댓글 페이지 응답 공통 형태(백엔드 page envelope 와 1:1). */
+/** 게시글/행사 댓글 페이지 응답 공통 형태(백엔드 page envelope 와 1:1). */
 export type PagedCommentsResponse<C> = {
   content: C[];
   page: number;
@@ -49,7 +49,7 @@ export type UsePagedCommentsArgs<C extends { id: string; text: string }> = {
   removeComment: (commentId: string) => Promise<void>;
   /** 페이지 이동 반영. preserveTarget=false 면 target(commentId) 해제도 함께 처리해야 한다. */
   onPageChange: (page: number, opts: { replace: boolean; preserveTarget: boolean }) => void;
-  /** 목록 404 시 보여줄 메시지("게시글을/캠페인을 찾을 수 없습니다."). */
+  /** 목록 404 시 보여줄 메시지("게시글을/행사를 찾을 수 없습니다."). */
   listNotFoundMessage: string;
   /** 등록/삭제/수정(권한·404) 오류 표출 채널 — toast 또는 인라인 state. */
   onMutationError: (message: string) => void;
@@ -59,14 +59,14 @@ export type UsePagedCommentsArgs<C extends { id: string; text: string }> = {
   onTotalElements?: (total: number) => void;
   /** 등록(+1)/삭제(-1) 직후 낙관적 카운트 반영(게시글 상세). */
   onCountDelta?: (delta: number) => void;
-  /** 등록/삭제 성공 후 부가 처리(캠페인: target 해제). */
+  /** 등록/삭제 성공 후 부가 처리(행사: target 해제). */
   onAfterMutation?: () => void;
   /** 로그인 필요로 /login 이동 직전 안내(게시글: toast). */
   onRequireLogin?: () => void;
 };
 
 /**
- * 게시글·캠페인 댓글이 공유하는 상태머신:
+ * 게시글·행사 댓글이 공유하는 상태머신:
  * 목록 fetch(identity 기반 stale 무시) + 빈 페이지 fallback,
  * target 댓글 위치 조회·스크롤, 등록/삭제(Confirm)/수정 mutation.
  * URL vs 로컬 페이지 상태, toast vs 인라인 오류 같은 화면별 차이는 콜백으로 위임한다.

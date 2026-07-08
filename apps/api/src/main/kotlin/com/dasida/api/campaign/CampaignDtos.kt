@@ -4,7 +4,7 @@ import com.dasida.api.post.Author
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 
-@Schema(description = "캠페인 작성 요청. 날짜는 yyyy-MM-dd 또는 yyyy.MM.dd 를 허용한다.")
+@Schema(description = "행사 작성 요청. 날짜는 yyyy-MM-dd 또는 yyyy.MM.dd 를 허용한다.")
 data class CreateCampaignRequest(
     @field:Schema(description = "제목")
     val title: String,
@@ -26,7 +26,7 @@ data class CreateCampaignRequest(
     val capacity: Int = 0,
 )
 
-@Schema(description = "캠페인 수정 요청. status 가 upcoming 일 때만 허용된다.")
+@Schema(description = "행사 수정 요청. status 가 upcoming 일 때만 허용된다.")
 data class UpdateCampaignRequest(
     @field:Schema(description = "제목")
     val title: String,
@@ -114,7 +114,7 @@ data class CampaignSearchResponse(
     val totalPages: Int,
 )
 
-/** 마이페이지 캠페인 목록(참여/개설) pagination 응답. Spring Page 를 직접 노출하지 않는다. */
+/** 마이페이지 행사 목록(참여/개설) pagination 응답. Spring Page 를 직접 노출하지 않는다. */
 data class CampaignPageResponse(
     val content: List<CampaignResponse>,
     val page: Int,
@@ -168,15 +168,15 @@ data class CampaignProofsResponse(
     val proofedByMe: Boolean,
 )
 
-@Schema(description = "캠페인 참여 인증 작성 요청")
+@Schema(description = "행사 참여 후기 작성 요청")
 data class CreateCampaignProofRequest(
     @field:Schema(description = "인증 소감(최대 500자)")
     val text: String,
-    @field:Schema(description = "인증 사진 URL 목록(최대 4장)")
+    @field:Schema(description = "후기 사진 URL 목록(최대 4장)")
     val images: List<String> = emptyList(),
 )
 
-@Schema(description = "캠페인 댓글 작성 요청")
+@Schema(description = "행사 댓글 작성 요청")
 data class CreateCampaignCommentRequest(
     @field:Schema(description = "댓글 본문(최대 500자)")
     val text: String,
@@ -184,7 +184,7 @@ data class CreateCampaignCommentRequest(
     val parentId: String? = null,
 )
 
-@Schema(description = "캠페인 댓글 수정 요청")
+@Schema(description = "행사 댓글 수정 요청")
 data class UpdateCampaignCommentRequest(
     @field:Schema(description = "댓글 본문(최대 500자)")
     val text: String,

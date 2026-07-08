@@ -27,7 +27,7 @@ function buildFeedFilterChips(state: FeedUrlState, onPatch: (changes: Partial<Fe
   if (state.campaignOnly) {
     chips.push({
       id: "campaignOnly",
-      label: "캠페인 게시글만",
+      label: "행사 게시글만",
       onRemove: () => onPatch({ campaignOnly: false }),
     });
   }
@@ -91,7 +91,7 @@ export function FeedControls({
             onChange={(event) => onCampaignOnly(event.target.checked)}
             className="accent-[var(--accent-strong)]"
           />
-          캠페인 게시글만
+          행사 게시글만
         </label>
         {onFollowingOnly ? (
           <label

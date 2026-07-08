@@ -14,7 +14,7 @@ import org.hibernate.type.SqlTypes
 import java.time.Instant
 
 /**
- * 캠페인 참여 인증(후기). 참여자가 캠페인에서 실제로 한 일을 사진과 소감으로 남긴다.
+ * 행사 참여 후기(후기). 참여자가 행사에서 실제로 한 일을 사진과 소감으로 남긴다.
  * 1인 1인증(campaign_id + author_user_id unique). 수정은 없고 삭제 후 재작성한다.
  */
 @Entity

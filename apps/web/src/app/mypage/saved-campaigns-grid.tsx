@@ -45,7 +45,7 @@ function SavedCampaignCard({
         <div className="relative aspect-[4/3] overflow-hidden">
           <FallbackImage
             src={campaign.thumb}
-            alt={`${campaign.title} 캠페인 이미지`}
+            alt={`${campaign.title} 행사 이미지`}
             thumbnail
             className="h-full w-full object-cover"
           />
@@ -137,14 +137,14 @@ export function SavedCampaignsGrid({ page, onPageChange }: { page: number; onPag
       page={page}
       onPageChange={onPageChange}
       fetcher={fetchBookmarkedCampaignsPage}
-      loadingLabel="저장한 캠페인을 불러오는 중입니다."
-      errorLabel="저장한 캠페인을 불러오지 못했습니다."
+      loadingLabel="저장한 행사를 불러오는 중입니다."
+      errorLabel="저장한 행사를 불러오지 못했습니다."
       empty={
         <ListEmptyState
-          title="저장한 캠페인이 없어요."
+          title="저장한 행사가 없어요."
           action={
             <Link href="/campaigns" className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]">
-              캠페인 둘러보기
+              행사 둘러보기
             </Link>
           }
         />

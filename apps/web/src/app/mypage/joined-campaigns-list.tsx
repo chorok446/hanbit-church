@@ -26,18 +26,18 @@ const LIST_META: Record<
   { loading: string; error: string; emptyTitle: string; ctaHref: string; ctaLabel: string }
 > = {
   joined: {
-    loading: "참여 캠페인을 불러오는 중입니다.",
-    error: "참여 캠페인을 불러오지 못했습니다.",
-    emptyTitle: "참여한 캠페인이 없어요.",
+    loading: "참여 행사를 불러오는 중입니다.",
+    error: "참여 행사를 불러오지 못했습니다.",
+    emptyTitle: "참여한 행사가 없어요.",
     ctaHref: "/campaigns",
-    ctaLabel: "캠페인 둘러보기",
+    ctaLabel: "행사 둘러보기",
   },
   created: {
-    loading: "개설 캠페인을 불러오는 중입니다.",
-    error: "개설 캠페인을 불러오지 못했습니다.",
-    emptyTitle: "개설한 캠페인이 없어요.",
+    loading: "개설 행사를 불러오는 중입니다.",
+    error: "개설 행사를 불러오지 못했습니다.",
+    emptyTitle: "개설한 행사가 없어요.",
     ctaHref: "/campaigns/new",
-    ctaLabel: "캠페인 만들기",
+    ctaLabel: "행사 만들기",
   },
 };
 
@@ -109,7 +109,7 @@ function CampaignCard({
         <div className="relative aspect-[4/3] overflow-hidden">
           <FallbackImage
             src={campaign.thumb}
-            alt={`${campaign.title} 캠페인 이미지`}
+            alt={`${campaign.title} 행사 이미지`}
             thumbnail
             className="h-full w-full object-cover"
           />
@@ -133,7 +133,7 @@ function CampaignCard({
               className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px]"
               style={{ background: "rgba(237,92,72,0.14)", color: "#ed5c48" }}
             >
-              <EyeOff size={12} aria-hidden /> 운영 정책에 따라 숨김 처리된 캠페인입니다
+              <EyeOff size={12} aria-hidden /> 운영 정책에 따라 숨김 처리된 행사입니다
             </p>
           ) : null}
           <h3

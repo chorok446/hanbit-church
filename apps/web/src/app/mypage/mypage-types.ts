@@ -5,8 +5,8 @@ export const MYPAGE_TAB_GROUPS: { label: string; tabs: { id: MypageTab; label: s
     label: "활동",
     tabs: [
       { id: "posts", label: "내 게시글" },
-      { id: "campaigns", label: "참여 캠페인" },
-      { id: "created", label: "개설 캠페인" },
+      { id: "campaigns", label: "참여 행사" },
+      { id: "created", label: "개설 행사" },
       { id: "saved", label: "저장됨" },
     ],
   },

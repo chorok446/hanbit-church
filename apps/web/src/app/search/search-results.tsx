@@ -108,7 +108,7 @@ export function SearchResults({
 
       {currentState.status === "success" && urlState.type === "campaigns" && campaignResponse?.content.length === 0 ? (
         <ListEmptyState
-          title="조건에 맞는 캠페인이 없어요."
+          title="조건에 맞는 행사가 없어요."
           description="다른 검색어를 입력하거나 필터를 초기화해보세요."
           action={
             <button
@@ -117,7 +117,7 @@ export function SearchResults({
               className="rounded-full px-5 py-2 text-[13px] font-medium"
               style={{ background: "var(--accent)", color: "var(--surface-dark)" }}
             >
-              전체 캠페인 보기
+              전체 행사 보기
             </button>
           }
         />
@@ -160,7 +160,7 @@ export function SearchResults({
           <div className="mb-5 flex items-end justify-between gap-3">
             <div>
               <p className="text-[11px] uppercase tracking-[0.25em] text-[var(--accent-strong)]">Campaigns</p>
-              <h2 className="mt-1 text-[24px] font-semibold" style={{ color: "var(--foreground)" }}>캠페인</h2>
+              <h2 className="mt-1 text-[24px] font-semibold" style={{ color: "var(--foreground)" }}>행사</h2>
             </div>
             <span className="text-[12px] opacity-55" style={{ color: "var(--foreground)" }}>
               {campaignResponse.totalElements.toLocaleString()}개
@@ -181,7 +181,7 @@ export function SearchResults({
                 className="rounded-full border px-5 py-2.5 text-[13px]"
                 style={{ borderColor: "var(--border)" }}
               >
-                캠페인 더 보기
+                행사 더 보기
               </button>
             </div>
           ) : null}
@@ -286,7 +286,7 @@ export function SearchResults({
 
       {currentState.status === "success" && urlState.type === "all" && !allEmpty ? (
         <p className="mt-10 text-center text-[12px] opacity-50" style={{ color: "var(--foreground)" }}>
-          전체 검색은 캠페인·게시글·사용자의 현재 페이지 결과를 각각 표시합니다.
+          전체 검색은 행사·게시글·사용자의 현재 페이지 결과를 각각 표시합니다.
         </p>
       ) : null}
     </>

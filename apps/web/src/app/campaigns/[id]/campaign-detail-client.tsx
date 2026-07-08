@@ -84,17 +84,17 @@ export default function CampaignDetailClient({ campaign }: { campaign: Campaign 
       const updated = await apiPost<Campaign>(`/api/campaigns/${c.id}/join`, {});
       if (getSessionId() !== requestToken) return;
       setC(updated);
-      toast.success("캠페인에 참여했습니다.");
+      toast.success("행사에 참여했습니다.");
     } catch (e) {
       if (getSessionId() !== requestToken) return;
       if (e instanceof ApiError && e.status === 401) {
         clearSession();
-        toast.error("로그인 후 캠페인에 참여할 수 있어요.");
+        toast.error("로그인 후 행사에 참여할 수 있어요.");
         router.push("/login");
       } else if (e instanceof ApiError && e.status === 409) {
         toast.error("모집 기간이 아니거나 정원이 마감되었습니다.");
       } else if (e instanceof ApiError && e.status === 400) {
-        toast.error("현재 참여할 수 없는 캠페인입니다.");
+        toast.error("현재 참여할 수 없는 행사입니다.");
       } else {
         toast.error("참여에 실패했습니다. 잠시 후 다시 시도해주세요.");
       }
@@ -107,11 +107,11 @@ export default function CampaignDetailClient({ campaign }: { campaign: Campaign 
   const leave = async () => {
     if (mutationBusy()) return;
     if (!getSessionId()) {
-      toast.error("로그인 후 캠페인에 참여할 수 있어요.");
+      toast.error("로그인 후 행사에 참여할 수 있어요.");
       router.push("/login");
       return;
     }
-    if (!(await confirm({ message: "캠페인 참여를 취소할까요?\n모집 마감 후에는 취소할 수 없습니다." }))) return;
+    if (!(await confirm({ message: "행사 참여를 취소할까요?\n모집 마감 후에는 취소할 수 없습니다." }))) return;
 
     const requestToken = getSessionId();
     if (!requestToken) return;
@@ -127,10 +127,10 @@ export default function CampaignDetailClient({ campaign }: { campaign: Campaign 
       if (getSessionId() !== requestToken) return;
       if (e instanceof ApiError && e.status === 401) {
         clearSession();
-        toast.error("로그인 후 캠페인에 참여할 수 있어요.");
+        toast.error("로그인 후 행사에 참여할 수 있어요.");
         router.push("/login");
       } else if (e instanceof ApiError && e.status === 404) {
-        toast.error("존재하지 않는 캠페인입니다.");
+        toast.error("존재하지 않는 행사입니다.");
         router.push("/campaigns");
       } else if (e instanceof ApiError && e.status === 409) {
         toast.error("모집이 마감되어 참여를 취소할 수 없습니다.");
@@ -152,7 +152,7 @@ export default function CampaignDetailClient({ campaign }: { campaign: Campaign 
     }
 
     const confirmed = target === "open"
-      ? await confirm({ message: "캠페인 모집을 시작할까요?" })
+      ? await confirm({ message: "행사 모집을 시작할까요?" })
       : await confirm({ message: "모집을 마감할까요? 다시 시작할 수 없습니다.", destructive: true });
     if (!confirmed) return;
 
@@ -172,13 +172,13 @@ export default function CampaignDetailClient({ campaign }: { campaign: Campaign 
         toast.error("로그인이 필요합니다.");
         router.push("/login");
       } else if (e instanceof ApiError && e.status === 403) {
-        toast.error("캠페인 관리 권한이 없습니다.");
+        toast.error("행사 관리 권한이 없습니다.");
       } else if (e instanceof ApiError && e.status === 400) {
         toast.error("요청한 모집 상태가 올바르지 않습니다.");
       } else if (e instanceof ApiError && e.status === 409) {
         toast.error("현재 상태에서는 모집 상태를 변경할 수 없습니다.");
       } else {
-        toast.error("캠페인 상태 변경에 실패했습니다.");
+        toast.error("행사 상태 변경에 실패했습니다.");
       }
     } finally {
       statusUpdatingRef.current = false;
@@ -222,7 +222,7 @@ export default function CampaignDetailClient({ campaign }: { campaign: Campaign 
       router.push("/login");
       return;
     }
-    if (!(await confirm({ message: "이 캠페인을 삭제할까요?\n삭제한 캠페인은 복구할 수 없습니다.", destructive: true, confirmLabel: "삭제" }))) return;
+    if (!(await confirm({ message: "이 행사를 삭제할까요?\n삭제한 행사는 복구할 수 없습니다.", destructive: true, confirmLabel: "삭제" }))) return;
 
     const requestToken = getSessionId();
     if (!requestToken) return;
@@ -240,14 +240,14 @@ export default function CampaignDetailClient({ campaign }: { campaign: Campaign 
         toast.error("로그인이 필요합니다.");
         router.push("/login");
       } else if (e instanceof ApiError && e.status === 403) {
-        toast.error("캠페인 삭제 권한이 없습니다.");
+        toast.error("행사 삭제 권한이 없습니다.");
       } else if (e instanceof ApiError && e.status === 404) {
-        toast.error("이미 삭제되었거나 존재하지 않는 캠페인입니다.");
+        toast.error("이미 삭제되었거나 존재하지 않는 행사입니다.");
         router.push("/campaigns");
       } else if (e instanceof ApiError && e.status === 409) {
         toast.error("모집을 시작했거나 참여자 또는 연결 게시글이 있어 삭제할 수 없습니다.");
       } else {
-        toast.error("캠페인 삭제에 실패했습니다.");
+        toast.error("행사 삭제에 실패했습니다.");
       }
     } finally {
       deletingRef.current = false;
@@ -263,7 +263,7 @@ export default function CampaignDetailClient({ campaign }: { campaign: Campaign 
           className="mb-6 inline-flex items-center gap-2 text-[13px] opacity-70 hover:opacity-100 transition-opacity"
           style={{ color: "var(--foreground)" }}
         >
-          <ArrowLeft size={14} /> 캠페인 목록
+          <ArrowLeft size={14} /> 행사 목록
         </button>
 
         <CampaignHeaderCard
@@ -298,9 +298,9 @@ export default function CampaignDetailClient({ campaign }: { campaign: Campaign 
 
         <div className="mt-10 flex gap-2 border-b" style={{ borderColor: "rgba(var(--ink-rgb), 0.1)" }}>
           {([
-            { id: "content", label: "캠페인 내용", icon: <FileText size={14} /> },
+            { id: "content", label: "행사 내용", icon: <FileText size={14} /> },
             { id: "comments", label: "댓글", icon: <MessageCircle size={14} /> },
-            { id: "proofs", label: "참여 인증", icon: <BadgeCheck size={14} /> },
+            { id: "proofs", label: "참여 후기", icon: <BadgeCheck size={14} /> },
           ] as { id: Tab; label: string; icon: React.ReactNode }[]).map((t) => {
             const active = activeTab === t.id;
             return (

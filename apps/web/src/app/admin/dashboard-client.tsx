@@ -81,7 +81,7 @@ export default function DashboardClient() {
   const cards = [
     { label: "활동 회원", value: data.users, icon: Users },
     { label: "게시글", value: data.posts, icon: FileText },
-    { label: "캠페인", value: data.campaigns, icon: Megaphone },
+    { label: "행사", value: data.campaigns, icon: Megaphone },
     { label: "누적 신고", value: data.totalReports, icon: Inbox },
   ];
 

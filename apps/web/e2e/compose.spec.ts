@@ -8,7 +8,7 @@ test.describe("비로그인 접근", () => {
     await page.waitForURL(/\/login\?next=.*\/posts\/new/);
   });
 
-  test("캠페인 개설 페이지는 로그인으로 보낸다", async ({ page }) => {
+  test("행사 개설 페이지는 로그인으로 보낸다", async ({ page }) => {
     await page.goto("/campaigns/new");
     await page.waitForURL("**/login");
   });
@@ -78,10 +78,10 @@ test("작성한 글을 편집하면 상세에 반영된다", async ({ page }) =>
   await expect(page.getByText(updated).first()).toBeVisible();
 });
 
-test("캠페인 개설 페이지가 로그인 후 표시된다", async ({ page }) => {
+test("행사 개설 페이지가 로그인 후 표시된다", async ({ page }) => {
   await signup(page, "e2e-campaign-page");
 
   await page.goto("/campaigns/new");
-  await expect(page.getByRole("heading", { name: "새 캠페인 개설" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "새 행사 개설" })).toBeVisible();
   await expect(page.getByRole("button", { name: /템플릿 적용/ }).first()).toBeVisible();
 });

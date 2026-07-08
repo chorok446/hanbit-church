@@ -23,7 +23,7 @@ export function CampaignContentTab({ c }: { c: Campaign }) {
           style={{ color: "var(--foreground-muted)", lineHeight: 1.8 }}
         />
       ))}
-      <RichBodyImageGrid images={c.body.images} altPrefix="캠페인 상세 이미지" />
+      <RichBodyImageGrid images={c.body.images} altPrefix="행사 상세 이미지" />
     </div>
   );
 }

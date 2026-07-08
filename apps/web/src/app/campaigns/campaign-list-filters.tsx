@@ -143,8 +143,8 @@ export function CampaignListFilters({
           key={state.query}
           value={state.query}
           onCommit={onSearch}
-          label="캠페인 검색"
-          placeholder="캠페인 제목·요약 검색..."
+          label="행사 검색"
+          placeholder="행사 제목·요약 검색..."
           loading={loading}
           className="rounded-full"
         />

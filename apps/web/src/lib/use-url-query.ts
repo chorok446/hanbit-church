@@ -39,7 +39,7 @@ export function buildFeedHref(state: FeedUrlState): string {
   return `/feed?${params.toString()}`;
 }
 
-/** 캠페인 목록 URL을 canonical 형태로 만든다. */
+/** 행사 목록 URL을 canonical 형태로 만든다. */
 export function buildCampaignsHref(state: CampaignListUrlState): string {
   const params = new URLSearchParams();
   if (state.query) params.set("q", state.query);

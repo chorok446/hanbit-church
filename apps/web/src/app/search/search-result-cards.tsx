@@ -36,13 +36,13 @@ export function CampaignResultCard({ campaign }: { campaign: Campaign }) {
           {campaign.thumb ? (
             <FallbackImage
               src={campaign.thumb}
-              alt={`${campaign.title} 캠페인 이미지`}
+              alt={`${campaign.title} 행사 이미지`}
               thumbnail
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
             <div className="flex h-full items-center justify-center bg-gradient-to-br from-[var(--heading)] to-[var(--accent-strong)] text-[12px] text-white/70">
-              캠페인 이미지 없음
+              행사 이미지 없음
             </div>
           )}
           <span

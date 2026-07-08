@@ -100,7 +100,7 @@ export default function PostCreateClient() {
   const applyTemplate = async (template: PostTemplate) => {
     if (
       composeHasContent(values) &&
-      !(await confirm({ message: "작성 중인 내용이 있습니다. 예시로 덮어쓸까요? (사진과 캠페인 연결은 유지됩니다)" }))
+      !(await confirm({ message: "작성 중인 내용이 있습니다. 예시로 덮어쓸까요? (사진과 행사 연결은 유지됩니다)" }))
     ) {
       return;
     }

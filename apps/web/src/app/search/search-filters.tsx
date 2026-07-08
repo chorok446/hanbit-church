@@ -26,7 +26,7 @@ export type SearchUrlState = CampaignDateRangeFilters & {
 
 const TYPE_TABS: { id: SearchType; label: string }[] = [
   { id: "all", label: "전체" },
-  { id: "campaigns", label: "캠페인" },
+  { id: "campaigns", label: "행사" },
   { id: "posts", label: "게시글" },
   { id: "users", label: "사용자" },
 ];
@@ -101,7 +101,7 @@ export function SearchFilters({
         value={state.query}
         onCommit={(query) => onUpdate({ query: query.slice(0, 100), page: 0 }, true)}
         label="통합 검색"
-        placeholder="캠페인, 게시글, 사용자를 검색해보세요."
+        placeholder="행사, 게시글, 사용자를 검색해보세요."
         loading={loading}
         className="rounded-full"
       />

@@ -7,7 +7,7 @@ import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 
-/** 캠페인 참여자. (campaign_id, user_id) unique 로 중복 참여를 막는다. */
+/** 행사 참여자. (campaign_id, user_id) unique 로 중복 참여를 막는다. */
 @Entity
 @Table(
     name = "campaign_participants",

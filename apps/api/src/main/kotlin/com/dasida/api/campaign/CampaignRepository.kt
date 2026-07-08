@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
 interface CampaignRepository : JpaRepository<Campaign, String> {
-    /** 정원 동시성 방어용 write lock 조회. join 트랜잭션에서 가장 먼저 호출해 캠페인별로 직렬화. */
+    /** 정원 동시성 방어용 write lock 조회. join 트랜잭션에서 가장 먼저 호출해 행사별로 직렬화. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select c from Campaign c where c.id = :id")
     fun findByIdForUpdate(@Param("id") id: String): Campaign?

@@ -347,7 +347,7 @@ class PostService(
     @Transactional
     fun createPost(author: AuthUser, req: CreatePostRequest): PostResponse {
         // @Transactional 로 묶어 normalizeFields 의 campaign write lock 을 게시글 저장 commit 까지 유지한다.
-        // 캠페인 삭제와 동시에 실행돼도 둘 중 하나만 통과해 orphan campaignId 가 남지 않는다.
+        // 행사 삭제와 동시에 실행돼도 둘 중 하나만 통과해 orphan campaignId 가 남지 않는다.
         val fields = normalizeFields(req.text, req.tags, req.images, req.campaignId)
         val profileImageUrl = users.findById(author.id).orElse(null)?.profileImageUrl
         return repo.save(
@@ -426,8 +426,8 @@ class PostService(
     ): NormalizedFields {
         val (normalizedText, mergedImages) = normalizePostFields(text, images)
         val cid = campaignId?.trim()?.ifBlank { null }
-        // 단순 existsById 면 확인과 저장 사이에 캠페인이 삭제돼 orphan campaignId 가 생길 수 있다.
-        // write lock 으로 캠페인을 잡아 두면 삭제가 게시글 commit 까지 직렬화돼 orphan 을 막는다.
+        // 단순 existsById 면 확인과 저장 사이에 행사가 삭제돼 orphan campaignId 가 생길 수 있다.
+        // write lock 으로 행사를 잡아 두면 삭제가 게시글 commit 까지 직렬화돼 orphan 을 막는다.
         // create/update 모두 @Transactional 이라 lock 이 트랜잭션 종료까지 유지된다.
         if (cid != null && campaigns.findByIdForUpdate(cid).let { it == null || it.deletedAt != null }) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "campaign not found")

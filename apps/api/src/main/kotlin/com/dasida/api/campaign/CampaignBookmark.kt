@@ -7,7 +7,7 @@ import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 
-/** 사용자별 캠페인 북마크. (campaign_id, user_id) unique 로 중복 북마크를 막는다. */
+/** 사용자별 행사 북마크. (campaign_id, user_id) unique 로 중복 북마크를 막는다. */
 @Entity
 @Table(
     name = "campaign_bookmarks",

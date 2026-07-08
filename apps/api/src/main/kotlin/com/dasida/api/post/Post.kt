@@ -35,7 +35,7 @@ object PostCategory {
     name = "posts",
     indexes = [
         Index(name = "idx_posts_author_user_id", columnList = "author_user_id"),
-        // 캠페인 삭제 시 연결 게시글 존재 확인(existsByCampaignId)을 위한 조회용 인덱스.
+        // 행사 삭제 시 연결 게시글 존재 확인(existsByCampaignId)을 위한 조회용 인덱스.
         Index(name = "idx_posts_campaign_id", columnList = "campaign_id"),
         // 소식·설교 목록의 카테고리 필터용.
         Index(name = "idx_posts_category", columnList = "category"),

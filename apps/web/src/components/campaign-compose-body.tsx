@@ -33,7 +33,7 @@ export function CampaignComposeBody({
           onBodyChange(next);
           onFieldErrorClear?.();
         }}
-        placeholder="캠페인의 배경과 진행 방식, 참여자에게 제공되는 것 등을 자세히 적어주세요."
+        placeholder="행사의 배경과 진행 방식, 참여자에게 제공되는 것 등을 자세히 적어주세요."
         minHeight={200}
         disabled={disabled}
         aria-invalid={Boolean(fieldError)}

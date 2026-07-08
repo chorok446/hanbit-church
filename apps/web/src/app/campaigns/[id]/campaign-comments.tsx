@@ -51,7 +51,7 @@ export function CampaignComments({
       if (!preserveTarget) clearTargetComment();
       setPage(Math.max(0, nextPage));
     },
-    listNotFoundMessage: "캠페인을 찾을 수 없습니다.",
+    listNotFoundMessage: "행사를 찾을 수 없습니다.",
     onMutationError: setMutationError,
     onMutationErrorClear: () => setMutationError(""),
     onAfterMutation: clearTargetComment,
@@ -139,7 +139,7 @@ export function CampaignComments({
               : ""}
           </h2>
           <p className="mt-1 text-[12px] opacity-60" style={{ color: "var(--foreground)" }}>
-            캠페인에 대한 의견과 질문을 남겨보세요.
+            행사에 대한 의견과 질문을 남겨보세요.
           </p>
         </div>
         <button

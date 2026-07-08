@@ -72,7 +72,7 @@ data class UpdateProfileRequest(
     val name: String,
     @field:Schema(description = "프로필 이미지 URL(http/https, 최대 500자). null/blank면 제거")
     val profileImageUrl: String? = null,
-    @field:Schema(description = "캠페인 상태 변경 알림 수신 여부")
+    @field:Schema(description = "행사 상태 변경 알림 수신 여부")
     val notifyCampaignUpdates: Boolean = true,
 )
 

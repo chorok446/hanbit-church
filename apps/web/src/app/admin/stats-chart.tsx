@@ -19,7 +19,7 @@ const RANGE_OPTIONS = [7, 30, 90] as const;
 const SERIES = [
   { key: "signups", label: "가입", color: "var(--accent)" },
   { key: "posts", label: "게시글", color: "var(--accent-strong)" },
-  { key: "campaigns", label: "캠페인", color: "#d9a441" },
+  { key: "campaigns", label: "행사", color: "#d9a441" },
   { key: "reports", label: "신고", color: "#ed5c48" },
 ] as const;
 

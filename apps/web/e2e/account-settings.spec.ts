@@ -87,7 +87,7 @@ test("확인 문구와 비밀번호를 입력해 탈퇴하면 계정이 삭제�
   await expect(page.getByText("이메일 또는 비밀번호가 올바르지 않습니다.")).toBeVisible();
 });
 
-test("계정 탭 알림 설정에서 캠페인 알림을 끄면 새로고침해도 유지된다", async ({ page }) => {
+test("계정 탭 알림 설정에서 행사 알림을 끄면 새로고침해도 유지된다", async ({ page }) => {
   await signup(page, "e2e-notify");
 
   await page.goto("/mypage?tab=account");

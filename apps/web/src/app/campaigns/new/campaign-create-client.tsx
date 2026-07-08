@@ -119,7 +119,7 @@ export default function CampaignCreateClient() {
       const created = await apiPost<Campaign>("/api/campaigns", validation.payload);
       if (getSessionId() !== requestToken) return;
       clearDraft();
-      toast.success("캠페인이 등록되었습니다.");
+      toast.success("행사가 등록되었습니다.");
       router.replace(`/campaigns/${created.id}`);
     } catch (error) {
       if (getSessionId() !== requestToken) return;
@@ -148,7 +148,7 @@ export default function CampaignCreateClient() {
           style={{ color: "var(--foreground)" }}
         >
           <ArrowLeft size={14} aria-hidden />
-          캠페인 목록
+          행사 목록
         </button>
 
         <div className="mb-10 text-center">
@@ -156,7 +156,7 @@ export default function CampaignCreateClient() {
             Create Campaign
           </p>
           <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(36px, 4.5vw, 60px)", color: "var(--foreground)" }}>
-            새 캠페인 개설
+            새 행사 개설
           </h1>
         </div>
 
@@ -172,7 +172,7 @@ export default function CampaignCreateClient() {
               <p className="mb-2 text-[12px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
                 템플릿으로 시작하기 <span className="normal-case tracking-normal opacity-70">(선택)</span>
               </p>
-              <ul className="flex flex-wrap gap-2" aria-label="캠페인 템플릿 목록">
+              <ul className="flex flex-wrap gap-2" aria-label="행사 템플릿 목록">
                 {CAMPAIGN_TEMPLATES.map((template) => (
                   <li key={template.id}>
                     <button
@@ -223,8 +223,8 @@ export default function CampaignCreateClient() {
                 submitting={submitting}
                 disabled={!values.title.trim()}
                 onClick={submit}
-                idleLabel="캠페인 등록"
-                pendingLabel="캠페인 만드는 중…"
+                idleLabel="행사 등록"
+                pendingLabel="행사 만드는 중…"
               />
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function CampaignCreateClient() {
                 {values.thumb ? (
                   <FallbackImage
                     src={values.thumb}
-                    alt="캠페인 썸네일 미리보기"
+                    alt="행사 썸네일 미리보기"
                     errorText="이미지를 불러올 수 없어요"
                     className="h-full w-full object-cover"
                   />
@@ -258,10 +258,10 @@ export default function CampaignCreateClient() {
               </div>
               <div className="space-y-3 p-5">
                 <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, color: "var(--foreground)", lineHeight: 1.25 }}>
-                  {values.title || "캠페인 제목"}
+                  {values.title || "행사 제목"}
                 </h3>
                 <p className="text-[13px]" style={{ color: "var(--foreground-muted)" }}>
-                  {values.summary || "캠페인 한 줄 소개가 여기에 표시됩니다."}
+                  {values.summary || "행사 한 줄 소개가 여기에 표시됩니다."}
                 </p>
                 <div className="space-y-1 border-t pt-2 text-[12px]" style={{ color: "var(--foreground-muted)", borderColor: "var(--border)" }}>
                   <div>모집 {values.recruitStart} ~ {values.recruitEnd}</div>

@@ -71,7 +71,7 @@ export function CampaignHeaderCard({
       >
         <div className="grid grid-cols-1 md:grid-cols-[400px_1fr]">
           <div className="relative aspect-square md:aspect-auto overflow-hidden">
-            <FallbackImage src={c.thumb} alt={`${c.title} 캠페인 이미지`} className="w-full h-full object-cover" />
+            <FallbackImage src={c.thumb} alt={`${c.title} 행사 이미지`} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-tr from-[var(--surface-dark)]/40 to-transparent" />
             <div className="absolute top-4 left-4 flex items-center gap-2" style={{ transform: "translateZ(50px)" }}>
               <StatusBadge c={c} />
@@ -166,7 +166,7 @@ export function CampaignHeaderCard({
             <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
               <Avatar name={c.author.name} verified={c.author.verified} src={c.author.profileImageUrl ?? undefined} />
               <span style={{ color: "var(--foreground)" }}>{c.author.name}</span>
-              <span className="text-[12px] opacity-60" style={{ color: "var(--foreground)" }}>· 캠페인 주최자</span>
+              <span className="text-[12px] opacity-60" style={{ color: "var(--foreground)" }}>· 행사 주최자</span>
             </div>
           </div>
         </div>
@@ -208,7 +208,7 @@ export function CampaignStatusManagement({
     >
       <div>
         <p className="text-[13px] font-medium">모집 상태 관리</p>
-        <p className="mt-0.5 text-[12px] opacity-60">캠페인 개설자만 모집을 시작하거나 마감할 수 있습니다.</p>
+        <p className="mt-0.5 text-[12px] opacity-60">행사 개설자만 모집을 시작하거나 마감할 수 있습니다.</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Link
@@ -229,7 +229,7 @@ export function CampaignStatusManagement({
         {c.status === "upcoming" ? (
           <Link
             href={`/campaigns/${c.id}/edit`}
-            aria-label="캠페인 수정"
+            aria-label="행사 수정"
             aria-disabled={disabled}
             tabIndex={disabled ? -1 : undefined}
             className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-[13px] font-medium ${
@@ -240,7 +240,7 @@ export function CampaignStatusManagement({
               color: "var(--foreground)",
             }}
           >
-            <Pencil size={14} /> 캠페인 수정
+            <Pencil size={14} /> 행사 수정
           </Link>
         ) : null}
         <button
@@ -261,11 +261,11 @@ export function CampaignStatusManagement({
             type="button"
             onClick={onDelete}
             disabled={disabled}
-            aria-label="캠페인 삭제"
+            aria-label="행사 삭제"
             className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-[13px] font-medium disabled:cursor-not-allowed disabled:opacity-45"
             style={{ background: "rgba(237,92,72,0.16)", color: "#ed5c48" }}
           >
-            <Trash2 size={14} /> {deleting ? "삭제 중…" : "캠페인 삭제"}
+            <Trash2 size={14} /> {deleting ? "삭제 중…" : "행사 삭제"}
           </button>
         ) : null}
       </div>

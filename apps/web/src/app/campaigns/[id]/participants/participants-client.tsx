@@ -121,7 +121,7 @@ export default function ParticipantsClient({ id }: { id: string }) {
     if (requestInFlightRef.current || removingId) return;
     if (
       !(await confirm({
-        message: "이 참가자를 캠페인에서 제외할까요?\n제외된 사용자는 다시 참여할 수 있습니다.",
+        message: "이 참가자를 행사에서 제외할까요?\n제외된 사용자는 다시 참여할 수 있습니다.",
         destructive: true,
         confirmLabel: "제외",
       }))
@@ -147,7 +147,7 @@ export default function ParticipantsClient({ id }: { id: string }) {
       } else if (error instanceof ApiError && error.status === 404) {
         setActionError("이미 제외되었거나 찾을 수 없는 참가자입니다.");
       } else if (error instanceof ApiError && error.status === 409) {
-        setActionError("모집 중인 캠페인에서만 참가자를 제외할 수 있습니다.");
+        setActionError("모집 중인 행사에서만 참가자를 제외할 수 있습니다.");
       } else {
         setActionError("참가자 제외에 실패했습니다. 잠시 후 다시 시도해주세요.");
       }
@@ -164,7 +164,7 @@ export default function ParticipantsClient({ id }: { id: string }) {
       <StateShell>
         <p>참가자 목록을 볼 권한이 없습니다.</p>
         <button type="button" onClick={() => router.push(`/campaigns/${id}`)} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
-          캠페인으로 돌아가기
+          행사로 돌아가기
         </button>
       </StateShell>
     );
@@ -172,9 +172,9 @@ export default function ParticipantsClient({ id }: { id: string }) {
   if (currentLoad.kind === "notfound") {
     return (
       <StateShell>
-        <p>캠페인을 찾을 수 없습니다.</p>
+        <p>행사를 찾을 수 없습니다.</p>
         <button type="button" onClick={() => router.push("/campaigns")} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
-          캠페인 목록
+          행사 목록
         </button>
       </StateShell>
     );
@@ -200,7 +200,7 @@ export default function ParticipantsClient({ id }: { id: string }) {
           className="mb-6 inline-flex items-center gap-2 text-[13px] opacity-70 transition-opacity hover:opacity-100"
           style={{ color: "var(--foreground)" }}
         >
-          <ArrowLeft size={14} /> 캠페인 상세로 돌아가기
+          <ArrowLeft size={14} /> 행사 상세로 돌아가기
         </Link>
 
         <div
@@ -263,10 +263,10 @@ export default function ParticipantsClient({ id }: { id: string }) {
                     <div className="flex w-full shrink-0 flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end">
                       {participant.verified ? (
                         <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--accent)]/20 px-2.5 py-1 text-[11px] text-[#2f9c68]">
-                          <ShieldCheck size={12} /> 인증 사용자
+                          <ShieldCheck size={12} /> 후기 작성자
                         </span>
                       ) : null}
-                      {/* 퇴장은 모집 중(open)인 캠페인에서만. 처리 중인 행은 disabled. */}
+                      {/* 퇴장은 모집 중(open)인 행사에서만. 처리 중인 행은 disabled. */}
                       {data.status === "open" ? (
                         <button
                           type="button"

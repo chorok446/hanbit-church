@@ -62,7 +62,7 @@ fun normalizeCampaignInput(
     return NormalizedCampaignInput(
         title = normalizedTitle,
         summary = summary.trim(),
-        body = CampaignBody("캠페인 소개", listOf(paragraphHtml).filter { it.isNotBlank() }, imageUrls),
+        body = CampaignBody("행사 소개", listOf(paragraphHtml).filter { it.isNotBlank() }, imageUrls),
         thumb = thumb.trim(),
         recruitStart = recruitStart.toString(),
         recruitEnd = recruitEnd.toString(),
@@ -72,7 +72,7 @@ fun normalizeCampaignInput(
     )
 }
 
-/** 캠페인 댓글 본문 trim + blank/length 검증. */
+/** 행사 댓글 본문 trim + blank/length 검증. */
 fun normalizeCampaignCommentText(value: String): String {
     val text = value.trim()
     if (text.isEmpty()) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "text is required")
