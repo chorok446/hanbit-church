@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CHURCH, WORSHIP_SERVICES } from "@/data/church";
+import { NewFamilyRegisterForm } from "./register-form";
 
 export const metadata: Metadata = {
   title: "새가족 안내",
@@ -76,7 +77,11 @@ export default function WelcomePage() {
           ))}
         </ol>
 
-        <div className="mt-12 flex flex-wrap gap-3">
+        <div className="mt-12">
+          <NewFamilyRegisterForm />
+        </div>
+
+        <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href="/signup"
             className="rounded-full px-8 py-3.5 text-[15px] font-medium transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
