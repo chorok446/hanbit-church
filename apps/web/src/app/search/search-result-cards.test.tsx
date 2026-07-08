@@ -13,6 +13,7 @@ const post: Post = {
   images: [],
   likes: 3,
   comments: 2,
+  category: "SHARING",
   likedByMe: false,
   bookmarkedByMe: true,
   ownedByMe: false,

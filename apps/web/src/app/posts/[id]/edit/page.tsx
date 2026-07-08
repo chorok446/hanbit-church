@@ -10,7 +10,9 @@ import { useAuthSession } from "@/lib/use-auth-session";
 import { PostComposeForm, PostComposeSubmitButton } from "@/components/post-compose-form";
 import { PageShell } from "@/components/page-shell";
 import {
+  POST_CATEGORIES,
   type Post,
+  type PostCategory,
   type PostComposeField,
   type PostComposeValues,
   postToComposeValues,
@@ -40,6 +42,7 @@ export default function PostEditPage() {
     campaign: "",
   });
   const [campaigns, setCampaigns] = useState<{ id: string; title: string }[]>([]);
+  const [category, setCategory] = useState<PostCategory>("SHARING");
   const [saving, setSaving] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<PostComposeField, string>>>({});
   const [retry, setRetry] = useState(0);
@@ -64,6 +67,7 @@ export default function PostEditPage() {
           return;
         }
         setValues(postToComposeValues(post));
+        setCategory(post.category);
         setLoad({ kind: "ready" });
       })
       .catch((error) => {
@@ -133,7 +137,7 @@ export default function PostEditPage() {
     setFieldErrors({});
 
     try {
-      await apiPut(`/api/posts/${id}`, validation.payload);
+      await apiPut(`/api/posts/${id}`, { ...validation.payload, category });
       if (getSessionId() !== requestToken) return;
       toast.success("게시글이 수정되었습니다.");
       router.replace(`/posts/${id}`);
@@ -219,6 +223,25 @@ export default function PostEditPage() {
           borderColor: "var(--border)",
         }}
       >
+        <div>
+          <label htmlFor="edit-post-category" className="mb-2 block text-[12px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
+            카테고리
+          </label>
+          <select
+            id="edit-post-category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value as PostCategory)}
+            className="ui-control px-3 py-2.5"
+            style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+          >
+            {POST_CATEGORIES.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <PostComposeForm
           values={values}
           onChange={setValues}

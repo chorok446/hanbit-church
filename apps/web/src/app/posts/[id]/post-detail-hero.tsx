@@ -16,6 +16,9 @@ import {
 import { AuthorHeader } from "@/components/author-header";
 import { FallbackImage } from "@/components/fallback-image";
 import { PostText } from "@/components/post-text";
+import { YouTubeEmbed } from "@/components/youtube-embed";
+import { extractYouTubeId } from "@/lib/youtube";
+import { postCategoryLabel } from "@/data/posts";
 import { RichBodyImageGrid } from "@/components/rich-body-image-grid";
 import { ShareButton } from "@/components/share-button";
 import { TagLink } from "@/components/tag-link";
@@ -187,6 +190,18 @@ export function PostDetailHero({
               </button>
             ) : null}
           </div>
+
+          <span
+            className="self-start rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.08em]"
+            style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}
+          >
+            {postCategoryLabel(p.category)}
+          </span>
+
+          {(() => {
+            const videoId = extractYouTubeId(p.text);
+            return videoId ? <YouTubeEmbed videoId={videoId} title="본문 영상" /> : null;
+          })()}
 
           <PostText text={p.text} style={{ color: "var(--foreground)", lineHeight: 1.7 }} />
 

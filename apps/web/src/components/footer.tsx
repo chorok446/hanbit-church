@@ -22,6 +22,8 @@ export function Footer() {
           <Link href="/about" className="hover:text-white">교회소개</Link>
           <Link href="/worship" className="hover:text-white">예배안내</Link>
           <Link href="/welcome" className="hover:text-white">새가족 안내</Link>
+          <Link href="/sermons" className="hover:text-white">설교</Link>
+          <Link href="/news" className="hover:text-white">소식</Link>
           <Link href="/feed" className="hover:text-white">교제</Link>
           <Link href="/campaigns" className="hover:text-white">행사·사역</Link>
         </nav>

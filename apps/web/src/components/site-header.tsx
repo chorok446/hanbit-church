@@ -143,9 +143,14 @@ export function SiteHeader() {
           {/* 서버 스냅샷은 항상 로그아웃 상태 → 비로그인 뷰로 hydration, 이후 클라이언트에서 갱신. */}
           {isLoggedIn ? (
             <>
-              <span className="hidden text-[13px] px-1 sm:inline" style={{ color: "var(--heading)" }}>
+              <Link
+                href="/mypage"
+                className="hidden rounded-full px-2 py-1.5 text-[13px] transition-colors hover:bg-white/10 sm:inline"
+                style={{ color: "var(--heading)" }}
+                aria-label="마이페이지로 이동"
+              >
                 {name ?? "사용자"}
-              </span>
+              </Link>
               <button
                 onClick={onLogout}
                 className="rounded-full px-3 py-1.5 text-[13px] transition-colors hover:bg-white/10"

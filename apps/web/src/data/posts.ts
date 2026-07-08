@@ -23,6 +23,21 @@ export type PostComposePayload = {
   campaignId: string | null;
 };
 
+/** 서버 PostCategory 와 동일한 값. */
+export type PostCategory = "NOTICE" | "BULLETIN" | "SERMON" | "SHARING" | "PRAYER";
+
+export const POST_CATEGORIES: { value: PostCategory; label: string }[] = [
+  { value: "SHARING", label: "나눔" },
+  { value: "PRAYER", label: "기도요청" },
+  { value: "NOTICE", label: "공지" },
+  { value: "BULLETIN", label: "주보" },
+  { value: "SERMON", label: "설교" },
+];
+
+export function postCategoryLabel(category: string): string {
+  return POST_CATEGORIES.find((item) => item.value === category)?.label ?? "나눔";
+}
+
 export type PostComposeField = "text" | "images" | "tags";
 
 export type PostComposeValidationResult =
@@ -128,6 +143,7 @@ export type Post = {
   likes: number;
   comments: number;
   campaignId?: string;
+  category: PostCategory;
   likedByMe: boolean;
   bookmarkedByMe: boolean;
   ownedByMe: boolean;

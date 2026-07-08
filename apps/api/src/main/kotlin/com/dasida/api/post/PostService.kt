@@ -71,6 +71,7 @@ class PostService(
         sort: String,
         page: Int,
         size: Int,
+        category: String? = null,
     ): PostSearchResponse {
         checkPageParams(page, size, MAX_SEARCH_PAGE_SIZE)
 
@@ -84,6 +85,11 @@ class PostService(
                 HttpStatus.BAD_REQUEST,
                 "q must not exceed $MAX_SEARCH_QUERY_LENGTH characters",
             )
+        }
+        val categoryFilter = category?.trim()?.takeIf { it.isNotEmpty() }?.also {
+            if (it !in PostCategory.ALL) {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid post category")
+            }
         }
         val tagFilter = tag?.trim()?.takeIf { it.isNotEmpty() }
         if (tagFilter != null && tagFilter.length > MAX_SEARCH_QUERY_LENGTH) {
@@ -109,6 +115,7 @@ class PostService(
             PostSearchCondition(
                 query = query,
                 tag = tagFilter,
+                category = categoryFilter,
                 campaignOnly = campaignOnly,
                 authorUserIds = authorUserIds,
                 sort = searchSort,
@@ -354,6 +361,7 @@ class PostService(
                 likes = 0,
                 comments = 0,
                 campaignId = fields.campaignId,
+                category = normalizeCategory(req.category),
                 seq = System.currentTimeMillis(),
                 authorUserId = author.id,
             ),
@@ -380,6 +388,7 @@ class PostService(
         post.tags = fields.tags
         post.images = fields.images
         post.campaignId = fields.campaignId
+        post.category = normalizeCategory(req.category)
         return post.toResponse(
             viewerId = userId,
             likedByMe = likeRepo.existsByPostIdAndUserId(postId, userId),

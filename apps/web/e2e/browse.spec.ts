@@ -22,7 +22,7 @@ test("시드 게시글 상세를 열 수 있다", async ({ page }) => {
 test("시드 캠페인 상세를 열 수 있다", async ({ page }) => {
   await page.goto("/campaigns/c1");
 
-  await expect(page.getByRole("heading", { name: "강아지를 위한 업사이클링 댕교복" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "여름 청년 수련회" })).toBeVisible();
   await expect(page.getByRole("button", { name: "캠페인 목록" })).toBeVisible();
 });
 
