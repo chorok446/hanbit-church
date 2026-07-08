@@ -134,7 +134,7 @@ export function UserProfileClient({ user: initialUser }: { user: PublicUser }) {
                   <h1
                     className="break-words"
                     style={{
-                      fontFamily: "'Black Han Sans', sans-serif",
+                      fontFamily: "var(--font-display)", fontWeight: 600,
                       fontSize: "clamp(30px, 5vw, 40px)",
                       color: "var(--foreground)",
                     }}
@@ -142,7 +142,7 @@ export function UserProfileClient({ user: initialUser }: { user: PublicUser }) {
                     {user.name}
                   </h1>
                   {user.verified ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[#7dd3a3]/15 px-2.5 py-1 text-[11px] text-[#7dd3a3]">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/15 px-2.5 py-1 text-[11px] text-[var(--accent)]">
                       <CheckCircle2 size={12} aria-hidden />
                       인증 사용자
                     </span>
@@ -176,7 +176,7 @@ export function UserProfileClient({ user: initialUser }: { user: PublicUser }) {
                       className="rounded-full px-5 py-2 text-[13px] font-medium disabled:opacity-50"
                       style={{
                         background: user.followedByMe ? "var(--accent-soft)" : "var(--accent)",
-                        color: user.followedByMe ? "var(--accent-secondary)" : "#0f1f22",
+                        color: user.followedByMe ? "var(--accent-secondary)" : "var(--surface-dark)",
                       }}
                     >
                       {user.followedByMe ? "팔로잉" : "팔로우"}

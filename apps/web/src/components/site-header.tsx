@@ -41,8 +41,8 @@ export function SiteHeader() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2" style={{ color: "var(--accent-secondary)" }}>
-          <span style={{ fontFamily: "'Black Han Sans', sans-serif", fontSize: 22 }}>다시,다</span>
-          <span className="hidden text-[10px] tracking-[0.3em] opacity-90 sm:inline">UPCYCLE</span>
+          <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 21 }}>한빛교회</span>
+          <span className="hidden text-[10px] tracking-[0.3em] opacity-90 lg:inline">HANBIT CHURCH</span>
         </Link>
         <nav className="hidden md:flex items-center gap-1" aria-label="주요 메뉴">
           {MAIN_NAV_ITEMS.map((it) => {
@@ -53,7 +53,7 @@ export function SiteHeader() {
               <motion.div
                 layoutId="navdot"
                 className="absolute left-1/2 -translate-x-1/2 bottom-1 w-1.5 h-1.5 rounded-full"
-                style={{ background: "#7dd3a3" }}
+                style={{ background: "var(--accent)" }}
               />
             );
             return (
@@ -70,8 +70,8 @@ export function SiteHeader() {
               href="/admin"
               className="flex h-9 items-center justify-center gap-2 rounded-full px-3 transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none"
               style={{
-                background: pathname.startsWith("/admin") ? "rgba(125,211,163,0.18)" : "rgba(var(--ink-rgb), 0.07)",
-                color: pathname.startsWith("/admin") ? "#148a90" : "var(--heading)",
+                background: pathname.startsWith("/admin") ? "var(--accent-soft)" : "rgba(var(--ink-rgb), 0.07)",
+                color: pathname.startsWith("/admin") ? "var(--accent-strong)" : "var(--heading)",
               }}
               aria-label="관리자 페이지로 이동"
               aria-current={pathname.startsWith("/admin") ? "page" : undefined}
@@ -84,8 +84,8 @@ export function SiteHeader() {
             href="/search"
             className="flex h-9 items-center justify-center gap-2 rounded-full px-3 transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none"
             style={{
-              background: pathname === "/search" ? "rgba(125,211,163,0.18)" : "rgba(var(--ink-rgb), 0.07)",
-              color: pathname === "/search" ? "#148a90" : "var(--heading)",
+              background: pathname === "/search" ? "var(--accent-soft)" : "rgba(var(--ink-rgb), 0.07)",
+              color: pathname === "/search" ? "var(--accent-strong)" : "var(--heading)",
             }}
             aria-label="검색 페이지로 이동"
           >
@@ -96,8 +96,8 @@ export function SiteHeader() {
             href="/messages"
             className="relative hidden h-9 items-center justify-center gap-2 rounded-full px-3 transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none sm:flex"
             style={{
-              background: onMessages ? "rgba(125,211,163,0.18)" : "rgba(var(--ink-rgb), 0.07)",
-              color: onMessages ? "#148a90" : "var(--heading)",
+              background: onMessages ? "var(--accent-soft)" : "rgba(var(--ink-rgb), 0.07)",
+              color: onMessages ? "var(--accent-strong)" : "var(--heading)",
             }}
             aria-label={dmUnread > 0 ? `DM, 읽지 않음 ${dmUnread > 99 ? "99+" : dmUnread}개` : "DM"}
             aria-current={onMessages ? "page" : undefined}
@@ -119,9 +119,9 @@ export function SiteHeader() {
             className="relative flex h-10 w-10 items-center justify-center rounded-full transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none"
             style={{
               background: onNotifications
-                ? "rgba(125,211,163,0.18)"
+                ? "var(--accent-soft)"
                 : "rgba(var(--ink-rgb), 0.07)",
-              color: onNotifications ? "#148a90" : "var(--heading)",
+              color: onNotifications ? "var(--accent-strong)" : "var(--heading)",
             }}
             aria-label={unread > 0 ? `알림, 읽지 않음 ${unread > 99 ? "99+" : unread}개` : "알림"}
             aria-current={onNotifications ? "page" : undefined}
@@ -166,7 +166,7 @@ export function SiteHeader() {
               <Link
                 href="/signup"
                 className="rounded-full px-3 py-1.5 text-[13px] font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none"
-                style={{ background: "#7dd3a3", color: "#0f1f22" }}
+                style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
               >
                 회원가입
               </Link>

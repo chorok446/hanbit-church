@@ -17,8 +17,8 @@ import { fetchAdminStats, type AdminDailyStat } from "@/data/admin";
 const RANGE_OPTIONS = [7, 30, 90] as const;
 
 const SERIES = [
-  { key: "signups", label: "가입", color: "#7dd3a3" },
-  { key: "posts", label: "게시글", color: "#148a90" },
+  { key: "signups", label: "가입", color: "var(--accent)" },
+  { key: "posts", label: "게시글", color: "var(--accent-strong)" },
   { key: "campaigns", label: "캠페인", color: "#d9a441" },
   { key: "reports", label: "신고", color: "#ed5c48" },
 ] as const;
@@ -75,7 +75,7 @@ export function StatsChartSection() {
               className="rounded-full border px-3 py-1 text-[12px]"
               style={
                 days === option
-                  ? { background: "var(--accent)", borderColor: "var(--accent)", color: "#0f1f22" }
+                  ? { background: "var(--accent)", borderColor: "var(--accent)", color: "var(--surface-dark)" }
                   : { background: "transparent", borderColor: "var(--border)", color: "var(--foreground-muted)" }
               }
             >

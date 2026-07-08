@@ -48,7 +48,7 @@ export default function LoginPage() {
       footer={
         <p className="text-center text-[14px] mt-6" style={{ color: "rgba(var(--ink-rgb), 0.7)" }}>
           아직 회원이 아니신가요?{" "}
-          <Link href="/signup" className="underline" style={{ color: "#7dd3a3" }}>
+          <Link href="/signup" className="underline" style={{ color: "var(--accent)" }}>
             회원가입
           </Link>
         </p>
@@ -76,7 +76,7 @@ export default function LoginPage() {
 
         <div className="flex items-center justify-between text-[13px]" style={{ color: "rgba(var(--ink-rgb), 0.7)" }}>
           <label className="flex cursor-pointer items-center gap-2">
-            <input type="checkbox" className="h-4 w-4 accent-[#7dd3a3]" />
+            <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" />
             이메일 기억하기
           </label>
         </div>
@@ -85,7 +85,7 @@ export default function LoginPage() {
           type="submit"
           disabled={submitting || !email.trim() || !password}
           className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-40 motion-reduce:transform-none"
-          style={{ background: "#7dd3a3", color: "#0f1f22" }}
+          style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
         >
           {submitting ? "로그인 중…" : "로그인"} <ArrowRight size={16} aria-hidden="true" />
         </button>

@@ -192,7 +192,7 @@ export default function CampaignEditClient({ id }: { id: string }) {
     return (
       <PageState>
         <p>캠페인을 찾을 수 없습니다.</p>
-        <button type="button" onClick={() => router.push("/campaigns")} className="rounded-xl bg-[#7dd3a3] px-4 py-2 text-[13px] text-[#0f1f22]">
+        <button type="button" onClick={() => router.push("/campaigns")} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
           캠페인 목록
         </button>
       </PageState>
@@ -202,7 +202,7 @@ export default function CampaignEditClient({ id }: { id: string }) {
     return (
       <PageState>
         <p>캠페인 수정 권한이 없습니다.</p>
-        <button type="button" onClick={() => router.push(`/campaigns/${id}`)} className="rounded-xl bg-[#7dd3a3] px-4 py-2 text-[13px] text-[#0f1f22]">
+        <button type="button" onClick={() => router.push(`/campaigns/${id}`)} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
           캠페인으로 돌아가기
         </button>
       </PageState>
@@ -212,7 +212,7 @@ export default function CampaignEditClient({ id }: { id: string }) {
     return (
       <PageState>
         <p>모집 시작 전 캠페인만 수정할 수 있습니다.</p>
-        <button type="button" onClick={() => router.push(`/campaigns/${id}`)} className="rounded-xl bg-[#7dd3a3] px-4 py-2 text-[13px] text-[#0f1f22]">
+        <button type="button" onClick={() => router.push(`/campaigns/${id}`)} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
           캠페인으로 돌아가기
         </button>
       </PageState>
@@ -222,7 +222,7 @@ export default function CampaignEditClient({ id }: { id: string }) {
     return (
       <PageState>
         <p>캠페인을 불러오지 못했습니다.</p>
-        <button type="button" onClick={() => setRetry((current) => current + 1)} className="rounded-xl bg-[#7dd3a3] px-4 py-2 text-[13px] text-[#0f1f22]">
+        <button type="button" onClick={() => setRetry((current) => current + 1)} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
           다시 시도
         </button>
       </PageState>
@@ -249,7 +249,7 @@ export default function CampaignEditClient({ id }: { id: string }) {
           <p className="mb-3 uppercase tracking-[0.4em]" style={{ color: "var(--accent-secondary)", fontSize: 11 }}>
             Edit Campaign
           </p>
-          <h1 style={{ fontFamily: "'Black Han Sans', sans-serif", fontSize: "clamp(36px, 4.5vw, 60px)", color: "var(--foreground)" }}>
+          <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(36px, 4.5vw, 60px)", color: "var(--foreground)" }}>
             캠페인 수정
           </h1>
         </div>
@@ -317,13 +317,13 @@ export default function CampaignEditClient({ id }: { id: string }) {
                     style={{ background: "rgba(var(--ink-rgb), 0.04)" }}
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0f1f22]/60 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface-dark)]/60 via-transparent to-transparent" />
                 <span className="absolute right-3 top-3 rounded-full px-2.5 py-1 text-[11px] tracking-[0.2em]" style={{ background: statusMeta.upcoming.color, color: "#fff" }}>
                   모집예정
                 </span>
               </div>
               <div className="space-y-3 p-5">
-                <h3 style={{ fontFamily: "'Black Han Sans', sans-serif", fontSize: 22, color: "var(--foreground)", lineHeight: 1.25 }}>
+                <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, color: "var(--foreground)", lineHeight: 1.25 }}>
                   {values.title || "캠페인 제목"}
                 </h3>
                 <p className="text-[13px]" style={{ color: "var(--foreground-muted)" }}>

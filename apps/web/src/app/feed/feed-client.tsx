@@ -185,9 +185,9 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
           >
             <CurrentUserAvatar />
             <span className="flex-1 opacity-60" style={{ color: "var(--foreground)" }}>
-              지금 어떤 업사이클을 하고 있나요?
+              성도들과 나누고 싶은 이야기가 있나요?
             </span>
-            <span className="flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-full" style={{ background: "#7dd3a3", color: "#0f1f22" }}>
+            <span className="flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-full" style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}>
               <ImageIcon size={14} /> 새 글
             </span>
           </button>
@@ -229,7 +229,7 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
               <button
                 type="button"
                 onClick={() => setRetryTick((tick) => tick + 1)}
-                className="rounded-full bg-[#7dd3a3] px-5 py-2 text-[13px] text-[#0f1f22]"
+                className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]"
               >
                 다시 시도
               </button>
@@ -253,14 +253,14 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
                   ? urlState.followingOnly
                     ? "팔로우한 작성자의 게시글이 없어요."
                     : "다른 검색어를 입력하거나 필터를 초기화해보세요."
-                  : "첫 업사이클 이야기를 남겨보세요."
+                  : "첫 나눔을 남겨보세요."
               }
               action={
                 feedHasActiveFilters(urlState) ? (
                   <button
                     type="button"
                     onClick={() => updateUrl({ query: "", campaignOnly: false, followingOnly: false, sort: "latest", page: 0 })}
-                    className="rounded-full bg-[#7dd3a3] px-5 py-2 text-[13px] font-medium text-[#0f1f22]"
+                    className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]"
                   >
                     전체 게시글 보기
                   </button>
@@ -268,7 +268,7 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
                   <button
                     type="button"
                     onClick={goToNewPost}
-                    className="rounded-full bg-[#7dd3a3] px-5 py-2 text-[13px] font-medium text-[#0f1f22]"
+                    className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]"
                   >
                     새 글 작성
                   </button>

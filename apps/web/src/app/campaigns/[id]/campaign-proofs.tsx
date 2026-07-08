@@ -67,7 +67,7 @@ function ProofItem({
               <span className="truncate text-[13px] font-medium" style={{ color: "var(--foreground)" }}>
                 {proof.author.name}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/20 px-2 py-0.5 text-[10px] text-[#148a90]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/20 px-2 py-0.5 text-[10px] text-[var(--accent-strong)]">
                 <BadgeCheck size={11} aria-hidden /> 참여 인증
               </span>
             </div>
@@ -344,7 +344,7 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
       <div className="mt-7 space-y-3">
         {status === "loading" ? (
           <StatePanel compact>
-            <Loader2 size={24} className="animate-spin text-[#7dd3a3]" />
+            <Loader2 size={24} className="animate-spin text-[var(--accent)]" />
             <p style={{ color: "var(--foreground-muted)" }}>참여 인증을 불러오는 중입니다.</p>
           </StatePanel>
         ) : null}
@@ -352,7 +352,7 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
         {status === "error" ? (
           <StatePanel compact role="alert">
             <p style={{ color: "var(--foreground-muted)" }}>참여 인증을 불러오지 못했습니다.</p>
-            <button type="button" onClick={reload} className="rounded-full bg-[#7dd3a3] px-5 py-2 text-[13px] text-[#0f1f22]">
+            <button type="button" onClick={reload} className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]">
               다시 시도
             </button>
           </StatePanel>

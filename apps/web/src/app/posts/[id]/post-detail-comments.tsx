@@ -148,7 +148,7 @@ export function PostDetailComments({
         background: c.id === targetCommentId
           ? "var(--accent-soft)"
           : "transparent",
-        outline: c.id === targetCommentId ? "1px solid rgba(125,211,163,0.55)" : "none",
+        outline: c.id === targetCommentId ? "1px solid var(--accent-soft)" : "none",
       }}
     >
       <Avatar
@@ -172,7 +172,7 @@ export function PostDetailComments({
                   disabled={savingCommentId !== null || deletingIds.has(c.id)}
                   aria-label={isReply ? "답글 수정" : "댓글 수정"}
                   className="flex h-8 w-8 items-center justify-center rounded-full disabled:cursor-wait disabled:opacity-40"
-                  style={{ background: "rgba(125,211,163,0.14)", color: "var(--accent-strong)" }}
+                  style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}
                 >
                   <Pencil size={14} />
                 </button>
@@ -234,7 +234,7 @@ export function PostDetailComments({
                 <button
                   type="submit"
                   disabled={savingCommentId === c.id || !editText.trim()}
-                  className="rounded-full bg-[#7dd3a3] px-3 py-1.5 text-[12px] text-[#0f1f22] disabled:opacity-40"
+                  className="rounded-full bg-[var(--cta-bg)] px-3 py-1.5 text-[12px] text-[var(--cta-fg)] disabled:opacity-40"
                 >
                   {savingCommentId === c.id ? "저장 중…" : "저장"}
                 </button>
@@ -273,7 +273,7 @@ export function PostDetailComments({
         borderColor: "var(--border)",
       }}
     >
-      <h3 className="mb-6" style={{ fontFamily: "'Black Han Sans', sans-serif", fontSize: 22, color: "var(--foreground)" }}>
+      <h3 className="mb-6" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, color: "var(--foreground)" }}>
         댓글 {count}
       </h3>
       <div
@@ -296,7 +296,7 @@ export function PostDetailComments({
               placeholder="댓글 달기..."
               maxLength={MAX_COMMENT_LENGTH}
               disabled={submitting || visibleCommentsLoading || !!listError}
-              className="flex-1 bg-transparent outline-none placeholder:opacity-50 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7dd3a3]"
+              className="flex-1 bg-transparent outline-none placeholder:opacity-50 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
               style={{ color: "var(--foreground)" }}
             />
             <button
@@ -305,7 +305,7 @@ export function PostDetailComments({
               disabled={submitting || visibleCommentsLoading || !!listError || !composeText.trim()}
               aria-label="댓글 등록"
               className="w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-40"
-              style={{ background: "#7dd3a3", color: "#0f1f22" }}
+              style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
             >
               <Send size={14} />
             </button>
@@ -318,7 +318,7 @@ export function PostDetailComments({
             <button
               type="button"
               onClick={() => router.push("/login")}
-              className="rounded-full bg-[#7dd3a3] px-5 py-2 text-[13px] text-[#0f1f22]"
+              className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]"
             >
               로그인하기
             </button>
@@ -375,7 +375,7 @@ export function PostDetailComments({
                         placeholder={`${c.author.name}님에게 답글 달기...`}
                         maxLength={MAX_COMMENT_LENGTH}
                         disabled={submittingReply}
-                        className="min-w-0 flex-1 bg-transparent outline-none placeholder:opacity-50 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7dd3a3]"
+                        className="min-w-0 flex-1 bg-transparent outline-none placeholder:opacity-50 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                         style={{ color: "var(--foreground)" }}
                       />
                       <button
@@ -384,7 +384,7 @@ export function PostDetailComments({
                         disabled={submittingReply || !replyText.trim()}
                         aria-label="답글 등록"
                         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
-                        style={{ background: "#7dd3a3", color: "#0f1f22" }}
+                        style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
                       >
                         <Send size={13} />
                       </button>

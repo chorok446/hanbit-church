@@ -155,7 +155,7 @@ export function PostDetailHero({
               </button>
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                 {p.images.map((_, i) => (
-                  <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: i === idx ? "#7dd3a3" : "rgba(255,255,255,0.4)" }} />
+                  <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: i === idx ? "var(--accent)" : "rgba(255,255,255,0.4)" }} />
                 ))}
               </div>
             </>
@@ -205,7 +205,7 @@ export function PostDetailHero({
               className="flex items-center gap-3 p-3 rounded-2xl cursor-pointer text-left w-full"
               style={{
                 background: "var(--accent-soft)",
-                border: "1px solid rgba(125,211,163,0.25)",
+                border: "1px solid var(--accent-soft)",
               }}
             >
               <FallbackImage
@@ -254,11 +254,11 @@ export function PostDetailHero({
               aria-label={bookmarked ? "북마크 해제" : "북마크 추가"}
               className="ml-auto w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-50"
               style={{
-                background: bookmarked ? "#7dd3a3" : "var(--border)",
-                color: bookmarked ? "#0f1f22" : "var(--foreground)",
+                background: bookmarked ? "var(--accent)" : "var(--border)",
+                color: bookmarked ? "var(--surface-dark)" : "var(--foreground)",
               }}
             >
-              <Bookmark size={14} fill={bookmarked ? "#0f1f22" : "transparent"} />
+              <Bookmark size={14} fill={bookmarked ? "var(--surface-dark)" : "transparent"} />
             </motion.button>
           </div>
         </div>

@@ -34,8 +34,8 @@ function UserPostCard({ post }: { post: Post }) {
             className="flex aspect-[4/3] items-center p-6"
             style={{
               background: dark
-                ? "linear-gradient(135deg,rgba(125,211,163,0.16),rgba(255,255,255,0.03))"
-                : "linear-gradient(135deg,rgba(125,211,163,0.3),rgba(231,223,203,0.5))",
+                ? "linear-gradient(135deg,var(--accent-soft),rgba(255,255,255,0.03))"
+                : "linear-gradient(135deg,var(--accent-soft),rgba(231,223,203,0.5))",
               color: "var(--foreground)",
             }}
           >
@@ -77,7 +77,7 @@ export function UserPostsGrid({ userId }: { userId: number }) {
           ))}
         </div>
       )}
-      empty={<ListEmptyState title="아직 게시글이 없어요" description="첫 업사이클 이야기를 기다리고 있어요." />}
+      empty={<ListEmptyState title="아직 게시글이 없어요" description="첫 나눔 이야기를 기다리고 있어요." />}
     />
   );
 }

@@ -169,7 +169,7 @@ export function CampaignComments({
       <div className="mt-7 space-y-3">
         {comments.status === "loading" ? (
           <StatePanel compact>
-            <Loader2 size={24} className="animate-spin text-[#7dd3a3]" />
+            <Loader2 size={24} className="animate-spin text-[var(--accent)]" />
             <p style={{ color: "var(--foreground-muted)" }}>댓글을 불러오는 중입니다.</p>
           </StatePanel>
         ) : null}
@@ -177,7 +177,7 @@ export function CampaignComments({
         {comments.status === "error" ? (
           <StatePanel compact role="alert">
             <p style={{ color: "var(--foreground-muted)" }}>{comments.listError}</p>
-            <button type="button" onClick={reload} className="rounded-full bg-[#7dd3a3] px-5 py-2 text-[13px] text-[#0f1f22]">
+            <button type="button" onClick={reload} className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]">
               다시 시도
             </button>
           </StatePanel>
@@ -248,7 +248,7 @@ export function CampaignComments({
                       placeholder={`${comment.author.name}님에게 답글 달기...`}
                       maxLength={500}
                       disabled={submittingReply}
-                      className="min-w-0 flex-1 bg-transparent outline-none placeholder:opacity-50 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7dd3a3]"
+                      className="min-w-0 flex-1 bg-transparent outline-none placeholder:opacity-50 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                       style={{ color: "var(--foreground)" }}
                     />
                     <button
@@ -257,7 +257,7 @@ export function CampaignComments({
                       disabled={submittingReply || !replyText.trim()}
                       aria-label="답글 등록"
                       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
-                      style={{ background: "#7dd3a3", color: "#0f1f22" }}
+                      style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
                     >
                       {submittingReply ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
                     </button>

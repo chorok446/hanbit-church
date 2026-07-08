@@ -20,7 +20,7 @@ export function FeedSideHot({ campaigns }: { campaigns: Campaign[] }) {
     <div className="rounded-2xl border p-5" style={cardStyle}>
       <div className="flex items-center gap-2 mb-4">
         <TrendingUp size={14} style={{ color: "var(--accent)" }} />
-        <h3 style={{ fontFamily: "'Black Han Sans', sans-serif", fontSize: 18, color: "var(--foreground)" }}>
+        <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--foreground)" }}>
           진행 중인 캠페인
         </h3>
       </div>
@@ -79,7 +79,7 @@ function RecommendRow({
         className="shrink-0 rounded-full px-3 py-1 text-[12px] disabled:opacity-50"
         style={{
           background: followed ? "var(--accent-soft)" : "var(--accent)",
-          color: followed ? "var(--accent-secondary)" : "#0f1f22",
+          color: followed ? "var(--accent-secondary)" : "var(--surface-dark)",
         }}
       >
         {followed ? "팔로잉" : "팔로우"}
@@ -119,7 +119,7 @@ export function FeedSideRecommend() {
     <div className="rounded-2xl border p-5" style={cardStyle}>
       <div className="mb-4 flex items-center gap-2">
         <Sparkles size={14} style={{ color: "var(--accent)" }} />
-        <h3 style={{ fontFamily: "'Black Han Sans', sans-serif", fontSize: 18, color: "var(--foreground)" }}>
+        <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--foreground)" }}>
           이런 분 어때요
         </h3>
       </div>

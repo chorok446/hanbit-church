@@ -22,7 +22,7 @@ export default function RootError({
       style={{ backgroundImage: "var(--page-gradient)", color: "var(--foreground)" }}
     >
       <h1
-        style={{ fontFamily: "'Black Han Sans', sans-serif" }}
+        style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
         className="text-[clamp(28px,4vw,40px)]"
       >
         문제가 발생했어요
@@ -35,7 +35,7 @@ export default function RootError({
           type="button"
           onClick={reset}
           className="inline-flex items-center gap-2 rounded-xl px-6 py-3 font-medium transition-transform hover:-translate-y-0.5"
-          style={{ background: "var(--accent)", color: "#0f1f22" }}
+          style={{ background: "var(--accent)", color: "var(--surface-dark)" }}
         >
           <RefreshCw size={16} /> 다시 시도
         </button>

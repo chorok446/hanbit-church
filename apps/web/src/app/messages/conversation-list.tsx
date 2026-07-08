@@ -40,7 +40,7 @@ export function ConversationListClient() {
         <h1
           className="mb-6"
           style={{
-            fontFamily: "'Black Han Sans', sans-serif",
+            fontFamily: "var(--font-display)", fontWeight: 600,
             fontSize: "clamp(28px, 5vw, 36px)",
             color: "var(--foreground)",
           }}
@@ -109,7 +109,7 @@ function ConversationListBody({
               </p>
               <Link
                 href="/feed"
-                className="mt-4 inline-block rounded-full bg-[#7dd3a3] px-5 py-2 text-[13px] text-[#0f1f22]"
+                className="mt-4 inline-block rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]"
               >
                 피드로 이동
               </Link>
@@ -134,7 +134,7 @@ function ConversationRow({ item }: { item: ConversationSummary }) {
     <li>
       <Link
         href={`/messages/${item.id}`}
-        className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:bg-[#7dd3a3]/8"
+        className="flex items-center gap-3 rounded-2xl border p-4 transition-colors hover:bg-[var(--accent)]/8"
         style={{ background: "var(--card)", borderColor: "var(--border)" }}
       >
         <Avatar

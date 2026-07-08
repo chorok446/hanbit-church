@@ -13,7 +13,7 @@ export function CampaignContentTab({ c }: { c: Campaign }) {
         borderColor: "var(--border)",
       }}
     >
-      <h2 style={{ fontFamily: "'Black Han Sans', sans-serif", fontSize: 26, color: "var(--foreground)" }}>
+      <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 26, color: "var(--foreground)" }}>
         {c.body.heading}
       </h2>
       {c.body.paragraphs.map((p, i) => (

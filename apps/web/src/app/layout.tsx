@@ -1,18 +1,34 @@
 import type { Metadata } from "next";
+import { Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-context";
 import { AppFrame } from "@/components/app-frame";
 import { getSiteUrl } from "@/lib/site-url";
 
+// 제목·성경구절용 명조. 본문은 산세리프 — 명조는 --font-display 로만 노출한다.
+const serif = Noto_Serif_KR({
+  weight: ["400", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const sans = Noto_Sans_KR({
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "다시,다 — 업사이클 플랫폼",
-    template: "%s | 다시,다",
+    default: "한빛교회",
+    template: "%s | 한빛교회",
   },
-  description: "버려진 자원에 새 가치를 더하는 업사이클링 캠페인 플랫폼",
+  description: "한빛교회 — 예배 안내, 설교, 교회 소식과 성도의 교제",
   openGraph: {
-    siteName: "다시,다",
+    siteName: "한빛교회",
     locale: "ko_KR",
     type: "website",
   },
@@ -24,7 +40,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className="h-full antialiased" suppressHydrationWarning>
+    <html
+      lang="ko"
+      className={`h-full antialiased ${serif.variable} ${sans.variable}`}
+      suppressHydrationWarning
+    >
       <body className="min-h-full">
         <ThemeProvider>
           <AppFrame>{children}</AppFrame>
