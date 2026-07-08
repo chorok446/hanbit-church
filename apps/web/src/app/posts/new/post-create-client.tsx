@@ -19,6 +19,9 @@ import {
   type PostComposeField,
   type PostComposeValues,
   validatePostCompose,
+  POST_CATEGORIES,
+  postCategoryLabel,
+  type PostCategory,
 } from "@/data/posts";
 import { POST_TEMPLATES, type PostTemplate } from "@/data/post-templates";
 import { PageShell } from "@/components/page-shell";
@@ -45,7 +48,7 @@ export default function PostCreateClient() {
   const restoredRef = useRef(false);
 
   const [values, setValues] = useState<PostComposeValues>(EMPTY_VALUES);
-  const [category, setCategory] = useState("패션");
+  const [category, setCategory] = useState<PostCategory>("SHARING");
   const [campaigns, setCampaigns] = useState<{ id: string; title: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<PostComposeField, string>>>({});
@@ -65,7 +68,9 @@ export default function PostCreateClient() {
         tags: draft.tags,
         campaign: draft.campaign,
       });
-      if (draft.category) setCategory(draft.category);
+      if (draft.category && POST_CATEGORIES.some((item) => item.value === draft.category)) {
+        setCategory(draft.category as PostCategory);
+      }
     },
   );
 
@@ -138,7 +143,7 @@ export default function PostCreateClient() {
     setFieldErrors({});
 
     try {
-      await apiPost("/api/posts", validation.payload);
+      await apiPost("/api/posts", { ...validation.payload, category });
       if (getSessionId() !== requestToken) return;
       clearDraft();
       toast.success("게시글이 등록되었습니다.");
@@ -213,7 +218,7 @@ export default function PostCreateClient() {
               <select
                 id="post-category"
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e) => setCategory(e.target.value as PostCategory)}
                 className="ui-control px-3 py-2.5"
                 style={{
                   background: "var(--card)",
@@ -221,9 +226,9 @@ export default function PostCreateClient() {
                   color: "var(--foreground)",
                 }}
               >
-                {["패션", "도시텃밭", "공방", "기증", "음식", "가구"].map((item) => (
-                  <option key={item} value={item}>
-                    {item}
+                {POST_CATEGORIES.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
                   </option>
                 ))}
               </select>
@@ -278,7 +283,7 @@ export default function PostCreateClient() {
                     {authorName}
                   </div>
                   <div className="text-[11px] opacity-60" style={{ color: "var(--foreground)" }}>
-                    방금 전 · {category}
+                    방금 전 · {postCategoryLabel(category)}
                   </div>
                 </div>
               </div>

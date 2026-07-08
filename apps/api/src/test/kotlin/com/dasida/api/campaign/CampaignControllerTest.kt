@@ -107,7 +107,7 @@ class CampaignControllerTest(
     fun `id로 단건을 반환한다`() {
         mvc.get("/api/campaigns/c2").andExpect {
             status { isOk() }
-            jsonPath("$.title") { value("한강공원 플로깅 데이") }
+            jsonPath("$.title") { value("지역 어르신 반찬 나눔 봉사") }
         }
     }
 

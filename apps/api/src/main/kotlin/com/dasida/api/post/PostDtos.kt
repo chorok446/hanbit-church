@@ -9,10 +9,12 @@ data class CreatePostRequest(
     val text: String,
     @field:Schema(description = "이미지 URL 목록(최대 4개, http/https)")
     val images: List<String> = emptyList(),
-    @field:Schema(description = "태그 목록(최대 10개)", example = "[\"#업사이클링\"]")
+    @field:Schema(description = "태그 목록(최대 10개)", example = "[\"#청년부\"]")
     val tags: List<String> = emptyList(),
-    @field:Schema(description = "연결할 캠페인 id(선택)")
+    @field:Schema(description = "연결할 행사 id(선택)")
     val campaignId: String? = null,
+    @field:Schema(description = "카테고리(NOTICE/BULLETIN/SERMON/SHARING/PRAYER). 생략하면 SHARING.")
+    val category: String? = null,
 )
 
 @Schema(description = "게시글 수정 요청")
@@ -23,8 +25,10 @@ data class UpdatePostRequest(
     val images: List<String> = emptyList(),
     @field:Schema(description = "태그 목록(최대 10개)")
     val tags: List<String> = emptyList(),
-    @field:Schema(description = "연결할 캠페인 id(선택)")
+    @field:Schema(description = "연결할 행사 id(선택)")
     val campaignId: String? = null,
+    @field:Schema(description = "카테고리(NOTICE/BULLETIN/SERMON/SHARING/PRAYER). 생략하면 SHARING.")
+    val category: String? = null,
 )
 
 @Schema(description = "게시글 댓글 작성 요청")
@@ -79,6 +83,7 @@ data class PostResponse(
     val likes: Int,
     val comments: Int,
     val campaignId: String?,
+    val category: String,
     val likedByMe: Boolean,
     val bookmarkedByMe: Boolean,
     val ownedByMe: Boolean,

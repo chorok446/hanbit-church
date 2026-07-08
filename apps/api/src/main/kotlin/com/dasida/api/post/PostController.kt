@@ -41,8 +41,9 @@ class PostController(
         @RequestParam(defaultValue = "latest") sort: String,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(required = false) category: String?,
         @AuthenticationPrincipal user: AuthUser?,
-    ): PostSearchResponse = postService.searchPosts(user?.id, q, tag, campaignOnly, followingOnly, sort, page, size)
+    ): PostSearchResponse = postService.searchPosts(user?.id, q, tag, campaignOnly, followingOnly, sort, page, size, category)
 
     @Operation(summary = "내 북마크 조회")
     @SecurityRequirement(name = "bearerAuth")

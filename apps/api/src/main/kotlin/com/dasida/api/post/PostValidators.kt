@@ -56,6 +56,15 @@ fun normalizeImages(images: List<String>): List<String> {
     return normalized
 }
 
+/** 카테고리 검증. null·blank 는 기본값(나눔). */
+fun normalizeCategory(category: String?): String {
+    val value = category?.trim()?.takeIf { it.isNotEmpty() } ?: return PostCategory.SHARING
+    if (value !in PostCategory.ALL) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid post category")
+    }
+    return value
+}
+
 fun normalizeCommentText(value: String): String {
     val text = value.trim()
     if (text.isBlank()) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "comment is required")
