@@ -21,7 +21,7 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * 캠페인 댓글 도메인 서비스. 댓글 목록/pagination/딥링크 위치 조회와 작성/수정/삭제 정책을 담당한다.
+ * 행사 댓글 도메인 서비스. 댓글 목록/pagination/딥링크 위치 조회와 작성/수정/삭제 정책을 담당한다.
  * Controller 에서 옮겨온 validation, 소유권 검증, row lock, 알림 생성, 트랜잭션을 이 계층에 둔다.
  */
 @Service
@@ -96,15 +96,15 @@ class CampaignCommentService(
     @Transactional
     fun createComment(user: AuthUser, campaignId: String, request: CreateCampaignCommentRequest): CampaignCommentResponse {
         val text = normalizeCampaignCommentText(request.text)
-        // 캠페인 삭제와 같은 row를 첫 DB 조회로 잠가 orphan comment 생성을 막는다.
+        // 행사 삭제와 같은 row를 첫 DB 조회로 잠가 orphan comment 생성을 막는다.
         val campaign = campaigns.findByIdForUpdate(campaignId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $campaignId not found")
-        // 숨김 캠페인에는 새 댓글을 받지 않는다(개설자 포함).
+        // 숨김 행사에는 새 댓글을 받지 않는다(개설자 포함).
         if (campaign.hiddenAt != null) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $campaignId not found")
         }
 
-        // 답글이면 부모가 같은 캠페인의 노출 중인 최상위 댓글인지 확인한다(1단계 제한).
+        // 답글이면 부모가 같은 행사의 노출 중인 최상위 댓글인지 확인한다(1단계 제한).
         val parent = request.parentId?.let { parentId ->
             val found = comments.findByIdAndCampaignId(parentId, campaignId)
             if (found == null || found.hiddenAt != null) {
@@ -138,12 +138,12 @@ class CampaignCommentService(
                 href = "/campaigns/$campaignId?commentId=${saved.id}",
             )
         } else {
-            // 내가 개설한 캠페인에 타인이 댓글 → 개설자에게 알림(본인 댓글/개설자 미상은 helper 가 생략).
+            // 내가 개설한 행사에 타인이 댓글 → 개설자에게 알림(본인 댓글/개설자 미상은 helper 가 생략).
             notifications.notify(
                 recipientUserId = campaign.authorUserId,
                 actorUserId = user.id,
                 type = NotificationType.CAMPAIGN_COMMENT_CREATED,
-                title = "${authorSnapshot.name}님이 캠페인에 댓글을 남겼습니다",
+                title = "${authorSnapshot.name}님이 행사에 댓글을 남겼습니다",
                 body = campaign.title,
                 href = "/campaigns/$campaignId?commentId=${saved.id}",
             )
@@ -179,7 +179,7 @@ class CampaignCommentService(
 
     @Transactional
     fun deleteComment(userId: Long, campaignId: String, commentId: String) {
-        // 작성·캠페인 삭제와 lock 순서를 맞추기 위해 campaign row를 가장 먼저 잠근다.
+        // 작성·행사 삭제와 lock 순서를 맞추기 위해 campaign row를 가장 먼저 잠근다.
         val campaign = campaigns.findByIdForUpdate(campaignId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $campaignId not found")
         if (campaign.deletedAt != null) {
@@ -207,7 +207,7 @@ class CampaignCommentService(
         }
     }
 
-    /** 캠페인 존재 확인. 삭제(soft delete)된 캠페인은 존재하지 않는 것으로 취급한다. */
+    /** 행사 존재 확인. 삭제(soft delete)된 행사는 존재하지 않는 것으로 취급한다. */
     private fun requireExistingCampaign(campaignId: String) {
         val campaign = campaigns.findById(campaignId).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $campaignId not found")
@@ -217,7 +217,7 @@ class CampaignCommentService(
         }
     }
 
-    /** 공개 조회 경로에서 캠페인 존재·노출 여부 확인. 숨김 캠페인은 개설자에게만 보이고, 삭제는 모두에게 404. */
+    /** 공개 조회 경로에서 행사 존재·노출 여부 확인. 숨김 행사는 개설자에게만 보이고, 삭제는 모두에게 404. */
     private fun requireViewableCampaign(campaignId: String, currentUserId: Long?) {
         val campaign = campaigns.findById(campaignId).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $campaignId not found")

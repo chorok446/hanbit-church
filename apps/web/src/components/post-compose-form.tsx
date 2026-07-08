@@ -274,7 +274,7 @@ export function PostComposeForm({
 
       <div>
         <label htmlFor={campaignInputId} className="mb-2 block text-[12px] tracking-[0.2em] uppercase" style={labelStyle}>
-          캠페인 연결
+          행사 연결
         </label>
         <select
           id={campaignInputId}

@@ -17,8 +17,8 @@ type Counts = Record<SummaryTab, number>;
 
 const TILES: { tab: SummaryTab; label: string }[] = [
   { tab: "posts", label: "내 게시글" },
-  { tab: "campaigns", label: "참여 캠페인" },
-  { tab: "created", label: "개설 캠페인" },
+  { tab: "campaigns", label: "참여 행사" },
+  { tab: "created", label: "개설 행사" },
   { tab: "saved", label: "저장함" },
 ];
 

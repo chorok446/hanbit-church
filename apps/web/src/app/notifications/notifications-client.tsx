@@ -41,7 +41,7 @@ const FILTER_GROUP_TYPES: Partial<Record<NotificationFilterId, string[]>> = {
 const filters: { id: NotificationFilterId; label: string }[] = [
   { id: "all", label: "전체" },
   { id: "social", label: "좋아요·댓글" },
-  { id: "campaign", label: "캠페인" },
+  { id: "campaign", label: "행사" },
   { id: "follow", label: "팔로우" },
   { id: "message", label: "메시지" },
 ];
@@ -347,10 +347,10 @@ export default function NotificationsClient() {
               <p className="text-[12px] opacity-60">
                 {unreadOnly
                   ? "새 알림이 오면 이 목록에 표시됩니다."
-                  : "관심 있는 캠페인에 참여하면 소식을 알림으로 받을 수 있어요."}
+                  : "관심 있는 행사에 참여하면 소식을 알림으로 받을 수 있어요."}
               </p>
             </StatePanel>
-            {filter === "all" && !unreadOnly ? <RecommendedCampaigns heading="참여해볼 만한 캠페인" /> : null}
+            {filter === "all" && !unreadOnly ? <RecommendedCampaigns heading="참여해볼 만한 행사" /> : null}
           </div>
         ) : (
           <div className="space-y-2">

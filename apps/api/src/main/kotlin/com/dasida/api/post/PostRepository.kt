@@ -39,7 +39,7 @@ interface PostRepository : JpaRepository<Post, String> {
     @Query("select p from Post p where p.id = :id")
     fun findByIdForUpdate(@Param("id") id: String): Post?
 
-    /** 캠페인 삭제 시 연결 게시글 존재 확인용. campaign_id 인덱스를 탄다. */
+    /** 행사 삭제 시 연결 게시글 존재 확인용. campaign_id 인덱스를 탄다. */
     fun existsByCampaignId(campaignId: String): Boolean
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

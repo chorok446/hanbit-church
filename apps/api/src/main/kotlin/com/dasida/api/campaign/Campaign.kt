@@ -36,7 +36,7 @@ class Campaign(
     @JdbcTypeCode(SqlTypes.JSON) @Column(columnDefinition = "json") var body: CampaignBody,
     @JsonIgnore var seq: Long = 0, // 정렬용. 시드=인덱스, 생성=epoch millis (최신이 위로)
     // 소유권 판정용. author.name 은 작성 시점의 표시 이름 snapshot 으로만 사용한다.
-    // 시드/기존 캠페인은 null 을 허용하며 이름으로 소유자를 추정하지 않는다.
+    // 시드/기존 행사는 null 을 허용하며 이름으로 소유자를 추정하지 않는다.
     @Column(name = "author_user_id")
     @JsonIgnore
     val authorUserId: Long? = null,

@@ -2,9 +2,9 @@ import { test, expect, type Page } from "@playwright/test";
 import { signup, type Account } from "./helpers/account";
 
 /**
- * 인증·캠페인 시나리오: httpOnly 쿠키 인증 전환(#202) 이후의 회귀 가드.
+ * 인증·행사 시나리오: httpOnly 쿠키 인증 전환(#202) 이후의 회귀 가드.
  * - 로그아웃이 쿠키를 만료시키고, 재로그인이 새 쿠키로 동작하는지
- * - 쿠키 인증으로 캠페인 개설 → 모집 시작 → 참여 → 취소가 이어지는지
+ * - 쿠키 인증으로 행사 개설 → 모집 시작 → 참여 → 취소가 이어지는지
  */
 
 /** controlled input React state 반영 후 submit — fill 직후 click 시 빈 body POST 방지. */
@@ -45,7 +45,7 @@ test("로그아웃하면 세션이 끊기고 재로그인하면 복구된다", a
   await expect(page.getByText(account.nickname).first()).toBeVisible();
 });
 
-test("캠페인을 개설해 모집을 시작하면 참여와 취소가 된다", async ({ page }) => {
+test("행사를 개설해 모집을 시작하면 참여와 취소가 된다", async ({ page }) => {
   await signup(page, "e2e-auth");
 
   // 개설 — 템플릿으로 필수 텍스트를 채우고, 날짜는 오늘 기준으로 참여 가능하게 지정
@@ -55,19 +55,19 @@ test("캠페인을 개설해 모집을 시작하면 참여와 취소가 된다",
   await page.getByLabel("모집 종료일").fill(dateAfter(7));
   await page.getByLabel("진행 시작일").fill(dateAfter(8));
   await page.getByLabel("진행 종료일").fill(dateAfter(14));
-  await page.getByRole("button", { name: "캠페인 등록" }).click();
+  await page.getByRole("button", { name: "행사 등록" }).click();
   await page.waitForURL("**/campaigns/c-*");
 
-  // 신규 캠페인은 upcoming → 개설자가 모집을 시작해야 참여 가능
+  // 신규 행사는 upcoming → 개설자가 모집을 시작해야 참여 가능
   await page.getByRole("button", { name: "모집 시작" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "확인" }).click();
 
   // 참여
-  await page.getByRole("button", { name: "캠페인 참여하기" }).click();
-  await expect(page.getByText("참여 완료 · 모집 중인 캠페인입니다")).toBeVisible();
+  await page.getByRole("button", { name: "행사 참여하기" }).click();
+  await expect(page.getByText("참여 완료 · 모집 중인 행사입니다")).toBeVisible();
 
   // 취소
   await page.getByRole("button", { name: "참여 취소", exact: true }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "확인" }).click();
-  await expect(page.getByRole("button", { name: "캠페인 참여하기" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "행사 참여하기" })).toBeVisible();
 });

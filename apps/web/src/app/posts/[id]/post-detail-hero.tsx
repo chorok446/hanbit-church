@@ -225,11 +225,11 @@ export function PostDetailHero({
             >
               <FallbackImage
                 src={linkedCampaign.thumb}
-                alt={`${linkedCampaign.title} 캠페인 이미지`}
+                alt={`${linkedCampaign.title} 행사 이미지`}
                 className="w-10 h-10 rounded-lg object-cover"
               />
               <div className="flex-1 min-w-0">
-                <div className="text-[11px] opacity-70" style={{ color: "var(--foreground)" }}>연결된 캠페인</div>
+                <div className="text-[11px] opacity-70" style={{ color: "var(--foreground)" }}>연결된 행사</div>
                 <div className="text-[13px] truncate" style={{ color: "var(--foreground)" }}>{linkedCampaign.title}</div>
               </div>
             </button>

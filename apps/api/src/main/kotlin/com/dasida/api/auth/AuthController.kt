@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 
-/** HTTP adapter. 인증 사용자 추출 후 Service 위임과 status code 반환만 담당한다. */
+/** HTTP adapter. 후기 작성자 추출 후 Service 위임과 status code 반환만 담당한다. */
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "Auth", description = "인증 및 계정 API")

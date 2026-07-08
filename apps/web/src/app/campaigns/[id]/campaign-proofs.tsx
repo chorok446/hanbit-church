@@ -68,7 +68,7 @@ function ProofItem({
                 {proof.author.name}
               </span>
               <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/20 px-2 py-0.5 text-[10px] text-[var(--accent-strong)]">
-                <BadgeCheck size={11} aria-hidden /> 참여 인증
+                <BadgeCheck size={11} aria-hidden /> 참여 후기
               </span>
             </div>
             <time
@@ -83,7 +83,7 @@ function ProofItem({
         {proof.ownedByMe ? (
           <button
             type="button"
-            aria-label="내 참여 인증 삭제"
+            aria-label="내 참여 후기 삭제"
             onClick={() => onDelete(proof)}
             disabled={deleting}
             className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#ed5c48] disabled:cursor-not-allowed disabled:opacity-45"
@@ -107,7 +107,7 @@ function ProofItem({
             <div key={image} className="aspect-square overflow-hidden rounded-xl">
               <FallbackImage
                 src={image}
-                alt={`${proof.author.name}님의 참여 인증 사진`}
+                alt={`${proof.author.name}님의 참여 후기 사진`}
                 thumbnail
                 className="h-full w-full object-cover"
               />
@@ -194,12 +194,12 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
         clearSession();
         router.push("/login");
       } else if (error instanceof ApiError && error.status === 403) {
-        setMutationError("캠페인에 참여한 사람만 인증을 남길 수 있어요.");
+        setMutationError("행사에 참여한 사람만 후기를 남길 수 있어요.");
       } else if (error instanceof ApiError && error.status === 409) {
-        setMutationError("모집 시작 전이거나 이미 인증을 남긴 캠페인입니다.");
+        setMutationError("모집 시작 전이거나 이미 인증을 남긴 행사입니다.");
         reload();
       } else {
-        setMutationError("참여 인증 등록에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        setMutationError("참여 후기 등록에 실패했습니다. 잠시 후 다시 시도해주세요.");
       }
     } finally {
       setSubmitting(false);
@@ -208,7 +208,7 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
 
   const removeProof = async (proof: CampaignProof) => {
     if (deletingId) return;
-    if (!(await confirm({ message: "참여 인증을 삭제할까요?", destructive: true, confirmLabel: "삭제" }))) return;
+    if (!(await confirm({ message: "참여 후기을 삭제할까요?", destructive: true, confirmLabel: "삭제" }))) return;
     const requestToken = getSessionId();
     if (!requestToken) return;
     setDeletingId(proof.id);
@@ -223,7 +223,7 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
         clearSession();
         router.push("/login");
       } else {
-        setMutationError("참여 인증 삭제에 실패했습니다.");
+        setMutationError("참여 후기 삭제에 실패했습니다.");
       }
     } finally {
       setDeletingId(null);
@@ -233,13 +233,13 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
   const proofedByMe = response?.proofedByMe ?? false;
   const canCompose = !!token && campaign.joinedByMe && campaign.status !== "upcoming" && !proofedByMe;
   const composeHint = !token
-    ? "로그인 후 참여한 캠페인의 인증을 남길 수 있어요."
+    ? "로그인 후 참여한 행사의 후기를 남길 수 있어요."
     : campaign.status === "upcoming"
-      ? "모집이 시작되면 참여 인증을 남길 수 있어요."
+      ? "모집이 시작되면 참여 후기을 남길 수 있어요."
       : !campaign.joinedByMe
-        ? "캠페인에 참여한 사람만 인증을 남길 수 있어요."
+        ? "행사에 참여한 사람만 후기를 남길 수 있어요."
         : proofedByMe
-          ? "이미 참여 인증을 남겼어요. 삭제 후 다시 작성할 수 있어요."
+          ? "이미 참여 후기을 남겼어요. 삭제 후 다시 작성할 수 있어요."
           : null;
 
   return (
@@ -250,15 +250,15 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-[18px] font-semibold" style={{ color: "var(--foreground)" }}>
-            참여 인증 {status === "success" && response ? response.totalElements.toLocaleString() : ""}
+            참여 후기 {status === "success" && response ? response.totalElements.toLocaleString() : ""}
           </h2>
           <p className="mt-1 text-[12px] opacity-60" style={{ color: "var(--foreground)" }}>
-            참여 {campaign.joined.toLocaleString()}명 · 캠페인에서 실천한 순간을 사진과 함께 남겨보세요.
+            참여 {campaign.joined.toLocaleString()}명 · 행사에서 실천한 순간을 사진과 함께 남겨보세요.
           </p>
         </div>
         <button
           type="button"
-          aria-label="참여 인증 새로고침"
+          aria-label="참여 후기 새로고침"
           onClick={reload}
           disabled={status === "loading"}
           className="inline-flex h-10 w-10 items-center justify-center rounded-full disabled:opacity-45"
@@ -275,7 +275,7 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
           style={{ borderColor: "var(--border)" }}
         >
           <label htmlFor="campaign-proof" className="text-[12px] font-medium" style={{ color: "var(--foreground)" }}>
-            참여 인증 작성
+            참여 후기 작성
           </label>
           <div className="mt-2 flex gap-3">
             <CurrentUserAvatar size={36} />
@@ -285,7 +285,7 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
               onChange={(event) => setComposeText(event.target.value)}
               maxLength={MAX_PROOF_TEXT_LENGTH}
               rows={4}
-              placeholder="캠페인에서 어떤 실천을 했는지 들려주세요."
+              placeholder="행사에서 어떤 실천을 했는지 들려주세요."
               className="ui-control min-w-0 flex-1 resize-none bg-transparent px-3 py-3"
               style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
             />
@@ -295,10 +295,10 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
             <div className="mt-3 flex flex-wrap gap-2">
               {composeImages.map((image) => (
                 <div key={image} className="relative h-20 w-20 overflow-hidden rounded-xl">
-                  <FallbackImage src={image} alt="업로드한 인증 사진" className="h-full w-full object-cover" />
+                  <FallbackImage src={image} alt="업로드한 후기 사진" className="h-full w-full object-cover" />
                   <button
                     type="button"
-                    aria-label="인증 사진 제거"
+                    aria-label="후기 사진 제거"
                     onClick={() => setComposeImages((current) => current.filter((it) => it !== image))}
                     className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/55 text-white"
                   >
@@ -330,7 +330,7 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
               style={{ background: "var(--accent)", color: "var(--surface-dark)" }}
             >
               {submitting ? <Loader2 size={14} className="animate-spin" /> : null}
-              {submitting ? "등록 중…" : "인증 등록"}
+              {submitting ? "등록 중…" : "후기 등록"}
             </button>
           </div>
         </form>
@@ -345,13 +345,13 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
         {status === "loading" ? (
           <StatePanel compact>
             <Loader2 size={24} className="animate-spin text-[var(--accent)]" />
-            <p style={{ color: "var(--foreground-muted)" }}>참여 인증을 불러오는 중입니다.</p>
+            <p style={{ color: "var(--foreground-muted)" }}>참여 후기을 불러오는 중입니다.</p>
           </StatePanel>
         ) : null}
 
         {status === "error" ? (
           <StatePanel compact role="alert">
-            <p style={{ color: "var(--foreground-muted)" }}>참여 인증을 불러오지 못했습니다.</p>
+            <p style={{ color: "var(--foreground-muted)" }}>참여 후기을 불러오지 못했습니다.</p>
             <button type="button" onClick={reload} className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]">
               다시 시도
             </button>
@@ -362,7 +362,7 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
           <StatePanel compact>
             <BadgeCheck size={26} className="opacity-35" />
             <p style={{ color: "rgba(var(--ink-rgb), 0.6)" }}>
-              아직 참여 인증이 없습니다. 첫 인증을 남겨보세요.
+              아직 참여 후기이 없습니다. 첫 후기를 남겨보세요.
             </p>
           </StatePanel>
         ) : null}

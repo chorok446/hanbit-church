@@ -117,16 +117,16 @@ export function relativeTime(item: Pick<NotificationItem, "createdAt" | "time">)
 }
 
 export function notificationTypeLabel(type: string): string {
-  if (type === "CAMPAIGN_JOINED") return "캠페인 참여";
+  if (type === "CAMPAIGN_JOINED") return "행사 참여";
   if (type === "USER_FOLLOWED") return "새 팔로워";
   if (type === "MESSAGE_RECEIVED") return "새 메시지";
   if (type === "POST_COMMENT_CREATED") return "게시글 댓글";
   if (type === "COMMENT_REPLY_CREATED") return "댓글 답글";
   if (type === "COMMENT_MENTIONED") return "멘션";
-  if (type === "CAMPAIGN_COMMENT_CREATED") return "캠페인 댓글";
-  if (type === "CAMPAIGN_PROOF_CREATED") return "캠페인 참여 인증";
+  if (type === "CAMPAIGN_COMMENT_CREATED") return "행사 댓글";
+  if (type === "CAMPAIGN_PROOF_CREATED") return "행사 참여 후기";
   if (type === "POST_LIKED") return "게시글 좋아요";
-  if (type === "CAMPAIGN_STATUS_CHANGED") return "캠페인 상태";
+  if (type === "CAMPAIGN_STATUS_CHANGED") return "행사 상태";
   if (type === "REPORT_RESOLVED") return "신고 처리";
   if (type === "CONTENT_HIDDEN") return "콘텐츠 숨김";
   if (type === "CONTENT_RESTORED") return "숨김 해제";

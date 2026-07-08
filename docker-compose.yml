@@ -1,17 +1,18 @@
-# 로컬 개발용 MySQL. 백엔드가 영속성을 필요로 하면서 도입(인증).
+# 로컬 개발용 MySQL. 원본(dasida)과 동시에 띄울 수 있도록 컨테이너·포트·볼륨·DB명을 분리했다.
+# 백엔드 기본 DB_URL 이 3307/hanbit 를 가리킨다(application.properties).
 services:
   mysql:
     image: mysql:8.4
-    container_name: dasida-mysql
+    container_name: hanbit-mysql
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
-      MYSQL_DATABASE: dasida
-      MYSQL_USER: dasida
-      MYSQL_PASSWORD: dasida
+      MYSQL_DATABASE: hanbit
+      MYSQL_USER: hanbit
+      MYSQL_PASSWORD: hanbit
       MYSQL_ROOT_PASSWORD: root
     volumes:
-      - dasida-mysql:/var/lib/mysql
+      - hanbit-mysql:/var/lib/mysql
 
 volumes:
-  dasida-mysql:
+  hanbit-mysql:

@@ -36,7 +36,7 @@ function ImagePreview({ src }: { src: string }) {
   return (
     <img
       src={src}
-      alt="캠페인 썸네일 미리보기"
+      alt="행사 썸네일 미리보기"
       className="h-full w-full object-cover"
       onError={() => setFailed(true)}
     />

@@ -21,7 +21,7 @@ export function FeedSideHot({ campaigns }: { campaigns: Campaign[] }) {
       <div className="flex items-center gap-2 mb-4">
         <TrendingUp size={14} style={{ color: "var(--accent)" }} />
         <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--foreground)" }}>
-          진행 중인 캠페인
+          진행 중인 행사
         </h3>
       </div>
       <div className="space-y-3">
@@ -31,7 +31,7 @@ export function FeedSideHot({ campaigns }: { campaigns: Campaign[] }) {
             <div key={c.id} className="flex gap-3 items-center">
               <FallbackImage
                 src={c.thumb}
-                alt={`${c.title} 캠페인 이미지`}
+                alt={`${c.title} 행사 이미지`}
                 thumbnail
                 className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
               />

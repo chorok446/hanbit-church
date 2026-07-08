@@ -92,7 +92,7 @@ export function CampaignListCard({ campaign, onOpen }: { campaign: Campaign; onO
           <div className="relative aspect-[4/3] overflow-hidden">
             <FallbackImage
               src={campaign.thumb}
-              alt={`${campaign.title} 캠페인 이미지`}
+              alt={`${campaign.title} 행사 이미지`}
               thumbnail
               className="h-full w-full object-cover"
             />

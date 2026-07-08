@@ -19,19 +19,19 @@ test("시드 게시글 상세를 열 수 있다", async ({ page }) => {
   await expect(page.getByText("낡은 청바지 두 벌로 토트백 한 개").first()).toBeVisible();
 });
 
-test("시드 캠페인 상세를 열 수 있다", async ({ page }) => {
+test("시드 행사 상세를 열 수 있다", async ({ page }) => {
   await page.goto("/campaigns/c1");
 
   await expect(page.getByRole("heading", { name: "여름 청년 수련회" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "캠페인 목록" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "행사 목록" })).toBeVisible();
 });
 
-test("캠페인 목록 URL이 canonical 형태로 정규화된다", async ({ page }) => {
+test("행사 목록 URL이 canonical 형태로 정규화된다", async ({ page }) => {
   await page.goto("/campaigns?page=-1&sort=popular");
   await page.waitForURL(/\/campaigns\?sort=popular&page=0$/);
 });
 
-test("캠페인 목록 정렬이 URL에 반영된다", async ({ page }) => {
+test("행사 목록 정렬이 URL에 반영된다", async ({ page }) => {
   await page.goto("/campaigns");
 
   await page.locator("select").filter({ has: page.locator('option[value="popular"]') }).selectOption("popular");

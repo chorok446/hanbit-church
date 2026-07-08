@@ -208,7 +208,7 @@ export default function SearchClient() {
             {title}
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-[13px] leading-6 opacity-60" style={{ color: "var(--foreground)" }}>
-            캠페인, 게시글, 사용자를 한 번에 찾고, 원하는 결과만 골라볼 수 있습니다.
+            행사, 게시글, 사용자를 한 번에 찾고, 원하는 결과만 골라볼 수 있습니다.
           </p>
         </div>
 

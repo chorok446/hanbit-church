@@ -144,7 +144,7 @@ export function UserProfileClient({ user: initialUser }: { user: PublicUser }) {
                   {user.verified ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/15 px-2.5 py-1 text-[11px] text-[var(--accent)]">
                       <CheckCircle2 size={12} aria-hidden />
-                      인증 사용자
+                      후기 작성자
                     </span>
                   ) : null}
                 </div>

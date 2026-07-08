@@ -14,7 +14,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 /**
- * 관리자 통계. 가입·게시글·캠페인·신고의 일별 생성 건수를 집계한다.
+ * 관리자 통계. 가입·게시글·행사·신고의 일별 생성 건수를 집계한다.
  * 콘텐츠의 seq(epoch millis)와 사용자 createdAt 을 기간 필터로만 조회하고
  * 일 단위 버킷팅은 서버에서 처리해 H2/MySQL 간 date 함수 차이를 피한다.
  */

@@ -14,7 +14,7 @@ test("로그인 후 알림 페이지가 빈 상태로 표시된다", async ({ pa
   await expect(page.getByText("알림이 없습니다.")).toBeVisible();
 });
 
-test("캠페인 참여 시 개설자에게 알림이 생성되고 읽음·삭제할 수 있다", async ({ browser }) => {
+test("행사 참여 시 개설자에게 알림이 생성되고 읽음·삭제할 수 있다", async ({ browser }) => {
   const ownerContext = await browser.newContext();
   const joinerContext = await browser.newContext();
   const ownerPage = await ownerContext.newPage();
@@ -36,7 +36,7 @@ test("캠페인 참여 시 개설자에게 알림이 생성되고 읽음·삭제
   await ownerPage.getByLabel("모집 종료일").fill(addDays(7));
   await ownerPage.getByLabel("진행 시작일").fill(addDays(8));
   await ownerPage.getByLabel("진행 종료일").fill(addDays(14));
-  await ownerPage.getByRole("button", { name: "캠페인 등록" }).click();
+  await ownerPage.getByRole("button", { name: "행사 등록" }).click();
   await ownerPage.waitForURL("**/campaigns/c-*");
   const campaignUrl = ownerPage.url();
 
@@ -45,18 +45,18 @@ test("캠페인 참여 시 개설자에게 알림이 생성되고 읽음·삭제
 
   await signup(joinerPage, "e2e-notif-joiner");
   await joinerPage.goto(campaignUrl);
-  await joinerPage.getByRole("button", { name: "캠페인 참여하기" }).click();
-  await expect(joinerPage.getByText("참여 완료 · 모집 중인 캠페인입니다")).toBeVisible();
+  await joinerPage.getByRole("button", { name: "행사 참여하기" }).click();
+  await expect(joinerPage.getByText("참여 완료 · 모집 중인 행사입니다")).toBeVisible();
 
   await ownerPage.goto("/notifications");
   await expect(ownerPage.getByRole("heading", { name: /알림 \(1\)/ })).toBeVisible();
-  await expect(ownerPage.getByRole("link", { name: /캠페인에 참여했습니다/ })).toBeVisible();
+  await expect(ownerPage.getByRole("link", { name: /행사에 참여했습니다/ })).toBeVisible();
 
-  // 타입별 필터 탭: 관련 없는 그룹에서는 안 보이고, 캠페인 그룹에서는 보인다.
+  // 타입별 필터 탭: 관련 없는 그룹에서는 안 보이고, 행사 그룹에서는 보인다.
   await ownerPage.getByRole("button", { name: "팔로우", exact: true }).click();
   await expect(ownerPage.getByText("알림이 없습니다.")).toBeVisible();
-  await ownerPage.getByRole("button", { name: "캠페인", exact: true }).click();
-  await expect(ownerPage.getByRole("link", { name: /캠페인에 참여했습니다/ })).toBeVisible();
+  await ownerPage.getByRole("button", { name: "행사", exact: true }).click();
+  await expect(ownerPage.getByRole("link", { name: /행사에 참여했습니다/ })).toBeVisible();
   await ownerPage.getByRole("button", { name: "전체", exact: true }).click();
 
   await ownerPage.getByRole("button", { name: "읽음으로 표시" }).click();
@@ -64,11 +64,11 @@ test("캠페인 참여 시 개설자에게 알림이 생성되고 읽음·삭제
   await expect(ownerPage.getByRole("heading", { name: /알림 \(1\)/ })).not.toBeVisible();
 
   // types + 안읽음만 조합(AND): 읽음 처리된 알림은 타입이 맞아도 안읽음만 볼 때는 안 보인다.
-  await ownerPage.getByRole("button", { name: "캠페인", exact: true }).click();
+  await ownerPage.getByRole("button", { name: "행사", exact: true }).click();
   await ownerPage.getByRole("button", { name: "안읽음만", exact: true }).click();
   await expect(ownerPage.getByText("알림이 없습니다.")).toBeVisible();
   await ownerPage.getByRole("button", { name: "안읽음만", exact: true }).click();
-  await expect(ownerPage.getByRole("link", { name: /캠페인에 참여했습니다/ })).toBeVisible();
+  await expect(ownerPage.getByRole("link", { name: /행사에 참여했습니다/ })).toBeVisible();
   await ownerPage.getByRole("button", { name: "전체", exact: true }).click();
 
   await ownerPage.getByRole("button", { name: "알림 삭제" }).click();

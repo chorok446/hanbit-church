@@ -52,9 +52,9 @@ export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
 export const REPORT_TARGET_LABELS: Record<ReportTargetType, string> = {
   POST: "게시글",
   POST_COMMENT: "게시글 댓글",
-  CAMPAIGN: "캠페인",
-  CAMPAIGN_COMMENT: "캠페인 댓글",
-  CAMPAIGN_PROOF: "캠페인 참여 인증",
+  CAMPAIGN: "행사",
+  CAMPAIGN_COMMENT: "행사 댓글",
+  CAMPAIGN_PROOF: "행사 참여 후기",
 };
 
 export const REPORT_STATUS_LABELS: Record<ReportStatus, string> = {

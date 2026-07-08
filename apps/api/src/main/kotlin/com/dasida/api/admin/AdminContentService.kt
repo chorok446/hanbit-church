@@ -87,8 +87,8 @@ class AdminContentService(
                 if (campaign.hiddenAt != null) return false
                 campaign.hiddenAt = now
                 campaign.hiddenReason = reason
-                // 숨겨진 캠페인 상세는 웹에서 열리지 않으므로 알림은 마이페이지로 보낸다.
-                notifyAuthor(campaign.authorUserId, hidden = true, label = "캠페인", href = "/mypage", reason = reason)
+                // 숨겨진 행사 상세는 웹에서 열리지 않으므로 알림은 마이페이지로 보낸다.
+                notifyAuthor(campaign.authorUserId, hidden = true, label = "행사", href = "/mypage", reason = reason)
             }
 
             ReportTargetType.CAMPAIGN_COMMENT -> {
@@ -104,7 +104,7 @@ class AdminContentService(
                 if (proof.hiddenAt != null) return false
                 proof.hiddenAt = now
                 proof.hiddenReason = reason
-                notifyAuthor(proof.authorUserId, hidden = true, label = "참여 인증", href = "/campaigns/${proof.campaignId}?tab=proofs", reason = reason)
+                notifyAuthor(proof.authorUserId, hidden = true, label = "참여 후기", href = "/campaigns/${proof.campaignId}?tab=proofs", reason = reason)
             }
         }
         return true
@@ -143,7 +143,7 @@ class AdminContentService(
                 if (campaign.hiddenAt == null) return false
                 campaign.hiddenAt = null
                 campaign.hiddenReason = null
-                notifyAuthor(campaign.authorUserId, hidden = false, label = "캠페인", href = "/campaigns/${campaign.id}", reason = null)
+                notifyAuthor(campaign.authorUserId, hidden = false, label = "행사", href = "/campaigns/${campaign.id}", reason = null)
             }
 
             ReportTargetType.CAMPAIGN_COMMENT -> {
@@ -160,7 +160,7 @@ class AdminContentService(
                 if (proof.hiddenAt == null) return false
                 proof.hiddenAt = null
                 proof.hiddenReason = null
-                notifyAuthor(proof.authorUserId, hidden = false, label = "참여 인증", href = "/campaigns/${proof.campaignId}?tab=proofs", reason = null)
+                notifyAuthor(proof.authorUserId, hidden = false, label = "참여 후기", href = "/campaigns/${proof.campaignId}?tab=proofs", reason = null)
             }
         }
         return true

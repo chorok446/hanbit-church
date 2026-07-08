@@ -163,7 +163,7 @@ export default function CampaignEditClient({ id }: { id: string }) {
     try {
       const updated = await apiPut<Campaign>(`/api/campaigns/${id}`, validation.payload);
       if (getSessionId() !== requestToken) return;
-      toast.success("캠페인이 수정되었습니다.");
+      toast.success("행사가 수정되었습니다.");
       router.replace(`/campaigns/${updated.id}`);
     } catch (error) {
       if (getSessionId() !== requestToken) return;
@@ -172,13 +172,13 @@ export default function CampaignEditClient({ id }: { id: string }) {
         toast.error("로그인이 필요합니다.");
         router.push("/login");
       } else if (error instanceof ApiError && error.status === 403) {
-        toast.error("캠페인 수정 권한이 없습니다.");
+        toast.error("행사 수정 권한이 없습니다.");
       } else if (error instanceof ApiError && error.status === 409) {
-        toast.error("모집을 시작한 캠페인은 수정할 수 없습니다.");
+        toast.error("모집을 시작한 행사는 수정할 수 없습니다.");
       } else if (error instanceof ApiError && error.status === 400) {
         toast.error("입력값을 확인해주세요.");
       } else {
-        toast.error("캠페인 수정에 실패했습니다.");
+        toast.error("행사 수정에 실패했습니다.");
       }
       savingRef.current = false;
       setSaving(false);
@@ -186,14 +186,14 @@ export default function CampaignEditClient({ id }: { id: string }) {
   };
 
   if (currentLoad.kind === "loading") {
-    return <PageState><p>캠페인을 불러오는 중입니다.</p></PageState>;
+    return <PageState><p>행사를 불러오는 중입니다.</p></PageState>;
   }
   if (currentLoad.kind === "notfound") {
     return (
       <PageState>
-        <p>캠페인을 찾을 수 없습니다.</p>
+        <p>행사를 찾을 수 없습니다.</p>
         <button type="button" onClick={() => router.push("/campaigns")} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
-          캠페인 목록
+          행사 목록
         </button>
       </PageState>
     );
@@ -201,9 +201,9 @@ export default function CampaignEditClient({ id }: { id: string }) {
   if (currentLoad.kind === "forbidden") {
     return (
       <PageState>
-        <p>캠페인 수정 권한이 없습니다.</p>
+        <p>행사 수정 권한이 없습니다.</p>
         <button type="button" onClick={() => router.push(`/campaigns/${id}`)} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
-          캠페인으로 돌아가기
+          행사로 돌아가기
         </button>
       </PageState>
     );
@@ -211,9 +211,9 @@ export default function CampaignEditClient({ id }: { id: string }) {
   if (currentLoad.kind === "started") {
     return (
       <PageState>
-        <p>모집 시작 전 캠페인만 수정할 수 있습니다.</p>
+        <p>모집 시작 전 행사만 수정할 수 있습니다.</p>
         <button type="button" onClick={() => router.push(`/campaigns/${id}`)} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
-          캠페인으로 돌아가기
+          행사로 돌아가기
         </button>
       </PageState>
     );
@@ -221,7 +221,7 @@ export default function CampaignEditClient({ id }: { id: string }) {
   if (currentLoad.kind === "error") {
     return (
       <PageState>
-        <p>캠페인을 불러오지 못했습니다.</p>
+        <p>행사를 불러오지 못했습니다.</p>
         <button type="button" onClick={() => setRetry((current) => current + 1)} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
           다시 시도
         </button>
@@ -242,7 +242,7 @@ export default function CampaignEditClient({ id }: { id: string }) {
           style={{ color: "var(--foreground)" }}
         >
           <ArrowLeft size={14} aria-hidden />
-          캠페인으로 돌아가기
+          행사로 돌아가기
         </button>
 
         <div className="mb-10 text-center">
@@ -250,7 +250,7 @@ export default function CampaignEditClient({ id }: { id: string }) {
             Edit Campaign
           </p>
           <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(36px, 4.5vw, 60px)", color: "var(--foreground)" }}>
-            캠페인 수정
+            행사 수정
           </h1>
         </div>
 
@@ -306,7 +306,7 @@ export default function CampaignEditClient({ id }: { id: string }) {
                 {values.thumb ? (
                   <FallbackImage
                     src={values.thumb}
-                    alt="캠페인 썸네일 미리보기"
+                    alt="행사 썸네일 미리보기"
                     dark={dark}
                     errorText="이미지를 불러올 수 없어요"
                     className="h-full w-full object-cover"
@@ -324,10 +324,10 @@ export default function CampaignEditClient({ id }: { id: string }) {
               </div>
               <div className="space-y-3 p-5">
                 <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, color: "var(--foreground)", lineHeight: 1.25 }}>
-                  {values.title || "캠페인 제목"}
+                  {values.title || "행사 제목"}
                 </h3>
                 <p className="text-[13px]" style={{ color: "var(--foreground-muted)" }}>
-                  {values.summary || "캠페인 한 줄 소개가 여기에 표시됩니다."}
+                  {values.summary || "행사 한 줄 소개가 여기에 표시됩니다."}
                 </p>
                 <div className="space-y-1 border-t pt-2 text-[12px]" style={{ color: "rgba(var(--ink-rgb), 0.7)", borderColor: "var(--border)" }}>
                   <div>모집 {values.recruitStart} ~ {values.recruitEnd}</div>

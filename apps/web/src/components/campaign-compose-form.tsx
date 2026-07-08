@@ -96,7 +96,7 @@ export function CampaignComposeForm({
             patch({ summary: e.target.value });
             onFieldErrorClear?.("summary");
           }}
-          placeholder="짧게 캠페인을 소개해 주세요"
+          placeholder="짧게 행사를 소개해 주세요"
           disabled={disabled}
           aria-invalid={Boolean(fieldErrors.summary)}
           aria-describedby={fieldErrors.summary ? summaryErrorId : undefined}

@@ -1,4 +1,4 @@
-// 캠페인 데이터는 백엔드 API가 source of truth. 타입 + 프레젠테이션 메타만 유지.
+// 행사 데이터는 백엔드 API가 source of truth. 타입 + 프레젠테이션 메타만 유지.
 import { apiDelete, apiDeleteVoid, apiGet, apiPost, apiPut } from "@/lib/api";
 import { mergeCampaignBodyForEditor } from "@/lib/rich-body-html";
 import { richTextPlainLength } from "@/lib/rich-text-length";
@@ -140,7 +140,7 @@ export type CampaignSearchResponse = {
   totalPages: number;
 };
 
-// 마이페이지 캠페인 pagination 응답(참여/개설). 백엔드 CampaignPageResponse 와 1:1.
+// 마이페이지 행사 pagination 응답(참여/개설). 백엔드 CampaignPageResponse 와 1:1.
 export type CampaignPageResponse = {
   content: Campaign[];
   page: number;
@@ -367,7 +367,7 @@ export function campaignToComposeValues(campaign: Campaign): CampaignComposeValu
 export function validateCampaignCompose(values: CampaignComposeValues): CampaignComposeValidationResult {
   const title = values.title.trim();
   if (!title) {
-    return { ok: false, message: "캠페인 제목을 입력해주세요.", field: "title" };
+    return { ok: false, message: "행사 제목을 입력해주세요.", field: "title" };
   }
 
   const thumb = values.thumb.trim();

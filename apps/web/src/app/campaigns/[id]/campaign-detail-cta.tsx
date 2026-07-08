@@ -38,7 +38,7 @@ export function CampaignCTABar({
             style={joinedStyle}
           >
             <CheckCircle2 size={20} aria-hidden />
-            <span>참여 완료 · 모집 중인 캠페인입니다</span>
+            <span>참여 완료 · 모집 중인 행사입니다</span>
           </div>
           <button
             type="button"
@@ -57,8 +57,8 @@ export function CampaignCTABar({
     }
     const joinedMessage =
       c.status === "closed"
-        ? "참여 완료 · 모집이 마감된 캠페인입니다"
-        : "참여 완료 · 종료된 캠페인입니다";
+        ? "참여 완료 · 모집이 마감된 행사입니다"
+        : "참여 완료 · 종료된 행사입니다";
     return (
       <div
         role="status"
@@ -79,7 +79,7 @@ export function CampaignCTABar({
           style={panelStyle}
         >
           <p className="text-[14px]" style={{ color: "var(--foreground-muted)" }}>
-            로그인 후 캠페인에 참여할 수 있어요.
+            로그인 후 행사에 참여할 수 있어요.
           </p>
           <button
             type="button"
@@ -98,12 +98,12 @@ export function CampaignCTABar({
         onClick={onJoin}
         disabled={disabled || pending}
         aria-busy={action === "join"}
-        aria-label={action === "join" ? "캠페인 참여 처리 중" : "캠페인 참여하기"}
+        aria-label={action === "join" ? "행사 참여 처리 중" : "행사 참여하기"}
         className="inline-flex w-full items-center justify-center gap-2 py-5 rounded-2xl font-medium hover:-translate-y-0.5 transition-transform shadow-[0_30px_60px_-20px_var(--accent-soft)] disabled:opacity-50 disabled:cursor-not-allowed"
         style={{ background: "var(--cta-bg)", color: "var(--cta-fg)", fontSize: 17 }}
       >
         {action === "join" ? <Loader2 size={18} className="animate-spin" aria-hidden /> : null}
-        {action === "join" ? "참여 처리 중…" : "캠페인 참여하기"}
+        {action === "join" ? "참여 처리 중…" : "행사 참여하기"}
       </button>
     );
   }
@@ -112,7 +112,7 @@ export function CampaignCTABar({
     c.recruitState === "before_recruit"
       ? "모집 시작 전이라 참여할 수 없습니다"
       : c.recruitState === "ended"
-        ? "종료된 캠페인이라 참여할 수 없습니다"
+        ? "종료된 행사라 참여할 수 없습니다"
         : c.recruitState === "closed"
           ? "모집이 마감되어 참여할 수 없습니다"
           : "정원이 마감되어 참여할 수 없습니다";
@@ -127,7 +127,7 @@ export function CampaignCTABar({
       }}
     >
       <p className="text-[15px] font-medium">{unavailableMessage}</p>
-      <p className="mt-1 text-[12px] opacity-70">현재 이 캠페인은 새 참여를 받지 않습니다.</p>
+      <p className="mt-1 text-[12px] opacity-70">현재 이 행사는 새 참여를 받지 않습니다.</p>
     </div>
   );
 }

@@ -20,7 +20,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * 캠페인 도메인 서비스. 목록/검색/상세, 작성/수정/삭제, 모집 상태 변경, 내 캠페인/참여 캠페인 정책을 담당한다.
+ * 행사 도메인 서비스. 목록/검색/상세, 작성/수정/삭제, 모집 상태 변경, 내 행사/참여 행사 정책을 담당한다.
  * Controller 에서 옮겨온 validation, 날짜 정규화, 소유권 판정, 모집 상태 전이, N+1 회피 bulk 조회, row lock, 트랜잭션을 이 계층에 둔다.
  */
 @Service
@@ -169,10 +169,10 @@ class CampaignService(
     }
 
     /**
-     * 현재 사용자가 참여한 캠페인 목록. 인증 필수.
+     * 현재 사용자가 참여한 행사 목록. 인증 필수.
      * 1) participant 조회(user_id 인덱스) → campaignId 목록 추출
      * 2) campaign IN 조회(seq DESC) → N+1 없이 2쿼리 완료
-     * 삭제된 캠페인의 orphan participant 는 자동으로 결과에서 제외.
+     * 삭제된 행사의 orphan participant 는 자동으로 결과에서 제외.
      */
     @Transactional(readOnly = true)
     fun getJoinedCampaigns(userId: Long): List<CampaignResponse> {
@@ -184,7 +184,7 @@ class CampaignService(
             .map { it.toResponse(viewerId = userId, joinedByMe = true, bookmarkedByMe = it.id in bookmarkedIds, today = today) }
     }
 
-    /** 현재 사용자가 개설한 캠페인. 캠페인과 참여 상태를 각각 bulk 조회해 N+1을 피한다. */
+    /** 현재 사용자가 개설한 행사. 행사와 참여 상태를 각각 bulk 조회해 N+1을 피한다. */
     @Transactional(readOnly = true)
     fun getMyCampaigns(userId: Long): List<CampaignResponse> {
         val today = LocalDate.now(clock)
@@ -208,8 +208,8 @@ class CampaignService(
     }
 
     /**
-     * 참여 캠페인 pagination. participant row 를 id ASC(deterministic, 참여 일시 없음)로 page 한 뒤
-     * 해당 page 의 campaignId 만 bulk 조회하고 participant page 순서를 보존한다. 삭제된 캠페인의 orphan 은 제외.
+     * 참여 행사 pagination. participant row 를 id ASC(deterministic, 참여 일시 없음)로 page 한 뒤
+     * 해당 page 의 campaignId 만 bulk 조회하고 participant page 순서를 보존한다. 삭제된 행사의 orphan 은 제외.
      */
     @Transactional(readOnly = true)
     fun getJoinedCampaignsPage(userId: Long, page: Int, size: Int): CampaignPageResponse {
@@ -218,7 +218,7 @@ class CampaignService(
         val participantPage = participants.findByUserId(userId, PageRequest.of(page, size, Sort.by("id").ascending()))
         val campaignIds = participantPage.content.map { it.campaignId }
         val byId = if (campaignIds.isEmpty()) emptyMap() else repo.findAllById(campaignIds).associateBy { it.id }
-        // participant page 순서 보존, orphan·숨김 캠페인 제외
+        // participant page 순서 보존, orphan·숨김 행사 제외
         val ordered = campaignIds.mapNotNull { byId[it] }.filter { it.hiddenAt == null }
         val bookmarkedIds = bookmarkedByPage(userId, ordered.map { it.id })
         return CampaignPageResponse(
@@ -232,7 +232,7 @@ class CampaignService(
         )
     }
 
-    /** 개설 캠페인 pagination. 최신순(seq DESC, id). 현재 page 의 id 만 대상으로 참여 상태 bulk 조회. */
+    /** 개설 행사 pagination. 최신순(seq DESC, id). 현재 page 의 id 만 대상으로 참여 상태 bulk 조회. */
     @Transactional(readOnly = true)
     fun getMyCampaignsPage(userId: Long, page: Int, size: Int): CampaignPageResponse {
         validatePageParams(page, size)
@@ -264,11 +264,11 @@ class CampaignService(
         val campaign = repo.findById(id).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $id not found")
         }
-        // 삭제(soft delete)된 캠페인은 개설자에게도 존재하지 않는 것으로 취급한다.
+        // 삭제(soft delete)된 행사는 개설자에게도 존재하지 않는 것으로 취급한다.
         if (campaign.deletedAt != null) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $id not found")
         }
-        // 숨김 캠페인은 개설자에게만 보인다(hidden 플래그 포함). 그 외에는 존재를 드러내지 않는 404.
+        // 숨김 행사는 개설자에게만 보인다(hidden 플래그 포함). 그 외에는 존재를 드러내지 않는 404.
         if (campaign.hiddenAt != null && (campaign.authorUserId == null || campaign.authorUserId != currentUserId)) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $id not found")
         }
@@ -281,7 +281,7 @@ class CampaignService(
     }
 
     /**
-     * 캠페인 모집 상태 변경. join 과 같은 row lock 을 가장 먼저 잡아 참여·마감 요청을 직렬화한다.
+     * 행사 모집 상태 변경. join 과 같은 row lock 을 가장 먼저 잡아 참여·마감 요청을 직렬화한다.
      * upcoming → open → closed 단방향 전환만 허용하며 같은 상태 요청은 멱등 처리한다.
      */
     @Transactional
@@ -338,7 +338,7 @@ class CampaignService(
         )
     }
 
-    /** 현재 사용자가 저장한 캠페인. 북마크/캠페인/참여를 각각 bulk 조회해 N+1을 피한다. */
+    /** 현재 사용자가 저장한 행사. 북마크/행사/참여를 각각 bulk 조회해 N+1을 피한다. */
     @Transactional(readOnly = true)
     fun getMyBookmarks(userId: Long): List<CampaignResponse> {
         val today = LocalDate.now(clock)
@@ -355,8 +355,8 @@ class CampaignService(
     }
 
     /**
-     * 저장한 캠페인 pagination. bookmark row 를 id ASC(deterministic, createdAt 없음)로 page 한 뒤
-     * 해당 page 의 campaignId 만 bulk 조회하고 bookmark page 순서를 보존한다. 삭제된 캠페인의 orphan bookmark 는 제외.
+     * 저장한 행사 pagination. bookmark row 를 id ASC(deterministic, createdAt 없음)로 page 한 뒤
+     * 해당 page 의 campaignId 만 bulk 조회하고 bookmark page 순서를 보존한다. 삭제된 행사의 orphan bookmark 는 제외.
      */
     @Transactional(readOnly = true)
     fun getMyBookmarksPage(userId: Long, page: Int, size: Int): CampaignPageResponse {
@@ -365,7 +365,7 @@ class CampaignService(
         val bookmarkPage = bookmarkRepo.findByUserId(userId, PageRequest.of(page, size, Sort.by("id").ascending()))
         val campaignIds = bookmarkPage.content.map { it.campaignId }
         val campaignsById = if (campaignIds.isEmpty()) emptyMap() else repo.findAllById(campaignIds).associateBy { it.id }
-        // bookmark page 순서 보존, orphan·숨김 캠페인 제외
+        // bookmark page 순서 보존, orphan·숨김 행사 제외
         val ordered = campaignIds.mapNotNull { campaignsById[it] }.filter { it.hiddenAt == null }
         val joinedIds = joinedByPage(userId, ordered.map { it.id })
         return CampaignPageResponse(
@@ -407,7 +407,7 @@ class CampaignService(
         )
     }
 
-    /** 모집 시작 전 캠페인 수정. 상태 변경과 같은 row lock 을 가장 먼저 잡아 요청을 직렬화한다. */
+    /** 모집 시작 전 행사 수정. 상태 변경과 같은 row lock 을 가장 먼저 잡아 요청을 직렬화한다. */
     @Transactional
     fun updateCampaign(userId: Long, campaignId: String, req: UpdateCampaignRequest): CampaignResponse {
         val campaign = repo.findByIdForUpdate(campaignId)
@@ -478,12 +478,12 @@ class CampaignService(
     }
 
     /**
-     * 모집 예정 캠페인 삭제. 개설자만, status=upcoming 이고 참여자·연결 게시글이 없을 때만 허용한다.
+     * 모집 예정 행사 삭제. 개설자만, status=upcoming 이고 참여자·연결 게시글이 없을 때만 허용한다.
      *
-     * 잠금 순서는 다른 캠페인 변경 API(join/status/update)와 같이 campaign row lock 을 가장 먼저 잡아
-     * 같은 캠페인의 삭제·참여·수정·모집시작을 직렬화한다. 연결 게시글 존재 확인도 이 lock 안에서 하므로,
+     * 잠금 순서는 다른 행사 변경 API(join/status/update)와 같이 campaign row lock 을 가장 먼저 잡아
+     * 같은 행사의 삭제·참여·수정·모집시작을 직렬화한다. 연결 게시글 존재 확인도 이 lock 안에서 하므로,
      * 게시글 생성(campaign write lock 보유)과 동시에 실행돼도 둘 중 하나만 통과해 orphan campaignId 가 남지 않는다.
-     * soft delete 미도입 → 이미 지워진 캠페인을 다시 삭제하면 404.
+     * soft delete 미도입 → 이미 지워진 행사를 다시 삭제하면 404.
      */
     @Transactional
     fun deleteCampaign(userId: Long, campaignId: String) {
@@ -513,7 +513,7 @@ class CampaignService(
     }
 
     /**
-     * 상호작용(북마크)용 write lock 조회. 숨김 캠페인은 존재를 드러내지 않는 404 로 차단한다
+     * 상호작용(북마크)용 write lock 조회. 숨김 행사는 존재를 드러내지 않는 404 로 차단한다
      * (개설자 권한 경로인 상태 변경/수정/삭제는 별도 — 숨김 상태에서도 허용).
      */
     private fun visibleForUpdateOrNotFound(campaignId: String): Campaign {

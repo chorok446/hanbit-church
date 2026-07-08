@@ -29,7 +29,7 @@ export function mergeRichBodyForEditor(text: string, images: string[]): string {
   return trimmed ? `${trimmed}\n${blocks}` : blocks;
 }
 
-// ponytail: 캠페인 compose 호환 alias
+// ponytail: 행사 compose 호환 alias
 export function mergeCampaignBodyForEditor(paragraphs: string[], images: string[]): string {
   return mergeRichBodyForEditor(paragraphs.join("\n\n"), images);
 }

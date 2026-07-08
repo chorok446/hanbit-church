@@ -25,7 +25,7 @@ export function PostPreview({
   );
 }
 
-/** 게시글·캠페인 본문 — HTML(리치) 또는 레거시 plain/markdown. */
+/** 게시글·행사 본문 — HTML(리치) 또는 레거시 plain/markdown. */
 export function PostText({
   text,
   className = "",
