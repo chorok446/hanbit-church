@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!user) return {};
   return {
     title: `${user.name}님의 프로필`,
-    description: `${user.name}님이 작성한 업사이클 게시글 ${user.postCount}개`,
+    description: `${user.name}님이 작성한 게시글 ${user.postCount}개`,
   };
 }
 

@@ -72,11 +72,11 @@ export function CampaignHeaderCard({
         <div className="grid grid-cols-1 md:grid-cols-[400px_1fr]">
           <div className="relative aspect-square md:aspect-auto overflow-hidden">
             <FallbackImage src={c.thumb} alt={`${c.title} 캠페인 이미지`} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-tr from-[#0f1f22]/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-[var(--surface-dark)]/40 to-transparent" />
             <div className="absolute top-4 left-4 flex items-center gap-2" style={{ transform: "translateZ(50px)" }}>
               <StatusBadge c={c} />
               {c.ownedByMe ? (
-                <span className="rounded-full bg-[#0f1f22]/80 px-3 py-1.5 text-[11px] text-[#7dd3a3]">
+                <span className="rounded-full bg-[var(--surface-dark)]/80 px-3 py-1.5 text-[11px] text-[var(--accent)]">
                   내가 개설
                 </span>
               ) : null}
@@ -86,7 +86,7 @@ export function CampaignHeaderCard({
             <div className="flex items-start justify-between gap-4">
               <h1
                 style={{
-                  fontFamily: "'Black Han Sans', sans-serif",
+                  fontFamily: "var(--font-display)", fontWeight: 600,
                   fontSize: "clamp(28px, 3vw, 40px)",
                   color: "var(--foreground)",
                   lineHeight: 1.2,
@@ -103,11 +103,11 @@ export function CampaignHeaderCard({
                     aria-label={bookmarked ? "북마크 해제" : "북마크 추가"}
                     className="flex h-9 w-9 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-45"
                     style={{
-                      background: bookmarked ? "#7dd3a3" : "var(--border)",
-                      color: bookmarked ? "#0f1f22" : "var(--foreground)",
+                      background: bookmarked ? "var(--accent)" : "var(--border)",
+                      color: bookmarked ? "var(--surface-dark)" : "var(--foreground)",
                     }}
                   >
-                    <Bookmark size={14} fill={bookmarked ? "#0f1f22" : "transparent"} />
+                    <Bookmark size={14} fill={bookmarked ? "var(--surface-dark)" : "transparent"} />
                   </button>
                 ) : null}
                 <AdminModerationButton targetType="CAMPAIGN" targetId={c.id} />
@@ -250,8 +250,8 @@ export function CampaignStatusManagement({
           aria-label={label}
           className="rounded-full px-5 py-2 text-[13px] font-medium disabled:cursor-not-allowed disabled:opacity-45"
           style={{
-            background: target === "closed" ? "rgba(237,92,72,0.16)" : "#7dd3a3",
-            color: target === "closed" ? "#ed5c48" : "#0f1f22",
+            background: target === "closed" ? "rgba(237,92,72,0.16)" : "var(--accent)",
+            color: target === "closed" ? "#ed5c48" : "var(--surface-dark)",
           }}
         >
           {updating ? "처리 중…" : label}

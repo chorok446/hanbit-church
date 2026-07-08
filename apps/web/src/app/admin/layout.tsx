@@ -5,7 +5,7 @@ import { AdminNav } from "./admin-nav";
 
 // 관리자 화면은 검색엔진에 노출하지 않는다.
 export const metadata: Metadata = {
-  title: "관리자 | 다시, 다",
+  title: "관리자 | 철마제일교회",
   robots: { index: false, follow: false },
 };
 

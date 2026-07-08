@@ -89,7 +89,7 @@ export function FeedControls({
             type="checkbox"
             checked={state.campaignOnly}
             onChange={(event) => onCampaignOnly(event.target.checked)}
-            className="accent-[#148a90]"
+            className="accent-[var(--accent-strong)]"
           />
           캠페인 게시글만
         </label>
@@ -102,7 +102,7 @@ export function FeedControls({
               type="checkbox"
               checked={state.followingOnly}
               onChange={(event) => onFollowingOnly(event.target.checked)}
-              className="accent-[#148a90]"
+              className="accent-[var(--accent-strong)]"
             />
             팔로잉만
           </label>
@@ -112,7 +112,7 @@ export function FeedControls({
           <select
             value={state.sort}
             onChange={(event) => onSort(event.target.value as PostSearchSort)}
-            className="rounded-full border px-4 py-2.5 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7dd3a3]"
+            className="rounded-full border px-4 py-2.5 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
             style={{
               color: "var(--foreground)",
               background: "var(--panel)",

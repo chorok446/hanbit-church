@@ -20,7 +20,7 @@ export function AdminNav() {
       </p>
       <h1
         className="mb-6 text-[32px]"
-        style={{ fontFamily: "'Black Han Sans', sans-serif", color: "var(--foreground)" }}
+        style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--foreground)" }}
       >
         관리자
       </h1>
@@ -35,7 +35,7 @@ export function AdminNav() {
               className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] transition-colors"
               style={
                 active
-                  ? { background: "var(--accent)", borderColor: "var(--accent)", color: "#0f1f22" }
+                  ? { background: "var(--accent)", borderColor: "var(--accent)", color: "var(--surface-dark)" }
                   : { background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }
               }
             >

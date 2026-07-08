@@ -4,12 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-"다시, 다" (Dasida) — a Korean upcycling / social-campaign app. pnpm + Gradle monorepo.
+**철마제일교회 홈페이지** — 다시다(dasida) 커뮤니티 플랫폼을 포크해 교회 홈페이지로 리스킨한 프로젝트. pnpm + Gradle monorepo. upstream 리모트가 원본(dasida)을 가리키며, 필요한 개선만 체리픽한다.
+
+- **디자인 방향(모던 클래식)**: 크림 `#faf8f3` + 딥네이비 `#1f2a44` + 골드 `#c9a227`. 제목·성경구절은 명조(`--font-display` = Noto Serif KR, `next/font` 주입), 본문은 Noto Sans KR(`--font-body`). 골드는 라벨·아이콘·구분선 같은 "한 줄"에만 쓰고 큰 면 금지. CTA 버튼은 `--cta-bg`/`--cta-fg`(라이트: 네이비/크림, 다크: 골드/미드나잇).
+- **도메인 명칭**: 캠페인 = "행사·사역", 피드 = "교제". 교회 기본 정보(이름·주소·예배 시간표·월별 말씀)는 `apps/web/src/data/church.ts` 한 파일에서 관리하며 `TODO(교회 확인)` 표시된 값은 자리표시다.
+- **정적 페이지**: `/about`(교회소개) `/worship`(예배안내) `/welcome`(새가족). 홈은 ChurchHero(월별 말씀) → WorshipSummary → HomeCommunity 구성.
 
 - **Frontend**: Next.js (App Router) + TypeScript + Tailwind v4 → `apps/web`
 - **Backend**: Kotlin + Spring Boot 4.1 (Gradle Kotlin DSL, Kotlin 2.4) → `apps/api`
 - **DB**: MySQL 8 via JPA/Hibernate (introduced for JWT auth persistence). Local DB runs from `docker-compose.yml` at root (`docker compose up -d`). Domains (posts/campaigns/notifications/users) are JPA entities; list/nested fields are stored as JSON columns. Seed data loads once into empty tables via `SeedRunner`. Tests run on in-memory H2 (MySQL mode), no Docker needed. QueryDSL (openfeign fork) is wired via kapt.
-- **`design-reference/`**: the original **Figma Make export** (a standalone Vite React SPA). This is the **design source of truth**, not shipping code. Port screens from here into `apps/web`; don't run it as part of the app. It has 13 pages (`design-reference/src/app/pages/`) and shadcn/ui components to mirror.
+- **`design-reference/`**: 원본 다시다의 Figma export. 교회 프로젝트에서는 참고용일 뿐 디자인 기준이 아니다 — 디자인 기준은 위 모던 클래식 토큰.
 
 ## Layout
 

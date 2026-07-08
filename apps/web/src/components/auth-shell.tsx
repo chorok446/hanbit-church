@@ -44,7 +44,7 @@ export function AuthShell({
       }}
     >
       <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-[#7dd3a3] blur-[120px]" />
+        <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-[var(--accent)] blur-[120px]" />
         <div className="absolute -bottom-40 -right-20 w-[600px] h-[600px] rounded-full bg-[#e7dfcb] blur-[140px]" />
       </div>
 
@@ -75,7 +75,7 @@ export function AuthShell({
             </p>
             <h1
               style={{
-                fontFamily: "'Black Han Sans', sans-serif",
+                fontFamily: "var(--font-display)", fontWeight: 600,
                 fontSize: 44,
                 color: "var(--foreground)",
               }}
@@ -91,13 +91,13 @@ export function AuthShell({
           style={{ transform: "translateZ(120px)" }}
           className="hidden sm:flex absolute -right-6 -top-6 h-20 w-20 items-center justify-center rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.4)]"
         >
-          <div className="absolute inset-0 rounded-2xl bg-[#7dd3a3]" />
+          <div className="absolute inset-0 rounded-2xl bg-[var(--surface-deep)]" />
           <span
-            className="relative"
-            style={{ fontFamily: "'Black Han Sans', sans-serif", fontSize: 22, color: "#0f1f22" }}
+            className="relative text-center"
+            style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, color: "var(--accent)", lineHeight: 1.3 }}
           >
-            다시,
-            <br />다
+            철마
+            <br />제일교회
           </span>
         </motion.div>
       </motion.div>
@@ -132,7 +132,7 @@ export function FieldInput({
     <div>
       <label htmlFor={id} className="sr-only">{label}</label>
       <div
-        className="relative flex items-center gap-3 rounded-xl border px-4 py-3.5 transition-[border-color,box-shadow,background-color] focus-within:border-[#7dd3a3] focus-within:ring-2 focus-within:ring-[#7dd3a3]/20"
+        className="relative flex items-center gap-3 rounded-xl border px-4 py-3.5 transition-[border-color,box-shadow,background-color] focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent)]/20"
         style={{
           background: "var(--glass-strong)",
           borderColor: "rgba(var(--ink-rgb), 0.1)",

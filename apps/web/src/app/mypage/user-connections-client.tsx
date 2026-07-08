@@ -53,7 +53,7 @@ export function UserConnectionsClient({ mode }: { mode: "following" | "followers
         </Link>
         <h1
           className="mb-6"
-          style={{ fontFamily: "'Black Han Sans', sans-serif", fontSize: 28, color: "var(--foreground)" }}
+          style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 28, color: "var(--foreground)" }}
         >
           {title}
         </h1>
@@ -63,7 +63,7 @@ export function UserConnectionsClient({ mode }: { mode: "following" | "followers
             title="로그인이 필요해요."
             description="팔로우 목록은 로그인 후 확인할 수 있어요."
             action={
-              <Link href="/login" className="rounded-full bg-[#7dd3a3] px-5 py-2 text-[13px] text-[#0f1f22]">
+              <Link href="/login" className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]">
                 로그인
               </Link>
             }

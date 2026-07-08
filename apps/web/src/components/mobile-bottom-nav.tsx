@@ -8,8 +8,8 @@ import { useDmUnread } from "@/lib/use-unread-badges";
 
 const tabs = [
   { label: "홈", href: "/", icon: Home, match: (path: string) => path === "/" },
-  { label: "피드", href: "/feed", icon: LayoutList, match: (path: string) => path.startsWith("/feed") || path.startsWith("/posts") },
-  { label: "캠페인", href: "/campaigns", icon: Flag, match: (path: string) => path.startsWith("/campaigns") },
+  { label: "교제", href: "/feed", icon: LayoutList, match: (path: string) => path.startsWith("/feed") || path.startsWith("/posts") },
+  { label: "행사", href: "/campaigns", icon: Flag, match: (path: string) => path.startsWith("/campaigns") },
   { label: "DM", href: "/messages", icon: MessageCircle, match: (path: string) => path.startsWith("/messages") },
   { label: "마이", href: "/mypage", icon: User, match: (path: string) => path.startsWith("/mypage") || path.startsWith("/profile") },
 ];

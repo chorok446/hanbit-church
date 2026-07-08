@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const post = await getPost(id);
   if (!post) return {};
   const title = postTitle(post);
-  const description = `${post.author.name}님의 업사이클 게시글`;
+  const description = `${post.author.name}님의 게시글`;
   return {
     title,
     description,

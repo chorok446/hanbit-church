@@ -1,114 +1,96 @@
-// 캠페인 작성 화면의 유형별 템플릿. static data로만 관리한다.
-import { fashionPhotos, marketPhotos, naturePhotos, objectPhotos, workshopPhotos } from "@/data/photos";
+// 행사·사역 작성 화면의 유형별 템플릿. static data로만 관리한다.
+import { marketPhotos, naturePhotos, peoplePhotos, workshopPhotos } from "@/data/photos";
 import type { CampaignComposeValues } from "@/data/campaigns";
 
 export type CampaignTemplate = {
   id: string;
   /** 칩 버튼에 표시되는 이름 */
   label: string;
-  /** 적용되는 필드. 일정은 사용자별로 달라 채우지 않는다. */
+  /** 적용되는 필드. 일정은 행사별로 달라 채우지 않는다. */
   values: Pick<CampaignComposeValues, "title" | "summary" | "body" | "thumb" | "capacity">;
 };
 
 export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   {
-    id: "upcycling-workshop",
-    label: "♻️ 업사이클링 워크숍",
+    id: "retreat",
+    label: "⛺ 수련회·성경학교",
     values: {
-      title: "우리 동네 업사이클링 워크숍",
-      summary: "버려지는 물건에 새 쓸모를 만드는 원데이 워크숍",
-      body: `🌱 왜 이 워크숍을 여나요
-(워크숍을 열게 된 계기와 목표를 적어주세요)
+      title: "여름 수련회",
+      summary: "말씀과 기도로 함께하는 수련회에 초대합니다",
+      body: `🙏 어떤 모임인가요
+(수련회의 주제와 말씀을 적어주세요)
 
-📋 진행 방식
-- 모임 장소: (예: ○○동 주민센터 2층)
-- 만들 것: (예: 버려진 청바지로 파우치 만들기)
-- 준비물: (예: 안 입는 옷 1벌, 나머지 재료는 제공)
+📋 안내
+- 장소: (예: ○○ 수양관)
+- 대상: (예: 청년부 전체)
+- 회비: (예: 1인 ○만원, 계좌 안내)
+- 준비물: (예: 성경, 세면도구, 편한 복장)
 
-🎁 참여하면 좋은 점
-- (예: 직접 만든 업사이클링 소품을 가져갈 수 있어요)`,
-      thumb: workshopPhotos[0],
+📞 문의
+- (예: 담당 교역자 또는 부서 임원)`,
+      thumb: naturePhotos[1],
+      capacity: "60",
+    },
+  },
+  {
+    id: "volunteer",
+    label: "🤝 봉사·섬김",
+    values: {
+      title: "지역 섬김 봉사",
+      summary: "이웃을 섬기는 봉사에 함께해 주세요",
+      body: `🙏 어떤 섬김인가요
+(봉사의 목적과 섬길 대상을 적어주세요)
+
+📋 안내
+- 집결 장소: (예: 교회 본당 앞)
+- 활동 내용: (예: 반찬 나눔, 마을 청소)
+- 준비물: (예: 편한 복장, 장갑은 교회에서 준비)
+
+💛 참여 후에는
+- 참여 후기를 남겨 은혜를 나눠주세요`,
+      thumb: peoplePhotos[0],
+      capacity: "20",
+    },
+  },
+  {
+    id: "class",
+    label: "📖 성경공부·양육",
+    values: {
+      title: "성경공부반 모집",
+      summary: "말씀을 깊이 배우는 성경공부반을 시작합니다",
+      body: `🙏 어떤 과정인가요
+(교재·본문과 과정의 목표를 적어주세요)
+
+📋 안내
+- 모임 시간: (예: 매주 화요일 저녁 8시)
+- 장소: (예: 교육관 2층)
+- 기간: (예: 8주 과정)
+- 준비물: (예: 성경, 교재는 교회에서 제공)
+
+📞 신청·문의
+- (예: 담당 교역자)`,
+      thumb: workshopPhotos[2],
       capacity: "15",
     },
   },
   {
-    id: "sharing",
-    label: "🎁 중고 물품 나눔",
+    id: "fellowship",
+    label: "🍚 친교·행사",
     values: {
-      title: "안 쓰는 물건 나눔 데이",
-      summary: "쓸모를 다한 물건이 새 주인을 만나는 나눔 모임",
-      body: `🌱 어떤 나눔인가요
-(나눔을 열게 된 배경을 적어주세요)
+      title: "전교인 친교 모임",
+      summary: "함께 먹고 나누며 교제하는 시간입니다",
+      body: `🙏 어떤 자리인가요
+(모임의 취지를 적어주세요)
 
-📋 진행 방식
-- 나눔 장소: (예: ○○공원 정자 앞)
-- 나눔 물품: (예: 의류, 도서, 주방용품 등)
-- 참여 방법: (예: 나눌 물건 1개 이상 가져오기)
+📋 안내
+- 장소: (예: 교회 마당 / 친교실)
+- 준비물: (예: 나눌 음식 한 가지)
+- 회비: (예: 없음)
 
 🙌 함께 지켜요
-- (예: 깨끗하게 손질한 물건만 가져와 주세요)`,
+- (예: 뒷정리까지 함께해요)`,
       thumb: marketPhotos[1],
-      capacity: "50",
-    },
-  },
-  {
-    id: "plogging",
-    label: "🏃 지역 플로깅",
-    values: {
-      title: "주말 아침 동네 플로깅",
-      summary: "가볍게 뛰며 우리 동네를 깨끗하게 만드는 플로깅",
-      body: `🌱 왜 함께 뛰나요
-(플로깅을 시작하게 된 이유를 적어주세요)
-
-📋 진행 방식
-- 집결 장소: (예: ○○역 2번 출구)
-- 코스: (예: 하천 산책로 왕복 3km)
-- 준비물: (예: 편한 운동화, 집게와 봉투는 제공)
-
-🎁 참여하면 좋은 점
-- (예: 참여 인증과 함께 소소한 기념품을 드려요)`,
-      thumb: naturePhotos[1],
-      capacity: "30",
-    },
-  },
-  {
-    id: "repair-class",
-    label: "🔧 수리·리폼 클래스",
-    values: {
-      title: "고쳐 쓰는 수리·리폼 클래스",
-      summary: "버리기 전에 고쳐 쓰는 법을 배우는 소규모 클래스",
-      body: `🌱 왜 고쳐 쓰나요
-(클래스를 열게 된 계기를 적어주세요)
-
-📋 진행 방식
-- 모임 장소: (예: ○○ 공방)
-- 배울 내용: (예: 의류 수선 기초, 가구 보수)
-- 준비물: (예: 고치고 싶은 물건 1점)
-
-🎁 참여하면 좋은 점
-- (예: 내 물건을 직접 고쳐서 가져갈 수 있어요)`,
-      thumb: objectPhotos[0],
-      capacity: "10",
-    },
-  },
-  {
-    id: "zero-waste",
-    label: "🌿 제로웨이스트 챌린지",
-    values: {
-      title: "일주일 제로웨이스트 챌린지",
-      summary: "일상 속 쓰레기를 줄이는 습관을 함께 만드는 챌린지",
-      body: `🌱 어떤 챌린지인가요
-(챌린지의 목표와 규칙을 적어주세요)
-
-📋 진행 방식
-- 기간: (예: 진행 기간 동안 매일 실천 인증)
-- 인증 방법: (예: 실천 사진을 댓글로 공유)
-- 실천 예시: (예: 텀블러 사용, 장바구니 들기)
-
-🎁 참여하면 좋은 점
-- (예: 완주자에게 소정의 리워드를 드려요)`,
-      thumb: fashionPhotos[0],
-      capacity: "30",
+      capacity: "100",
     },
   },
 ];

@@ -41,7 +41,7 @@ export function CampaignResultCard({ campaign }: { campaign: Campaign }) {
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#1c4044] to-[#148a90] text-[12px] text-white/70">
+            <div className="flex h-full items-center justify-center bg-gradient-to-br from-[var(--heading)] to-[var(--accent-strong)] text-[12px] text-white/70">
               캠페인 이미지 없음
             </div>
           )}
@@ -119,7 +119,7 @@ export function PostResultCard({ post }: { post: Post }) {
           time={post.time}
           timeClassName="text-[11px] opacity-50"
         />
-        {post.bookmarkedByMe ? <Bookmark size={15} fill="#7dd3a3" className="shrink-0 text-[#7dd3a3]" /> : null}
+        {post.bookmarkedByMe ? <Bookmark size={15} fill="var(--accent)" className="shrink-0 text-[var(--accent)]" /> : null}
       </div>
       <Link href={`/posts/${post.id}`} className="block">
         {image ? (
@@ -132,7 +132,7 @@ export function PostResultCard({ post }: { post: Post }) {
             />
           </div>
         ) : (
-          <div className="flex aspect-[16/9] items-center justify-center bg-gradient-to-br from-[#1c4044] to-[#2d666c] px-6 text-center text-[13px] leading-6 text-white/75">
+          <div className="flex aspect-[16/9] items-center justify-center bg-gradient-to-br from-[var(--heading)] to-[#2d666c] px-6 text-center text-[13px] leading-6 text-white/75">
             {post.text.slice(0, 90)}
           </div>
         )}
@@ -145,7 +145,7 @@ export function PostResultCard({ post }: { post: Post }) {
           />
           <div className="flex flex-wrap gap-1.5">
             {post.tags.slice(0, 3).map((tag) => (
-              <span key={tag} className="rounded-full bg-[#7dd3a3]/15 px-2 py-0.5 text-[10px] text-[#148a90]">
+              <span key={tag} className="rounded-full bg-[var(--accent)]/15 px-2 py-0.5 text-[10px] text-[var(--accent-strong)]">
                 {tag}
               </span>
             ))}

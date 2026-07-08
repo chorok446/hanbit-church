@@ -49,7 +49,7 @@ function SavedCampaignCard({
             thumbnail
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0f1f22]/70 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface-dark)]/70 via-transparent to-transparent" />
           <div className="absolute right-3 top-3">
             <span className="rounded-full px-2.5 py-1 text-[11px] tracking-[0.2em]" style={{ background: meta.color, color: meta.fg }}>
               {meta.label}
@@ -66,7 +66,7 @@ function SavedCampaignCard({
         </div>
 
         <div className="space-y-3 p-5" style={{ color: "var(--foreground)" }}>
-          <h3 className="line-clamp-2" style={{ fontFamily: "'Black Han Sans', sans-serif", fontSize: 20, lineHeight: 1.3 }}>
+          <h3 className="line-clamp-2" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20, lineHeight: 1.3 }}>
             {campaign.title}
           </h3>
           <p className="line-clamp-2 text-[13px]" style={{ color: "var(--foreground-muted)" }}>
@@ -143,7 +143,7 @@ export function SavedCampaignsGrid({ page, onPageChange }: { page: number; onPag
         <ListEmptyState
           title="저장한 캠페인이 없어요."
           action={
-            <Link href="/campaigns" className="rounded-full bg-[#7dd3a3] px-5 py-2 text-[13px] font-medium text-[#0f1f22]">
+            <Link href="/campaigns" className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]">
               캠페인 둘러보기
             </Link>
           }

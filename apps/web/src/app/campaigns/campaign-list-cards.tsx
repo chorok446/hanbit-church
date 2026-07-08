@@ -108,7 +108,7 @@ export function CampaignListCard({ campaign, onOpen }: { campaign: Campaign; onO
           <div className="space-y-3 p-5">
             <h2
               style={{
-                fontFamily: "'Black Han Sans', sans-serif",
+                fontFamily: "var(--font-display)", fontWeight: 600,
                 fontSize: 22,
                 color: "var(--foreground)",
                 lineHeight: 1.25,

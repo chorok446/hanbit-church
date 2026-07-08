@@ -1,72 +1,91 @@
-@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap');
 @import "tailwindcss";
 
+/* 철마제일교회 — 모던 클래식: 크림 바탕 + 딥네이비 잉크 + 골드 포인트.
+   골드는 라벨·구분선·아이콘 같은 "한 줄"에만 쓰고 큰 면은 만들지 않는다.
+   폰트는 layout.tsx 의 next/font 가 --font-display(명조)/--font-body(산세리프)를 주입한다. */
 :root {
-  --surface: #f9f7f2;
-  --surface-muted: #e7dfcb;
-  --surface-deep: #1c4044;
-  --surface-dark: #0f1f22;
-  --accent: #7dd3a3;
-  /* 액센트 계열 보조 텍스트(태그·eyebrow). 라이트는 딥틸, 다크는 민트. */
-  --accent-secondary: #1c4044;
+  --surface: #faf8f3;
+  --surface-muted: #ece5d2;
+  --surface-deep: #1f2a44;
+  --surface-dark: #16203a;
+  --accent: #c9a227;
+  /* 액센트 계열 보조 텍스트(태그·eyebrow)·주요 버튼 배경. 라이트는 딥네이비, 다크는 골드. */
+  --accent-secondary: #1f2a44;
   /* 액센트 틴트 배경(태그 pill 등). */
-  --accent-soft: rgba(125, 211, 163, 0.2);
-  --foreground: #0f1f22;
-  --foreground-muted: rgba(28, 64, 68, 0.65);
-  --border: rgba(28, 64, 68, 0.08);
+  --accent-soft: rgba(201, 162, 39, 0.14);
+  --foreground: #1a2235;
+  --foreground-muted: rgba(31, 42, 68, 0.65);
+  --border: rgba(31, 42, 68, 0.1);
   --card: #ffffff;
-  --chip-bg: rgba(28, 64, 68, 0.06);
-  --badge-muted-bg: rgba(28, 64, 68, 0.08);
+  --chip-bg: rgba(31, 42, 68, 0.06);
+  --badge-muted-bg: rgba(31, 42, 68, 0.08);
   --page-gradient: linear-gradient(180deg, var(--surface), var(--surface-muted));
   /* 로그인·회원가입 배경 그라디언트. */
-  --auth-gradient: linear-gradient(135deg, #f9f7f2, #e7dfcb 50%, #cfe6d3);
+  --auth-gradient: linear-gradient(135deg, #faf8f3, #ece5d2 50%, #e6d9b8);
   /* 본문 잉크 RGB 채널. rgba(var(--ink-rgb), a) 로 임의 투명도의 텍스트/틴트를 만든다. */
-  --ink-rgb: 28, 64, 68;
+  --ink-rgb: 31, 42, 68;
   /* 페이지 표면 RGB 채널. 반투명 고정 헤더 등 rgba(var(--surface-rgb), a) 용. */
-  --surface-rgb: 249, 247, 242;
+  --surface-rgb: 250, 248, 243;
   /* 반투명 화이트 패널(입력·필터 바 등)과 그보다 불투명한 강조 패널. */
   --glass: rgba(255, 255, 255, 0.75);
   --glass-strong: rgba(255, 255, 255, 0.9);
   /* 액센트 틴트 배경 위 텍스트용 진한 액센트. */
-  --accent-strong: #148a90;
-  /* 제목·강조 잉크. 라이트는 딥틸, 다크는 크림(--foreground 보다 딥틸 쪽이 진한 헤딩용). */
-  --heading: #1c4044;
+  --accent-strong: #8a6d12;
+  /* 제목·강조 잉크. 라이트는 딥네이비, 다크는 크림. */
+  --heading: #1f2a44;
   /* 불투명 패널(카드보다 진한 면 — 모달·팝오버 등). */
   --panel: #ffffff;
   /* 오류·삭제 계열 텍스트/틴트 배경. */
   --danger: #b3402f;
   --danger-soft: rgba(237, 92, 72, 0.08);
+  /* 주요 버튼(CTA) — 라이트: 네이비 바탕 + 크림 글자, 다크: 골드 바탕 + 미드나잇 글자. */
+  --cta-bg: #1f2a44;
+  --cta-fg: #f6f3ea;
 }
 
 .dark {
-  --surface: #0f1f22;
-  --surface-muted: #1c4044;
-  --surface-deep: #0f1f22;
-  --surface-rgb: 15, 31, 34;
+  --surface: #16203a;
+  --surface-muted: #1f2a44;
+  --surface-deep: #16203a;
+  --surface-rgb: 22, 32, 58;
   --glass: rgba(255, 255, 255, 0.05);
   --glass-strong: rgba(255, 255, 255, 0.06);
-  --accent-strong: #7dd3a3;
-  --accent-secondary: #7dd3a3;
-  --accent-soft: rgba(125, 211, 163, 0.12);
-  --foreground: #f9f7f2;
-  --foreground-muted: rgba(255, 255, 255, 0.65);
+  --accent: #d4b04a;
+  --accent-strong: #d4b04a;
+  --accent-secondary: #d4b04a;
+  --accent-soft: rgba(212, 176, 74, 0.12);
+  --foreground: #f6f3ea;
+  --foreground-muted: rgba(246, 243, 234, 0.65);
   --border: rgba(255, 255, 255, 0.08);
   --card: rgba(255, 255, 255, 0.04);
   --chip-bg: rgba(255, 255, 255, 0.06);
   --badge-muted-bg: rgba(255, 255, 255, 0.07);
   --page-gradient: linear-gradient(180deg, var(--surface-dark), var(--surface-muted));
-  --auth-gradient: linear-gradient(135deg, #0f1f22, #1c4044 50%, #2a5a4a);
-  --ink-rgb: 255, 255, 255;
-  --heading: #f9f7f2;
-  --panel: #1c4044;
+  --auth-gradient: linear-gradient(135deg, #16203a, #1f2a44 50%, #2f2c1e);
+  --ink-rgb: 246, 243, 234;
+  --heading: #f6f3ea;
+  --panel: #1f2a44;
   --danger: #f3b4ab;
   --danger-soft: rgba(237, 92, 72, 0.12);
+  --cta-bg: #d4b04a;
+  --cta-fg: #16203a;
 }
 
 html,
 body {
   margin: 0;
   background: var(--surface-dark);
+}
+
+/* 본문 서체. next/font(--font-body) 미주입 환경(테스트 등)은 시스템 스택으로 fallback. */
+body {
+  font-family: var(--font-body, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif);
+}
+
+/* 제목 서체 헬퍼 — 기존 인라인 fontFamily("Black Han Sans") 사용처를 대체한다. */
+.font-display {
+  font-family: var(--font-display, "Noto Serif KR", serif);
+  font-weight: 600;
 }
 
 :where(a, button, input, select, textarea, summary):focus-visible {

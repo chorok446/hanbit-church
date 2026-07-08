@@ -65,7 +65,7 @@ export function CampaignCommentItem({
             ? "rgba(255,255,255,0.025)"
             : "rgba(249,247,242,0.55)",
         borderColor: highlighted
-          ? "rgba(125,211,163,0.65)"
+          ? "var(--accent-soft)"
           : "var(--border)",
       }}
     >
@@ -83,7 +83,7 @@ export function CampaignCommentItem({
                 {comment.author.name}
               </span>
               {comment.author.verified ? (
-                <span className="rounded-full bg-[var(--accent)]/20 px-2 py-0.5 text-[10px] text-[#148a90]">인증</span>
+                <span className="rounded-full bg-[var(--accent)]/20 px-2 py-0.5 text-[10px] text-[var(--accent-strong)]">인증</span>
               ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-1 text-[11px] opacity-55" style={{ color: "var(--foreground)" }}>
@@ -101,7 +101,7 @@ export function CampaignCommentItem({
                 onClick={() => onEdit(comment)}
                 disabled={deleting || saving}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-45"
-                style={{ background: "rgba(125,211,163,0.14)", color: "var(--accent-strong)" }}
+                style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}
               >
                 <Pencil size={15} />
               </button>

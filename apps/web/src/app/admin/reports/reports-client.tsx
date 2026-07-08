@@ -109,7 +109,7 @@ export default function ReportsClient() {
                 className="rounded-full border px-4 py-2 text-[13px] transition-colors"
                 style={
                   active
-                    ? { background: "var(--accent)", borderColor: "var(--accent)", color: "#0f1f22" }
+                    ? { background: "var(--accent)", borderColor: "var(--accent)", color: "var(--surface-dark)" }
                     : { background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }
                 }
               >
@@ -346,7 +346,7 @@ function ReportRow({
                 type="checkbox"
                 checked={hideContent}
                 onChange={(e) => setHideContent(e.target.checked)}
-                className="h-4 w-4 accent-[#7dd3a3]"
+                className="h-4 w-4 accent-[var(--accent)]"
               />
               조치 완료 시 대상 콘텐츠 함께 숨김 (작성자에게 알림 발송)
             </label>
@@ -357,7 +357,7 @@ function ReportRow({
               onClick={() => resolve("RESOLVED")}
               disabled={submitting !== null}
               className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] disabled:opacity-50"
-              style={{ background: "var(--accent)", color: "#0f1f22" }}
+              style={{ background: "var(--accent)", color: "var(--surface-dark)" }}
             >
               {submitting === "RESOLVED" ? (
                 <Loader2 size={14} className="animate-spin" aria-hidden />

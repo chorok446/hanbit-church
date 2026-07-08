@@ -77,9 +77,9 @@ export function ActivitySummary({ onSelectTab }: { onSelectTab: (tab: SummaryTab
             {counts ? (
               <p
                 style={{
-                  fontFamily: "'Black Han Sans', sans-serif",
+                  fontFamily: "var(--font-display)", fontWeight: 600,
                   fontSize: "clamp(26px, 3vw, 34px)",
-                  color: "#7dd3a3",
+                  color: "var(--accent)",
                   lineHeight: 1.1,
                 }}
               >

@@ -113,7 +113,7 @@ function CampaignCard({
             thumbnail
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0f1f22]/70 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface-dark)]/70 via-transparent to-transparent" />
           <div className="absolute right-3 top-3">
             <StatusBadge campaign={campaign} />
           </div>
@@ -138,7 +138,7 @@ function CampaignCard({
           ) : null}
           <h3
             className="line-clamp-2"
-            style={{ fontFamily: "'Black Han Sans', sans-serif", fontSize: 20, color: "var(--foreground)", lineHeight: 1.3 }}
+            style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20, color: "var(--foreground)", lineHeight: 1.3 }}
           >
             {campaign.title}
           </h3>
@@ -232,7 +232,7 @@ export function UserCampaignsList({
           <ListEmptyState
             title={meta.emptyTitle}
             action={
-              <Link href={meta.ctaHref} className="rounded-full bg-[#7dd3a3] px-5 py-2 text-[13px] font-medium text-[#0f1f22]">
+              <Link href={meta.ctaHref} className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]">
                 {meta.ctaLabel}
               </Link>
             }
