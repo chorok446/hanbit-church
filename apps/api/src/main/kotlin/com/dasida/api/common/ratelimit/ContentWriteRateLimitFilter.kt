@@ -12,6 +12,8 @@ class ContentWriteRateLimitFilter(
         if (request.method != HttpMethod.POST.name()) return null
         val path = request.requestURI.removeSuffix("/")
         if (path == "/api/reports") return RateLimitRule.REPORT_CREATE
+        // 새가족 등록은 비로그인 공개 POST — 신고와 같은 IP 한도를 공유한다.
+        if (path == "/api/new-family") return RateLimitRule.REPORT_CREATE
         if (path == "/api/media") return RateLimitRule.MEDIA_UPLOAD
         if (isCommentCreatePath(path)) return RateLimitRule.COMMENT_CREATE
         return null

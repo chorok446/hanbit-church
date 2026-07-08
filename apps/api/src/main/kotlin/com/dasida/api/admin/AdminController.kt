@@ -1,5 +1,9 @@
 package com.dasida.api.admin
 
+import com.dasida.api.newfamily.NewFamilyPageResponse
+import com.dasida.api.newfamily.NewFamilyResponse
+import com.dasida.api.newfamily.NewFamilyService
+import com.dasida.api.newfamily.SetContactedRequest
 import com.dasida.api.security.AuthUser
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -27,6 +31,7 @@ class AdminController(
     private val userService: AdminUserService,
     private val actionLogs: AdminActionLogService,
     private val stats: AdminStatsService,
+    private val newFamily: NewFamilyService,
 ) {
 
     @Operation(summary = "대시보드 요약 (사용자/게시글/행사/신고 수)")
@@ -89,6 +94,21 @@ class AdminController(
         @RequestBody request: SetUserSuspensionRequest,
         @AuthenticationPrincipal admin: AuthUser,
     ): AdminUserResponse = userService.setSuspension(admin.id, id, request)
+
+    @Operation(summary = "새가족 등록 신청 목록 (최신순, 미연락 필터)")
+    @GetMapping("/new-family")
+    fun newFamilyList(
+        @RequestParam(defaultValue = "false") pendingOnly: Boolean,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
+    ): NewFamilyPageResponse = newFamily.getRegistrations(pendingOnly, page, size)
+
+    @Operation(summary = "새가족 신청 연락 완료/해제 표시")
+    @PatchMapping("/new-family/{id}")
+    fun setNewFamilyContacted(
+        @PathVariable id: String,
+        @RequestBody request: SetContactedRequest,
+    ): NewFamilyResponse = newFamily.setContacted(id, request.contacted)
 
     @Operation(summary = "감사 로그 조회 (관리자 조치 이력, 최신순, 조치 종류 필터)")
     @GetMapping("/logs")
