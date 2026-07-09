@@ -1,5 +1,5 @@
 {
-  "name": "dasida",
+  "name": "cheolma-church",
   "private": true,
   "packageManager": "pnpm@11.9.0",
   "scripts": {
@@ -8,6 +8,11 @@
     "test:web": "pnpm --filter web test",
     "e2e:web": "pnpm --filter web e2e",
     "dev:api": "cd apps/api && ./gradlew bootRun",
-    "build:api": "cd apps/api && ./gradlew build"
+    "build:api": "cd apps/api && ./gradlew build",
+    "test:api": "cd apps/api && ./gradlew test",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "docker:local": "docker compose -f compose.local.yml up --build",
+    "docker:local:down": "docker compose -f compose.local.yml down"
   }
 }
