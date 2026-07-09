@@ -24,14 +24,19 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
-COPY --chown=node:node --from=builder /app/node_modules ./node_modules
-COPY --chown=node:node --from=builder /app/apps/web ./apps/web
-COPY --chown=node:node --from=builder /app/package.json ./package.json
-COPY --chown=node:node --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+# Ship the Next.js standalone bundle (output: "standalone" in next.config.ts) instead of the
+# whole workspace node_modules + `pnpm start`. In this pnpm monorepo the traced output nests
+# under apps/web/, so server.js lands at /app/apps/web/server.js and static/public sit beside it.
+COPY --chown=node:node --from=builder /app/apps/web/.next/standalone ./
+COPY --chown=node:node --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --chown=node:node --from=builder /app/apps/web/public ./apps/web/public
 
 USER node
 
-WORKDIR /app/apps/web
 EXPOSE 3000
-CMD ["pnpm", "start"]
+# node images have neither wget nor curl in bookworm-slim; use node's built-in http client.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "require('http').get('http://127.0.0.1:3000/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"
+CMD ["node", "apps/web/server.js"]
