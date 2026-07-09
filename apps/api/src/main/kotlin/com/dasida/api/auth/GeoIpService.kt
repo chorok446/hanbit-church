@@ -7,7 +7,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
-import java.util.concurrent.ConcurrentHashMap
+import java.util.Collections
 
 data class GeoLocation(val country: String?, val region: String?)
 
@@ -19,7 +19,13 @@ data class GeoLocation(val country: String?, val region: String?)
 @Service
 class GeoIpService {
     private val client = HttpClient.newBuilder().connectTimeout(Duration.ofMillis(800)).build()
-    private val cache = ConcurrentHashMap<String, GeoLocation>()
+
+    // 접근 순서 LRU. 상한 초과 시 가장 오래 안 쓴 항목만 제거한다(예전엔 전체 clear 로 캐시가 통째로 날아갔다).
+    private val cache: MutableMap<String, GeoLocation> = Collections.synchronizedMap(
+        object : LinkedHashMap<String, GeoLocation>(256, 0.75f, true) {
+            override fun removeEldestEntry(eldest: Map.Entry<String, GeoLocation>): Boolean = size > MAX_CACHE
+        },
+    )
 
     fun lookup(ip: String): GeoLocation? {
         if (ip.isBlank() || ip == "unknown" || isPrivateOrLocal(ip)) return LOCAL
@@ -33,8 +39,7 @@ class GeoIpService {
             val body = client.send(request, HttpResponse.BodyHandlers.ofString()).body()
             if (!body.contains("\"status\":\"success\"")) return null
             val geo = GeoLocation(country = extract(body, "country"), region = extract(body, "regionName"))
-            if (cache.size > MAX_CACHE) cache.clear()
-            cache[ip] = geo
+            cache[ip] = geo // LinkedHashMap.removeEldestEntry 가 상한을 관리한다
             geo
         } catch (_: Exception) {
             null
