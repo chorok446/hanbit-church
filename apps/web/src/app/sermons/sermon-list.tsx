@@ -55,12 +55,12 @@ function FeaturedSermon({ entry }: { entry: SermonEntry }) {
       className="mb-8 overflow-hidden rounded-3xl border"
       style={{ background: "var(--card)", borderColor: "var(--border)" }}
     >
-      <div className="grid grid-cols-1 md:grid-cols-[280px_1fr]">
+      <div className="grid grid-cols-1 md:grid-cols-[340px_1fr]">
         <Link href={detail} aria-label={`${info.title} 자세히 보기`} className="block">
           <SermonThumb
             youtubeId={info.youtubeId}
             meta={{ serviceLabel: info.serviceLabel, title: info.title, scripture: info.scripture }}
-            className="aspect-video h-full w-full md:aspect-auto md:min-h-[200px]"
+            className="aspect-video h-full w-full md:aspect-auto md:min-h-[220px]"
           />
         </Link>
         <div className="flex flex-col gap-2.5 p-6 sm:p-8">
@@ -103,63 +103,62 @@ function SermonCard({ entry, index }: { entry: SermonEntry; index: number }) {
   const detail = `/posts/${post.id}`;
   return (
     <StaggerItem index={index}>
-      <li>
-        <article
-          className="flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:gap-5"
-          style={{ background: "var(--card)", borderColor: "var(--border)" }}
-        >
-          <Link href={detail} aria-label={`${info.title} 자세히 보기`} className="block w-full shrink-0 sm:w-44">
-            <SermonThumb youtubeId={info.youtubeId} className="aspect-video w-full rounded-xl" />
-          </Link>
-          <div className="min-w-0 flex-1">
-            {/* 메타 한 줄: "주일 설교 · 1주 전 · 한빛교회" */}
-            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
-              <span className="font-semibold" style={{ color: "var(--accent-strong)" }}>
-                {info.serviceLabel}
-              </span>
-              <span aria-hidden>·</span>
-              <span>{info.date}</span>
-              <span aria-hidden>·</span>
-              <span>{post.author.name}</span>
-            </div>
-            <Link href={detail} className="hover:opacity-80">
-              <h3
-                className="mt-2 text-[19px] leading-snug"
-                style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
-              >
-                {info.title}
-              </h3>
-            </Link>
-            {info.scripture ? (
-              <p className="mt-1 text-[14.5px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--foreground)" }}>
-                {info.scripture}
-              </p>
-            ) : null}
-            {info.summary ? (
-              <p className="mt-2 line-clamp-2 text-[13.5px] leading-6" style={{ color: "var(--foreground-muted)" }}>
-                {info.summary}
-              </p>
-            ) : null}
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <WatchButton
-                entry={entry}
-                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-medium"
-                style={ctaStyle}
-              />
-              <Link
-                href={detail}
-                className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12.5px] font-medium"
-                style={outlineStyle}
-              >
-                자세히 보기
-              </Link>
-              {/* 설교는 좋아요·댓글을 노출하지 않는다 — 조회수만. */}
-              <span className="ml-auto flex items-center gap-1.5 text-[11.5px]" style={{ color: "var(--foreground-muted)" }}>
-                <span>조회 {post.views ?? 0}</span>
-              </span>
-            </div>
+      {/* 에디토리얼 리스트: border-b 로 구분, 썸네일(190·16:9) | 본문 */}
+      <li
+        className="grid grid-cols-1 gap-4 border-b py-7 sm:grid-cols-[190px_1fr] sm:gap-6"
+        style={{ borderColor: "var(--border)" }}
+      >
+        <Link href={detail} aria-label={`${info.title} 자세히 보기`} className="block w-full shrink-0">
+          <SermonThumb youtubeId={info.youtubeId} className="aspect-video w-full overflow-hidden rounded-xl" />
+        </Link>
+        <div className="min-w-0">
+          {/* 메타 한 줄: "주일 설교 · 1주 전 · 한빛교회" (유형=골드) */}
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
+            <span className="font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--accent-strong)" }}>
+              {info.serviceLabel}
+            </span>
+            <span aria-hidden>·</span>
+            <span>{info.date}</span>
+            <span aria-hidden>·</span>
+            <span>{post.author.name}</span>
           </div>
-        </article>
+          <Link href={detail} className="hover:opacity-80">
+            <h3
+              className="mt-2 text-[19px] leading-snug"
+              style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
+            >
+              {info.title}
+            </h3>
+          </Link>
+          {info.scripture ? (
+            <p className="mt-1 text-[14.5px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--foreground)" }}>
+              {info.scripture}
+            </p>
+          ) : null}
+          {info.summary ? (
+            <p className="mt-2 line-clamp-2 text-[13.5px] leading-6" style={{ color: "var(--foreground-muted)" }}>
+              {info.summary}
+            </p>
+          ) : null}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <WatchButton
+              entry={entry}
+              className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-medium"
+              style={ctaStyle}
+            />
+            <Link
+              href={detail}
+              className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12.5px] font-medium"
+              style={outlineStyle}
+            >
+              자세히 보기
+            </Link>
+            {/* 설교는 좋아요·댓글을 노출하지 않는다 — 조회수만. */}
+            <span className="ml-auto flex items-center gap-1.5 text-[11.5px]" style={{ color: "var(--foreground-muted)" }}>
+              <span>조회 {post.views ?? 0}</span>
+            </span>
+          </div>
+        </div>
       </li>
     </StaggerItem>
   );
@@ -323,7 +322,7 @@ export function SermonList() {
               description="다른 키워드로 검색해 주세요."
             />
           ) : (
-            <ul className="space-y-4">
+            <ul className="border-t" style={{ borderColor: "var(--border)" }}>
               {listEntries.map((entry, index) => (
                 <SermonCard key={entry.post.id} entry={entry} index={index} />
               ))}

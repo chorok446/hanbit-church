@@ -34,7 +34,7 @@ import {
   type PraiseSetlist,
 } from "@/data/praise-team";
 import { usePraiseProfile } from "./praise-team-guard";
-import { AttendanceBadge, PraiseCard, SectionLabel, SetlistStatusBadge } from "./praise-ui";
+import { AttendanceBadge, BandPill, PraiseBand, PraiseCard, SetlistStatusBadge } from "./praise-ui";
 
 type Result = {
   key: number;
@@ -97,58 +97,41 @@ export function PraiseTeamDashboard() {
   const notices = sortPraiseNotices(setlist?.notices ?? []);
 
   return (
-    <PageShell orb="right" paddingClassName="px-6 pb-24 pt-32">
-      <div className="mx-auto max-w-4xl">
-        <header>
-          <SectionLabel>Praise Team</SectionLabel>
-          <h1
-            className="mt-2 text-[32px] sm:text-[38px]"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
-          >
-            찬양팀
-          </h1>
-          <p className="mt-3 text-[15px] leading-8" style={{ color: "var(--foreground-muted)" }}>
+    <>
+      <PraiseBand
+        eyebrow="Praise Team"
+        title="찬양팀"
+        subtitle={
+          <>
             {profile.name}님, 환영합니다. ({roleLabel}
             {myParts.length > 0 ? ` · ${myParts.map(praisePartLabel).join(", ")}` : ""})
-          </p>
-          <nav className="mt-4 flex flex-wrap gap-2" aria-label="찬양팀 메뉴">
-            <Link
-              href="/praise-team/setlists"
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-[13px]"
-              style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
-            >
-              <ListMusic size={14} aria-hidden style={{ color: "var(--accent-strong)" }} />
+          </>
+        }
+        pills={
+          <>
+            <BandPill href="/praise-team/setlists">
+              <ListMusic size={14} aria-hidden />
               전체 콘티
-            </Link>
-            <Link
-              href="/praise-team/schedule"
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-[13px]"
-              style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
-            >
-              <CalendarDays size={14} aria-hidden style={{ color: "var(--accent-strong)" }} />
+            </BandPill>
+            <BandPill href="/praise-team/schedule">
+              <CalendarDays size={14} aria-hidden />
               팀 일정
-            </Link>
-            <Link
-              href="/praise-team/members"
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-[13px]"
-              style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
-            >
-              <Users size={14} aria-hidden style={{ color: "var(--accent-strong)" }} />
+            </BandPill>
+            <BandPill href="/praise-team/members">
+              <Users size={14} aria-hidden />
               팀원 목록
-            </Link>
+            </BandPill>
             {isLeader ? (
-              <Link
-                href="/praise-team/setlists/new"
-                className="inline-flex min-h-10 items-center gap-1.5 rounded-full px-4 text-[13px] font-medium text-[var(--cta-fg)]"
-                style={{ background: "var(--cta-bg)" }}
-              >
+              <BandPill href="/praise-team/setlists/new" filled>
                 <PlusCircle size={14} aria-hidden />새 콘티 작성
-              </Link>
+              </BandPill>
             ) : null}
-          </nav>
-        </header>
-
-        <div className="mt-8 space-y-6">
+          </>
+        }
+      />
+      <PageShell orb="right" paddingClassName="px-6 pb-24 pt-10">
+        <div className="mx-auto max-w-[896px]">
+          <div className="space-y-6">
           {loading ? (
             <StatePanel compact>
               <Loader2 className="animate-spin" size={20} aria-hidden />
@@ -269,7 +252,25 @@ export function PraiseTeamDashboard() {
                   </p>
                 ) : null}
               </PraiseCard>
+            </>
+          ) : (
+            <StatePanel compact>
+              <p>등록된 콘티가 아직 없습니다. 리더가 콘티를 올리면 이곳에 표시됩니다.</p>
+              {isLeader ? (
+                <Link
+                  href="/praise-team/setlists/new"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-[13px] font-medium text-[var(--cta-fg)]"
+                  style={{ background: "var(--cta-bg)" }}
+                >
+                  <PlusCircle size={14} aria-hidden />첫 콘티 작성하기
+                </Link>
+              ) : null}
+            </StatePanel>
+          )}
 
+          {/* 최근 공지 + 다가오는 팀 일정 (2열) — 콘티/일정 유무와 무관하게 표시 */}
+          {!loading && !error ? (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               {/* 최근 공지 */}
               <PraiseCard label="Notice" title="최근 공지">
                 {notices.length > 0 ? (
@@ -299,83 +300,69 @@ export function PraiseTeamDashboard() {
                   </p>
                 )}
               </PraiseCard>
-            </>
-          ) : (
-            <StatePanel compact>
-              <p>등록된 콘티가 아직 없습니다. 리더가 콘티를 올리면 이곳에 표시됩니다.</p>
-              {isLeader ? (
-                <Link
-                  href="/praise-team/setlists/new"
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-[13px] font-medium text-[var(--cta-fg)]"
-                  style={{ background: "var(--cta-bg)" }}
-                >
-                  <PlusCircle size={14} aria-hidden />첫 콘티 작성하기
-                </Link>
-              ) : null}
-            </StatePanel>
-          )}
 
-          {/* 다가오는 팀 일정 — 콘티 유무와 무관하게 표시 */}
-          {!loading && !error ? (
-            <PraiseCard
-              label="Schedule"
-              title="다가오는 일정"
-              action={
-                <Link
-                  href="/praise-team/schedule"
-                  className="text-[13px] underline underline-offset-2"
-                  style={{ color: "var(--foreground-muted)" }}
-                >
-                  전체 보기
-                </Link>
-              }
-            >
-              {schedules.length > 0 ? (
-                <ul className="space-y-4">
-                  {schedules.map((schedule) => (
-                    <li key={schedule.id} className="text-[14px]">
-                      <p className="flex flex-wrap items-center gap-2 font-medium" style={{ color: "var(--foreground)" }}>
-                        <CalendarDays size={13} aria-hidden style={{ color: "var(--accent-strong)" }} />
-                        {schedule.title}
-                        <span
-                          className="rounded-full px-2 py-0.5 text-[11px]"
-                          style={{ background: "var(--chip-bg)", color: "var(--foreground-muted)" }}
-                        >
-                          {PRAISE_SCHEDULE_TYPE_LABELS[schedule.type] ?? schedule.type}
-                        </span>
-                        <span
-                          className="rounded-full px-2 py-0.5 text-[11px]"
-                          style={{ background: "var(--chip-bg)", color: "var(--foreground-muted)" }}
-                        >
-                          {SCHEDULE_VISIBILITY_LABELS[schedule.visibility] ?? schedule.visibility}
-                        </span>
-                      </p>
-                      <p className="mt-1 text-[13px]" style={{ color: "var(--foreground-muted)" }}>
-                        {formatDateLabel(scheduleDateKey(schedule.startAt))} {scheduleTimeLabel(schedule.startAt)}
-                        {schedule.location ? ` · ${schedule.location}` : ""}
-                      </p>
-                      {schedule.setlistId ? (
-                        <Link
-                          href={`/praise-team/setlists/${schedule.setlistId}`}
-                          className="mt-1 inline-flex min-h-8 items-center gap-1 text-[13px] underline underline-offset-2"
-                          style={{ color: "var(--foreground)" }}
-                        >
-                          <ListMusic size={12} aria-hidden style={{ color: "var(--accent-strong)" }} />
-                          콘티 보기
-                        </Link>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-[14px]" style={{ color: "var(--foreground-muted)" }}>
-                  다가오는 일정이 없습니다.{isLeader ? " 팀 일정 페이지에서 등록할 수 있어요." : ""}
-                </p>
-              )}
-            </PraiseCard>
+              {/* 다가오는 일정 */}
+              <PraiseCard
+                label="Schedule"
+                title="다가오는 일정"
+                action={
+                  <Link
+                    href="/praise-team/schedule"
+                    className="text-[13px] underline underline-offset-2"
+                    style={{ color: "var(--foreground-muted)" }}
+                  >
+                    전체 보기
+                  </Link>
+                }
+              >
+                {schedules.length > 0 ? (
+                  <ul className="space-y-4">
+                    {schedules.map((schedule) => (
+                      <li key={schedule.id} className="text-[14px]">
+                        <p className="flex flex-wrap items-center gap-2 font-medium" style={{ color: "var(--foreground)" }}>
+                          <CalendarDays size={13} aria-hidden style={{ color: "var(--accent-strong)" }} />
+                          {schedule.title}
+                          <span
+                            className="rounded-full px-2 py-0.5 text-[11px]"
+                            style={{ background: "var(--chip-bg)", color: "var(--foreground-muted)" }}
+                          >
+                            {PRAISE_SCHEDULE_TYPE_LABELS[schedule.type] ?? schedule.type}
+                          </span>
+                          <span
+                            className="rounded-full px-2 py-0.5 text-[11px]"
+                            style={{ background: "var(--chip-bg)", color: "var(--foreground-muted)" }}
+                          >
+                            {SCHEDULE_VISIBILITY_LABELS[schedule.visibility] ?? schedule.visibility}
+                          </span>
+                        </p>
+                        <p className="mt-1 text-[13px]" style={{ color: "var(--foreground-muted)" }}>
+                          {formatDateLabel(scheduleDateKey(schedule.startAt))} {scheduleTimeLabel(schedule.startAt)}
+                          {schedule.location ? ` · ${schedule.location}` : ""}
+                        </p>
+                        {schedule.setlistId ? (
+                          <Link
+                            href={`/praise-team/setlists/${schedule.setlistId}`}
+                            className="mt-1 inline-flex min-h-8 items-center gap-1 text-[13px] underline underline-offset-2"
+                            style={{ color: "var(--foreground)" }}
+                          >
+                            <ListMusic size={12} aria-hidden style={{ color: "var(--accent-strong)" }} />
+                            콘티 보기
+                          </Link>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-[14px]" style={{ color: "var(--foreground-muted)" }}>
+                    다가오는 일정이 없습니다.{isLeader ? " 팀 일정 페이지에서 등록할 수 있어요." : ""}
+                  </p>
+                )}
+              </PraiseCard>
+            </div>
           ) : null}
         </div>
-      </div>
-    </PageShell>
+        </div>
+      </PageShell>
+    </>
   );
 }

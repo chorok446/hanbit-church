@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarHeart, MessageCircle, Paperclip } from "lucide-react";
+import { CalendarHeart, FileText, Megaphone, MessageCircle, Paperclip, type LucideIcon } from "lucide-react";
 import { apiGet } from "@/lib/api";
 import { FallbackImage } from "@/components/fallback-image";
 import { ListEmptyState } from "@/components/list-empty-state";
@@ -22,6 +22,28 @@ const PAGE_SIZE = 10;
 const NEWS_CATEGORIES = ["NOTICE", "BULLETIN"] as const;
 
 type NewsCategory = (typeof NEWS_CATEGORIES)[number];
+
+/** 공식 채널 카테고리별 lucide 아이콘(썸네일·뱃지에서 이모지 대체). */
+const NEWS_CATEGORY_ICON: Record<NewsCategory, LucideIcon> = {
+  NOTICE: Megaphone,
+  BULLETIN: FileText,
+};
+
+/** 카테고리별 lucide 아이콘 렌더 — 컴포넌트를 render 중 생성하지 않도록 모듈 스코프 래퍼. */
+function CategoryIcon({
+  category,
+  size,
+  strokeWidth,
+  className,
+}: {
+  category: string;
+  size: number;
+  strokeWidth?: number;
+  className?: string;
+}) {
+  const Icon: LucideIcon = NEWS_CATEGORY_ICON[category as NewsCategory] ?? Megaphone;
+  return <Icon size={size} strokeWidth={strokeWidth} className={className} aria-hidden />;
+}
 
 type Result = { key: string; status: "success" | "error"; data: PostSearchResponse | null };
 
@@ -70,7 +92,7 @@ function NewsThumb({ post }: { post: Post }) {
       style={{ background: "var(--banner-bg)" }}
       aria-hidden
     >
-      <span style={{ fontSize: 18, lineHeight: 1 }}>{badge.emoji}</span>
+      <CategoryIcon category={post.category} size={20} strokeWidth={1.75} className="text-[#f6f3ea]" />
       <span
         className="text-[11.5px] tracking-[0.22em] text-[#f6f3ea]"
         style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
@@ -100,10 +122,10 @@ function NewsCard({ post, index }: { post: Post; index: number }) {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
               <span
-                className="rounded-full px-2 py-0.5 text-[11px] font-medium"
+                className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium"
                 style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}
               >
-                <span aria-hidden>{badge.emoji}</span> {badge.label}
+                <CategoryIcon category={post.category} size={11} strokeWidth={2} /> {badge.label}
               </span>
               {hasAttachments ? (
                 <span

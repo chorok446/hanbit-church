@@ -177,39 +177,43 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
   }, [queryIdentity, requestIdentity, searchPath, token]);
 
   return (
-    <PageShell paddingClassName="relative min-h-screen pt-28 pb-20 px-6 overflow-hidden" orb="left">
+    <>
+      {/* 컴팩트 네이비 밴드 — 마케팅 히어로가 아닌 커뮤니티/앱 페이지 공통 헤더. 골드 글로우 없음. */}
+      <section className="px-6 pb-11 pt-[124px]" style={{ background: "var(--banner-bg)" }}>
+        <div className="mx-auto max-w-5xl">
+          <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent)" }}>
+            Community
+          </p>
+          <h1
+            className="text-[32px] text-[#f6f3ea] sm:text-[38px]"
+            style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
+          >
+            성도의 교제
+          </h1>
+          <p className="mt-2 text-[14px]" style={{ color: "rgba(246,243,234,0.72)" }}>
+            함께 나누고, 기도하고, 서로를 격려하는 공간입니다.
+          </p>
+        </div>
+      </section>
+      <PageShell paddingClassName="relative min-h-screen px-6 pb-20 pt-10 overflow-hidden" orb="left">
       <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
         <main>
-          <div className="mb-8">
-            <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-              Community
-            </p>
-            <h1
-              className="text-[32px] sm:text-[38px]"
-              style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
-            >
-              성도의 교제
-            </h1>
-            <p className="mt-2 text-[14px]" style={{ color: "var(--foreground-muted)" }}>
-              함께 나누고, 기도하고, 서로를 격려하는 공간입니다.
-            </p>
-          </div>
           <button
             type="button"
             onClick={goToNewPost}
             aria-label="새 글 작성"
-            className="w-full flex items-center gap-3 p-4 rounded-2xl border mb-6 hover:-translate-y-0.5 transition-transform text-left"
+            className="w-full flex items-center gap-3 p-4 rounded-2xl border mb-6 shadow-[0_18px_44px_-30px_rgba(0,0,0,0.45)] hover:-translate-y-0.5 transition-transform text-left"
             style={{
               background: "var(--card)",
               borderColor: "var(--border)",
             }}
           >
             <CurrentUserAvatar />
-            <span className="flex-1 opacity-60" style={{ color: "var(--foreground)" }}>
+            <span className="flex-1 text-[14px]" style={{ color: "var(--foreground-muted)" }}>
               성도들과 나누고 싶은 이야기가 있나요?
             </span>
-            <span className="flex items-center gap-1.5 text-[13px] px-3 py-1.5 rounded-full" style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}>
-              <ImageIcon size={14} /> 새 글
+            <span className="flex items-center gap-1.5 text-[13px] px-3.5 py-1.5 rounded-full" style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}>
+              <ImageIcon size={14} aria-hidden /> 새 글
             </span>
           </button>
 
@@ -403,6 +407,7 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
           </div>
         </aside>
       </div>
-    </PageShell>
+      </PageShell>
+    </>
   );
 }

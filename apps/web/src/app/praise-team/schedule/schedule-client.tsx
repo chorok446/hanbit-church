@@ -4,7 +4,6 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
   CalendarDays,
   ListMusic,
   Loader2,
@@ -37,7 +36,7 @@ import {
   type PraiseSetlistSummary,
 } from "@/data/praise-team";
 import { usePraiseProfile } from "../praise-team-guard";
-import { SectionLabel } from "../praise-ui";
+import { PraiseBand } from "../praise-ui";
 
 const inputClass =
   "w-full rounded-2xl border px-4 py-3 text-[14px] outline-none placeholder:opacity-50";
@@ -239,31 +238,17 @@ export function ScheduleClient() {
   };
 
   return (
-    <PageShell orb="right" paddingClassName="px-6 pb-24 pt-32">
-      <div className="mx-auto max-w-4xl">
-        <Link
-          href="/praise-team"
-          className="inline-flex min-h-11 items-center gap-1.5 text-[13px]"
-          style={{ color: "var(--foreground-muted)" }}
-        >
-          <ArrowLeft size={14} aria-hidden />
-          찬양팀 홈
-        </Link>
-
-        <header className="mt-4 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <SectionLabel>Schedule</SectionLabel>
-            <h1
-              className="mt-2 text-[28px] sm:text-[32px]"
-              style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
-            >
-              팀 일정
-            </h1>
-            <p className="mt-2 text-[14px] leading-7" style={{ color: "var(--foreground-muted)" }}>
-              교회 공개·외부 공개 일정은 교회 캘린더와 홈 이번 주 일정에도 표시됩니다.
-            </p>
-          </div>
-          {isLeader && editing === null ? (
+    <>
+      <PraiseBand
+        eyebrow="Schedule"
+        title="팀 일정"
+        subtitle="교회 공개·외부 공개 일정은 교회 캘린더와 홈 이번 주 일정에도 표시됩니다."
+        back={{ href: "/praise-team", label: "찬양팀 홈" }}
+      />
+      <PageShell orb="right" paddingClassName="px-6 pb-24 pt-10">
+        <div className="mx-auto max-w-[896px]">
+        {isLeader && editing === null ? (
+          <div className="flex justify-end">
             <button
               type="button"
               onClick={openNew}
@@ -273,8 +258,8 @@ export function ScheduleClient() {
               <PlusCircle size={14} aria-hidden />
               일정 추가
             </button>
-          ) : null}
-        </header>
+          </div>
+        ) : null}
 
         {/* 추가/수정 폼 (리더) */}
         {isLeader && editing !== null ? (
@@ -537,7 +522,8 @@ export function ScheduleClient() {
             </ul>
           )}
         </div>
-      </div>
-    </PageShell>
+        </div>
+      </PageShell>
+    </>
   );
 }
