@@ -1,7 +1,7 @@
-package com.dasida.api.campaign
+package com.cheolma.api.event
 
-import com.dasida.api.common.Photos
-import com.dasida.api.post.Author
+import com.cheolma.api.common.Photos
+import com.cheolma.api.post.Author
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
 import jakarta.persistence.Embedded
@@ -12,20 +12,20 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 
-data class CampaignBody(val heading: String, val paragraphs: List<String>, val images: List<String>)
+data class EventBody(val heading: String, val paragraphs: List<String>, val images: List<String>)
 
 @Entity
 @Table(
-    name = "campaigns",
+    name = "events",
     indexes = [
-        Index(name = "idx_campaigns_author_user_id", columnList = "author_user_id"),
+        Index(name = "idx_events_author_user_id", columnList = "author_user_id"),
         // 공개 목록/검색: hidden_at IS NULL + seq 내림차순.
-        Index(name = "idx_campaigns_hidden_seq", columnList = "hidden_at, seq"),
+        Index(name = "idx_events_hidden_seq", columnList = "hidden_at, seq"),
         // 상태(open/upcoming/closed) 필터 + 숨김 필터 + seq 정렬 복합.
-        Index(name = "idx_campaigns_status_hidden_seq", columnList = "status, hidden_at, seq"),
+        Index(name = "idx_events_status_hidden_seq", columnList = "status, hidden_at, seq"),
     ],
 )
-class Campaign(
+class Event(
     @Id val id: String,
     var status: String, // "open" | "upcoming" | "closed"
     var title: String,
@@ -39,7 +39,7 @@ class Campaign(
     @Column(name = "joined_count") var joined: Int,
     var daysLeftLabel: String,
     @Embedded val author: Author,
-    @JdbcTypeCode(SqlTypes.JSON) @Column(columnDefinition = "json") var body: CampaignBody,
+    @JdbcTypeCode(SqlTypes.JSON) @Column(columnDefinition = "json") var body: EventBody,
     @JsonIgnore var seq: Long = 0, // 정렬용. 시드=인덱스, 생성=epoch millis (최신이 위로)
     // 소유권 판정용. author.name 은 작성 시점의 표시 이름 snapshot 으로만 사용한다.
     // 시드/기존 행사는 null 을 허용하며 이름으로 소유자를 추정하지 않는다.
@@ -52,12 +52,18 @@ class Campaign(
     // 개설자 삭제(soft delete). 값이 있으면 개설자 본인·관리자 복구 경로에서도 404 로 취급한다.
     // 삭제 시 hiddenAt 도 함께 세팅해 공개 노출 제외를 재사용한다.
     @Column(name = "deleted_at") @JsonIgnore var deletedAt: java.time.Instant? = null,
+    // 실무 안내(전부 선택). null/blank 면 프론트 상세에서 해당 행을 숨긴다 — "추후 안내" 자리표시 없음.
+    @Column(length = 200) var place: String? = null,
+    @Column(length = 200) var audience: String? = null,
+    @Column(length = 200) var fee: String? = null,
+    @Column(length = 500) var supplies: String? = null,
+    @Column(length = 200) var contact: String? = null,
 )
 
 /**
- * 초기 적재 시드. apps/web/src/data/campaigns.ts 와 1:1 미러. SeedRunner 가 비어있을 때만 저장.
+ * 초기 적재 시드. apps/web/src/data/events.ts 와 1:1 미러. SeedRunner 가 비어있을 때만 저장.
  */
-object CampaignSeed {
+object EventSeed {
     private val worship = Photos.worship
     private val bible = Photos.bible
     private val community = Photos.community
@@ -71,46 +77,47 @@ object CampaignSeed {
         "궁금한 점은 담당 교역자 또는 부서 임원에게 문의해 주세요.",
     )
 
-    val campaigns: List<Campaign> = listOf(
-        Campaign("c1", "open", "여름 청년 수련회",
+    val events: List<Event> = listOf(
+        Event("c1", "open", "여름 청년 수련회",
             "말씀 안에서 쉼과 회복을 누리는 2박 3일 청년 수련회.", community[1],
             "2026-06-18", "2026-07-18", "2026-07-22", "2026-07-24", 40, 39, "21일 남음",
             Author("청년부", true),
-            CampaignBody("행사 소개", longBody, listOf(community[3], community[4]))),
-        Campaign("c2", "open", "지역 어르신 반찬 나눔 봉사",
+            EventBody("행사 소개", longBody, listOf(community[3], community[4])),
+            place = "OO수양관(추후 안내)", audience = "청년부", fee = "1인 3만원", supplies = "성경, 세면도구, 편한 복장", contact = "청년부 임원"),
+        Event("c2", "open", "지역 어르신 반찬 나눔 봉사",
             "매주 토요일 오전, 홀로 계신 어르신께 반찬을 전합니다.", serve[0],
             "2026-06-10", "2026-06-30", "2026-07-05", "2026-08-30", 60, 47, "5일 남음",
             Author("사랑부", true),
-            CampaignBody("섬김 소개", longBody, listOf(serve[1], serve[2]))),
-        Campaign("c3", "upcoming", "새가족 환영 식사",
+            EventBody("섬김 소개", longBody, listOf(serve[1], serve[2]))),
+        Event("c3", "upcoming", "새가족 환영 식사",
             "새로 오신 분들과 함께하는 환영 식사와 교제.", fellowship[0],
             "2026-07-01", "2026-07-20", "2026-07-26", "2026-07-26", 30, 0, "3일 후 모집 시작",
             Author("새가족부", false),
-            CampaignBody("모임 소개", longBody, listOf(fellowship[2], fellowship[3]))),
-        Campaign("c4", "upcoming", "가을 전교인 야외 예배",
+            EventBody("모임 소개", longBody, listOf(fellowship[2], fellowship[3]))),
+        Event("c4", "upcoming", "가을 전교인 야외 예배",
             "온 성도가 함께 드리는 야외 예배와 친교.", community[5],
             "2026-07-15", "2026-08-05", "2026-08-15", "2026-08-15", 100, 0, "12일 후 모집 시작",
             Author("철마제일교회", true),
-            CampaignBody("행사 소개", longBody, listOf(community[2], community[0]))),
-        Campaign("c5", "closed", "봄 학기 성경공부반",
+            EventBody("행사 소개", longBody, listOf(community[2], community[0]))),
+        Event("c5", "closed", "봄 학기 성경공부반",
             "로마서를 함께 읽은 8주 과정이 은혜 가운데 마쳤습니다.", bible[0],
             "2026-04-01", "2026-04-30", "2026-05-10", "2026-06-30", 40, 40, "모집완료",
             Author("교육부", true),
-            CampaignBody("과정 결과", longBody, listOf(bible[4], bible[3]))),
-        Campaign("c6", "closed", "부활절 이웃 초청 잔치",
+            EventBody("과정 결과", longBody, listOf(bible[4], bible[3]))),
+        Event("c6", "closed", "부활절 이웃 초청 잔치",
             "이웃과 함께 부활의 기쁨을 나눈 초청 잔치였습니다.", fellowship[1],
             "2026-03-10", "2026-03-30", "2026-04-05", "2026-04-05", 25, 25, "모집완료",
             Author("전도부", false),
-            CampaignBody("행사 결과", longBody, listOf(fellowship[2], worship[4]))),
-        Campaign("c7", "open", "주일학교 여름성경학교 교사 모집",
+            EventBody("행사 결과", longBody, listOf(fellowship[2], worship[4]))),
+        Event("c7", "open", "주일학교 여름성경학교 교사 모집",
             "아이들과 함께할 여름성경학교 섬김 교사를 찾습니다.", children[0],
             "2026-06-20", "2026-07-10", "2026-07-27", "2026-07-29", 20, 12, "14일 남음",
             Author("주일학교", true),
-            CampaignBody("섬김 소개", longBody, listOf(children[2], children[3]))),
-        Campaign("c8", "open", "교회 화단 가꾸기",
+            EventBody("섬김 소개", longBody, listOf(children[2], children[3]))),
+        Event("c8", "open", "교회 화단 가꾸기",
             "함께 심고 가꾸며 교회 마당을 돌보는 소소한 섬김.", serve[3],
             "2026-06-01", "2026-07-01", "2026-07-10", "2026-07-31", 16, 9, "8일 남음",
             Author("관리부", false),
-            CampaignBody("섬김 소개", longBody, listOf(serve[4], serve[5]))),
+            EventBody("섬김 소개", longBody, listOf(serve[4], serve[5]))),
     )
 }

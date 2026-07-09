@@ -4,7 +4,7 @@ import { CalendarRange, Info, Package, Phone } from "lucide-react";
 import type { ReactNode } from "react";
 import { RichBodyImageGrid } from "@/components/rich-body-image-grid";
 import { PostText } from "@/components/post-text";
-import type { Campaign } from "@/data/campaigns";
+import type { Event } from "@/data/events";
 
 function InfoSection({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
   return (
@@ -23,7 +23,7 @@ function InfoSection({ icon, title, children }: { icon: ReactNode; title: string
   );
 }
 
-export function CampaignContentTab({ c }: { c: Campaign }) {
+export function EventContentTab({ c }: { c: Event }) {
   return (
     <div
       className="rounded-3xl border p-6 sm:p-10 space-y-8"
@@ -44,8 +44,7 @@ export function CampaignContentTab({ c }: { c: Campaign }) {
       ))}
       <RichBodyImageGrid images={c.body.images} altPrefix="행사 상세 이미지" />
 
-      {/* 소개 외 실무 안내 — 준비물·문의는 아직 데이터가 없어 일반 안내 문구로 대신한다.
-          TODO(데이터: 장소·대상·참가비 필드 백엔드 추가 필요) — supplies/contact 값이 생기면 그대로 노출된다. */}
+      {/* 소개 외 실무 안내 — supplies/contact 값이 있으면 그대로, 없으면 일반 안내 문구를 보여준다. */}
       <div className="space-y-6 border-t pt-8" style={{ borderColor: "var(--border)" }}>
         <InfoSection icon={<CalendarRange size={15} />} title="일정 안내">
           <p>모집 기간: {c.recruitStart} ~ {c.recruitEnd}</p>

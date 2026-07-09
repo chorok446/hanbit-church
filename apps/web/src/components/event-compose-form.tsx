@@ -2,37 +2,37 @@
 
 import { useEffect, useId } from "react";
 import { Loader2 } from "lucide-react";
-import { CampaignComposeBody } from "@/components/campaign-compose-body";
-import { CampaignComposeSchedule } from "@/components/campaign-compose-schedule";
-import { CampaignComposeThumb } from "@/components/campaign-compose-thumb";
+import { EventComposeBody } from "@/components/event-compose-body";
+import { EventComposeSchedule } from "@/components/event-compose-schedule";
+import { EventComposeThumb } from "@/components/event-compose-thumb";
 import {
-  CAMPAIGN_COMPOSE_DRAFT_KEY,
-  DEFAULT_CAMPAIGN_COMPOSE_VALUES,
-  type CampaignComposeField,
-  type CampaignComposeValues,
-} from "@/data/campaigns";
+  EVENT_COMPOSE_DRAFT_KEY,
+  DEFAULT_EVENT_COMPOSE_VALUES,
+  type EventComposeField,
+  type EventComposeValues,
+} from "@/data/events";
 
-export { CAMPAIGN_COMPOSE_DRAFT_KEY };
+export { EVENT_COMPOSE_DRAFT_KEY };
 
-type CampaignComposeFormProps = {
-  values: CampaignComposeValues;
-  onChange: (values: CampaignComposeValues) => void;
-  fieldErrors?: Partial<Record<CampaignComposeField, string>>;
-  onFieldErrorClear?: (field: CampaignComposeField) => void;
+type EventComposeFormProps = {
+  values: EventComposeValues;
+  onChange: (values: EventComposeValues) => void;
+  fieldErrors?: Partial<Record<EventComposeField, string>>;
+  onFieldErrorClear?: (field: EventComposeField) => void;
   showDraftSaved?: boolean;
   disabled?: boolean;
   titleInputId?: string;
 };
 
-export function CampaignComposeForm({
+export function EventComposeForm({
   values,
   onChange,
   fieldErrors = {},
   onFieldErrorClear,
   showDraftSaved = false,
   disabled = false,
-  titleInputId = "campaign-title",
-}: CampaignComposeFormProps) {
+  titleInputId = "event-title",
+}: EventComposeFormProps) {
   const summaryInputId = useId();
 
   const labelStyle = { color: "var(--foreground-muted)" };
@@ -42,7 +42,7 @@ export function CampaignComposeForm({
     color: "var(--foreground)",
   };
 
-  const patch = (partial: Partial<CampaignComposeValues>) => onChange({ ...values, ...partial });
+  const patch = (partial: Partial<EventComposeValues>) => onChange({ ...values, ...partial });
 
   const titleErrorId = `${titleInputId}-error`;
   const summaryErrorId = `${summaryInputId}-error`;
@@ -108,7 +108,7 @@ export function CampaignComposeForm({
         ) : null}
       </div>
 
-      <CampaignComposeThumb
+      <EventComposeThumb
         thumb={values.thumb}
         disabled={disabled}
         fieldError={fieldErrors.thumb}
@@ -116,7 +116,7 @@ export function CampaignComposeForm({
         onThumbChange={(thumb) => patch({ thumb })}
       />
 
-      <CampaignComposeSchedule
+      <EventComposeSchedule
         recruitStart={values.recruitStart}
         recruitEnd={values.recruitEnd}
         runStart={values.runStart}
@@ -128,37 +128,89 @@ export function CampaignComposeForm({
         onChange={(partial) => patch(partial)}
       />
 
-      <CampaignComposeBody
+      <EventComposeBody
         body={values.body}
         fieldError={fieldErrors.body}
         disabled={disabled}
         onFieldErrorClear={() => onFieldErrorClear?.("body")}
         onBodyChange={(body) => patch({ body })}
       />
+
+      {/* 실무 안내(전부 선택) — 비워두면 상세에서 해당 행이 노출되지 않는다. */}
+      <fieldset className="space-y-4 rounded-xl border p-4" style={{ borderColor: "var(--border)" }}>
+        <legend className="px-1 text-[12px] tracking-[0.2em] uppercase" style={labelStyle}>
+          실무 안내 (선택)
+        </legend>
+        {(
+          [
+            { key: "place", label: "장소", placeholder: "예) 본당 2층" },
+            { key: "audience", label: "대상", placeholder: "예) 청년부, 누구나" },
+            { key: "fee", label: "참가비", placeholder: "예) 1인 1만원 (없으면 비워두세요)" },
+            { key: "supplies", label: "준비물", placeholder: "예) 성경, 필기구" },
+            { key: "contact", label: "문의", placeholder: "예) 청년부 임원, 교회 사무실" },
+          ] as const
+        ).map((field) => {
+          const inputId = `${titleInputId}-${field.key}`;
+          const errorId = `${inputId}-error`;
+          const error = fieldErrors[field.key];
+          return (
+            <div key={field.key}>
+              <label htmlFor={inputId} className="mb-2 block text-[12px]" style={labelStyle}>
+                {field.label}
+              </label>
+              <input
+                id={inputId}
+                type="text"
+                value={values[field.key]}
+                onChange={(e) => {
+                  patch({ [field.key]: e.target.value });
+                  onFieldErrorClear?.(field.key);
+                }}
+                placeholder={field.placeholder}
+                disabled={disabled}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? errorId : undefined}
+                className="ui-control w-full placeholder:opacity-50"
+                style={controlStyle}
+              />
+              {error ? (
+                <p id={errorId} className="mt-1.5 text-[12px]" style={{ color: "var(--danger)" }} role="alert">
+                  {error}
+                </p>
+              ) : null}
+            </div>
+          );
+        })}
+      </fieldset>
     </div>
   );
 }
 
-export function useCampaignComposeDraft(
-  values: CampaignComposeValues,
-  onRestore: (draft: CampaignComposeValues) => void,
+export function useEventComposeDraft(
+  values: EventComposeValues,
+  onRestore: (draft: EventComposeValues) => void,
 ) {
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(CAMPAIGN_COMPOSE_DRAFT_KEY);
+      const raw = localStorage.getItem(EVENT_COMPOSE_DRAFT_KEY);
       if (!raw) return;
-      const draft = JSON.parse(raw) as Partial<CampaignComposeValues>;
+      const draft = JSON.parse(raw) as Partial<EventComposeValues>;
       if (!draft || typeof draft !== "object") return;
       onRestore({
         title: typeof draft.title === "string" ? draft.title : "",
         summary: typeof draft.summary === "string" ? draft.summary : "",
         body: typeof draft.body === "string" ? draft.body : "",
         thumb: typeof draft.thumb === "string" ? draft.thumb : "",
-        recruitStart: typeof draft.recruitStart === "string" ? draft.recruitStart : DEFAULT_CAMPAIGN_COMPOSE_VALUES.recruitStart,
-        recruitEnd: typeof draft.recruitEnd === "string" ? draft.recruitEnd : DEFAULT_CAMPAIGN_COMPOSE_VALUES.recruitEnd,
-        runStart: typeof draft.runStart === "string" ? draft.runStart : DEFAULT_CAMPAIGN_COMPOSE_VALUES.runStart,
-        runEnd: typeof draft.runEnd === "string" ? draft.runEnd : DEFAULT_CAMPAIGN_COMPOSE_VALUES.runEnd,
-        capacity: typeof draft.capacity === "string" ? draft.capacity : DEFAULT_CAMPAIGN_COMPOSE_VALUES.capacity,
+        recruitStart: typeof draft.recruitStart === "string" ? draft.recruitStart : DEFAULT_EVENT_COMPOSE_VALUES.recruitStart,
+        recruitEnd: typeof draft.recruitEnd === "string" ? draft.recruitEnd : DEFAULT_EVENT_COMPOSE_VALUES.recruitEnd,
+        runStart: typeof draft.runStart === "string" ? draft.runStart : DEFAULT_EVENT_COMPOSE_VALUES.runStart,
+        runEnd: typeof draft.runEnd === "string" ? draft.runEnd : DEFAULT_EVENT_COMPOSE_VALUES.runEnd,
+        capacity: typeof draft.capacity === "string" ? draft.capacity : DEFAULT_EVENT_COMPOSE_VALUES.capacity,
+        place: typeof draft.place === "string" ? draft.place : "",
+        audience: typeof draft.audience === "string" ? draft.audience : "",
+        fee: typeof draft.fee === "string" ? draft.fee : "",
+        supplies: typeof draft.supplies === "string" ? draft.supplies : "",
+        contact: typeof draft.contact === "string" ? draft.contact : "",
       });
     } catch {
       // ignore corrupt draft
@@ -167,33 +219,38 @@ export function useCampaignComposeDraft(
   }, []);
 
   useEffect(() => {
-    if (!campaignComposeDraftHasContent(values)) {
-      localStorage.removeItem(CAMPAIGN_COMPOSE_DRAFT_KEY);
+    if (!eventComposeDraftHasContent(values)) {
+      localStorage.removeItem(EVENT_COMPOSE_DRAFT_KEY);
       return;
     }
-    localStorage.setItem(CAMPAIGN_COMPOSE_DRAFT_KEY, JSON.stringify(values));
+    localStorage.setItem(EVENT_COMPOSE_DRAFT_KEY, JSON.stringify(values));
   }, [values]);
 
-  const draftSaved = campaignComposeDraftHasContent(values);
+  const draftSaved = eventComposeDraftHasContent(values);
 
   const clearDraft = () => {
-    localStorage.removeItem(CAMPAIGN_COMPOSE_DRAFT_KEY);
+    localStorage.removeItem(EVENT_COMPOSE_DRAFT_KEY);
   };
 
   return { draftSaved, clearDraft };
 }
 
-function campaignComposeDraftHasContent(values: CampaignComposeValues): boolean {
+function eventComposeDraftHasContent(values: EventComposeValues): boolean {
   return (
     values.title.trim().length > 0 ||
     values.summary.trim().length > 0 ||
     values.body.trim().length > 0 ||
     values.thumb.trim().length > 0 ||
-    values.capacity !== DEFAULT_CAMPAIGN_COMPOSE_VALUES.capacity ||
-    values.recruitStart !== DEFAULT_CAMPAIGN_COMPOSE_VALUES.recruitStart ||
-    values.recruitEnd !== DEFAULT_CAMPAIGN_COMPOSE_VALUES.recruitEnd ||
-    values.runStart !== DEFAULT_CAMPAIGN_COMPOSE_VALUES.runStart ||
-    values.runEnd !== DEFAULT_CAMPAIGN_COMPOSE_VALUES.runEnd
+    values.capacity !== DEFAULT_EVENT_COMPOSE_VALUES.capacity ||
+    values.recruitStart !== DEFAULT_EVENT_COMPOSE_VALUES.recruitStart ||
+    values.recruitEnd !== DEFAULT_EVENT_COMPOSE_VALUES.recruitEnd ||
+    values.runStart !== DEFAULT_EVENT_COMPOSE_VALUES.runStart ||
+    values.runEnd !== DEFAULT_EVENT_COMPOSE_VALUES.runEnd ||
+    values.place.trim().length > 0 ||
+    values.audience.trim().length > 0 ||
+    values.fee.trim().length > 0 ||
+    values.supplies.trim().length > 0 ||
+    values.contact.trim().length > 0
   );
 }
 
@@ -205,7 +262,7 @@ type SubmitButtonProps = {
   pendingLabel: string;
 };
 
-export function CampaignComposeSubmitButton({
+export function EventComposeSubmitButton({
   submitting,
   disabled,
   onClick,
