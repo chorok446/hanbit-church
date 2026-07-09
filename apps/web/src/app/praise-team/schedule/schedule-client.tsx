@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   CalendarDays,
+  ListMusic,
   Loader2,
   MapPin,
   Pencil,
@@ -18,7 +19,6 @@ import { PageShell } from "@/components/page-shell";
 import { StatePanel } from "@/components/ui/state-panel";
 import { formatDateLabel } from "@/data/calendar";
 import { ApiError, apiErrorMessage } from "@/lib/api";
-import { ListMusic } from "lucide-react";
 import {
   createPraiseSchedule,
   deletePraiseSchedule,

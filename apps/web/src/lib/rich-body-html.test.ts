@@ -20,6 +20,16 @@ describe("rich-body-html", () => {
     expect(merged).toContain("소개");
   });
 
+  it("merge 는 src 의 특수문자를 이스케이프해 라운드트립한다", () => {
+    const url = "https://a.com/1.jpg?a=1&b=2\"><script>";
+    const merged = mergeRichBodyForEditor("", [url]);
+    expect(merged).not.toContain('"><script>');
+    expect(merged).toContain("&amp;");
+    // 편집 HTML 을 다시 분리하면 원래 URL 로 복원된다
+    const { images } = splitRichBodyHtml(merged);
+    expect(images).toEqual([url]);
+  });
+
   it("cleanEmptyRichParagraphs 는 빈 p 를 제거한다", () => {
     expect(cleanEmptyRichParagraphs("<p>본문</p><p></p><p>&nbsp;</p>")).toBe("<p>본문</p>");
   });

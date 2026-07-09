@@ -59,7 +59,7 @@ class AdminReportService(
             else -> reports.findAll(pageable)
         }
         return AdminReportsPageResponse(
-            content = result.content.map { it.toAdminResponse() },
+            content = buildReportResponses(result.content),
             page = result.number,
             size = result.size,
             totalElements = result.totalElements,
@@ -89,6 +89,12 @@ class AdminReportService(
         report.resolvedByUserId = adminUserId
         report.resolvedAt = Instant.now(clock)
         report.resolutionNote = note
+        // 상태 변경을 먼저 flush 해 @Version 충돌(동시 처리)을 side effect(알림·감사로그·숨김) 전에 잡는다.
+        try {
+            reports.saveAndFlush(report)
+        } catch (_: org.springframework.dao.OptimisticLockingFailureException) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "report already processed")
+        }
         val action = if (newStatus == ReportStatus.RESOLVED) AdminActionType.REPORT_RESOLVED else AdminActionType.REPORT_DISMISSED
         actionLogs.record(adminUserId, action, TARGET_TYPE_REPORT, reportId, note)
         // 제재 확정 시 대상 콘텐츠 숨김까지 한 번에 처리. 대상이 이미 삭제됐으면 조용히 넘어간다.
@@ -138,7 +144,31 @@ class AdminReportService(
         )
     }
 
-    private fun Report.toAdminResponse(): AdminReportResponse = AdminReportResponse(
+    /**
+     * 신고 큐 목록 매핑 — 행당 반복 조회(N+1)를 배치로 대체한다:
+     *  - 신고자: users.findAllById 로 한 번에 로드
+     *  - 대상별 신고 건수: countGroupedByTarget 로 한 번에 집계
+     * (대상 미리보기 targetPreview 는 5개 타입 분기라 행당 조회를 유지한다.)
+     */
+    private fun buildReportResponses(page: List<Report>): List<AdminReportResponse> {
+        if (page.isEmpty()) return emptyList()
+        val reporterMap = users.findAllById(page.map { it.reporterUserId }.toSet()).associateBy { it.id }
+        val countMap = reports.countGroupedByTarget(
+            types = page.map { it.targetType }.toSet(),
+            ids = page.map { it.targetId }.toSet(),
+        ).associate { (it[0] as String) + "|" + (it[1] as String) to (it[2] as Long) }
+        return page.map { report ->
+            report.toAdminResponse(
+                reporter = reporterResponse(report, reporterMap[report.reporterUserId]),
+                targetReportCount = countMap["${report.targetType}|${report.targetId}"] ?: 0L,
+            )
+        }
+    }
+
+    private fun Report.toAdminResponse(
+        reporter: AdminReportUserResponse = reporterResponse(this, users.findById(reporterUserId).orElse(null)),
+        targetReportCount: Long = reports.countByTargetTypeAndTargetId(targetType, targetId),
+    ): AdminReportResponse = AdminReportResponse(
         id = id,
         targetType = targetType,
         targetId = targetId,
@@ -148,20 +178,18 @@ class AdminReportService(
         status = status,
         resolutionNote = resolutionNote,
         resolvedAt = resolvedAt?.toString(),
-        reporter = reporterOf(this),
+        reporter = reporter,
         target = targetPreview(this),
-        targetReportCount = reports.countByTargetTypeAndTargetId(targetType, targetId),
+        targetReportCount = targetReportCount,
     )
 
-    private fun reporterOf(report: Report): AdminReportUserResponse {
-        val user = users.findById(report.reporterUserId).orElse(null)
-        return AdminReportUserResponse(
+    private fun reporterResponse(report: Report, user: com.dasida.api.auth.User?): AdminReportUserResponse =
+        AdminReportUserResponse(
             id = report.reporterUserId,
             name = user?.name ?: "알 수 없음",
             // 탈퇴 계정 이메일은 익명화된 placeholder 라 노출 의미가 없다.
             email = user?.takeIf { it.deletedAt == null }?.email,
         )
-    }
 
     /** 신고 대상 미리보기. 대상이 이미 삭제됐으면 null(프론트는 "삭제된 콘텐츠"로 표시). */
     private fun targetPreview(report: Report): AdminReportTargetResponse? {

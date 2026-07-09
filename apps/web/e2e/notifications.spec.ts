@@ -54,7 +54,8 @@ test("행사 참여 시 개설자에게 알림이 생성되고 읽음·삭제할
   await expect(ownerPage.getByRole("link", { name: /행사에 참여했습니다/ })).toBeVisible();
 
   // 타입별 필터 탭: 관련 없는 그룹에서는 안 보이고, 행사 그룹에서는 보인다.
-  await ownerPage.getByRole("button", { name: "팔로우", exact: true }).click();
+  // (팔로우 기능 제거로 "팔로우" 탭이 없어져, 무관 그룹으로 "찬양팀" 탭을 사용한다.)
+  await ownerPage.getByRole("button", { name: "찬양팀", exact: true }).click();
   await expect(ownerPage.getByText("알림이 없습니다.")).toBeVisible();
   await ownerPage.getByRole("button", { name: "행사", exact: true }).click();
   await expect(ownerPage.getByRole("link", { name: /행사에 참여했습니다/ })).toBeVisible();

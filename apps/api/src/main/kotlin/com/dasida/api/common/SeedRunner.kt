@@ -51,10 +51,19 @@ class SeedRunner(
     private fun seedAdmin() {
         val existing = users.findByEmail(adminEmail.trim().lowercase())
         if (existing != null) {
+            // 부트스트랩 관리자는 승인제와 무관하게 로그인 가능해야 한다 — role 승격 + 미승인 시 승인 처리.
+            var changed = false
             if (!existing.isAdmin) {
                 existing.role = UserRole.ADMIN.name
+                changed = true
+            }
+            if (existing.approvedAt == null) {
+                existing.approvedAt = java.time.Instant.now()
+                changed = true
+            }
+            if (changed) {
                 users.save(existing)
-                log.info("promoted existing user to ADMIN: {}", adminEmail)
+                log.info("ensured bootstrap ADMIN (role/approval): {}", adminEmail)
             }
             return
         }
@@ -70,6 +79,8 @@ class SeedRunner(
                 verified = true,
                 role = UserRole.ADMIN.name,
                 createdAt = java.time.Instant.now(),
+                // 승인제(app.signup.require-approval=true) 에서도 부트스트랩 관리자는 즉시 로그인 가능해야 한다.
+                approvedAt = java.time.Instant.now(),
             ),
         )
         log.info("admin account seeded: {}", adminEmail)

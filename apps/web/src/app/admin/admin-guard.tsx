@@ -1,12 +1,24 @@
 "use client";
 
-import { useEffect } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { notFound, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { StatePanel } from "@/components/ui/state-panel";
 import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
+import type { UserProfile } from "@/data/users";
 import { isStaffRole } from "./permissions";
+
+const AdminProfileContext = createContext<UserProfile | null>(null);
+
+/** 가드 통과 후 하위 관리자 페이지에서 프로필을 재요청 없이 읽는다(가드 안에서만 사용). */
+export function useAdminProfile(): UserProfile {
+  const profile = useContext(AdminProfileContext);
+  if (!profile) {
+    throw new Error("useAdminProfile 은 AdminGuard 하위에서만 사용할 수 있습니다.");
+  }
+  return profile;
+}
 
 /**
  * 관리자 라우트 가드. 비로그인은 로그인으로 보내고, 스태프 역할(permissions.ts)이 아니면
@@ -50,5 +62,5 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return <AdminProfileContext.Provider value={profile}>{children}</AdminProfileContext.Provider>;
 }

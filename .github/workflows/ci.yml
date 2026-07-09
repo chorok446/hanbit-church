@@ -69,7 +69,18 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter web build
       - run: pnpm --filter web exec playwright install --with-deps chromium
+      # API 기본 DB 는 3307/hanbit(로컬 docker-compose) 이므로, e2e MySQL 서비스(3306/dasida)에
+      # 맞춰 DB env 를 주입한다. 없으면 bootRun 이 Communications link failure 로 기동 실패한다.
       - run: pnpm --filter web e2e
+        env:
+          DB_URL: jdbc:mysql://localhost:3306/dasida
+          DB_USER: dasida
+          DB_PASSWORD: dasida
+          # e2e 헬퍼가 기대하는 부트스트랩 관리자(e2e-admin@hanbit.local/E2eAdmin1!)를 SeedRunner 로 시드.
+          # 없으면 관리자 로그인이 401 로 실패한다(praise-team 등 admin 시드 전제 스펙).
+          ADMIN_EMAIL: e2e-admin@hanbit.local
+          ADMIN_PASSWORD: E2eAdmin1!
+          ADMIN_NAME: e2e관리자
       - name: Upload Playwright traces on failure
         if: failure()
         uses: actions/upload-artifact@v6
@@ -77,6 +88,25 @@ jobs:
           name: playwright-traces
           path: apps/web/test-results/
           retention-days: 7
+
+  # 의존성/파일시스템 취약점 스캔. 초기에는 비차단(continue-on-error)으로 리포트만 남긴다.
+  security:
+    name: security (deps scan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # pnpm audit runs over the whole JS workspace (web + packages); it has no --filter form.
+      # 비차단(continue-on-error): 취약점을 리포트만 하고 빌드는 막지 않는다.
+      # (컨테이너 이미지 스캔은 외부 액션 버전 드리프트로 잡이 통째로 실패할 수 있어 후속 과제로 분리)
+      - name: pnpm audit (JS workspace, high+)
+        continue-on-error: true
+        run: pnpm audit --audit-level=high
 
   api:
     name: api (Spring Boot)

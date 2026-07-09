@@ -2,7 +2,12 @@ package com.dasida.api.campaign
 
 import com.dasida.api.auth.UserRepository
 import com.dasida.api.common.checkPageParams
+import com.dasida.api.common.ListingLimits.MAX_SEARCH_PAGE_SIZE
+import com.dasida.api.common.ListingLimits.MAX_SEARCH_QUERY_LENGTH
+import com.dasida.api.common.ListingLimits.MAX_SITEMAP_PAGE_SIZE
 import com.dasida.api.common.SitemapIdsResponse
+import com.dasida.api.common.presenceByPage
+import com.dasida.api.common.totalPages
 import com.dasida.api.notification.NotificationService
 import com.dasida.api.notification.NotificationType
 import com.dasida.api.post.Author
@@ -313,14 +318,17 @@ class CampaignService(
                 else -> throw ResponseStatusException(HttpStatus.CONFLICT, "invalid status transition")
             }
             val title = if (target == "open") "모집이 시작되었습니다" else "모집이 마감되었습니다"
-            participants.findByCampaignId(campaignId)
-                .asSequence()
-                .filter { it.userId != userId }
-                .forEach { participant ->
-                    val recipient = users.findById(participant.userId).orElse(null) ?: return@forEach
-                    if (!recipient.notifyCampaignUpdates) return@forEach
+            // 참여자 알림 팬아웃. 행 락(PESSIMISTIC_WRITE) 보유 시간을 줄이려고 수신자 유저를 한 번에 bulk 로드한다
+            // (기존엔 참여자마다 users.findById → N+1). TODO(후속): 알림 생성을 after-commit/async 로 옮겨 락 밖에서 처리.
+            val recipientIds = participants.findByCampaignId(campaignId)
+                .map { it.userId }
+                .filter { it != userId }
+                .distinct()
+            users.findAllById(recipientIds)
+                .filter { it.notifyCampaignUpdates }
+                .forEach { recipient ->
                     notifications.notify(
-                        recipientUserId = participant.userId,
+                        recipientUserId = recipient.id,
                         actorUserId = userId,
                         type = NotificationType.CAMPAIGN_STATUS_CHANGED,
                         title = title,
@@ -529,27 +537,13 @@ class CampaignService(
 
     /** 현재 page 의 campaignId 만 대상으로 참여 상태 bulk 조회. 비로그인/빈 page 면 query 생략. */
     private fun joinedByPage(userId: Long?, campaignIds: List<String>): Set<String> =
-        if (userId == null || campaignIds.isEmpty()) {
-            emptySet()
-        } else {
-            participants.findByUserIdAndCampaignIdIn(userId, campaignIds).map { it.campaignId }.toSet()
-        }
+        presenceByPage(userId, campaignIds) { uid, ids -> participants.findByUserIdAndCampaignIdIn(uid, ids).map { it.campaignId } }
 
     /** 현재 page 의 campaignId 만 대상으로 북마크 bulk 조회. 비로그인/빈 page 면 query 생략. */
     private fun bookmarkedByPage(userId: Long?, campaignIds: List<String>): Set<String> =
-        if (userId == null || campaignIds.isEmpty()) {
-            emptySet()
-        } else {
-            bookmarkRepo.findByUserIdAndCampaignIdIn(userId, campaignIds).map { it.campaignId }.toSet()
-        }
+        presenceByPage(userId, campaignIds) { uid, ids -> bookmarkRepo.findByUserIdAndCampaignIdIn(uid, ids).map { it.campaignId } }
 
     private companion object {
         val CAMPAIGN_STATUSES = setOf("open", "upcoming", "closed")
-        const val MAX_SEARCH_PAGE_SIZE = 50
-        const val MAX_SEARCH_QUERY_LENGTH = 100
-        const val MAX_SITEMAP_PAGE_SIZE = 500
-
-        fun totalPages(totalElements: Long, size: Int): Int =
-            if (totalElements == 0L) 0 else ((totalElements - 1) / size + 1).toInt()
     }
 }
