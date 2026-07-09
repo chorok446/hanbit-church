@@ -7,6 +7,8 @@ import com.dasida.api.campaign.CampaignRepository
 import com.dasida.api.campaign.CampaignSeed
 import com.dasida.api.post.PostRepository
 import com.dasida.api.post.PostSeed
+import com.dasida.api.praise.PraiseSeed
+import com.dasida.api.praise.PraiseSetlistRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Component
 class SeedRunner(
     private val posts: PostRepository,
     private val campaigns: CampaignRepository,
+    private val praiseSetlists: PraiseSetlistRepository,
     private val users: UserRepository,
     private val encoder: PasswordEncoder,
     @Value("\${app.admin.email}") private val adminEmail: String,
@@ -33,6 +36,9 @@ class SeedRunner(
         }
         if (campaigns.count() == 0L) {
             campaigns.saveAll(CampaignSeed.campaigns.reversed().onEachIndexed { i, c -> c.seq = (i + 1).toLong() })
+        }
+        if (praiseSetlists.count() == 0L) {
+            praiseSetlists.saveAll(PraiseSeed.setlists(java.time.Instant.now()))
         }
         seedAdmin()
     }

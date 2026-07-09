@@ -52,11 +52,12 @@ class Campaign(
  * 초기 적재 시드. apps/web/src/data/campaigns.ts 와 1:1 미러. SeedRunner 가 비어있을 때만 저장.
  */
 object CampaignSeed {
-    private val nature = Photos.nature
-    private val workshop = Photos.workshop
-    private val market = Photos.market
-    private val obj = Photos.obj
-    private val people = Photos.people
+    private val worship = Photos.worship
+    private val bible = Photos.bible
+    private val community = Photos.community
+    private val fellowship = Photos.fellowship
+    private val serve = Photos.serve
+    private val children = Photos.children
 
     private val longBody = listOf(
         "말씀과 기도, 교제가 함께하는 시간입니다. 자세한 일정과 준비물은 본문을 확인해 주세요.",
@@ -66,44 +67,44 @@ object CampaignSeed {
 
     val campaigns: List<Campaign> = listOf(
         Campaign("c1", "open", "여름 청년 수련회",
-            "말씀 안에서 쉼과 회복을 누리는 2박 3일 청년 수련회.", nature[1],
+            "말씀 안에서 쉼과 회복을 누리는 2박 3일 청년 수련회.", community[1],
             "2026-06-18", "2026-07-18", "2026-07-22", "2026-07-24", 40, 39, "21일 남음",
             Author("청년부", true),
-            CampaignBody("행사 소개", longBody, listOf(nature[3], nature[5]))),
+            CampaignBody("행사 소개", longBody, listOf(community[3], community[4]))),
         Campaign("c2", "open", "지역 어르신 반찬 나눔 봉사",
-            "매주 토요일 오전, 홀로 계신 어르신께 반찬을 전합니다.", people[0],
+            "매주 토요일 오전, 홀로 계신 어르신께 반찬을 전합니다.", serve[0],
             "2026-06-10", "2026-06-30", "2026-07-05", "2026-08-30", 60, 47, "5일 남음",
             Author("사랑부", true),
-            CampaignBody("섬김 소개", longBody, listOf(people[2], people[4]))),
+            CampaignBody("섬김 소개", longBody, listOf(serve[1], serve[2]))),
         Campaign("c3", "upcoming", "새가족 환영 식사",
-            "새로 오신 분들과 함께하는 환영 식사와 교제.", market[1],
+            "새로 오신 분들과 함께하는 환영 식사와 교제.", fellowship[0],
             "2026-07-01", "2026-07-20", "2026-07-26", "2026-07-26", 30, 0, "3일 후 모집 시작",
             Author("새가족부", false),
-            CampaignBody("모임 소개", longBody, listOf(market[3], market[5]))),
+            CampaignBody("모임 소개", longBody, listOf(fellowship[2], fellowship[3]))),
         Campaign("c4", "upcoming", "가을 전교인 야외 예배",
-            "온 성도가 함께 드리는 야외 예배와 친교.", nature[0],
+            "온 성도가 함께 드리는 야외 예배와 친교.", community[5],
             "2026-07-15", "2026-08-05", "2026-08-15", "2026-08-15", 100, 0, "12일 후 모집 시작",
             Author("한빛교회", true),
-            CampaignBody("행사 소개", longBody, listOf(nature[2], nature[4]))),
+            CampaignBody("행사 소개", longBody, listOf(community[2], community[0]))),
         Campaign("c5", "closed", "봄 학기 성경공부반",
-            "로마서를 함께 읽은 8주 과정이 은혜 가운데 마쳤습니다.", workshop[0],
+            "로마서를 함께 읽은 8주 과정이 은혜 가운데 마쳤습니다.", bible[0],
             "2026-04-01", "2026-04-30", "2026-05-10", "2026-06-30", 40, 40, "모집완료",
             Author("교육부", true),
-            CampaignBody("과정 결과", longBody, listOf(workshop[3], workshop[5]))),
+            CampaignBody("과정 결과", longBody, listOf(bible[4], bible[3]))),
         Campaign("c6", "closed", "부활절 이웃 초청 잔치",
-            "이웃과 함께 부활의 기쁨을 나눈 초청 잔치였습니다.", obj[1],
+            "이웃과 함께 부활의 기쁨을 나눈 초청 잔치였습니다.", fellowship[1],
             "2026-03-10", "2026-03-30", "2026-04-05", "2026-04-05", 25, 25, "모집완료",
             Author("전도부", false),
-            CampaignBody("행사 결과", longBody, listOf(obj[2], obj[4]))),
+            CampaignBody("행사 결과", longBody, listOf(fellowship[2], worship[4]))),
         Campaign("c7", "open", "주일학교 여름성경학교 교사 모집",
-            "아이들과 함께할 여름성경학교 섬김 교사를 찾습니다.", obj[0],
+            "아이들과 함께할 여름성경학교 섬김 교사를 찾습니다.", children[0],
             "2026-06-20", "2026-07-10", "2026-07-27", "2026-07-29", 20, 12, "14일 남음",
             Author("주일학교", true),
-            CampaignBody("섬김 소개", longBody, listOf(obj[3], obj[5]))),
+            CampaignBody("섬김 소개", longBody, listOf(children[2], children[3]))),
         Campaign("c8", "open", "교회 화단 가꾸기",
-            "함께 심고 가꾸며 교회 마당을 돌보는 소소한 섬김.", workshop[2],
+            "함께 심고 가꾸며 교회 마당을 돌보는 소소한 섬김.", serve[3],
             "2026-06-01", "2026-07-01", "2026-07-10", "2026-07-31", 16, 9, "8일 남음",
             Author("관리부", false),
-            CampaignBody("섬김 소개", longBody, listOf(workshop[4], workshop[6]))),
+            CampaignBody("섬김 소개", longBody, listOf(serve[4], serve[5]))),
     )
 }

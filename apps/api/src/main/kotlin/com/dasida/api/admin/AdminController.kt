@@ -79,6 +79,35 @@ class AdminController(
         @RequestParam(defaultValue = "20") size: Int,
     ): AdminUsersPageResponse = userService.getUsers(q, suspended, page, size)
 
+    @Operation(summary = "가입 승인 대기 회원 목록 (오래 기다린 순)")
+    @GetMapping("/users/pending")
+    fun pendingUsers(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
+    ): AdminUsersPageResponse = userService.getPendingUsers(page, size)
+
+    @Operation(summary = "가입 승인 (승인 후 해당 회원이 로그인할 수 있다)")
+    @PatchMapping("/users/{id}/approve")
+    fun approveUser(
+        @PathVariable id: Long,
+        @AuthenticationPrincipal admin: AuthUser,
+    ): AdminUserResponse = userService.approve(admin.id, id)
+
+    @Operation(summary = "가입 거절 (계정 비활성화, 같은 이메일 재가입 가능)")
+    @PatchMapping("/users/{id}/reject")
+    fun rejectUser(
+        @PathVariable id: Long,
+        @AuthenticationPrincipal admin: AuthUser,
+    ): AdminUserResponse = userService.reject(admin.id, id)
+
+    @Operation(summary = "찬양팀 역할·파트 지정/해제 (최고 관리자 전용, 사이트 role 과 분리)")
+    @PatchMapping("/users/{id}/praise")
+    fun setPraiseRole(
+        @PathVariable id: Long,
+        @RequestBody request: SetPraiseRoleRequest,
+        @AuthenticationPrincipal admin: AuthUser,
+    ): AdminUserResponse = userService.setPraiseRole(admin.id, id, request)
+
     @Operation(summary = "회원 역할 변경 (승격/강등, 기존 토큰에도 즉시 반영. 본인 역할은 변경 불가)")
     @PatchMapping("/users/{id}/role")
     fun setUserRole(

@@ -48,7 +48,10 @@ test("피드 작성자 링크로 공개 프로필을 볼 수 있다", async ({ p
   await page.getByRole("button", { name: "게시하기" }).click();
   await page.waitForURL("**/feed");
 
-  await page.getByRole("link", { name: account.nickname }).first().click();
+  // 기본 "리스트" 뷰(PostBoardList)는 작성자 링크가 없다 — 아바타·작성자 링크가 있는 갤러리 뷰로 전환.
+  await page.getByRole("tab", { name: "갤러리" }).click();
+  // 게시글 카드 전체 링크의 접근성 이름에도 작성자 이름이 들어가므로, /users/ 링크로 한정한다.
+  await page.locator('a[href^="/users/"]').filter({ hasText: account.nickname }).first().click();
   await page.waitForURL("**/users/*");
   await expect(page.getByRole("heading", { name: account.nickname })).toBeVisible();
   await expect(page.getByText("작성한 게시글")).toBeVisible();

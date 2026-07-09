@@ -118,8 +118,6 @@ export function relativeTime(item: Pick<NotificationItem, "createdAt" | "time">)
 
 export function notificationTypeLabel(type: string): string {
   if (type === "CAMPAIGN_JOINED") return "행사 참여";
-  if (type === "USER_FOLLOWED") return "새 팔로워";
-  if (type === "MESSAGE_RECEIVED") return "새 메시지";
   if (type === "POST_COMMENT_CREATED") return "게시글 댓글";
   if (type === "COMMENT_REPLY_CREATED") return "댓글 답글";
   if (type === "COMMENT_MENTIONED") return "멘션";
@@ -130,6 +128,10 @@ export function notificationTypeLabel(type: string): string {
   if (type === "REPORT_RESOLVED") return "신고 처리";
   if (type === "CONTENT_HIDDEN") return "콘텐츠 숨김";
   if (type === "CONTENT_RESTORED") return "숨김 해제";
+  if (type === "PRAISE_ASSIGNED") return "찬양팀 배정";
+  if (type === "PRAISE_UNASSIGNED") return "찬양팀 배정 해제";
+  if (type === "PRAISE_ATTENDANCE_REMINDER") return "참석 체크 요청";
+  if (type === "PRAISE_SCHEDULE_CHANGED") return "찬양팀 일정 변경";
   return "알림";
 }
 

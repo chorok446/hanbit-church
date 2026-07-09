@@ -20,4 +20,9 @@ class UserAccessLog(
     @Column(name = "ip_address", nullable = false, length = 45) val ipAddress: String,
     @Column(nullable = false, length = 32) val os: String,
     @Column(name = "accessed_at", nullable = false) val accessedAt: Instant,
+    // User-Agent 기반 브라우저 이름. V21 이전 기록은 기본값("알 수 없음").
+    @Column(nullable = false, length = 32) val browser: String = "알 수 없음",
+    // IP 기반 대략적 위치(best-effort). 조회 실패 시 null.
+    @Column(length = 64) val country: String? = null,
+    @Column(length = 64) val region: String? = null,
 )

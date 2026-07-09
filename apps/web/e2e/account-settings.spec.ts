@@ -18,7 +18,8 @@ async function login(page: Page, account: Pick<Account, "email" | "password">) {
 }
 
 async function logout(page: Page) {
-  await page.getByRole("button", { name: "로그아웃" }).click();
+  await page.getByRole("button", { name: "내 계정 메뉴" }).click();
+  await page.getByRole("menuitem", { name: "로그아웃" }).click();
   await expect(page.getByRole("link", { name: "로그인", exact: true })).toBeVisible();
 }
 
@@ -42,7 +43,7 @@ test("비밀번호를 변경하면 새 비밀번호로만 로그인된다", asyn
   // 새 비밀번호로 로그인된다
   await login(page, { email: account.email, password: NEW_PASSWORD });
   await page.waitForURL("**/feed");
-  await expect(page.getByRole("button", { name: "로그아웃" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "내 계정 메뉴" })).toBeVisible();
 });
 
 test("이메일을 변경하면 새 이메일로 로그인된다", async ({ page }) => {
@@ -60,7 +61,7 @@ test("이메일을 변경하면 새 이메일로 로그인된다", async ({ page
   await logout(page);
   await login(page, { email: newEmail, password: account.password });
   await page.waitForURL("**/feed");
-  await expect(page.getByRole("button", { name: "로그아웃" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "내 계정 메뉴" })).toBeVisible();
 });
 
 test("확인 문구와 비밀번호를 입력해 탈퇴하면 계정이 삭제된다", async ({ page }) => {

@@ -111,6 +111,13 @@ export type Campaign = {
   ownedByMe: boolean;
   /** 관리자 숨김 여부. 개설자 본인 경로(mine/상세)에서만 true 로 내려온다. */
   hidden?: boolean;
+  // TODO(데이터: 장소·대상·참가비 필드 백엔드 추가 필요) — 아래 5개는 백엔드 Campaign 엔티티에 아직 없어
+  // 항상 undefined 로 내려온다. 값이 생기면 상세 정보 패널·행사 내용 탭에 자동 노출된다.
+  place?: string | null;
+  audience?: string | null;
+  fee?: string | null;
+  supplies?: string | null;
+  contact?: string | null;
 };
 
 export type CampaignParticipant = {
@@ -293,9 +300,111 @@ const recruitStateMeta: Record<CampaignRecruitState, { label: string; color: str
 
 export function campaignRecruitMeta(campaign: Campaign) {
   if (campaign.recruitState === "recruiting" && !campaign.recruitable && campaign.joined >= campaign.capacity) {
-    return { label: "정원마감", color: "rgba(237,92,72,0.82)", fg: "#ffffff" };
+    return { label: "정원마감", color: "var(--danger-solid)", fg: "#ffffff" };
   }
   return recruitStateMeta[campaign.recruitState];
+}
+
+// ─── 행사 수명주기(D-day·진행률) — 카드와 상세가 동일 기준을 쓰도록 단일 util 로 관리 ───
+
+export type CampaignPhase = "before_recruit" | "recruiting" | "recruit_closed" | "running" | "ended";
+
+export type CampaignLifecycle = {
+  phase: CampaignPhase;
+  /** 상태 배지(모집예정/모집중/모집마감/진행중/종료). */
+  badge: { label: string; color: string; fg: string };
+  /**
+   * D-day 라벨 — 기준일을 문구에 명시한다.
+   * 모집예정: "모집 시작까지 D-N"(모집 시작일 기준)
+   * 모집중: "모집 마감까지 D-N"(모집 종료일 기준)
+   * 모집마감(마감·정원마감·모집종료): "행사 시작까지 D-N"(진행 시작일 기준)
+   * 진행중: "행사 종료까지 D-N"(진행 종료일 기준)
+   * 종료: "종료된 행사입니다"
+   */
+  dday: string;
+};
+
+const CAMPAIGN_PHASE_BADGES: Record<CampaignPhase, { label: string; color: string; fg: string }> = {
+  before_recruit: { label: "모집예정", color: "#148a90", fg: "#ffffff" },
+  recruiting: { label: "모집중", color: "#7dd3a3", fg: "#0f1f22" },
+  recruit_closed: { label: "모집마감", color: "rgba(120,120,130,0.7)", fg: "#ffffff" },
+  running: { label: "진행중", color: "#3c5a96", fg: "#ffffff" },
+  ended: { label: "종료", color: "rgba(120,120,130,0.55)", fg: "#ffffff" },
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function parseIsoDateUtc(value: string): number | null {
+  const trimmed = value.trim();
+  if (!isIsoDate(trimmed)) return null;
+  const [year, month, day] = trimmed.split("-").map(Number);
+  return Date.UTC(year, month - 1, day);
+}
+
+function todayUtc(): number {
+  const now = new Date();
+  return Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function daysUntil(target: number, today: number): number {
+  return Math.round((target - today) / DAY_MS);
+}
+
+/**
+ * 행사 수명주기 계산. 진행 기간(runStart~runEnd)은 날짜로 판정하고,
+ * 모집 여부는 백엔드가 내려주는 recruitState/recruitable 을 신뢰한다(카드·상세 공통 기준).
+ */
+export function campaignLifecycle(campaign: Campaign, todayMs: number = todayUtc()): CampaignLifecycle {
+  const runStart = parseIsoDateUtc(campaign.runStart);
+  const runEnd = parseIsoDateUtc(campaign.runEnd);
+
+  // 1) 진행 기간 기준: 진행 종료일이 지났으면 종료, 진행 시작일이 지났으면 진행중.
+  if (runEnd !== null && todayMs > runEnd) {
+    return { phase: "ended", badge: CAMPAIGN_PHASE_BADGES.ended, dday: "종료된 행사입니다" };
+  }
+  if (runStart !== null && todayMs >= runStart) {
+    const left = runEnd !== null ? daysUntil(runEnd, todayMs) : null;
+    const dday = left === null
+      ? "진행 중인 행사입니다"
+      : left === 0
+        ? "오늘 행사 종료"
+        : `행사 종료까지 D-${left}`;
+    return { phase: "running", badge: CAMPAIGN_PHASE_BADGES.running, dday };
+  }
+
+  // 2) 진행 시작 전: 모집 상태 기준.
+  if (campaign.recruitState === "before_recruit") {
+    const recruitStart = parseIsoDateUtc(campaign.recruitStart);
+    const until = recruitStart !== null ? daysUntil(recruitStart, todayMs) : null;
+    const dday = until !== null && until > 0 ? `모집 시작까지 D-${until}` : "모집 시작 예정";
+    return { phase: "before_recruit", badge: CAMPAIGN_PHASE_BADGES.before_recruit, dday };
+  }
+  if (campaign.recruitState === "recruiting" && campaign.recruitable) {
+    const recruitEnd = parseIsoDateUtc(campaign.recruitEnd);
+    const left = recruitEnd !== null ? daysUntil(recruitEnd, todayMs) : null;
+    const dday = left === null
+      ? "모집 중"
+      : left <= 0
+        ? "오늘 모집 마감"
+        : `모집 마감까지 D-${left}`;
+    return { phase: "recruiting", badge: CAMPAIGN_PHASE_BADGES.recruiting, dday };
+  }
+
+  // 3) 모집이 끝났고(마감·정원마감·모집종료) 아직 행사 시작 전.
+  const full = campaign.recruitState === "recruiting" && campaign.capacity > 0 && campaign.joined >= campaign.capacity;
+  const untilStart = runStart !== null ? daysUntil(runStart, todayMs) : null;
+  const dday = untilStart !== null && untilStart > 0 ? `행사 시작까지 D-${untilStart}` : "행사 시작 대기";
+  const badge = full
+    ? { label: "정원마감", color: "var(--danger-solid)", fg: "#ffffff" }
+    : CAMPAIGN_PHASE_BADGES.recruit_closed;
+  return { phase: "recruit_closed", badge, dday };
+}
+
+/** 진행률 라벨: "N% 모집 완료". 정원 미정(capacity<=0)이면 null. */
+export function campaignProgressLabel(campaign: Campaign): string | null {
+  if (campaign.capacity <= 0) return null;
+  const pct = Math.max(0, Math.min(100, Math.round((campaign.joined / campaign.capacity) * 100)));
+  return `${pct}% 모집 완료`;
 }
 
 /** 백엔드 CampaignValidators 와 동일한 제한. */

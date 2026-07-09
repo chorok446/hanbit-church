@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AtSign, BadgeCheck, Bell, MessageCircle, UserPlus, Users, Check, Trash2, Loader2, Heart, Megaphone } from "lucide-react";
+import { AtSign, BadgeCheck, Bell, MessageCircle, Music, Users, Check, Trash2, Loader2, Heart, Megaphone } from "lucide-react";
 import {
   isNotificationNavigable,
   notificationTypeLabel,
@@ -11,11 +11,10 @@ import {
 
 function iconFor(type: string) {
   if (type === "CAMPAIGN_JOINED") return <Users size={16} aria-hidden />;
-  if (type === "USER_FOLLOWED") return <UserPlus size={16} aria-hidden />;
-  if (type === "MESSAGE_RECEIVED") return <MessageCircle size={16} aria-hidden />;
   if (type === "POST_LIKED") return <Heart size={16} aria-hidden />;
   if (type === "CAMPAIGN_STATUS_CHANGED") return <Megaphone size={16} aria-hidden />;
   if (type === "CAMPAIGN_PROOF_CREATED") return <BadgeCheck size={16} aria-hidden />;
+  if (type.startsWith("PRAISE_")) return <Music size={16} aria-hidden />;
   if (type.endsWith("COMMENT_CREATED")) return <MessageCircle size={16} aria-hidden />;
   if (type === "COMMENT_REPLY_CREATED") return <MessageCircle size={16} aria-hidden />;
   if (type === "COMMENT_MENTIONED") return <AtSign size={16} aria-hidden />;
@@ -137,8 +136,8 @@ export function NotificationRow({
         type="button"
         onClick={() => onDelete(item.id)}
         disabled={deleting || pending}
-        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ed5c48]"
-        style={{ background: "var(--danger-soft)", color: "#ed5c48" }}
+        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--danger)]"
+        style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
         aria-label="알림 삭제"
       >
         {deleting ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <Trash2 size={14} aria-hidden />}

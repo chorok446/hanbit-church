@@ -10,6 +10,8 @@ fun User.toProfile() = UserProfileResponse(
     profileImageUrl = profileImageUrl,
     notifyCampaignUpdates = notifyCampaignUpdates,
     role = role,
+    praiseRole = praiseRole,
+    praiseParts = praiseParts.orEmpty(),
 )
 
 fun User.toAuthorSnapshot() = Author(

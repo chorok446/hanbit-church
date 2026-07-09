@@ -9,7 +9,10 @@ import { apiPost, ApiError } from "@/lib/api";
 import { setSession } from "@/lib/auth";
 import { getPasswordPolicyState, isValidEmail } from "@/data/auth";
 
-type AuthResponse = { token: string; name: string; verified: boolean };
+// 승인제: 서버가 토큰 대신 pendingApproval 을 내려주면 승인 대기 화면을 보여준다.
+type SignupResponse =
+  | { token: string; name: string; verified: boolean; pendingApproval?: undefined }
+  | { pendingApproval: true; name: string };
 
 function Rule({ ok, label }: { ok: boolean; label: string }) {
   return (
@@ -28,6 +31,7 @@ export default function SignupPage() {
   const [nickname, setNickname] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [pendingName, setPendingName] = useState<string | null>(null);
 
   const passwordPolicy = getPasswordPolicyState(password);
   const canSubmit = isValidEmail(email) && passwordPolicy.valid && password === passwordConfirm && nickname.trim();
@@ -37,7 +41,12 @@ export default function SignupPage() {
     setSubmitting(true);
     setError("");
     try {
-      const res = await apiPost<AuthResponse>("/api/auth/signup", { email, password, name: nickname });
+      const res = await apiPost<SignupResponse>("/api/auth/signup", { email, password, name: nickname });
+      if (res.pendingApproval) {
+        // 승인제: 토큰이 발급되지 않았다 — 승인 대기 안내를 보여준다.
+        setPendingName(res.name);
+        return;
+      }
       setSession(res.name);
       router.push("/feed");
     } catch (e) {
@@ -45,6 +54,30 @@ export default function SignupPage() {
       setError(e instanceof ApiError && e.status === 409 ? "이미 사용 중인 이메일입니다." : "회원가입에 실패했습니다.");
     }
   };
+
+  if (pendingName !== null) {
+    return (
+      <AuthShell subtitle="Almost there" title="가입 신청 완료">
+        <div className="space-y-5 text-center">
+          <p className="text-[15px] leading-7" style={{ color: "var(--foreground)" }}>
+            {pendingName}님, 가입 신청이 접수되었습니다.
+            <br />
+            관리자 승인이 완료되면 로그인하실 수 있어요.
+          </p>
+          <p className="text-[13px] leading-6" style={{ color: "rgba(var(--ink-rgb), 0.6)" }}>
+            승인 여부는 교회 사무실을 통해 안내드립니다. 문의가 필요하시면 교회로 연락해 주세요.
+          </p>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-medium"
+            style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+          >
+            홈으로 <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
+      </AuthShell>
+    );
+  }
 
   return (
     <AuthShell
@@ -85,7 +118,11 @@ export default function SignupPage() {
           onChange={setPasswordConfirm}
           error={passwordConfirm && password !== passwordConfirm ? "비밀번호가 일치하지 않습니다." : undefined}
         />
-        <FieldInput label="닉네임" name="nickname" icon={<User size={18} />} placeholder="닉네임을 입력하세요" value={nickname} onChange={setNickname} />
+        {/* 교회 공동체 — 실명 가입이 원칙이다. */}
+        <FieldInput label="이름(실명)" name="nickname" icon={<User size={18} />} placeholder="실명을 입력해 주세요" value={nickname} onChange={setNickname} />
+        <p className="px-1 text-[12px]" style={{ color: "rgba(var(--ink-rgb), 0.55)" }}>
+          교우 확인을 위해 실명으로 가입해 주세요. 가입 후 관리자 승인이 완료되면 이용하실 수 있습니다.
+        </p>
 
         <button
           type="submit"

@@ -46,7 +46,12 @@ class JwtAuthFilter(
                 // 관리자 권한 회수가 기존 토큰 만료를 기다리지 않고 즉시 반영된다.
                 val authorities = buildList {
                     add(SimpleGrantedAuthority("ROLE_USER"))
-                    if (storedUser.isAdmin) add(SimpleGrantedAuthority("ROLE_ADMIN"))
+                    // ADMIN 외 스태프 역할(OPERATOR/MINISTRY/NEW_FAMILY/CONTENT)도 ROLE_<역할> 로 부여.
+                    if (storedUser.role != com.dasida.api.auth.UserRole.USER.name &&
+                        runCatching { com.dasida.api.auth.UserRole.valueOf(storedUser.role) }.isSuccess
+                    ) {
+                        add(SimpleGrantedAuthority("ROLE_${storedUser.role}"))
+                    }
                 }
                 val auth = UsernamePasswordAuthenticationToken(user, null, authorities)
                 SecurityContextHolder.getContext().authentication = auth

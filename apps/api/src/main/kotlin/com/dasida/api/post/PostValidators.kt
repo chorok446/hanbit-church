@@ -9,6 +9,8 @@ private const val MAX_TAGS = 10
 private const val MAX_TAG_LENGTH = 30
 private const val MAX_IMAGES = 4
 private const val MAX_COMMENT_LENGTH = 500
+private const val MAX_ATTACHMENTS = 3
+private const val MAX_ATTACHMENT_NAME_LENGTH = 255
 
 /** 게시글 본문 trim + blank/length 검증. 생성·수정이 공유한다. */
 fun normalizePostText(text: String): String {
@@ -63,6 +65,29 @@ fun normalizeCategory(category: String?): String {
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid post category")
     }
     return value
+}
+
+/** 첨부파일 검증. 공지·주보·설교(STAFF_WRITE)에서만 허용. url http(s)·이름 필수, 최대 [MAX_ATTACHMENTS]개. */
+fun normalizeAttachments(category: String, attachments: List<PostAttachment>): List<PostAttachment> {
+    val normalized = attachments
+        .map { PostAttachment(name = it.name.trim(), url = it.url.trim(), size = it.size?.takeIf { s -> s > 0 }) }
+        .filter { it.url.isNotBlank() }
+        .distinctBy { it.url }
+    if (normalized.isEmpty()) return emptyList()
+    // 공지·주보·설교(스태프 작성 카테고리)에서 첨부 허용 — 설교 악보·자료 PDF 등.
+    if (category !in PostCategory.STAFF_WRITE) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "attachments are allowed only for official categories")
+    }
+    if (normalized.size > MAX_ATTACHMENTS) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "too many attachments")
+    }
+    if (normalized.any { !(it.url.startsWith("http://") || it.url.startsWith("https://")) }) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "attachment must be http(s) url")
+    }
+    if (normalized.any { it.name.isBlank() || it.name.length > MAX_ATTACHMENT_NAME_LENGTH }) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid attachment name")
+    }
+    return normalized
 }
 
 fun normalizeCommentText(value: String): String {

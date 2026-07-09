@@ -1,28 +1,138 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, MessageCircle, Search, ShieldCheck } from "lucide-react";
+import { Bell, LogOut, Search, ShieldCheck, UserRound } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuthSession } from "@/lib/use-auth-session";
 import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
-import { useDmUnread, useNotificationUnread } from "@/lib/use-unread-badges";
+import { useNotificationUnread } from "@/lib/use-unread-badges";
 import { MAIN_NAV_ITEMS } from "@/lib/nav-items";
+import { CurrentUserAvatar } from "@/components/current-user-avatar";
+import { CHURCH } from "@/data/church";
+import { isStaffRole } from "@/app/admin/permissions";
 
 // 로그아웃 시 머무르면 안 되는(인증 필요) 경로 prefix.
-const PROTECTED_PREFIXES = ["/posts/new", "/campaigns/new", "/mypage", "/profile/edit", "/messages"];
+const PROTECTED_PREFIXES = ["/posts/new", "/campaigns/new", "/mypage", "/profile/edit"];
+
+/** 로그인 상태의 아바타 버튼 + 드롭다운(마이페이지 / 관리자 / 로그아웃). */
+function ProfileMenu({
+  name,
+  isAdmin,
+  onLogout,
+}: {
+  name: string;
+  isAdmin: boolean;
+  onLogout: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  const itemClassName =
+    "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] transition-colors hover:bg-[rgba(var(--ink-rgb),0.07)]";
+
+  return (
+    <div ref={rootRef} className="relative">
+      {/* 아바타가 버튼을 꽉 채운다 — 회색 원 안에 작은 원이 겹치면 이중 원처럼 어색하다. 열림 상태는 골드 링으로 표시. */}
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`flex h-10 w-10 items-center justify-center overflow-hidden rounded-full transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none ${
+          open ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--surface)]" : ""
+        }`}
+        aria-label="내 계정 메뉴"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls="profile-menu"
+      >
+        <CurrentUserAvatar size={40} />
+      </button>
+      {open && (
+        <div
+          id="profile-menu"
+          role="menu"
+          aria-label="내 계정 메뉴"
+          className="absolute right-0 top-[calc(100%+8px)] z-50 w-48 rounded-xl border p-1.5 shadow-[0_20px_45px_-18px_rgba(0,0,0,0.35)]"
+          style={{ background: "var(--card)", borderColor: "var(--border)" }}
+        >
+          <p
+            className="truncate px-3 pb-2 pt-1.5 text-[12px] font-medium"
+            style={{ color: "var(--foreground-muted)" }}
+          >
+            {name}
+          </p>
+          <Link
+            href="/mypage"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className={itemClassName}
+            style={{ color: "var(--heading)" }}
+          >
+            <UserRound size={15} aria-hidden />
+            마이페이지
+          </Link>
+          {isAdmin && (
+            <Link
+              href="/admin"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className={itemClassName}
+              style={{ color: "var(--heading)" }}
+            >
+              <ShieldCheck size={15} aria-hidden />
+              관리자
+            </Link>
+          )}
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              onLogout();
+            }}
+            className={itemClassName}
+            style={{ color: "rgba(var(--ink-rgb), 0.8)" }}
+          >
+            <LogOut size={15} aria-hidden />
+            로그아웃
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const onNotifications = pathname === "/notifications";
-  const onMessages = pathname.startsWith("/messages");
   const { isLoggedIn, name, logout, sessionId: token } = useAuthSession();
   // 관리자에게만 /admin 진입점을 보여준다(권한 자체는 서버가 검사).
   const { profile } = useCurrentUserProfile();
-  const isAdmin = profile?.role === "ADMIN";
+  const isAdmin = isStaffRole(profile?.role);
   const unread = useNotificationUnread(token);
-  const dmUnread = useDmUnread(token);
 
   const onLogout = () => {
     void logout().finally(() => {
@@ -41,10 +151,10 @@ export function SiteHeader() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2" style={{ color: "var(--accent-secondary)" }}>
-          <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 21 }}>한빛교회</span>
-          <span className="hidden text-[10px] tracking-[0.3em] opacity-90 lg:inline">HANBIT CHURCH</span>
+          <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 21 }}>{CHURCH.name}</span>
+          <span className="hidden text-[10px] tracking-[0.3em] opacity-90 lg:inline">{CHURCH.nameEn}</span>
         </Link>
-        <nav className="hidden md:flex items-center gap-1" aria-label="주요 메뉴">
+        <nav className="hidden md:flex items-center gap-2" aria-label="주요 메뉴">
           {MAIN_NAV_ITEMS.map((it) => {
             const isActive = pathname === it.href || (it.href !== "/" && pathname.startsWith(it.href));
             const className = "relative rounded-lg px-4 py-2 text-[14px] transition-opacity hover:opacity-100";
@@ -65,21 +175,6 @@ export function SiteHeader() {
           })}
         </nav>
         <div className="flex items-center gap-2 sm:gap-3">
-          {isAdmin && (
-            <Link
-              href="/admin"
-              className="flex h-9 items-center justify-center gap-2 rounded-full px-3 transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none"
-              style={{
-                background: pathname.startsWith("/admin") ? "var(--accent-soft)" : "rgba(var(--ink-rgb), 0.07)",
-                color: pathname.startsWith("/admin") ? "var(--accent-strong)" : "var(--heading)",
-              }}
-              aria-label="관리자 페이지로 이동"
-              aria-current={pathname.startsWith("/admin") ? "page" : undefined}
-            >
-              <ShieldCheck size={16} aria-hidden />
-              <span className="hidden xl:inline text-[12px]">관리자</span>
-            </Link>
-          )}
           <Link
             href="/search"
             className="flex h-9 items-center justify-center gap-2 rounded-full px-3 transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none"
@@ -91,28 +186,6 @@ export function SiteHeader() {
           >
             <Search size={16} />
             <span className="hidden xl:inline text-[12px]">검색</span>
-          </Link>
-          <Link
-            href="/messages"
-            className="relative hidden h-9 items-center justify-center gap-2 rounded-full px-3 transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none sm:flex"
-            style={{
-              background: onMessages ? "var(--accent-soft)" : "rgba(var(--ink-rgb), 0.07)",
-              color: onMessages ? "var(--accent-strong)" : "var(--heading)",
-            }}
-            aria-label={dmUnread > 0 ? `DM, 읽지 않음 ${dmUnread > 99 ? "99+" : dmUnread}개` : "DM"}
-            aria-current={onMessages ? "page" : undefined}
-          >
-            <MessageCircle size={16} aria-hidden />
-            <span className="hidden lg:inline text-[12px]">DM</span>
-            {isLoggedIn && dmUnread > 0 && (
-              <span
-                className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center text-[10px] font-semibold leading-none"
-                style={{ background: "#ed5c48", color: "#ffffff" }}
-                aria-hidden
-              >
-                {dmUnread > 99 ? "99+" : dmUnread}
-              </span>
-            )}
           </Link>
           <Link
             href="/notifications"
@@ -133,7 +206,7 @@ export function SiteHeader() {
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center text-[10px] font-semibold leading-none"
-                style={{ background: "#ed5c48", color: "#ffffff" }}
+                style={{ background: "var(--danger-solid)", color: "#ffffff" }}
                 aria-hidden
               >
                 {unread > 99 ? "99+" : unread}
@@ -142,23 +215,7 @@ export function SiteHeader() {
           </Link>
           {/* 서버 스냅샷은 항상 로그아웃 상태 → 비로그인 뷰로 hydration, 이후 클라이언트에서 갱신. */}
           {isLoggedIn ? (
-            <>
-              <Link
-                href="/mypage"
-                className="hidden rounded-full px-2 py-1.5 text-[13px] transition-colors hover:bg-white/10 sm:inline"
-                style={{ color: "var(--heading)" }}
-                aria-label="마이페이지로 이동"
-              >
-                {name ?? "사용자"}
-              </Link>
-              <button
-                onClick={onLogout}
-                className="rounded-full px-3 py-1.5 text-[13px] transition-colors hover:bg-white/10"
-                style={{ color: "rgba(var(--ink-rgb), 0.8)" }}
-              >
-                로그아웃
-              </button>
-            </>
+            <ProfileMenu name={name ?? "사용자"} isAdmin={isAdmin} onLogout={onLogout} />
           ) : (
             <>
               <Link

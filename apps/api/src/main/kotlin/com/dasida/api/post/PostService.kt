@@ -1,6 +1,5 @@
 package com.dasida.api.post
 
-import com.dasida.api.auth.UserFollowService
 import com.dasida.api.auth.UserRepository
 import com.dasida.api.campaign.CampaignRepository
 import com.dasida.api.common.checkPageParams
@@ -11,6 +10,7 @@ import com.dasida.api.security.AuthUser
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
@@ -27,7 +27,6 @@ class PostService(
     private val repo: PostRepository,
     private val campaigns: CampaignRepository,
     private val users: UserRepository,
-    private val userFollows: UserFollowService,
     private val likeRepo: PostLikeRepository,
     private val bookmarkRepo: PostBookmarkRepository,
     private val commentRepo: PostCommentRepository,
@@ -67,17 +66,12 @@ class PostService(
         q: String?,
         tag: String?,
         campaignOnly: Boolean,
-        followingOnly: Boolean,
         sort: String,
         page: Int,
         size: Int,
         category: String? = null,
     ): PostSearchResponse {
         checkPageParams(page, size, MAX_SEARCH_PAGE_SIZE)
-
-        if (followingOnly && currentUserId == null) {
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "login required for following feed")
-        }
 
         val query = q?.trim()?.takeIf { it.isNotEmpty() }
         if (query != null && query.length > MAX_SEARCH_QUERY_LENGTH) {
@@ -86,11 +80,16 @@ class PostService(
                 "q must not exceed $MAX_SEARCH_QUERY_LENGTH characters",
             )
         }
-        val categoryFilter = category?.trim()?.takeIf { it.isNotEmpty() }?.also {
-            if (it !in PostCategory.ALL) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid post category")
+        // 콤마 구분 다중 카테고리 허용 — 교제 피드가 나눔·기도만(SHARING,PRAYER) 조회하는 데 쓴다.
+        val categoryFilter = category?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.takeIf { it.isNotEmpty() }
+            ?.also { values ->
+                if (values.any { it !in PostCategory.ALL }) {
+                    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid post category")
+                }
             }
-        }
         val tagFilter = tag?.trim()?.takeIf { it.isNotEmpty() }
         if (tagFilter != null && tagFilter.length > MAX_SEARCH_QUERY_LENGTH) {
             throw ResponseStatusException(
@@ -105,19 +104,13 @@ class PostService(
             else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid post sort")
         }
 
-        val authorUserIds = if (followingOnly) {
-            userFollows.followeeIdsFor(requireNotNull(currentUserId))
-        } else {
-            null
-        }
-
         val result = postSearch.search(
             PostSearchCondition(
                 query = query,
                 tag = tagFilter,
-                category = categoryFilter,
+                categories = categoryFilter,
                 campaignOnly = campaignOnly,
-                authorUserIds = authorUserIds,
+                authorUserIds = null,
                 sort = searchSort,
                 page = page,
                 size = size,
@@ -248,7 +241,7 @@ class PostService(
         )
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     fun getPost(id: String, currentUserId: Long?): PostResponse {
         val post = repo.findById(id).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "post $id not found")
@@ -261,6 +254,9 @@ class PostService(
         if (post.hiddenAt != null && (post.authorUserId == null || post.authorUserId != currentUserId)) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $id not found")
         }
+        // 조회수 증가 — 엔티티 dirty checking 대신 원자적 UPDATE 로 동시 조회 유실을 막는다.
+        repo.incrementViews(id)
+        post.views += 1 // 응답에도 이번 조회를 반영(재조회 없이)
         return post.toResponse(
             viewerId = currentUserId,
             likedByMe = currentUserId != null && likeRepo.existsByPostIdAndUserId(id, currentUserId),
@@ -348,6 +344,9 @@ class PostService(
     fun createPost(author: AuthUser, req: CreatePostRequest): PostResponse {
         // @Transactional 로 묶어 normalizeFields 의 campaign write lock 을 게시글 저장 commit 까지 유지한다.
         // 행사 삭제와 동시에 실행돼도 둘 중 하나만 통과해 orphan campaignId 가 남지 않는다.
+        val category = normalizeCategory(req.category)
+        requireAdminForOfficialCategory(category)
+        val attachments = normalizeAttachments(category, req.attachments)
         val fields = normalizeFields(req.text, req.tags, req.images, req.campaignId)
         val profileImageUrl = users.findById(author.id).orElse(null)?.profileImageUrl
         return repo.save(
@@ -361,11 +360,26 @@ class PostService(
                 likes = 0,
                 comments = 0,
                 campaignId = fields.campaignId,
-                category = normalizeCategory(req.category),
+                category = category,
                 seq = System.currentTimeMillis(),
                 authorUserId = author.id,
+                attachments = attachments,
             ),
         ).toResponse(viewerId = author.id, likedByMe = false, bookmarkedByMe = false)
+    }
+
+    /**
+     * 공지·주보·설교는 교회 공식 콘텐츠 — 최고 관리자·운영자·콘텐츠 관리자만 쓸 수 있다.
+     * 권한은 JWT 클레임이 아니라 JwtAuthFilter 가 매 요청 DB role 로 채운 SecurityContext 기준(회수 즉시 반영).
+     */
+    private fun requireAdminForOfficialCategory(category: String) {
+        if (category !in PostCategory.STAFF_WRITE) return
+        val allowed = setOf("ROLE_ADMIN", "ROLE_OPERATOR", "ROLE_CONTENT")
+        val hasRole = SecurityContextHolder.getContext().authentication
+            ?.authorities?.any { it.authority in allowed } == true
+        if (!hasRole) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "only staff can write this category")
+        }
     }
 
     /**
@@ -383,12 +397,19 @@ class PostService(
         if (post.authorUserId == null || post.authorUserId != userId) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "not the author")
         }
+        val category = normalizeCategory(req.category)
+        // 공지·주보로 바꾸는 것뿐 아니라 이미 공지·주보인 글의 수정도 관리자만 가능하다.
+        if (post.category in PostCategory.ADMIN_ONLY || category in PostCategory.ADMIN_ONLY) {
+            requireAdminForOfficialCategory(category.takeIf { it in PostCategory.ADMIN_ONLY } ?: post.category)
+        }
+        val attachments = normalizeAttachments(category, req.attachments)
         val fields = normalizeFields(req.text, req.tags, req.images, req.campaignId)
         post.text = fields.text
         post.tags = fields.tags
         post.images = fields.images
         post.campaignId = fields.campaignId
-        post.category = normalizeCategory(req.category)
+        post.category = category
+        post.attachments = attachments
         return post.toResponse(
             viewerId = userId,
             likedByMe = likeRepo.existsByPostIdAndUserId(postId, userId),

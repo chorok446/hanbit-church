@@ -12,12 +12,40 @@ import { Avatar } from "@/components/avatar";
 import { AuthorHeader } from "@/components/author-header";
 import { FallbackImage } from "@/components/fallback-image";
 import { PostPreview } from "@/components/post-text";
-import { ReportButton } from "@/components/report-button";
 import { ShareButton } from "@/components/share-button";
 import { TagLink } from "@/components/tag-link";
-import type { Post, PostComment } from "@/data/posts";
+import { isAdminOnlyCategory, postCategoryBadge, type Post, type PostComment } from "@/data/posts";
 
 const MAX_COMMENT_LENGTH = 500;
+
+/**
+ * 이미지가 없는 글의 갤러리 placeholder 문구 — sermon-thumb 의 네이비(--banner-bg)+골드 관례를 따른다.
+ * --banner-bg 는 양 테마 모두 네이비라 크림(#f6f3ea) 텍스트를 그대로 쓴다.
+ */
+const GALLERY_PLACEHOLDERS: Record<string, { emoji: string; label: string }> = {
+  SHARING: { emoji: "🌱", label: "함께 나누는 이야기" },
+  PRAYER: { emoji: "🙏", label: "함께 기도해주세요" },
+};
+
+function GalleryPlaceholder({ category }: { category: string }) {
+  const meta = GALLERY_PLACEHOLDERS[category] ?? GALLERY_PLACEHOLDERS.SHARING;
+  return (
+    <div
+      className="flex h-full w-full flex-col items-center justify-center gap-2"
+      style={{ background: "var(--banner-bg)" }}
+      aria-hidden
+    >
+      <span style={{ fontSize: 22, lineHeight: 1 }}>{meta.emoji}</span>
+      <span
+        className="text-[13px] tracking-[0.14em] text-[#f6f3ea]"
+        style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
+      >
+        {meta.label}
+      </span>
+      <span className="h-px w-8" style={{ background: "var(--accent)" }} />
+    </div>
+  );
+}
 
 export function FeedPostCard({
   p,
@@ -178,9 +206,24 @@ export function FeedPostCard({
             time={p.time}
             timeClassName="text-[11px] opacity-60"
           />
+          {(() => {
+            const badge = postCategoryBadge(p.category);
+            return (
+              <span
+                className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium"
+                style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}
+              >
+                <span aria-hidden>{badge.emoji}</span> {badge.label}
+              </span>
+            );
+          })()}
         </div>
 
-        {p.images.length === 1 ? (
+        {p.images.length === 0 ? (
+          <button type="button" className="block aspect-[4/3] w-full overflow-hidden" onClick={onOpen} aria-label="게시글 상세 보기">
+            <GalleryPlaceholder category={p.category} />
+          </button>
+        ) : p.images.length === 1 ? (
           <button type="button" className="block aspect-[4/3] w-full overflow-hidden" onClick={onOpen} aria-label="게시글 상세 보기">
             <FallbackImage src={p.images[0]} alt="" decorative thumbnail className="w-full h-full object-cover" />
           </button>
@@ -193,25 +236,39 @@ export function FeedPostCard({
         )}
 
         <div className="p-4 space-y-3">
-          <PostPreview text={p.text} style={{ color: "var(--foreground)", fontSize: 14, lineHeight: 1.6 }} maxLength={320} />
-          <div className="flex flex-wrap gap-1.5">
-            {p.tags.map((t) => (
-              <TagLink key={t} tag={t} className="text-[11px] px-2 py-0.5 rounded-full transition-opacity hover:opacity-75" style={{ background: "var(--accent-soft)", color: "var(--accent-secondary)" }} />
-            ))}
-          </div>
+          <PostPreview text={p.text} className="line-clamp-2" style={{ color: "var(--foreground)", fontSize: 14, lineHeight: 1.6 }} maxLength={320} />
+          {p.tags.length > 0 || p.campaignId ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {/* 연결 행사 배지 — PostBoardList(리스트 뷰)와 동일한 pill 스타일 */}
+              {p.campaignId ? (
+                <span
+                  className="text-[11px] px-2 py-0.5 rounded-full"
+                  style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}
+                >
+                  <span aria-hidden>🗓</span> 행사 연결
+                </span>
+              ) : null}
+              {p.tags.slice(0, 3).map((t) => (
+                <TagLink key={t} tag={t} className="text-[11px] px-2 py-0.5 rounded-full transition-opacity hover:opacity-75" style={{ background: "var(--accent-soft)", color: "var(--accent-secondary)" }} />
+              ))}
+            </div>
+          ) : null}
           <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: "var(--border)" }}>
             <div className="flex flex-wrap gap-3 text-[13px]" style={{ color: "var(--foreground-muted)" }}>
-              <motion.button whileTap={{ scale: 0.85 }} onClick={onLike} disabled={liking || refreshing} className="flex items-center gap-1 hover:text-[#ed5c48] transition-colors disabled:opacity-50" style={liked ? { color: "#ed5c48" } : undefined}>
-                <Heart size={14} fill={liked ? "#ed5c48" : "none"} /> {likes}
-              </motion.button>
+              {/* 교회 공식 소식(공지·주보)에는 좋아요를 노출하지 않는다 */}
+              {isAdminOnlyCategory(p.category) ? null : (
+                <motion.button whileTap={{ scale: 0.85 }} onClick={onLike} disabled={liking || refreshing} className="flex items-center gap-1 hover:text-[var(--danger)] transition-colors disabled:opacity-50" style={liked ? { color: "var(--danger)" } : undefined}>
+                  <Heart size={14} fill={liked ? "var(--danger)" : "none"} /> {likes}
+                </motion.button>
+              )}
               <button onClick={toggleComments} className="flex items-center gap-1">
                 <MessageCircle size={14} /> {commentCount}
               </button>
               <ShareButton
                 title={p.text.slice(0, 80)}
-                className="flex items-center gap-1 hover:text-[#ed5c48] transition-colors"
+                className="flex items-center gap-1 hover:text-[var(--danger)] transition-colors"
               />
-              <ReportButton targetType="POST" targetId={p.id} ownedByMe={p.ownedByMe} className="!px-2 !py-1" />
+              {/* 신고는 카드에 직접 노출하지 않는다 — 상세 페이지의 ⋯ 메뉴(PostActionsMenu)로 충분. */}
             </div>
             <motion.button
               whileTap={{ scale: 0.85 }}
@@ -228,7 +285,7 @@ export function FeedPostCard({
           {showComments && (
             <div className="pt-3 border-t space-y-3" style={{ borderColor: "var(--border)" }}>
               {commentsError ? (
-                <p className="text-[12px]" style={{ color: "#ed5c48" }}>{commentsError}</p>
+                <p className="text-[12px]" style={{ color: "var(--danger)" }}>{commentsError}</p>
               ) : comments.length === 0 ? (
                 <p className="text-[12px] opacity-50" style={{ color: "var(--foreground)" }}>
                   {commentsLoaded ? "첫 댓글을 남겨보세요." : "댓글을 불러오는 중…"}
@@ -276,7 +333,7 @@ export function FeedPostCard({
               ) : (
                 <div className="flex flex-col items-center gap-2 rounded-xl px-3 py-4 text-center" style={{ background: "var(--border)" }}>
                   <p className="text-[12px]" style={{ color: "var(--foreground-muted)" }}>
-                    로그인해야 댓글을 작성할 수 있어요.
+                    댓글을 작성하려면 로그인이 필요합니다.
                   </p>
                   <button type="button" onClick={() => router.push("/login")} className="rounded-full bg-[var(--cta-bg)] px-4 py-1.5 text-[12px] text-[var(--cta-fg)]">
                     로그인하기

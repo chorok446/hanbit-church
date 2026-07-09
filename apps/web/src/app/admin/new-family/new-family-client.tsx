@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Loader2, Phone, Undo2 } from "lucide-react";
+import { Check, Eye, EyeOff, Loader2, Phone, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Pagination } from "@/components/ui/pagination";
 import { StatePanel } from "@/components/ui/state-panel";
+import { maskPhone } from "@/lib/mask";
 import {
   fetchNewFamilyPage,
   setNewFamilyContacted,
@@ -117,13 +118,7 @@ export default function NewFamilyClient() {
                   <span className="text-[15px] font-semibold" style={{ color: "var(--heading)" }}>
                     {item.name}
                   </span>
-                  <a
-                    href={`tel:${item.phone.replace(/[^0-9+]/g, "")}`}
-                    className="inline-flex items-center gap-1 text-[13px] underline-offset-4 hover:underline"
-                    style={{ color: "var(--accent-strong)" }}
-                  >
-                    <Phone size={12} aria-hidden /> {item.phone}
-                  </a>
+                  <PhonePrivacy name={item.name} phone={item.phone} />
                   <span
                     className="rounded-full px-2 py-0.5 text-[11px] font-medium"
                     style={
@@ -174,5 +169,37 @@ export default function NewFamilyClient() {
         <Pagination page={page} totalPages={data.totalPages} onPageChange={setPage} />
       ) : null}
     </div>
+  );
+}
+
+/**
+ * 연락처 개인정보 보호: 목록 기본 표시는 끝 4자리 마스킹(010-1234-****).
+ * 관리자는 새가족 연락이 업무라 전화 걸기(tel: 링크에는 원본 번호)와
+ * "전체 보기" 토글은 그대로 둔다 — 화면 노출만 줄이는 표시용 마스킹이다.
+ */
+function PhonePrivacy({ name, phone }: { name: string; phone: string }) {
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <a
+        href={`tel:${phone.replace(/[^0-9+]/g, "")}`}
+        className="inline-flex items-center gap-1 py-1 text-[13px] underline-offset-4 hover:underline"
+        style={{ color: "var(--accent-strong)" }}
+        aria-label={`${name}님에게 전화 걸기`}
+      >
+        <Phone size={12} aria-hidden /> {revealed ? phone : maskPhone(phone)}
+      </a>
+      <button
+        type="button"
+        onClick={() => setRevealed((v) => !v)}
+        aria-pressed={revealed}
+        aria-label={revealed ? "전화번호 가리기" : "전화번호 전체 보기"}
+        className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px]"
+        style={{ borderColor: "var(--border)", color: "var(--foreground-muted)", background: "transparent" }}
+      >
+        {revealed ? <EyeOff size={11} aria-hidden /> : <Eye size={11} aria-hidden />}
+        {revealed ? "가리기" : "전체 보기"}
+      </button>
+    </span>
   );
 }

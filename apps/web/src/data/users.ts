@@ -8,7 +8,12 @@ export type UserProfile = {
   verified: boolean;
   profileImageUrl?: string | null;
   notifyCampaignUpdates?: boolean;
-  role?: "USER" | "ADMIN";
+  /** 백엔드 UserRole 과 1:1 — 스태프 역할 정의는 app/admin/permissions.ts 참조. */
+  role?: "USER" | "ADMIN" | "OPERATOR" | "MINISTRY" | "NEW_FAMILY" | "CONTENT";
+  /** 찬양팀 역할 — null·미지정이면 찬양팀 소속이 아니다. 라벨은 data/praise-team.ts 참조. */
+  praiseRole?: "LEADER" | "MEMBER" | "GUEST" | null;
+  /** 찬양팀 파트(백엔드 PraisePart 문자열 — LEADER/VOCAL/KEYBOARD/…). */
+  praiseParts?: string[];
 };
 
 export type PublicUser = {
@@ -17,14 +22,7 @@ export type PublicUser = {
   verified: boolean;
   profileImageUrl?: string | null;
   postCount: number;
-  followerCount: number;
-  followingCount: number;
-  followedByMe?: boolean | null;
   blockedByMe?: boolean | null;
-};
-
-export type RecommendedUsersResponse = {
-  items: PublicUser[];
 };
 
 export type PublicUserPageResponse = {
@@ -39,34 +37,12 @@ export function fetchPublicUser(id: number): Promise<PublicUser> {
   return apiGet<PublicUser>(`/api/users/${id}`);
 }
 
-export function fetchRecommendedUsers(size = 4): Promise<RecommendedUsersResponse> {
-  return apiGet<RecommendedUsersResponse>(`/api/users/recommended?size=${size}`);
-}
-
-export async function followUser(id: number): Promise<void> {
-  await apiPostVoid(`/api/users/${id}/follow`);
-}
-
-export async function unfollowUser(id: number): Promise<void> {
-  await apiDeleteVoid(`/api/users/${id}/follow`);
-}
-
 export async function blockUser(id: number): Promise<void> {
   await apiPostVoid(`/api/users/${id}/block`);
 }
 
 export async function unblockUser(id: number): Promise<void> {
   await apiDeleteVoid(`/api/users/${id}/block`);
-}
-
-export function fetchMyFollowingPage(page: number, size = 10): Promise<PublicUserPageResponse> {
-  const params = new URLSearchParams({ page: String(page), size: String(size) });
-  return apiGet<PublicUserPageResponse>(`/api/users/me/following?${params.toString()}`);
-}
-
-export function fetchMyFollowersPage(page: number, size = 10): Promise<PublicUserPageResponse> {
-  const params = new URLSearchParams({ page: String(page), size: String(size) });
-  return apiGet<PublicUserPageResponse>(`/api/users/me/followers?${params.toString()}`);
 }
 
 export function searchUsersPage(q: string, page: number, size = 12): Promise<PublicUserPageResponse> {

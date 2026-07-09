@@ -36,11 +36,16 @@ class AuthController(
     private val accessLogService: AccessLogService,
 ) {
 
-    @Operation(summary = "회원가입")
+    @Operation(summary = "회원가입", description = "승인제가 켜져 있으면 토큰 없이 승인 대기 상태(pendingApproval=true)로 응답한다.")
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
-    fun signup(@RequestBody req: SignupRequest, http: HttpServletRequest, res: HttpServletResponse): AuthResponse =
-        res.setAuthCookies(authService.signup(req).also { accessLogService.record(it.userId, ClientRequestInfo.from(http)) })
+    fun signup(@RequestBody req: SignupRequest, http: HttpServletRequest, res: HttpServletResponse): Any {
+        val result = authService.signup(req)
+        val tokens = result.tokens
+            ?: return SignupPendingResponse(name = result.user.name)
+        accessLogService.record(tokens.userId, ClientRequestInfo.from(http))
+        return res.setAuthCookies(tokens)
+    }
 
     @Operation(summary = "로그인")
     @PostMapping("/login")

@@ -29,21 +29,19 @@ import { NotificationRow } from "./notification-row";
 
 const PAGE_SIZE = 20;
 
-type NotificationFilterId = "all" | "social" | "campaign" | "follow" | "message";
+type NotificationFilterId = "all" | "social" | "campaign" | "praise";
 
 const FILTER_GROUP_TYPES: Partial<Record<NotificationFilterId, string[]>> = {
   social: ["POST_LIKED", "POST_COMMENT_CREATED", "CAMPAIGN_COMMENT_CREATED", "COMMENT_REPLY_CREATED", "COMMENT_MENTIONED"],
   campaign: ["CAMPAIGN_JOINED", "CAMPAIGN_PARTICIPATION_REMOVED", "CAMPAIGN_STATUS_CHANGED", "CAMPAIGN_PROOF_CREATED"],
-  follow: ["USER_FOLLOWED"],
-  message: ["MESSAGE_RECEIVED"],
+  praise: ["PRAISE_ASSIGNED", "PRAISE_UNASSIGNED", "PRAISE_ATTENDANCE_REMINDER", "PRAISE_SCHEDULE_CHANGED"],
 };
 
 const filters: { id: NotificationFilterId; label: string }[] = [
   { id: "all", label: "전체" },
   { id: "social", label: "좋아요·댓글" },
   { id: "campaign", label: "행사" },
-  { id: "follow", label: "팔로우" },
-  { id: "message", label: "메시지" },
+  { id: "praise", label: "찬양팀" },
 ];
 
 type Result = { identity: string; status: "success" | "error"; data: NotificationsResponse | null };
@@ -317,7 +315,7 @@ export default function NotificationsClient() {
           </div>
         </div>
 
-        {actionError ? <p role="alert" className="mb-4 text-[13px] text-[#ed5c48]">{actionError}</p> : null}
+        {actionError ? <p role="alert" className="mb-4 text-[13px] text-[var(--danger)]">{actionError}</p> : null}
 
         {loading ? (
           <StatePanel compact>

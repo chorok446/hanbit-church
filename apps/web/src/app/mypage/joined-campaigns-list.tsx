@@ -28,14 +28,14 @@ const LIST_META: Record<
   joined: {
     loading: "참여 행사를 불러오는 중입니다.",
     error: "참여 행사를 불러오지 못했습니다.",
-    emptyTitle: "참여한 행사가 없어요.",
+    emptyTitle: "아직 참여 신청한 행사가 없어요.",
     ctaHref: "/campaigns",
     ctaLabel: "행사 둘러보기",
   },
   created: {
     loading: "개설 행사를 불러오는 중입니다.",
     error: "개설 행사를 불러오지 못했습니다.",
-    emptyTitle: "개설한 행사가 없어요.",
+    emptyTitle: "아직 개설한 행사가 없어요.",
     ctaHref: "/campaigns/new",
     ctaLabel: "행사 만들기",
   },
@@ -131,7 +131,7 @@ function CampaignCard({
           {campaign.hidden ? (
             <p
               className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px]"
-              style={{ background: "rgba(237,92,72,0.14)", color: "#ed5c48" }}
+              style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
             >
               <EyeOff size={12} aria-hidden /> 운영 정책에 따라 숨김 처리된 행사입니다
             </p>
@@ -157,7 +157,7 @@ function CampaignCard({
 
       <div className="flex flex-wrap gap-2 border-t px-4 py-3" style={{ borderColor: "var(--border)" }}>
         <Link href={`/campaigns/${campaign.id}`} className={cardActionClass}>
-          <ExternalLink size={12} aria-hidden /> 상세 보기
+          <ExternalLink size={12} aria-hidden /> 행사 보기
         </Link>
         {mode === "created" && campaign.ownedByMe ? (
           <Link href={`/campaigns/${campaign.id}/edit`} className={cardActionClass}>
@@ -246,7 +246,7 @@ export function UserCampaignsList({
             <div
               className="rounded-xl px-4 py-3 text-[13px]"
               role="alert"
-              style={{ background: "rgba(237,92,72,0.12)", color: "var(--danger)" }}
+              style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
             >
               {actionError}
             </div>

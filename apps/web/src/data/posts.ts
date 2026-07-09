@@ -34,8 +34,46 @@ export const POST_CATEGORIES: { value: PostCategory; label: string }[] = [
   { value: "SERMON", label: "설교" },
 ];
 
+/** 서버 PostCategory.ADMIN_ONLY 와 동일 — 교회 공식 소식(좋아요·신고 비노출). */
+export const POST_ADMIN_CATEGORIES: PostCategory[] = ["NOTICE", "BULLETIN"];
+
+export function isAdminOnlyCategory(category: string): boolean {
+  return POST_ADMIN_CATEGORIES.includes(category as PostCategory);
+}
+
+/**
+ * 서버 PostCategory.STAFF_WRITE 와 1:1 — 스태프(최고 관리자·운영자·콘텐츠 관리자,
+ * getAdminPermissions().canManageContent)만 작성·수정 가능(서버 403). 비스태프에게는
+ * 작성·수정 화면에서 선택지 자체를 숨긴다. 파일 첨부(주보 PDF·설교 자료 등)도 이 기준으로
+ * 허용된다(서버 normalizeAttachments 와 동일).
+ */
+export const POST_STAFF_WRITE_CATEGORIES: PostCategory[] = ["NOTICE", "BULLETIN", "SERMON"];
+
+export function isStaffWriteCategory(category: string): boolean {
+  return POST_STAFF_WRITE_CATEGORIES.includes(category as PostCategory);
+}
+
+/** 게시글 첨부파일(주보 PDF 등). 서버 PostAttachment 와 1:1. */
+export type PostAttachment = { name: string; url: string; size?: number | null };
+
+/** 서버 PostValidators.MAX_ATTACHMENTS 와 동일. */
+export const POST_MAX_ATTACHMENTS = 3;
+
 export function postCategoryLabel(category: string): string {
   return POST_CATEGORIES.find((item) => item.value === category)?.label ?? "나눔";
+}
+
+/** 교회 특화 카테고리 배지(이모지 + 라벨). 카드·게시판 리스트의 카테고리 pill 에서 공용. */
+const POST_CATEGORY_BADGES: Record<PostCategory, { emoji: string; label: string }> = {
+  NOTICE: { emoji: "📢", label: "공지" },
+  BULLETIN: { emoji: "📅", label: "주보" },
+  SERMON: { emoji: "📖", label: "설교" },
+  PRAYER: { emoji: "🙏", label: "기도요청" },
+  SHARING: { emoji: "🌱", label: "나눔" },
+};
+
+export function postCategoryBadge(category: string): { emoji: string; label: string } {
+  return POST_CATEGORY_BADGES[category as PostCategory] ?? POST_CATEGORY_BADGES.SHARING;
 }
 
 export type PostComposeField = "text" | "images" | "tags";
@@ -143,7 +181,13 @@ export type Post = {
   likes: number;
   comments: number;
   campaignId?: string;
+  // TODO(백엔드: posts.visibility/anonymous 필드·접근 제어 도입 시 활성화) — 도입되면
+  // 리스트/갤러리/상세에 공개 범위·익명 배지를 노출한다. 지금은 스키마가 없어 표시하지 않는다.
   category: PostCategory;
+  /** 공지·주보 첨부파일(PDF 등). 이전 응답 캐시 호환을 위해 optional. */
+  attachments?: PostAttachment[];
+  /** 조회수. 상세 조회마다 증가. 이전 응답 호환을 위해 optional. */
+  views?: number;
   likedByMe: boolean;
   bookmarkedByMe: boolean;
   ownedByMe: boolean;

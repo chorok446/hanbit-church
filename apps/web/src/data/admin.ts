@@ -97,7 +97,7 @@ export type AdminUserItem = {
   email: string;
   name: string;
   verified: boolean;
-  role: "USER" | "ADMIN";
+  role: "USER" | "ADMIN" | "OPERATOR" | "MINISTRY" | "NEW_FAMILY" | "CONTENT";
   deleted: boolean;
   suspended: boolean;
   suspendedUntil: string | null;
@@ -106,6 +106,12 @@ export type AdminUserItem = {
   createdAt: string | null;
   postCount: number;
   campaignCount: number;
+  /** 가입 승인 대기 여부(승인제). */
+  pendingApproval: boolean;
+  /** 찬양팀 역할(LEADER/MEMBER/GUEST) — null 이면 미지정. */
+  praiseRole: "LEADER" | "MEMBER" | "GUEST" | null;
+  /** 찬양팀 파트 목록(백엔드 PraisePart 문자열). */
+  praiseParts: string[];
 };
 
 export type AdminUsersPageResponse = {
@@ -131,9 +137,36 @@ export function fetchAdminUsers(params: {
   return apiGet<AdminUsersPageResponse>(`/api/admin/users?${query.toString()}`);
 }
 
+/** 가입 승인 대기 회원 목록(오래 기다린 순). */
+export function fetchPendingUsers(params: { page?: number; size?: number } = {}): Promise<AdminUsersPageResponse> {
+  const query = new URLSearchParams({
+    page: String(params.page ?? 0),
+    size: String(params.size ?? 20),
+  });
+  return apiGet<AdminUsersPageResponse>(`/api/admin/users/pending?${query.toString()}`);
+}
+
+/** 가입 승인 — 이후 해당 회원이 로그인할 수 있다. */
+export function approveUser(userId: number): Promise<AdminUserItem> {
+  return apiPatch<AdminUserItem>(`/api/admin/users/${userId}/approve`, {});
+}
+
+/** 가입 거절 — 계정을 비활성화한다(같은 이메일 재가입 가능). */
+export function rejectUser(userId: number): Promise<AdminUserItem> {
+  return apiPatch<AdminUserItem>(`/api/admin/users/${userId}/reject`, {});
+}
+
 /** 회원 역할 변경(승격/강등). DB role 을 매 요청 읽으므로 기존 토큰에도 즉시 반영된다. 본인 역할은 변경 불가(400). */
-export function setAdminUserRole(userId: number, role: "USER" | "ADMIN"): Promise<AdminUserItem> {
+export function setAdminUserRole(userId: number, role: "USER" | "ADMIN" | "OPERATOR" | "MINISTRY" | "NEW_FAMILY" | "CONTENT"): Promise<AdminUserItem> {
   return apiPatch<AdminUserItem>(`/api/admin/users/${userId}/role`, { role });
+}
+
+/** 찬양팀 역할·파트 지정(해제는 praiseRole: null). ADMIN 전용. */
+export function setPraiseRole(
+  userId: number,
+  body: { praiseRole: "LEADER" | "MEMBER" | "GUEST" | null; praiseParts: string[] },
+): Promise<AdminUserItem> {
+  return apiPatch<AdminUserItem>(`/api/admin/users/${userId}/praise`, body);
 }
 
 /** 회원 정지(suspendedUntil 미래 시각) 또는 해제(null). 로그인·기존 토큰이 즉시 차단된다. */
@@ -151,7 +184,10 @@ export type AdminActionType =
   | "CONTENT_RESTORED"
   | "USER_SUSPENDED"
   | "USER_UNSUSPENDED"
-  | "ROLE_CHANGED";
+  | "ROLE_CHANGED"
+  | "USER_APPROVED"
+  | "USER_REJECTED"
+  | "PRAISE_ROLE_CHANGED";
 
 export type AdminActionLogItem = {
   id: number;

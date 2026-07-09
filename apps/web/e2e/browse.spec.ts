@@ -15,8 +15,9 @@ test("잘못된 page 파라미터를 canonical URL로 교정한다", async ({ pa
 test("시드 게시글 상세를 열 수 있다", async ({ page }) => {
   await page.goto("/posts/p1");
 
-  await expect(page.getByRole("button", { name: "피드로 돌아가기" })).toBeVisible();
-  await expect(page.getByText("낡은 청바지 두 벌로 토트백 한 개").first()).toBeVisible();
+  // p1 은 공지(NOTICE) 시드 — 카테고리별 돌아가기 버튼은 소식으로 향한다.
+  await expect(page.getByRole("button", { name: "소식으로 돌아가기" })).toBeVisible();
+  await expect(page.getByText("여름 청년 수련회 사전 모임").first()).toBeVisible();
 });
 
 test("시드 행사 상세를 열 수 있다", async ({ page }) => {
@@ -33,6 +34,8 @@ test("행사 목록 URL이 canonical 형태로 정규화된다", async ({ page }
 
 test("행사 목록 정렬이 URL에 반영된다", async ({ page }) => {
   await page.goto("/campaigns");
+  // canonical 정규화(?sort=latest&page=0 replace)가 끝난 뒤 선택해야 정렬 변경이 덮어써지지 않는다.
+  await page.waitForURL(/\/campaigns\?sort=latest&page=0$/);
 
   await page.locator("select").filter({ has: page.locator('option[value="popular"]') }).selectOption("popular");
   await page.waitForURL(/sort=popular/);

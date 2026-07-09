@@ -141,7 +141,7 @@ export function SavedCampaignsGrid({ page, onPageChange }: { page: number; onPag
       errorLabel="저장한 행사를 불러오지 못했습니다."
       empty={
         <ListEmptyState
-          title="저장한 행사가 없어요."
+          title="아직 저장한 행사가 없어요."
           action={
             <Link href="/campaigns" className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]">
               행사 둘러보기
@@ -155,7 +155,7 @@ export function SavedCampaignsGrid({ page, onPageChange }: { page: number; onPag
             <div
               className="rounded-xl px-4 py-3 text-[13px]"
               role="alert"
-              style={{ background: "rgba(237,92,72,0.12)", color: "var(--danger)" }}
+              style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
             >
               {actionError}
             </div>

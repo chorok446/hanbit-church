@@ -17,6 +17,7 @@ import { getSessionId } from "@/lib/auth";
 import { beginAuthedRequest, clearSessionIfUnauthorized, staleByIdentity } from "@/lib/authed-request";
 import { useAuthSession } from "@/lib/use-auth-session";
 import { useCanonicalUrl, parsePageParam } from "@/lib/use-url-query";
+import { SearchExplore } from "./search-explore";
 import {
   SearchFilters,
   buildSearchHref,
@@ -25,6 +26,7 @@ import {
   parseSearchTag,
   parseSearchType,
   type SearchUrlState,
+  type SearchTabCounts,
 } from "./search-filters";
 import { SearchResults, type ResultState } from "./search-results";
 
@@ -57,10 +59,14 @@ export default function SearchClient() {
 
   useCanonicalUrl(canonicalHref, currentHref);
 
+  const hasQuery = urlState.query.trim().length > 0;
+  // 검색어·태그가 없는 전체 탭은 결과 대신 탐색 화면(추천 검색어 + 자주 찾는 메뉴)을 보여준다.
+  const isExplore = !hasQuery && !urlState.tag && urlState.type === "all";
+
   const requestIdentity = JSON.stringify([token, urlState, retryTick]);
   const [resultState, setResultState] = useState<ResultState>({
     identity: "",
-    status: "loading",
+    status: "idle",
     campaigns: null,
     posts: null,
     users: null,
@@ -68,7 +74,7 @@ export default function SearchClient() {
   });
   const currentState = staleByIdentity(resultState, requestIdentity, {
     identity: requestIdentity,
-    status: "loading",
+    status: isExplore ? "idle" : "loading",
     campaigns: null,
     posts: null,
     users: null,
@@ -103,8 +109,26 @@ export default function SearchClient() {
     page: 0,
   });
 
+  const runSearch = useCallback(
+    (query: string) => updateUrl({ query: query.slice(0, 100), page: 0 }),
+    [updateUrl],
+  );
+
   useEffect(() => {
     if (getSessionId() !== token) return;
+
+    const trimmedQuery = urlState.query.trim();
+
+    // 탐색 화면에서는 아무것도 조회하지 않는다 — staleByIdentity 의 placeholder(status: "idle")가 그대로 쓰인다.
+    if (!trimmedQuery && !urlState.tag && urlState.type === "all") return;
+
+    // 검색어가 있으면 탭 개수(전체/행사·사역/게시글/사용자) 표기를 위해 세 도메인을 모두 조회한다.
+    // page 는 활성 탭(또는 전체 탭)에만 적용하고, 나머지는 개수 파악용으로 0페이지만 가져온다.
+    const wantCampaigns = urlState.type === "all" || urlState.type === "campaigns" || !!trimmedQuery;
+    const wantPosts = urlState.type === "all" || urlState.type === "posts" || !!trimmedQuery;
+    // 사용자는 이름 검색만 지원 → 검색어가 있을 때만 조회한다.
+    // TODO(정책: 사용자 검색 로그인 제한 검토) — 현재는 백엔드 공개 정책(탈퇴·정지 제외한 공개 프로필만 반환)을 따른다.
+    const wantUsers = !!trimmedQuery;
 
     const campaignParams = new URLSearchParams();
     if (urlState.query) campaignParams.set("q", urlState.query);
@@ -123,35 +147,39 @@ export default function SearchClient() {
         runStartTo: urlState.runStartTo,
       });
     }
-    campaignParams.set("page", urlState.page.toString());
+    campaignParams.set(
+      "page",
+      urlState.type === "all" || urlState.type === "campaigns" ? urlState.page.toString() : "0",
+    );
     campaignParams.set("size", "6");
+
     const postParams = new URLSearchParams();
     if (urlState.query) postParams.set("q", urlState.query);
     if (urlState.tag) postParams.set("tag", urlState.tag);
     postParams.set("sort", urlState.sort === "popular" ? "popular" : "latest");
-    postParams.set("page", urlState.page.toString());
+    postParams.set(
+      "page",
+      urlState.type === "all" || urlState.type === "posts" ? urlState.page.toString() : "0",
+    );
     postParams.set("size", "6");
+
+    const usersPage = urlState.type === "all" || urlState.type === "users" ? urlState.page : 0;
+    const usersSize = urlState.type === "users" ? 12 : 6;
 
     const guard = beginAuthedRequest(generationRef, token);
 
     const load = async () => {
-      let campaigns: CampaignSearchResponse | null = null;
-      let posts: PostSearchResponse | null = null;
-      let users: PublicUserPageResponse | null = null;
-      if (urlState.type === "all") {
-        [campaigns, posts, users] = await Promise.all([
-          apiGet<CampaignSearchResponse>(`/api/campaigns/search?${campaignParams.toString()}`),
-          apiGet<PostSearchResponse>(`/api/posts/search?${postParams.toString()}`),
-          // 사용자는 이름 검색만 지원 → 검색어가 있을 때만 함께 조회한다.
-          urlState.query ? searchUsersPage(urlState.query, urlState.page, 6) : Promise.resolve(null),
-        ]);
-      } else if (urlState.type === "campaigns") {
-        campaigns = await apiGet<CampaignSearchResponse>(`/api/campaigns/search?${campaignParams.toString()}`);
-      } else if (urlState.type === "users") {
-        users = await searchUsersPage(urlState.query, urlState.page, 12);
-      } else {
-        posts = await apiGet<PostSearchResponse>(`/api/posts/search?${postParams.toString()}`);
-      }
+      const [campaigns, posts, users] = await Promise.all([
+        wantCampaigns
+          ? apiGet<CampaignSearchResponse>(`/api/campaigns/search?${campaignParams.toString()}`)
+          : Promise.resolve<CampaignSearchResponse | null>(null),
+        wantPosts
+          ? apiGet<PostSearchResponse>(`/api/posts/search?${postParams.toString()}`)
+          : Promise.resolve<PostSearchResponse | null>(null),
+        wantUsers
+          ? searchUsersPage(trimmedQuery, usersPage, usersSize)
+          : Promise.resolve<PublicUserPageResponse | null>(null),
+      ]);
       if (!guard.isCurrent()) return;
       setResultState({ identity: requestIdentity, status: "success", campaigns, posts, users, errorMessage: null });
     };
@@ -161,7 +189,7 @@ export default function SearchClient() {
       if (clearSessionIfUnauthorized(error, token)) return;
       const errorMessage = error instanceof ApiError && error.status === 400
         ? dateFilterError ?? "날짜 형식이 올바르지 않습니다."
-        : "검색 결과를 불러오지 못했습니다.";
+        : "검색 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.";
       setResultState({
         identity: requestIdentity,
         status: "error",
@@ -190,11 +218,20 @@ export default function SearchClient() {
     urlState.type,
   ]);
 
-  const title = urlState.query
+  const title = hasQuery
     ? `“${urlState.query}” 검색 결과`
     : urlState.tag
       ? `${urlState.tag} 태그 게시글`
       : "전체 탐색";
+
+  // 검색어가 있고 조회가 끝났을 때만 탭에 개수를 표기한다.
+  const tabCounts: SearchTabCounts | null = hasQuery && currentState.status === "success"
+    ? {
+        campaigns: currentState.campaigns?.totalElements ?? 0,
+        posts: currentState.posts?.totalElements ?? 0,
+        users: currentState.users?.totalElements ?? 0,
+      }
+    : null;
 
   return (
     <PageShell paddingClassName="relative min-h-screen overflow-hidden px-5 pb-20 pt-28 sm:px-6 sm:pt-32" orb="left">
@@ -208,24 +245,30 @@ export default function SearchClient() {
             {title}
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-[13px] leading-6 opacity-60" style={{ color: "var(--foreground)" }}>
-            행사, 게시글, 사용자를 한 번에 찾고, 원하는 결과만 골라볼 수 있습니다.
+            행사, 게시글, 새가족 안내와 같은 정보를 한 번에 찾아보세요.
           </p>
         </div>
 
         <SearchFilters
           state={urlState}
           loading={currentState.status === "loading"}
+          counts={tabCounts}
           onUpdate={updateUrl}
           onReset={resetFilters}
         />
 
-        <SearchResults
-          urlState={urlState}
-          currentState={currentState}
-          onRetry={() => setRetryTick((tick) => tick + 1)}
-          onUpdate={(changes) => updateUrl(changes)}
-          onReset={resetFilters}
-        />
+        {isExplore ? (
+          <SearchExplore onSearch={runSearch} />
+        ) : (
+          <SearchResults
+            urlState={urlState}
+            currentState={currentState}
+            onRetry={() => setRetryTick((tick) => tick + 1)}
+            onUpdate={(changes) => updateUrl(changes)}
+            onReset={resetFilters}
+            onSearch={runSearch}
+          />
+        )}
       </div>
     </PageShell>
   );

@@ -14,18 +14,25 @@ import { useAuthSession } from "@/lib/use-auth-session";
 import { CurrentUserAvatar } from "@/components/current-user-avatar";
 import { PageShell } from "@/components/page-shell";
 import { FeedPostCard } from "@/app/feed/feed-post-card";
-import { FeedSideHot, FeedSideRecommend } from "@/app/feed/feed-sidebar";
+import { FeedSideHot } from "@/app/feed/feed-sidebar";
 import { FeedControls, feedHasActiveFilters } from "@/app/feed/feed-controls";
 import { ListEmptyState } from "@/components/list-empty-state";
+import { PostBoardList } from "@/components/post-board-list";
 import { StaggerItem } from "@/components/scroll-reveal";
 import { SkeletonCards } from "@/components/ui/skeleton-cards";
 import { Pagination } from "@/components/ui/pagination";
 import { StatePanel } from "@/components/ui/state-panel";
-import type { PostSearchResponse } from "@/data/posts";
+import { POST_CATEGORIES, type PostCategory, type PostSearchResponse } from "@/data/posts";
 import type { Campaign } from "@/data/campaigns";
 import { useCanonicalUrl, parsePageParam, buildFeedHref, type FeedUrlState } from "@/lib/use-url-query";
 
 type UrlState = FeedUrlState;
+
+// 교제에서 다루는 커뮤니티 카테고리 — 공지·주보·설교는 소식/설교 페이지 몫.
+const FEED_CATEGORIES = POST_CATEGORIES.filter(
+  (item) => item.value === "SHARING" || item.value === "PRAYER",
+);
+const FEED_ALL_CATEGORIES = FEED_CATEGORIES.map((item) => item.value).join(",");
 
 type SearchState = {
   identity: string;
@@ -52,6 +59,8 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
   const searchParams = useSearchParams();
   const { sessionId: token } = useAuthSession();
   const [retryTick, setRetryTick] = useState(0);
+  // 교회 게시판답게 리스트(게시판)가 기본, 카드 피드는 "갤러리" 탭으로 분리한다.
+  const [view, setView] = useState<"list" | "gallery">("list");
   const generationRef = useRef(0);
 
   useEffect(() => {
@@ -62,10 +71,14 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
 
   const urlState = useMemo<UrlState>(() => {
     const sort = searchParams.get("sort");
+    const category = searchParams.get("category");
     return {
       query: searchParams.get("q") ?? "",
       campaignOnly: searchParams.get("campaignOnly") === "true",
-      followingOnly: searchParams.get("followingOnly") === "true",
+      // 교제는 성도 커뮤니티 공간 — 공지·주보·설교는 소식/설교 페이지 몫이라 나눔·기도만 다룬다.
+      category: FEED_CATEGORIES.some((item) => item.value === category)
+        ? (category as PostCategory)
+        : null,
       sort: sort === "popular" || sort === "discussed" ? sort : "latest",
       page: parsePageParam(searchParams.get("page")),
     };
@@ -106,7 +119,7 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
 
   const goToNewPost = () => {
     if (!getSessionId()) {
-      toast.error("로그인 후 글을 작성할 수 있어요.");
+      toast.error("교제 글을 작성하려면 로그인이 필요합니다.");
       router.push("/login?next=/posts/new");
       return;
     }
@@ -117,18 +130,13 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
     const params = new URLSearchParams();
     if (urlState.query) params.set("q", urlState.query);
     if (urlState.campaignOnly) params.set("campaignOnly", "true");
-    if (urlState.followingOnly && token) params.set("followingOnly", "true");
+    // 전체 = 나눔+기도(콤마 다중 카테고리) — 공지·주보·설교는 교제에 올라오지 않는다.
+    params.set("category", urlState.category ?? FEED_ALL_CATEGORIES);
     params.set("sort", urlState.sort);
     params.set("page", urlState.page.toString());
     params.set("size", "10");
     return `/api/posts/search?${params.toString()}`;
-  }, [token, urlState.campaignOnly, urlState.followingOnly, urlState.page, urlState.query, urlState.sort]);
-
-  useEffect(() => {
-    if (!token && urlState.followingOnly) {
-      updateUrl({ followingOnly: false }, true);
-    }
-  }, [token, updateUrl, urlState.followingOnly]);
+  }, [urlState.campaignOnly, urlState.category, urlState.page, urlState.query, urlState.sort]);
 
   useEffect(() => {
     const requestToken = token;
@@ -172,7 +180,20 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
     <PageShell paddingClassName="relative min-h-screen pt-28 pb-20 px-6 overflow-hidden" orb="left">
       <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
         <main>
-          <h1 className="sr-only">피드</h1>
+          <div className="mb-8">
+            <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
+              Community
+            </p>
+            <h1
+              className="text-[32px] sm:text-[38px]"
+              style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
+            >
+              성도의 교제
+            </h1>
+            <p className="mt-2 text-[14px]" style={{ color: "var(--foreground-muted)" }}>
+              함께 나누고, 기도하고, 서로를 격려하는 공간입니다.
+            </p>
+          </div>
           <button
             type="button"
             onClick={goToNewPost}
@@ -193,12 +214,48 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
           </button>
 
           <div className="mb-4 flex items-center justify-between gap-4">
-            <p className="text-[13px]" style={{ color: "var(--foreground-muted)" }}>
-              {response ? `검색 결과 ${response.totalElements.toLocaleString()}개` : "게시글 검색"}
-            </p>
+            <div className="flex items-center gap-3">
+              <div
+                className="flex rounded-full border p-0.5"
+                role="tablist"
+                aria-label="보기 형식"
+                style={{ background: "var(--card)", borderColor: "var(--border)" }}
+              >
+                {([
+                  { value: "list", label: "리스트" },
+                  { value: "gallery", label: "갤러리" },
+                ] as const).map((tab) => {
+                  const active = view === tab.value;
+                  return (
+                    <button
+                      key={tab.value}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setView(tab.value)}
+                      className="rounded-full px-3.5 py-1.5 text-[12px] font-medium"
+                      style={
+                        active
+                          ? { background: "var(--cta-bg)", color: "var(--cta-fg)" }
+                          : { color: "var(--foreground-muted)" }
+                      }
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* 결과 카운트는 검색·필터가 걸려 있을 때만 의미 있는 정보라 그때만 노출한다. */}
+              {response && feedHasActiveFilters(urlState) ? (
+                <p className="text-[13px]" style={{ color: "var(--foreground-muted)" }} aria-live="polite">
+                  검색 결과 {response.totalElements.toLocaleString()}개
+                </p>
+              ) : null}
+            </div>
             <button
               type="button"
               aria-label="피드 새로고침"
+              title="피드 새로고침"
               onClick={() => setRetryTick((tick) => tick + 1)}
               disabled={refreshing}
               className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full disabled:opacity-45"
@@ -214,10 +271,31 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
             onSearch={commitSearch}
             onSort={(sort) => updateUrl({ sort, page: 0 })}
             onCampaignOnly={(campaignOnly) => updateUrl({ campaignOnly, page: 0 })}
-            onFollowingOnly={token ? (followingOnly) => updateUrl({ followingOnly, page: 0 }) : undefined}
             onPatch={(changes) => updateUrl(changes)}
-            onResetAll={() => updateUrl({ query: "", campaignOnly: false, followingOnly: false, sort: "latest", page: 0 })}
+            onResetAll={() => updateUrl({ query: "", campaignOnly: false, category: null, sort: "latest", page: 0 })}
           />
+
+          <div className="-mt-2 mb-6 flex flex-wrap gap-2" role="group" aria-label="카테고리 필터">
+            {[{ value: null as PostCategory | null, label: "전체" }, ...FEED_CATEGORIES].map((item) => {
+              const active = urlState.category === item.value;
+              return (
+                <button
+                  key={item.value ?? "all"}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => updateUrl({ category: item.value, page: 0 })}
+                  className="rounded-full border px-3.5 py-1.5 text-[12px] font-medium"
+                  style={
+                    active
+                      ? { background: "var(--cta-bg)", borderColor: "var(--cta-bg)", color: "var(--cta-fg)" }
+                      : { background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground-muted)" }
+                  }
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
 
           {requestStatus === "loading" && !response ? (
             <SkeletonCards count={4} className="grid grid-cols-1 gap-5 sm:grid-cols-2" />
@@ -237,7 +315,7 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
           ) : null}
 
           {requestStatus === "error" && response ? (
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#ed5c48]/25 px-4 py-3 text-[12px] text-[#ed5c48]">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[rgba(var(--danger-rgb),0.25)] px-4 py-3 text-[12px] text-[var(--danger)]">
               <span>최신 게시글을 불러오지 못해 이전 결과를 표시합니다.</span>
               <button type="button" onClick={() => setRetryTick((tick) => tick + 1)} className="underline underline-offset-4">
                 다시 시도
@@ -247,19 +325,25 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
 
           {requestStatus === "success" && response?.content.length === 0 ? (
             <ListEmptyState
-              title={feedHasActiveFilters(urlState) ? "검색 결과가 없어요." : "아직 게시글이 없어요."}
+              title={
+                urlState.query
+                  ? "검색 결과가 없습니다."
+                  : feedHasActiveFilters(urlState)
+                    ? "조건에 맞는 글이 없습니다."
+                    : "아직 게시글이 없어요."
+              }
               description={
-                feedHasActiveFilters(urlState)
-                  ? urlState.followingOnly
-                    ? "팔로우한 작성자의 게시글이 없어요."
-                    : "다른 검색어를 입력하거나 필터를 초기화해보세요."
-                  : "첫 나눔을 남겨보세요."
+                urlState.query
+                  ? "다른 키워드로 검색해 주세요."
+                  : feedHasActiveFilters(urlState)
+                    ? "필터를 초기화해 보세요."
+                    : "첫 나눔을 남겨보세요."
               }
               action={
                 feedHasActiveFilters(urlState) ? (
                   <button
                     type="button"
-                    onClick={() => updateUrl({ query: "", campaignOnly: false, followingOnly: false, sort: "latest", page: 0 })}
+                    onClick={() => updateUrl({ query: "", campaignOnly: false, category: null, sort: "latest", page: 0 })}
                     className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]"
                   >
                     전체 게시글 보기
@@ -278,18 +362,22 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
           ) : null}
 
           {response && response.content.length > 0 ? (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              {response.content.map((post, i) => (
-                <StaggerItem key={post.id} index={i}>
-                  <FeedPostCard
-                    p={post}
-                    refreshing={refreshing}
-                    identity={token}
-                    onOpen={() => router.push(`/posts/${post.id}`)}
-                  />
-                </StaggerItem>
-              ))}
-            </div>
+            view === "list" ? (
+              <PostBoardList posts={response.content} />
+            ) : (
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                {response.content.map((post, i) => (
+                  <StaggerItem key={post.id} index={i}>
+                    <FeedPostCard
+                      p={post}
+                      refreshing={refreshing}
+                      identity={token}
+                      onOpen={() => router.push(`/posts/${post.id}`)}
+                    />
+                  </StaggerItem>
+                ))}
+              </div>
+            )
           ) : null}
 
           {response && response.totalElements > 0 ? (
@@ -302,12 +390,16 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
               onPageChange={(page) => updateUrl({ page })}
             />
           ) : null}
+
+          {/* lg 미만에서는 aside 가 숨겨지므로 진행 중 행사를 목록 아래에서 보여준다. */}
+          <div className="mt-10 lg:hidden">
+            <FeedSideHot campaigns={campaigns} />
+          </div>
         </main>
 
         <aside className="hidden lg:block">
           <div className="sticky top-24 flex flex-col gap-5">
             <FeedSideHot campaigns={campaigns} />
-            <FeedSideRecommend />
           </div>
         </aside>
       </div>

@@ -1,13 +1,15 @@
 "use client";
 
 import { motion } from "motion/react";
-import { MYPAGE_TAB_GROUPS, type MypageTab } from "./mypage-types";
+import { visibleTabGroups, type MypageTab } from "./mypage-types";
 
 export function MypageTabBar({
   tab,
+  isAdmin,
   onSelect,
 }: {
   tab: MypageTab;
+  isAdmin: boolean;
   onSelect: (tab: MypageTab) => void;
 }) {
 
@@ -17,7 +19,7 @@ export function MypageTabBar({
       style={{ borderColor: "var(--border)" }}
     >
       <div className="flex flex-col gap-3 py-3 sm:flex-row sm:items-end sm:gap-6">
-        {MYPAGE_TAB_GROUPS.map((group) => (
+        {visibleTabGroups(isAdmin).map((group) => (
           <div key={group.label} className="min-w-0">
             <p
               className="mb-1.5 px-1 text-[10px] font-medium tracking-[0.2em] uppercase"
@@ -28,7 +30,7 @@ export function MypageTabBar({
             <div
               role="tablist"
               aria-label={`${group.label} 메뉴`}
-              className="flex gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex flex-wrap gap-1"
             >
               {group.tabs.map((item) => {
                 const active = tab === item.id;

@@ -1,15 +1,21 @@
 "use client";
 
 import { toast } from "sonner";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { ArrowLeft, BadgeCheck, MessageCircle, FileText } from "lucide-react";
-import { apiPost, apiPut, apiDelete, apiDeleteVoid, ApiError } from "@/lib/api";
+import { apiGet, apiPost, apiPut, apiDelete, apiDeleteVoid, ApiError } from "@/lib/api";
 import { clearSession, getSessionId } from "@/lib/auth";
 import { useAuthedRefresh } from "@/lib/use-authed-refresh";
 import { useAuthSession } from "@/lib/use-auth-session";
-import { bookmarkCampaign, unbookmarkCampaign, type Campaign } from "@/data/campaigns";
+import {
+  bookmarkCampaign,
+  fetchCampaignProofs,
+  unbookmarkCampaign,
+  type Campaign,
+  type CampaignCommentsResponse,
+} from "@/data/campaigns";
 import { PageShell } from "@/components/page-shell";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { CampaignComments } from "./campaign-comments";
@@ -39,6 +45,30 @@ export default function CampaignDetailClient({ campaign }: { campaign: Campaign 
   const deletingRef = useRef(false);
   const [deleting, setDeleting] = useState(false);
   const confirm = useConfirm();
+
+  // 탭 라벨에 붙는 댓글·참여 후기 개수. 탭 전환 시 재조회해 작성/삭제 후에도 대체로 맞는 값을 유지한다.
+  const [tabCounts, setTabCounts] = useState<{ comments: number | null; proofs: number | null }>({
+    comments: null,
+    proofs: null,
+  });
+  useEffect(() => {
+    let cancelled = false;
+    apiGet<CampaignCommentsResponse>(`/api/campaigns/${encodeURIComponent(campaign.id)}/comments?page=0&size=1`)
+      .then((res) => {
+        if (cancelled) return;
+        setTabCounts((cur) => ({ ...cur, comments: res.totalComments ?? res.totalElements }));
+      })
+      .catch(() => {});
+    fetchCampaignProofs(campaign.id, 0, 1)
+      .then((res) => {
+        if (cancelled) return;
+        setTabCounts((cur) => ({ ...cur, proofs: res.totalElements }));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [campaign.id, activeTab]);
 
   const selectTab = (next: Tab) => {
     setTab(next);
@@ -296,22 +326,37 @@ export default function CampaignDetailClient({ campaign }: { campaign: Campaign 
           />
         </div>
 
-        <div className="mt-10 flex gap-2 border-b" style={{ borderColor: "rgba(var(--ink-rgb), 0.1)" }}>
+        <div className="mt-10 flex gap-1 overflow-x-auto border-b sm:gap-2" style={{ borderColor: "rgba(var(--ink-rgb), 0.1)" }}>
           {([
-            { id: "content", label: "행사 내용", icon: <FileText size={14} /> },
-            { id: "comments", label: "댓글", icon: <MessageCircle size={14} /> },
-            { id: "proofs", label: "참여 후기", icon: <BadgeCheck size={14} /> },
-          ] as { id: Tab; label: string; icon: React.ReactNode }[]).map((t) => {
+            { id: "content", label: "행사 내용", icon: <FileText size={14} />, count: null },
+            { id: "comments", label: "댓글", icon: <MessageCircle size={14} />, count: tabCounts.comments },
+            { id: "proofs", label: "참여 후기", icon: <BadgeCheck size={14} />, count: tabCounts.proofs },
+          ] as { id: Tab; label: string; icon: React.ReactNode; count: number | null }[]).map((t) => {
             const active = activeTab === t.id;
             return (
               <button
                 key={t.id}
                 onClick={() => selectTab(t.id)}
-                className="relative px-5 py-3 inline-flex items-center gap-2 text-[14px]"
-                style={{ color: active ? ("var(--foreground)") : "rgba(var(--ink-rgb), 0.5)" }}
+                aria-current={active ? "true" : undefined}
+                className="relative inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-3 py-3 text-[14px] sm:px-5"
+                style={{
+                  color: active ? "var(--foreground)" : "rgba(var(--ink-rgb), 0.5)",
+                  fontWeight: active ? 600 : 400,
+                }}
               >
                 {t.icon}
                 {t.label}
+                {t.count !== null ? (
+                  <span
+                    className="rounded-full px-1.5 py-0.5 text-[11px] leading-none"
+                    style={{
+                      background: active ? "var(--accent-soft)" : "rgba(var(--ink-rgb), 0.07)",
+                      color: active ? "var(--accent-strong)" : "rgba(var(--ink-rgb), 0.55)",
+                    }}
+                  >
+                    {t.count.toLocaleString()}
+                  </span>
+                ) : null}
                 {active && (
                   <motion.div
                     layoutId="detail-tab"

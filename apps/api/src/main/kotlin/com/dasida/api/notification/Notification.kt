@@ -17,13 +17,19 @@ object NotificationType {
     const val CAMPAIGN_JOINED = "CAMPAIGN_JOINED"
     const val CAMPAIGN_PROOF_CREATED = "CAMPAIGN_PROOF_CREATED"
     const val CAMPAIGN_PARTICIPATION_REMOVED = "CAMPAIGN_PARTICIPATION_REMOVED"
-    const val USER_FOLLOWED = "USER_FOLLOWED"
-    const val MESSAGE_RECEIVED = "MESSAGE_RECEIVED"
     const val POST_LIKED = "POST_LIKED"
     const val CAMPAIGN_STATUS_CHANGED = "CAMPAIGN_STATUS_CHANGED"
     const val REPORT_RESOLVED = "REPORT_RESOLVED"
     const val CONTENT_HIDDEN = "CONTENT_HIDDEN"
     const val CONTENT_RESTORED = "CONTENT_RESTORED"
+
+    // 찬양팀 — 리더가 콘티 파트 배정을 저장할 때(PraiseService.setAssignments).
+    const val PRAISE_ASSIGNED = "PRAISE_ASSIGNED"
+    const val PRAISE_UNASSIGNED = "PRAISE_UNASSIGNED"
+    // 리더가 미응답자에게 참석 리마인드를 보낼 때(PraiseService.remindPendingAttendance).
+    const val PRAISE_ATTENDANCE_REMINDER = "PRAISE_ATTENDANCE_REMINDER"
+    // 일정 시각·장소가 바뀔 때 연결 콘티 배정자에게(PraiseScheduleService.update).
+    const val PRAISE_SCHEDULE_CHANGED = "PRAISE_SCHEDULE_CHANGED"
 }
 
 /**

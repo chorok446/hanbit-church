@@ -1,5 +1,7 @@
 "use client";
 
+import { getAdminPermissions } from "@/app/admin/permissions";
+
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -7,15 +9,14 @@ import { LogIn, RefreshCw } from "lucide-react";
 import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
 import { ActivitySummary } from "./activity-summary";
 import { MyPostsGrid } from "./my-posts-grid";
-import { SavedCampaignsGrid } from "./saved-campaigns-grid";
-import { SavedPostsGrid } from "./saved-posts-grid";
+import { SavedTabPanel } from "./saved-tab-panel";
 import { UserCampaignsList } from "./joined-campaigns-list";
 import { ReportsList } from "./reports-list";
 import { AccessLogsList } from "./access-logs-list";
 import { MypageAccountPanel } from "./mypage-account-panel";
 import { MypageProfileHeader } from "./mypage-profile-header";
 import { MypageTabBar } from "./mypage-tab-bar";
-import { parseMypageTab, type MypageTab } from "./mypage-types";
+import { DEFAULT_MYPAGE_TAB, parseMypageTab, type MypageTab } from "./mypage-types";
 import { PageShell } from "@/components/page-shell";
 import { StatePanel } from "@/components/ui/state-panel";
 
@@ -32,7 +33,10 @@ export default function MyPageClient() {
   const [emailOverride, setEmailOverride] = useState<{ userId: number; email: string } | null>(null);
   const [savedCampaignPage, setSavedCampaignPage] = useState(0);
 
-  const tab = parseMypageTab(searchParams.get("tab"));
+  // TODO(권한: 사역 담당자 역할 도입 시 확장) — 개설 행사 탭은 현재 관리자 전용
+  const isAdmin = getAdminPermissions(profile?.role).canManageEvents;
+  const requestedTab = parseMypageTab(searchParams.get("tab"));
+  const tab = requestedTab === "created" && !isAdmin ? DEFAULT_MYPAGE_TAB : requestedTab;
   const page = parsePage(searchParams.get("page"));
   const displayedProfile = profile && emailOverride?.userId === profile.id
     ? { ...profile, email: emailOverride.email }
@@ -86,8 +90,8 @@ export default function MyPageClient() {
         ) : (
           <>
             <MypageProfileHeader profile={displayedProfile ?? profile} />
-            <ActivitySummary key={`summary-${profile.id}`} onSelectTab={onSelectTab} />
-            <MypageTabBar tab={tab} onSelect={onSelectTab} />
+            <ActivitySummary key={`summary-${profile.id}`} isAdmin={isAdmin} onSelectTab={onSelectTab} />
+            <MypageTabBar tab={tab} isAdmin={isAdmin} onSelect={onSelectTab} />
             <div className="mx-auto max-w-5xl px-6 py-10 sm:px-8">
               {tab === "posts" ? (
                 <div role="tabpanel" id="mypage-panel-posts" aria-labelledby="mypage-tab-posts">
@@ -99,25 +103,19 @@ export default function MyPageClient() {
                   <UserCampaignsList mode="joined" page={page} onPageChange={onPageChange} />
                 </div>
               ) : null}
-              {tab === "created" ? (
+              {tab === "created" && isAdmin ? (
                 <div role="tabpanel" id="mypage-panel-created" aria-labelledby="mypage-tab-created">
                   <UserCampaignsList mode="created" page={page} onPageChange={onPageChange} />
                 </div>
               ) : null}
               {tab === "saved" ? (
-                <div role="tabpanel" id="mypage-panel-saved" aria-labelledby="mypage-tab-saved" className="space-y-12">
-                  <section>
-                    <h2 className="mb-6 text-[15px] font-medium" style={{ color: "var(--foreground)" }}>
-                      저장한 게시글
-                    </h2>
-                    <SavedPostsGrid page={page} onPageChange={onPageChange} />
-                  </section>
-                  <section>
-                    <h2 className="mb-6 text-[15px] font-medium" style={{ color: "var(--foreground)" }}>
-                      저장한 행사
-                    </h2>
-                    <SavedCampaignsGrid page={savedCampaignPage} onPageChange={setSavedCampaignPage} />
-                  </section>
+                <div role="tabpanel" id="mypage-panel-saved" aria-labelledby="mypage-tab-saved">
+                  <SavedTabPanel
+                    page={page}
+                    onPageChange={onPageChange}
+                    campaignPage={savedCampaignPage}
+                    onCampaignPageChange={setSavedCampaignPage}
+                  />
                 </div>
               ) : null}
               {tab === "account" ? (

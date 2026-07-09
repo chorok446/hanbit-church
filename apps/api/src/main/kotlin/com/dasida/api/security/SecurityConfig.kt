@@ -18,6 +18,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 class SecurityConfig(
     private val jwtFilter: JwtAuthFilter,
+    // 행사 개설을 스태프(최고 관리자·운영자·사역 담당자)로 제한할지. e2e·기존 흐름 보호를 위해 기본 꺼짐.
+    // TODO(운영 결정): 실제 운영 전환 시 CAMPAIGN_CREATE_STAFF_ONLY=true 로 켠다.
+    @param:org.springframework.beans.factory.annotation.Value("\${app.campaigns.staff-only-create:false}")
+    private val campaignCreateStaffOnly: Boolean,
 ) {
     @Bean
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
@@ -39,7 +43,19 @@ class SecurityConfig(
                 // 아래 anyRequest().authenticated() 에 걸려 401 로 차단된다.
                 it.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                 it.requestMatchers("/actuator/health").permitAll()
-                // 관리자 API 전체 보호. 아래 GET /api/** permitAll 보다 반드시 먼저 선언한다.
+                // 관리자 API — 역할별 세분(UserRole 참조). 구체 경로를 /api/admin/** ADMIN 폴백보다 먼저 선언한다.
+                // 새가족 신청 관리: 새가족 담당자까지.
+                it.requestMatchers("/api/admin/new-family/**").hasAnyRole("ADMIN", "OPERATOR", "NEW_FAMILY")
+                // 가입 승인·신고·회원 조회·콘텐츠 숨김: 운영자까지.
+                it.requestMatchers("/api/admin/users/pending").hasAnyRole("ADMIN", "OPERATOR")
+                it.requestMatchers("/api/admin/users/*/approve", "/api/admin/users/*/reject").hasAnyRole("ADMIN", "OPERATOR")
+                it.requestMatchers(HttpMethod.GET, "/api/admin/users").hasAnyRole("ADMIN", "OPERATOR")
+                it.requestMatchers("/api/admin/reports/**").hasAnyRole("ADMIN", "OPERATOR")
+                it.requestMatchers("/api/admin/content/**").hasAnyRole("ADMIN", "OPERATOR")
+                // 대시보드 요약·추이: 모든 스태프.
+                it.requestMatchers("/api/admin/summary", "/api/admin/stats")
+                    .hasAnyRole("ADMIN", "OPERATOR", "MINISTRY", "NEW_FAMILY", "CONTENT")
+                // 나머지(감사 로그, 회원 역할 변경·정지 등)는 최고 관리자 전용.
                 it.requestMatchers("/api/admin/**").hasRole("ADMIN")
                 it.requestMatchers("/ws/messages").permitAll()
                 // OpenAPI JSON / Swagger UI 는 문서 확인용으로 공개한다. /api/** 인증 정책과 무관한 별도 경로다.
@@ -60,20 +76,29 @@ class SecurityConfig(
                 it.requestMatchers(HttpMethod.GET, "/api/campaigns/bookmarks").authenticated()
                 it.requestMatchers(HttpMethod.GET, "/api/campaigns/bookmarks/page").authenticated()
                 it.requestMatchers(HttpMethod.GET, "/api/campaigns/*/participants").authenticated()
-                // 알림은 사용자별 데이터 → 일반 GET permitAll 보다 먼저 보호한다.
-                it.requestMatchers(HttpMethod.GET, "/api/users/recommended").authenticated()
-                it.requestMatchers(HttpMethod.GET, "/api/users/me/following", "/api/users/me/followers").authenticated()
-                it.requestMatchers(HttpMethod.POST, "/api/users/*/follow").authenticated()
-                it.requestMatchers(HttpMethod.DELETE, "/api/users/*/follow").authenticated()
-                it.requestMatchers(HttpMethod.GET, "/api/users/*/follow").authenticated()
                 it.requestMatchers(HttpMethod.POST, "/api/users/*/block").authenticated()
                 it.requestMatchers(HttpMethod.DELETE, "/api/users/*/block").authenticated()
-                it.requestMatchers("/api/messages/**").authenticated()
+                // 알림은 사용자별 데이터 → 일반 GET permitAll 보다 먼저 보호한다.
                 it.requestMatchers(HttpMethod.GET, "/api/notifications/**").authenticated()
                 it.requestMatchers(HttpMethod.POST, "/api/notifications/**").authenticated()
                 it.requestMatchers(HttpMethod.GET, "/api/reports/mine").authenticated()
                 it.requestMatchers(HttpMethod.POST, "/api/reports").authenticated()
+                // 찬양팀 공개 일정(교회 캘린더 합류용)만 예외 — 응답 범위는 서비스가 요청자별로 좁힌다
+                // (비로그인 PUBLIC / 로그인 CHURCH+PUBLIC / 찬양팀 멤버 전체). authenticated 매처보다 먼저 선언.
+                it.requestMatchers(HttpMethod.GET, "/api/praise/schedules/public").permitAll()
+                // 나머지 찬양팀 내부 API — 인증만 여기서 요구하고, 찬양팀 권한(멤버/리더)은
+                // PraiseService 가 요청자 praiseRole 을 DB 조회로 검사한다(JwtAuthFilter 는 사이트 role 만 부여).
+                it.requestMatchers("/api/praise/**").authenticated()
+                if (campaignCreateStaffOnly) {
+                    // 행사 개설 스태프 제한(플래그). POST /api/campaigns/{id}/join 등 하위 경로는 해당 없음(정확 일치).
+                    it.requestMatchers(HttpMethod.POST, "/api/campaigns").hasAnyRole("ADMIN", "OPERATOR", "MINISTRY")
+                }
+                // 문서(주보 PDF) 업로드는 공지·주보 작성 권한(최고 관리자·운영자·콘텐츠 관리자)과 동일.
+                it.requestMatchers(HttpMethod.POST, "/api/media/document").hasAnyRole("ADMIN", "OPERATOR", "CONTENT")
                 it.requestMatchers(HttpMethod.POST, "/api/media").authenticated()
+                // 찬양팀 파일은 uploads/praise/ 하위에 저장된다. 공개 정적 경로(/uploads/**)로의 직접 접근을
+                // 차단해 인증 서빙(GET /api/praise/files/{name})만 남긴다 — permitAll 매처보다 먼저 선언.
+                it.requestMatchers(HttpMethod.GET, "/uploads/praise/**").denyAll()
                 it.requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                 it.requestMatchers(HttpMethod.GET, "/api/**").permitAll()
                 it.anyRequest().authenticated()

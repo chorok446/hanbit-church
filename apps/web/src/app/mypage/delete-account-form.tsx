@@ -79,7 +79,7 @@ export function DeleteAccountForm({ embedded = false }: { embedded?: boolean }) 
 
   const inputStyle = {
     background: "var(--card)",
-    borderColor: "rgba(237,92,72,0.25)",
+    borderColor: "rgba(var(--danger-rgb), 0.25)",
     color: "var(--foreground)",
   };
 

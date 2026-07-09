@@ -17,10 +17,10 @@ test("검색 페이지에서 검색어를 입력하면 결과 화면으로 전�
   await expect(page.getByRole("heading", { name: new RegExp(`${query}.*검색 결과`) })).toBeVisible();
 });
 
-test("행사 탭과 정렬이 URL에 반영된다", async ({ page }) => {
+test("행사·사역 탭과 정렬이 URL에 반영된다", async ({ page }) => {
   await page.goto("/search");
 
-  await page.getByRole("button", { name: "행사", exact: true }).click();
+  await page.getByRole("button", { name: "행사·사역", exact: true }).click();
   await page.waitForURL(/type=campaigns/);
 
   await page.locator("select").first().selectOption("popular");

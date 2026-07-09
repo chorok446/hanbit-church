@@ -15,6 +15,8 @@ data class CreatePostRequest(
     val campaignId: String? = null,
     @field:Schema(description = "카테고리(NOTICE/BULLETIN/SERMON/SHARING/PRAYER). 생략하면 SHARING.")
     val category: String? = null,
+    @field:Schema(description = "첨부파일 목록(공지·주보 전용, 최대 3개)")
+    val attachments: List<PostAttachment> = emptyList(),
 )
 
 @Schema(description = "게시글 수정 요청")
@@ -29,6 +31,8 @@ data class UpdatePostRequest(
     val campaignId: String? = null,
     @field:Schema(description = "카테고리(NOTICE/BULLETIN/SERMON/SHARING/PRAYER). 생략하면 SHARING.")
     val category: String? = null,
+    @field:Schema(description = "첨부파일 목록(공지·주보 전용, 최대 3개)")
+    val attachments: List<PostAttachment> = emptyList(),
 )
 
 @Schema(description = "게시글 댓글 작성 요청")
@@ -84,6 +88,8 @@ data class PostResponse(
     val comments: Int,
     val campaignId: String?,
     val category: String,
+    val attachments: List<PostAttachment> = emptyList(),
+    val views: Long = 0,
     val likedByMe: Boolean,
     val bookmarkedByMe: Boolean,
     val ownedByMe: Boolean,

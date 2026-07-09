@@ -36,7 +36,14 @@ export function ChurchHero() {
           </cite>
         </blockquote>
 
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-3">
+        <p
+          className="mx-auto mt-10 max-w-[40ch] text-[14px] leading-7 sm:text-[15px]"
+          style={{ color: "var(--foreground-muted)", textWrap: "balance" }}
+        >
+          부산 기장 한빛에서 예배와 말씀, 교제와 섬김으로 함께 걷는 공동체입니다.
+        </p>
+
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/worship"
             className="rounded-full px-8 py-3.5 text-[15px] font-medium transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"

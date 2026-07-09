@@ -2,7 +2,7 @@
 
 import { ActiveFilterChips, type FilterChip } from "@/components/active-filter-chips";
 import { SearchField } from "@/components/search-field";
-import type { PostSearchSort } from "@/data/posts";
+import { POST_CATEGORIES, postCategoryLabel, type PostCategory, type PostSearchSort } from "@/data/posts";
 import type { FeedUrlState } from "@/lib/use-url-query";
 
 const POST_SORT_LABELS: Record<PostSearchSort, string> = {
@@ -12,7 +12,7 @@ const POST_SORT_LABELS: Record<PostSearchSort, string> = {
 };
 
 export function feedHasActiveFilters(state: FeedUrlState): boolean {
-  return !!(state.query || state.campaignOnly || state.followingOnly || state.sort !== "latest");
+  return !!(state.query || state.campaignOnly || state.category || state.sort !== "latest");
 }
 
 function buildFeedFilterChips(state: FeedUrlState, onPatch: (changes: Partial<FeedUrlState>) => void): FilterChip[] {
@@ -31,11 +31,11 @@ function buildFeedFilterChips(state: FeedUrlState, onPatch: (changes: Partial<Fe
       onRemove: () => onPatch({ campaignOnly: false }),
     });
   }
-  if (state.followingOnly) {
+  if (state.category) {
     chips.push({
-      id: "followingOnly",
-      label: "팔로잉만",
-      onRemove: () => onPatch({ followingOnly: false }),
+      id: "category",
+      label: `카테고리: ${postCategoryLabel(state.category)}`,
+      onRemove: () => onPatch({ category: null }),
     });
   }
   if (state.sort !== "latest") {
@@ -54,7 +54,6 @@ export function FeedControls({
   onSearch,
   onSort,
   onCampaignOnly,
-  onFollowingOnly,
   onPatch,
   onResetAll,
 }: {
@@ -63,7 +62,6 @@ export function FeedControls({
   onSearch: (query: string) => void;
   onSort: (sort: PostSearchSort) => void;
   onCampaignOnly: (checked: boolean) => void;
-  onFollowingOnly?: (checked: boolean) => void;
   onPatch: (changes: Partial<FeedUrlState>) => void;
   onResetAll: () => void;
 }) {
@@ -93,20 +91,6 @@ export function FeedControls({
           />
           행사 게시글만
         </label>
-        {onFollowingOnly ? (
-          <label
-            className="flex min-h-10 items-center gap-2 rounded-full px-4 py-2.5 text-[13px]"
-            style={{ background: "rgba(var(--ink-rgb), 0.06)" }}
-          >
-            <input
-              type="checkbox"
-              checked={state.followingOnly}
-              onChange={(event) => onFollowingOnly(event.target.checked)}
-              className="accent-[var(--accent-strong)]"
-            />
-            팔로잉만
-          </label>
-        ) : null}
         <label className="ml-auto flex min-h-10 items-center gap-2 text-[13px]">
           <span className="sr-only">게시글 정렬</span>
           <select

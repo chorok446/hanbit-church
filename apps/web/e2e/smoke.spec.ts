@@ -1,27 +1,19 @@
 import { test, expect } from "@playwright/test";
+import { signup } from "./helpers/account";
 import { fillPostContent } from "./helpers/post-content";
 
 /**
- * 핵심 경로 스모크: 회원가입 → 글 작성 → 피드 노출 → 로그인 상태로 직접 진입.
+ * 핵심 경로 스모크: 회원가입(승인제) → 글 작성 → 피드 노출 → 로그인 상태로 직접 진입.
  * 마지막 단계는 hydration 첫 렌더에서 비로그인 UI로 튕기던 회귀(#197, #198)의 가드다.
  */
 test("회원가입 후 글을 작성하면 피드에 보인다", async ({ page }) => {
   const stamp = Date.now();
-  const email = `e2e-${stamp}@example.com`;
-  const nickname = `이투이${stamp % 100000}`;
-  const password = "Passw0rd!"; // 영문+숫자+특수문자, 8~15자
 
-  // 회원가입
-  await page.goto("/signup");
-  await page.getByLabel("이메일").fill(email);
-  await page.getByLabel("비밀번호", { exact: true }).fill(password);
-  await page.getByLabel("비밀번호 확인").fill(password);
-  await page.getByLabel("닉네임").fill(nickname);
-  await page.getByRole("button", { name: "회원가입" }).click();
-  await page.waitForURL("**/feed");
+  // 회원가입(가입 신청 → 관리자 승인 → 로그인까지 헬퍼가 처리)
+  const { nickname } = await signup(page, "e2e");
 
-  // 헤더에 로그인 상태 반영
-  await expect(page.getByRole("button", { name: "로그아웃" })).toBeVisible();
+  // 헤더에 로그인 상태 반영 — 프로필 드롭다운 버튼 노출
+  await expect(page.getByRole("button", { name: "내 계정 메뉴" })).toBeVisible();
 
   // 글 작성
   const text = `E2E 스모크 게시글 ${stamp}`;

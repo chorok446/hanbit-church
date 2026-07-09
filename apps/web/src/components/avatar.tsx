@@ -11,18 +11,32 @@ type AvatarProps = {
   src?: string;
 };
 
-function DefaultAvatar({ size }: { size: number }) {
+/** 프로필 사진이 없을 때의 기본 아바타 — 딥네이비 바탕 + 이름 첫 글자(명조). 이름이 없으면 사람 아이콘. */
+function DefaultAvatar({ name, size }: { name: string; size: number }) {
+  const initial = name.trim().charAt(0);
+  if (!initial) {
+    return (
+      <div
+        className="flex h-full w-full items-center justify-center rounded-full border"
+        style={{ background: "rgba(var(--ink-rgb), 0.14)", borderColor: "rgba(var(--ink-rgb), 0.12)" }}
+        aria-hidden
+      >
+        <User size={Math.round(size * 0.52)} color={"rgba(var(--ink-rgb), 0.6)"} strokeWidth={1.75} />
+      </div>
+    );
+  }
   return (
     <div
       className="flex h-full w-full items-center justify-center rounded-full"
-      style={{ background: "rgba(var(--ink-rgb), 0.12)" }}
+      style={{ background: "var(--banner-bg)" }}
       aria-hidden
     >
-      <User
-        size={Math.round(size * 0.52)}
-        color={"rgba(var(--ink-rgb), 0.4)"}
-        strokeWidth={1.75}
-      />
+      <span
+        className="select-none"
+        style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: Math.round(size * 0.44), color: "#f6f3ea", lineHeight: 1 }}
+      >
+        {initial}
+      </span>
     </div>
   );
 }
@@ -40,7 +54,7 @@ export function Avatar({ name, verified, size = 32, src }: AvatarProps) {
   return (
     <div className="relative inline-block flex-shrink-0" style={{ width: size, height: size }}>
       {showDefault ? (
-        <DefaultAvatar size={size} />
+        <DefaultAvatar name={name} size={size} />
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
         <img

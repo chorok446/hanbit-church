@@ -8,6 +8,11 @@
   --surface-muted: #ece5d2;
   --surface-deep: #1f2a44;
   --surface-dark: #16203a;
+  /* 푸터 배경. 라이트는 딥네이비(본문 크림과 대비), 다크는 본문보다 한 단계 어두운 네이비. */
+  --footer-bg: #1f2a44;
+  /* 딥네이비 배너(새가족 환영 등). 다크에서는 본문보다 한 단계 밝은 네이비로 띄운다. */
+  --banner-bg: #1f2a44;
+  --banner-border: transparent;
   --accent: #c9a227;
   /* 액센트 계열 보조 텍스트(태그·eyebrow)·주요 버튼 배경. 라이트는 딥네이비, 다크는 골드. */
   --accent-secondary: #1f2a44;
@@ -35,18 +40,31 @@
   --heading: #1f2a44;
   /* 불투명 패널(카드보다 진한 면 — 모달·팝오버 등). */
   --panel: #ffffff;
-  /* 오류·삭제 계열 텍스트/틴트 배경. */
+  /* 오류·삭제 계열 텍스트/틴트 배경. --danger-rgb 로 임의 투명도의 틴트를 만든다. */
   --danger: #b3402f;
-  --danger-soft: rgba(237, 92, 72, 0.08);
+  --danger-rgb: 179, 64, 47;
+  --danger-soft: rgba(var(--danger-rgb), 0.1);
+  /* 흰 글자를 얹는 채워진 위험 버튼·배지용 솔리드 채도. */
+  --danger-solid: #d94e3c;
+  /* 성공(참여 완료 등) 그린. */
+  --success: #2f9c68;
+  --success-soft: rgba(47, 156, 104, 0.14);
+  /* 경고·대기(신고 접수 등) 앰버. */
+  --warning: #b07b1e;
+  --warning-soft: rgba(237, 178, 72, 0.18);
   /* 주요 버튼(CTA) — 라이트: 네이비 바탕 + 크림 글자, 다크: 골드 바탕 + 미드나잇 글자. */
   --cta-bg: #1f2a44;
   --cta-fg: #f6f3ea;
 }
 
 .dark {
+  /* 다크 섹션 명암 차등 — 히어로(위쪽 약간 밝은 네이비) → 본문(--surface) → 푸터(--footer-bg, 더 어두운 네이비). */
   --surface: #16203a;
   --surface-muted: #1f2a44;
   --surface-deep: #16203a;
+  --footer-bg: #0f1729;
+  --banner-bg: #26365c;
+  --banner-border: rgba(255, 255, 255, 0.1);
   --surface-rgb: 22, 32, 58;
   --glass: rgba(255, 255, 255, 0.05);
   --glass-strong: rgba(255, 255, 255, 0.06);
@@ -57,16 +75,22 @@
   --foreground: #f6f3ea;
   --foreground-muted: rgba(246, 243, 234, 0.65);
   --border: rgba(255, 255, 255, 0.08);
-  --card: rgba(255, 255, 255, 0.04);
+  --card: rgba(255, 255, 255, 0.055);
   --chip-bg: rgba(255, 255, 255, 0.06);
   --badge-muted-bg: rgba(255, 255, 255, 0.07);
-  --page-gradient: linear-gradient(180deg, var(--surface-dark), var(--surface-muted));
+  --page-gradient: linear-gradient(180deg, #202c4e, var(--surface));
   --auth-gradient: linear-gradient(135deg, #16203a, #1f2a44 50%, #2f2c1e);
   --ink-rgb: 246, 243, 234;
   --heading: #f6f3ea;
-  --panel: #1f2a44;
+  --panel: #223050;
   --danger: #f3b4ab;
-  --danger-soft: rgba(237, 92, 72, 0.12);
+  --danger-rgb: 243, 180, 171;
+  --danger-soft: rgba(var(--danger-rgb), 0.14);
+  --danger-solid: #d0523f;
+  --success: #5cc493;
+  --success-soft: rgba(92, 196, 147, 0.16);
+  --warning: #d4b04a;
+  --warning-soft: rgba(212, 176, 74, 0.2);
   --cta-bg: #d4b04a;
   --cta-fg: #16203a;
 }

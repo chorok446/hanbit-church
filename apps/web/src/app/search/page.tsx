@@ -3,7 +3,7 @@ import SearchClient from "./search-client";
 
 function SearchFallback() {
   return (
-    <section className="min-h-screen bg-[#f9f7f2] px-6 pb-20 pt-32 text-center text-[var(--heading)]/60 dark:bg-[var(--surface-dark)] dark:text-white/60">
+    <section className="min-h-screen bg-[var(--surface)] px-6 pb-20 pt-32 text-center text-[var(--foreground-muted)]">
       검색 조건을 불러오는 중입니다.
     </section>
   );

@@ -40,7 +40,8 @@ test("행사 참여 시 개설자에게 알림이 생성되고 읽음·삭제할
   await ownerPage.waitForURL("**/campaigns/c-*");
   const campaignUrl = ownerPage.url();
 
-  await ownerPage.getByRole("button", { name: "모집 시작" }).click();
+  // exact: CTA 의 disabled "모집 시작 전입니다" 버튼과 substring 충돌 방지
+  await ownerPage.getByRole("button", { name: "모집 시작", exact: true }).click();
   await ownerPage.getByRole("alertdialog").getByRole("button", { name: "확인" }).click();
 
   await signup(joinerPage, "e2e-notif-joiner");

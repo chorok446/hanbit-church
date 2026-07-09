@@ -18,6 +18,12 @@ import java.util.UUID
 import javax.imageio.ImageIO
 import kotlin.math.roundToInt
 
+/** storeImageOrPdf 결과 — 전용 디렉터리에 저장된 파일명과 종류(image|pdf). URL 은 인증 엔드포인트가 만든다. */
+data class StoredPraiseFile(val filename: String, val kind: String)
+
+/** readPraiseFile 결과 — 인증 서빙용 파일 본문·content-type·인라인 여부(이미지=인라인, PDF=다운로드). */
+data class PraiseFileContent(val bytes: ByteArray, val contentType: String, val inline: Boolean)
+
 @Service
 class MediaUploadService(
     @param:Value("\${app.upload.dir:uploads}") private val uploadDir: String,
@@ -58,6 +64,102 @@ class MediaUploadService(
         val base = publicBaseUrl.trim().trimEnd('/')
         return "$base/uploads/$filename"
     }
+
+    /**
+     * 문서(주보 PDF·한글·이미지 등) 저장. 실행형 확장자(BLOCKED_DOCUMENT_EXTENSIONS)만 차단하고 모든 파일 허용.
+     * 이미지와 달리 축소·썸네일 없이 원본 그대로 저장하고 공개 URL 을 반환한다.
+     */
+    fun storeDocument(file: MultipartFile): String {
+        if (file.isEmpty) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file is required")
+        }
+        val bytes = file.bytes
+        if (bytes.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file is required")
+        }
+        if (bytes.size > MAX_DOCUMENT_BYTES) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file is too large")
+        }
+        // 모든 파일 허용하되, 브라우저가 실행/렌더할 수 있는 위험 유형(HTML·SVG·JS 등)은 XSS 방지를 위해 차단.
+        val extension = documentExtension(file.originalFilename)
+        if (extension in BLOCKED_DOCUMENT_EXTENSIONS) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported document type")
+        }
+        val filename = "${UUID.randomUUID()}.$extension"
+        Files.write(resolveUploadDir().resolve(filename), bytes)
+        val base = publicBaseUrl.trim().trimEnd('/')
+        return "$base/uploads/$filename"
+    }
+
+    /**
+     * 찬양팀 자료(악보 사진·PDF) 저장. magic bytes 허용 목록(이미지 jpeg/png/webp 또는 PDF)만 받는다 —
+     * BLOCKED_DOCUMENT_EXTENSIONS 블록리스트보다 강한 방식이라 실행형(HTML·JS 등)은 원천 차단된다.
+     * 이미지 5MB·PDF 10MB. 확장자는 감지 타입으로 고정해 원본 파일명 확장자를 신뢰하지 않는다.
+     *
+     * 공개 uploads 가 아니라 전용 하위 디렉터리(praise/)에 저장하고 파일명만 돌려준다.
+     * 서빙은 PraiseController 의 인증 엔드포인트(GET api/praise/files/{name})가 담당한다
+     * — 공개 정적 리소스 경로와 겹치지 않아 URL 을 알아도 비멤버는 접근할 수 없다.
+     */
+    fun storeImageOrPdf(file: MultipartFile): StoredPraiseFile {
+        if (file.isEmpty) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file is required")
+        }
+        val bytes = file.bytes
+        if (bytes.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file is required")
+        }
+        val imageExt = detectImageExtension(bytes)
+        val dir = resolvePraiseDir()
+        return when {
+            imageExt != null -> {
+                if (bytes.size > MAX_BYTES) {
+                    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file is too large")
+                }
+                // webp 은 ImageIO 디코더가 없어 원본 그대로 저장(축소 생략). 그 외는 원본 저장(썸네일은 만들지 않는다).
+                val filename = "${UUID.randomUUID()}.$imageExt"
+                val image = if (imageExt == "webp") null else decodeOrNull(bytes)
+                Files.write(dir.resolve(filename), optimizedOriginal(bytes, image, imageExt))
+                StoredPraiseFile(filename = filename, kind = "image")
+            }
+            isPdf(bytes) -> {
+                if (bytes.size > MAX_DOCUMENT_BYTES) {
+                    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file is too large")
+                }
+                val filename = "${UUID.randomUUID()}.pdf"
+                Files.write(dir.resolve(filename), bytes)
+                StoredPraiseFile(filename = filename, kind = "pdf")
+            }
+            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported file type (image or pdf only)")
+        }
+    }
+
+    /**
+     * 인증 서빙용 찬양팀 파일 로드. 파일명은 UUID.확장자 형태만 허용해 경로 탐색(../ 등)을 원천 차단한다.
+     * 없으면 404. 반환한 [PraiseFileContent] 로 컨트롤러가 content-type·본문을 내려준다.
+     */
+    fun readPraiseFile(filename: String): PraiseFileContent {
+        if (!SAFE_PRAISE_FILENAME.matches(filename)) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "file not found")
+        }
+        val path = resolvePraiseDir().resolve(filename).normalize()
+        // 정규화 후에도 전용 디렉터리 밖을 가리키면 거절(추가 방어).
+        if (!path.startsWith(resolvePraiseDir()) || !Files.isRegularFile(path)) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "file not found")
+        }
+        val ext = filename.substringAfterLast('.', "").lowercase()
+        val contentType = when (ext) {
+            "jpg", "jpeg" -> "image/jpeg"
+            "png" -> "image/png"
+            "webp" -> "image/webp"
+            "pdf" -> "application/pdf"
+            else -> "application/octet-stream"
+        }
+        // 이미지는 인라인(미리보기), PDF 는 다운로드 유도. 어느 쪽이든 nosniff.
+        val inline = ext in INLINE_PRAISE_IMAGE_EXTENSIONS
+        return PraiseFileContent(bytes = Files.readAllBytes(path), contentType = contentType, inline = inline)
+    }
+
+    private fun resolvePraiseDir(): Path = resolveUploadDir().resolve(PRAISE_SUBDIR).also { Files.createDirectories(it) }
 
     private fun decodeOrNull(bytes: ByteArray): BufferedImage? =
         runCatching { ImageIO.read(ByteArrayInputStream(bytes)) }.getOrNull()
@@ -112,6 +214,46 @@ class MediaUploadService(
 
     companion object {
         private const val MAX_BYTES = 5 * 1024 * 1024
+
+        /** 문서(PDF) 한도. 스캔 주보도 수 MB 수준이라 10MB 면 넉넉하다. multipart 한도(12MB)보다 작게 유지할 것. */
+        private const val MAX_DOCUMENT_BYTES = 10 * 1024 * 1024
+
+        /** 찬양팀 파일 전용 하위 디렉터리. 공개 정적 uploads 핸들러와 별개로 인증 서빙만 접근한다. */
+        internal const val PRAISE_SUBDIR = "praise"
+
+        /** 찬양팀 파일명 허용 패턴 — UUID.확장자. 경로 탐색·임의 파일 읽기 방지. */
+        internal val SAFE_PRAISE_FILENAME =
+            Regex("^[0-9a-fA-F-]{36}\\.(jpg|jpeg|png|webp|pdf)$")
+
+        /** 인증 서빙 시 인라인(미리보기) 허용 이미지 확장자. PDF 는 다운로드. */
+        internal val INLINE_PRAISE_IMAGE_EXTENSIONS = setOf("jpg", "jpeg", "png", "webp")
+
+        /** 원본 파일명에서 저장용 확장자를 뽑는다(영숫자 1~8자만, 없으면 bin). */
+        internal fun documentExtension(originalFilename: String?): String {
+            val ext = originalFilename?.substringAfterLast('.', "")?.lowercase()?.trim().orEmpty()
+            return if (Regex("^[a-z0-9]{1,8}$").matches(ext)) ext else "bin"
+        }
+
+        /**
+         * /uploads 로 그대로 서빙되므로 브라우저 실행/렌더형 확장자는 차단한다.
+         * 2차 방어로 UploadSecurityHeadersFilter 가 문서 응답에 Content-Disposition: attachment 를 강제한다.
+         */
+        internal val BLOCKED_DOCUMENT_EXTENSIONS = setOf(
+            "html", "htm", "xhtml", "xht", "shtml", "shtm", "stm", "mhtml", "mht", "hta",
+            "svg", "xml", "xsl", "swf",
+            "js", "mjs", "css", "vbs", "ps1",
+            "php", "phtml", "phar", "pht", "jsp", "jspx",
+            "sh", "bat", "cmd", "exe", "com", "scr", "htaccess",
+        )
+
+        /** %PDF- magic bytes. */
+        internal fun isPdf(bytes: ByteArray): Boolean =
+            bytes.size >= 5 &&
+                bytes[0] == '%'.code.toByte() &&
+                bytes[1] == 'P'.code.toByte() &&
+                bytes[2] == 'D'.code.toByte() &&
+                bytes[3] == 'F'.code.toByte() &&
+                bytes[4] == '-'.code.toByte()
 
         /** 원본 저장 시 긴 변 상한. 이보다 크면 축소 재인코딩한다. */
         internal const val MAX_ORIGINAL_DIM = 1920

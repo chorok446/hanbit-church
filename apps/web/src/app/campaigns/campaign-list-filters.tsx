@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "motion/react";
+import { ChevronDown } from "lucide-react";
 import { CampaignDateRangeFilterControls } from "@/components/campaign-date-range-filters";
 import { ActiveFilterChips, type FilterChip } from "@/components/active-filter-chips";
 import { SearchField } from "@/components/search-field";
@@ -111,11 +113,14 @@ export function CampaignListFilters({
   onResetAll: () => void;
 }) {
   const chips = buildCampaignFilterChips(state, (changes) => onPatch({ ...changes, page: 0 }));
+  const hasDateFilters = !!(state.recruitEndFrom || state.recruitEndTo || state.runStartFrom || state.runStartTo);
+  // 날짜 4개 필터는 사용 빈도가 낮아 "상세 필터" 접힘 영역으로 내린다. 활성 필터가 있으면 펼친 채로 시작.
+  const [detailOpen, setDetailOpen] = useState(hasDateFilters);
 
   return (
     <div className="mb-8 space-y-4">
       <div
-        className="flex w-full gap-1 overflow-x-auto rounded-full p-1 md:w-fit"
+        className="flex w-full flex-wrap gap-1 rounded-3xl p-1 md:w-fit md:rounded-full"
         style={{ background: "rgba(var(--ink-rgb), 0.06)" }}
       >
         {FILTER_ITEMS.map((item) => {
@@ -193,11 +198,38 @@ export function CampaignListFilters({
           </label>
         </div>
       </div>
-      <CampaignDateRangeFilterControls
-        value={state}
-        onChange={onDateChange}
-        onClear={onClearDates}
-      />
+      <div>
+        <button
+          type="button"
+          aria-expanded={detailOpen}
+          onClick={() => setDetailOpen((open) => !open)}
+          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-4 py-2 text-[13px]"
+          style={{ background: "rgba(var(--ink-rgb), 0.06)", color: "var(--foreground)" }}
+        >
+          <ChevronDown
+            size={14}
+            aria-hidden
+            className={`transition-transform ${detailOpen ? "rotate-180" : ""}`}
+          />
+          상세 필터
+          {hasDateFilters ? (
+            <span
+              aria-label="상세 필터 적용 중"
+              className="ml-0.5 h-1.5 w-1.5 rounded-full"
+              style={{ background: "var(--accent)" }}
+            />
+          ) : null}
+        </button>
+        {detailOpen ? (
+          <div className="mt-3">
+            <CampaignDateRangeFilterControls
+              value={state}
+              onChange={onDateChange}
+              onClear={onClearDates}
+            />
+          </div>
+        ) : null}
+      </div>
       <ActiveFilterChips chips={chips} onClearAll={chips.length > 0 ? onResetAll : undefined} />
     </div>
   );
