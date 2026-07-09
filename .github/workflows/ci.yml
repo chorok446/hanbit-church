@@ -76,6 +76,11 @@ jobs:
           DB_URL: jdbc:mysql://localhost:3306/dasida
           DB_USER: dasida
           DB_PASSWORD: dasida
+          # e2e 헬퍼가 기대하는 부트스트랩 관리자(e2e-admin@hanbit.local/E2eAdmin1!)를 SeedRunner 로 시드.
+          # 없으면 관리자 로그인이 401 로 실패한다(praise-team 등 admin 시드 전제 스펙).
+          ADMIN_EMAIL: e2e-admin@hanbit.local
+          ADMIN_PASSWORD: E2eAdmin1!
+          ADMIN_NAME: e2e관리자
       - name: Upload Playwright traces on failure
         if: failure()
         uses: actions/upload-artifact@v6
