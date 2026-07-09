@@ -96,16 +96,10 @@ export function NewFamilyRegisterForm() {
     <form
       onSubmit={submit}
       noValidate
+      aria-label="새가족 등록 신청"
       className="space-y-4 rounded-3xl border p-6 sm:p-8"
       style={{ background: "var(--card)", borderColor: "var(--border)" }}
     >
-      <h2 className="text-[20px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
-        새가족 등록 신청
-      </h2>
-      <p className="text-[13.5px] leading-6" style={{ color: "var(--foreground-muted)" }}>
-        연락처를 남겨주시면 담당자가 인사드리고 예배와 새가족 안내를 도와드립니다. 등록은 의무가 아닙니다.
-      </p>
-
       <div>
         <label htmlFor="nf-name" className="mb-1.5 block text-[12px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
           이름 <span className="normal-case tracking-normal" style={{ color: "var(--accent-strong)" }}>(필수)</span>

@@ -63,142 +63,164 @@ const visitInfoItems: { label: string; value: string; href?: string }[] = [
   { label: "문의 전화", value: CHURCH.phone, href: `tel:${CHURCH.phone.replace(/[^0-9+]/g, "")}` },
 ];
 
-const smallCtaClass =
-  "inline-flex min-h-11 items-center rounded-full border px-5 py-2.5 text-[14px] font-medium transition-colors";
-const smallCtaStyle = { borderColor: "rgba(var(--ink-rgb), 0.35)", color: "var(--heading)" } as const;
+const outlineCtaClass =
+  "inline-flex min-h-11 items-center rounded-full border px-6 py-2.5 text-[13.5px] font-medium transition-colors hover:bg-[var(--panel)]";
+const outlineCtaStyle = { borderColor: "rgba(var(--ink-rgb), 0.25)", color: "var(--heading)" } as const;
 
-function SectionHeading({ eyebrow, title }: { eyebrow: string; title: string }) {
-  return (
-    <div>
-      <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-        {eyebrow}
-      </p>
-      <h2
-        className="text-[24px] sm:text-[26px]"
-        style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
-      >
-        {title}
-      </h2>
-    </div>
-  );
-}
-
+// 새가족: 히어로(네이비) → 4단계(크림) → 등록 신청(웜크림 2열) → 오시는 길 안내(크림 2열) → FAQ → 마무리 CTA(네이비)
 export default function WelcomePage() {
   return (
-    <section
-      className="min-h-screen px-6 pb-24 pt-32 transition-colors"
-      style={{ backgroundImage: "var(--page-gradient)" }}
-    >
-      <div className="mx-auto max-w-4xl">
-        {/* 제목 + 상단 CTA */}
-        <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-          Welcome
-        </p>
-        <h1
-          className="text-[32px] sm:text-[38px]"
-          style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
-        >
-          처음 오셨나요?
-        </h1>
-        <p className="mt-3 max-w-[52ch] text-[15px] leading-8" style={{ color: "var(--foreground-muted)" }}>
-          {CHURCH.name}는 처음 오시는 한 분 한 분을 기쁨으로 환영합니다. 등록은 의무가 아니며,
-          원하시는 경우 새가족 안내와 교제를 도와드립니다.
-        </p>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Link href="/worship" className={smallCtaClass} style={smallCtaStyle}>
-            예배 시간 보기
-          </Link>
-          <Link href="/about" className={smallCtaClass} style={smallCtaStyle}>
-            오시는 길 보기
-          </Link>
-        </div>
-
-        {/* 4단계 안내 */}
-        <ol className="mt-12 space-y-4">
-          {newFamilySteps.map((step, index) => (
-            <li
-              key={step.title}
-              className="flex gap-5 rounded-2xl border px-6 py-6 sm:gap-6 sm:px-7"
-              style={{ background: "var(--card)", borderColor: "var(--border)" }}
+    <>
+      <section className="relative overflow-hidden px-6 pb-16 pt-40" style={{ background: "var(--surface-dark)" }}>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-24 left-1/4 h-[420px] w-[420px] rounded-full opacity-20 blur-[150px]"
+          style={{ background: "var(--accent)" }}
+        />
+        <div className="relative mx-auto max-w-5xl">
+          <p className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent)" }}>
+            Welcome
+          </p>
+          <h1
+            className="text-[34px] sm:text-[40px] text-[#f6f3ea]"
+            style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
+          >
+            처음 오셨나요?
+          </h1>
+          <p className="mt-3.5 max-w-[52ch] text-[15px] leading-[30px]" style={{ color: "rgba(246, 243, 234, 0.78)" }}>
+            {CHURCH.name}는 처음 오시는 한 분 한 분을 기쁨으로 환영합니다. 등록은 의무가 아니며,
+            원하시는 경우 새가족 안내와 교제를 도와드립니다.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2.5">
+            <Link
+              href="/worship"
+              className="inline-flex min-h-11 items-center rounded-full bg-[#f6f3ea] px-6 py-2.5 text-[14px] font-medium text-[#1f2a44] transition-opacity hover:opacity-90"
             >
-              <span
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold"
-                style={{ background: "var(--surface-deep)", color: "var(--accent)" }}
-                aria-hidden
-              >
-                {index + 1}
-              </span>
-              <div className="min-w-0">
-                <h2
-                  className="text-[18px]"
+              예배 시간 보기
+            </Link>
+            <Link
+              href="/about"
+              className="inline-flex min-h-11 items-center rounded-full border px-6 py-2.5 text-[14px] font-medium text-[#f6f3ea] transition-colors hover:bg-white/10"
+              style={{ borderColor: "rgba(246, 243, 234, 0.4)" }}
+            >
+              오시는 길 보기
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-6 py-24" style={{ background: "var(--surface)" }}>
+        <div className="mx-auto max-w-5xl">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
+            Steps
+          </p>
+          <h2 className="mt-2 text-[28px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
+            이렇게 함께 걸어요
+          </h2>
+          <ol className="mt-11 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+            {newFamilySteps.map((step, index) => (
+              <li key={step.title} className="border-t pt-5" style={{ borderColor: "rgba(var(--ink-rgb), 0.25)" }}>
+                <p
+                  aria-hidden
+                  className="text-[22px]"
+                  style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--accent)" }}
+                >
+                  {index + 1}
+                </p>
+                <h3
+                  className="mt-2.5 text-[17.5px]"
                   style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
                 >
                   {step.title}
-                </h2>
-                <p className="mt-1.5 text-[14.5px] leading-7" style={{ color: "var(--foreground-muted)" }}>
+                </h3>
+                <p className="mt-2 text-[13.5px] leading-[25px]" style={{ color: "var(--foreground-muted)" }}>
                   {step.body}
                 </p>
-              </div>
-            </li>
-          ))}
-        </ol>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
 
-        {/* 새가족 등록 신청 폼 */}
-        <div className="mt-14">
+      <section className="px-6 py-24" style={{ background: "var(--surface-muted)" }}>
+        <div className="mx-auto grid max-w-5xl grid-cols-1 items-start gap-14 lg:grid-cols-[5fr_7fr] lg:gap-16">
+          <div>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
+              Register
+            </p>
+            <h2 className="mt-2 text-[28px] leading-[1.45]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
+              새가족 등록 신청
+            </h2>
+            <span aria-hidden className="mt-5 block h-px w-12" style={{ background: "var(--accent)" }} />
+            <p className="mt-5 max-w-[36ch] text-[14.5px] leading-[28px]" style={{ color: "var(--foreground-muted)" }}>
+              연락처를 남겨주시면 담당자가 인사드리고 예배와 새가족 안내를 도와드립니다. 등록은 의무가
+              아닙니다.
+            </p>
+            <p className="mt-4 max-w-[36ch] text-[13px] leading-6" style={{ color: "var(--foreground-muted)" }}>
+              수집된 정보는 새가족 안내와 연락 목적으로만 사용됩니다.
+            </p>
+          </div>
           <NewFamilyRegisterForm />
         </div>
+      </section>
 
-        {/* 오시는 길과 안내 */}
-        <div className="mt-14">
-          <SectionHeading eyebrow="Visit" title="오시는 길과 안내" />
-          <div
-            className="mt-5 rounded-3xl border p-6 sm:p-8"
-            style={{ background: "var(--card)", borderColor: "var(--border)" }}
-          >
-            <dl className="space-y-4">
-              {visitInfoItems.map((item) => (
-                <div key={item.label} className="flex flex-col gap-1 sm:flex-row sm:gap-6">
-                  <dt
-                    className="w-28 shrink-0 text-[12px] font-semibold uppercase tracking-[0.2em]"
-                    style={{ color: "var(--accent-strong)" }}
-                  >
-                    {item.label}
-                  </dt>
-                  <dd className="text-[14.5px] leading-7" style={{ color: "var(--foreground)" }}>
-                    {item.href ? (
-                      <a href={item.href} className="underline-offset-4 hover:underline">
-                        {item.value}
-                      </a>
-                    ) : (
-                      item.value
-                    )}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            <div className="mt-6 flex flex-wrap gap-3 border-t pt-6" style={{ borderColor: "var(--border)" }}>
-              <Link href="/about" className={smallCtaClass} style={smallCtaStyle}>
+      <section className="px-6 py-24" style={{ background: "var(--surface)" }}>
+        <div className="mx-auto grid max-w-5xl grid-cols-1 items-start gap-14 lg:grid-cols-[5fr_7fr] lg:gap-16">
+          <div>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
+              Visit
+            </p>
+            <h2 className="mt-2 text-[28px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
+              오시는 길과 안내
+            </h2>
+            <span aria-hidden className="mt-5 block h-px w-12" style={{ background: "var(--accent)" }} />
+            <div className="mt-6 flex flex-wrap gap-2.5">
+              <Link href="/about" className={outlineCtaClass} style={outlineCtaStyle}>
                 오시는 길 보기
               </Link>
-              <Link href="/worship" className={smallCtaClass} style={smallCtaStyle}>
+              <Link href="/worship" className={outlineCtaClass} style={outlineCtaStyle}>
                 예배안내 보기
               </Link>
             </div>
           </div>
-        </div>
-
-        {/* 자주 묻는 질문 */}
-        <div className="mt-14">
-          <SectionHeading eyebrow="FAQ" title="자주 묻는 질문" />
-          <div className="mt-5 space-y-3">
-            {faqItems.map((item) => (
-              <details
-                key={item.question}
-                className="group rounded-2xl border px-6 py-1"
-                style={{ background: "var(--card)", borderColor: "var(--border)" }}
+          <dl className="border-t" style={{ borderColor: "var(--border)" }}>
+            {visitInfoItems.map((item) => (
+              <div
+                key={item.label}
+                className="grid grid-cols-1 gap-1 border-b py-4 sm:grid-cols-[130px_1fr] sm:gap-5"
+                style={{ borderColor: "var(--border)" }}
               >
+                <dt className="text-[12px] font-semibold uppercase tracking-[0.2em]" style={{ color: "var(--accent-strong)" }}>
+                  {item.label}
+                </dt>
+                <dd className="text-[14.5px] leading-[26px]" style={{ color: "var(--foreground)" }}>
+                  {item.href ? (
+                    <a href={item.href} className="underline-offset-4 hover:underline">
+                      {item.value}
+                    </a>
+                  ) : (
+                    item.value
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      <section className="px-6 pb-24" style={{ background: "var(--surface)" }}>
+        <div className="mx-auto max-w-[820px]">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
+            FAQ
+          </p>
+          <h2 className="mt-2 mb-6 text-[28px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
+            자주 묻는 질문
+          </h2>
+          <div className="border-t" style={{ borderColor: "var(--border)" }}>
+            {faqItems.map((item) => (
+              <details key={item.question} className="group border-b" style={{ borderColor: "var(--border)" }}>
                 <summary
-                  className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 py-4 text-[15.5px] [&::-webkit-details-marker]:hidden"
+                  className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 py-4 text-[16px] [&::-webkit-details-marker]:hidden"
                   style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
                 >
                   {item.question}
@@ -210,53 +232,50 @@ export default function WelcomePage() {
                     +
                   </span>
                 </summary>
-                <p className="pb-5 text-[14.5px] leading-7" style={{ color: "var(--foreground-muted)" }}>
+                <p className="pb-5 text-[14.5px] leading-[28px]" style={{ color: "var(--foreground-muted)" }}>
                   {item.answer}
                 </p>
               </details>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* 하단 CTA */}
-        <div
-          className="mt-14 rounded-3xl border px-6 py-10 text-center sm:px-10"
-          style={{ background: "var(--card)", borderColor: "var(--border)" }}
-        >
+      <section className="px-6 py-24 text-center" style={{ background: "var(--banner-bg)" }}>
+        <div className="mx-auto max-w-[640px]">
           <h2
-            className="text-[22px] sm:text-[24px]"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
+            className="text-[26px] text-[#f6f3ea] sm:text-[30px]"
+            style={{ fontFamily: "var(--font-display)", fontWeight: 600, textWrap: "balance" }}
           >
             처음 방문을 준비하고 계신가요?
           </h2>
-          <p className="mt-2 text-[14.5px]" style={{ color: "var(--foreground-muted)" }}>
+          <p className="mx-auto mt-3.5 text-[14.5px] leading-[27px]" style={{ color: "rgba(246, 243, 234, 0.75)" }}>
             예배 시간과 오시는 길을 미리 확인해 보세요.
           </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <div className="mt-7 flex flex-wrap justify-center gap-3">
             <Link
               href="/worship"
-              className="inline-flex min-h-12 items-center rounded-full px-8 py-3.5 text-[15px] font-medium transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
-              style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+              className="inline-flex min-h-12 items-center rounded-full bg-[#f6f3ea] px-8 py-3.5 text-[15px] font-medium text-[#1f2a44] transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
             >
               예배 안내 보기
             </Link>
             <Link
               href="/about"
-              className="inline-flex min-h-12 items-center rounded-full border px-8 py-3.5 text-[15px] font-medium"
-              style={smallCtaStyle}
+              className="inline-flex min-h-12 items-center rounded-full border px-8 py-3.5 text-[15px] font-medium text-[#f6f3ea] transition-colors hover:bg-white/10"
+              style={{ borderColor: "rgba(212, 176, 74, 0.6)" }}
             >
               오시는 길 보기
             </Link>
           </div>
-          <p className="mt-6 text-[13px]" style={{ color: "var(--foreground-muted)" }}>
+          <p className="mt-7 text-[13px]" style={{ color: "rgba(246, 243, 234, 0.6)" }}>
             홈페이지 소식과 교제에 참여하고 싶으시다면{" "}
-            <Link href="/signup" className="underline underline-offset-4" style={{ color: "var(--heading)" }}>
+            <Link href="/signup" className="underline underline-offset-4 text-[#f6f3ea]">
               회원가입
             </Link>
             을 해보세요.
           </p>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
