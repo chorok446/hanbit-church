@@ -16,11 +16,13 @@ import { fetchAdminStats, type AdminDailyStat } from "@/data/admin";
 
 const RANGE_OPTIONS = [7, 30, 90] as const;
 
+// 차트 전용 범주형 팔레트(--chart-1..4). 테마 토큰(--accent 등)은 다크에서 여러 계열이
+// 같은 골드로 뭉개지므로 쓰지 않는다.
 const SERIES = [
-  { key: "signups", label: "가입", color: "var(--accent)" },
-  { key: "posts", label: "게시글", color: "var(--accent-strong)" },
-  { key: "campaigns", label: "행사", color: "var(--warning)" },
-  { key: "reports", label: "신고", color: "var(--danger)" },
+  { key: "signups", label: "가입", color: "var(--chart-1)" },
+  { key: "posts", label: "게시글", color: "var(--chart-2)" },
+  { key: "campaigns", label: "행사", color: "var(--chart-3)" },
+  { key: "reports", label: "신고", color: "var(--chart-4)" },
 ] as const;
 
 // 저장된 결과의 key 가 현재 요청 key 와 다르면 로딩 중으로 간주한다(dashboard-client 패턴).

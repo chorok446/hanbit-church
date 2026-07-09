@@ -206,7 +206,7 @@ export function SiteHeader() {
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center text-[10px] font-semibold leading-none"
-                style={{ background: "var(--danger-solid)", color: "#ffffff" }}
+                style={{ background: "var(--danger-solid)", color: "var(--on-danger)" }}
                 aria-hidden
               >
                 {unread > 99 ? "99+" : unread}
