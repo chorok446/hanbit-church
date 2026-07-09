@@ -69,7 +69,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter web build
       - run: pnpm --filter web exec playwright install --with-deps chromium
+      # API 기본 DB 는 3307/cheolma(로컬 docker-compose) 이므로, e2e MySQL 서비스(3306/dasida)에
+      # 맞춰 DB env 를 주입한다. 없으면 bootRun 이 Communications link failure 로 기동 실패한다.
       - run: pnpm --filter web e2e
+        env:
+          DB_URL: jdbc:mysql://localhost:3306/dasida
+          DB_USER: dasida
+          DB_PASSWORD: dasida
       - name: Upload Playwright traces on failure
         if: failure()
         uses: actions/upload-artifact@v6
