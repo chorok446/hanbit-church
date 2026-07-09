@@ -13,25 +13,40 @@ import {
 import { progressPercent } from "@/lib/progress";
 import { CampaignThumb } from "./campaign-thumb";
 
+/**
+ * 상태 뱃지 색을 CSS 토큰으로 매핑한다(data 층의 하드코딩 hex 대신 브랜드 토큰 사용).
+ * 모집중=성공 톤(--success), 정원마감=위험 톤, 그 외(모집예정·모집마감·진행중·종료)=중립 톤.
+ */
+function badgeStyle(lifecycle: CampaignLifecycle): { background: string; color: string } {
+  if (lifecycle.phase === "recruiting") {
+    return { background: "var(--success)", color: "#f6f3ea" };
+  }
+  if (lifecycle.badge.label === "정원마감") {
+    return { background: "var(--danger-solid)", color: "#ffffff" };
+  }
+  // 모집예정·모집마감·진행중·종료 — 네이비 중립 톤(크림 텍스트).
+  return { background: "rgba(31,42,68,0.82)", color: "#f6f3ea" };
+}
+
 function StatusBadge({ lifecycle }: { lifecycle: CampaignLifecycle }) {
   return (
     <span
-      className="rounded-full px-2.5 py-1 text-[11px] tracking-[0.2em]"
-      style={{ background: lifecycle.badge.color, color: lifecycle.badge.fg }}
+      className="rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.14em]"
+      style={badgeStyle(lifecycle)}
     >
       {lifecycle.badge.label}
     </span>
   );
 }
 
-function ProgressBar({ campaign, lifecycle }: { campaign: Campaign; lifecycle: CampaignLifecycle }) {
+function ProgressBar({ campaign }: { campaign: Campaign }) {
   const pct = progressPercent(campaign.joined, campaign.capacity);
   const progressLabel = campaignProgressLabel(campaign);
   return (
     <div className="w-full">
       <div
         className="h-1.5 w-full overflow-hidden rounded-full"
-        style={{ background: "var(--border)" }}
+        style={{ background: "rgba(var(--ink-rgb), 0.1)" }}
       >
         <motion.div
           initial={{ width: 0 }}
@@ -39,14 +54,14 @@ function ProgressBar({ campaign, lifecycle }: { campaign: Campaign; lifecycle: C
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: "easeOut" }}
           className="h-full rounded-full"
-          style={{ background: lifecycle.badge.color }}
+          style={{ background: "var(--accent)" }}
         />
       </div>
       <div className="mt-1.5 flex justify-between text-[11px]" style={{ color: "var(--foreground-muted)" }}>
         <span>
           {campaign.capacity > 0 ? (
             <>
-              <b style={{ color: lifecycle.badge.color }}>{campaign.joined}</b> / {campaign.capacity}명 신청
+              <b style={{ color: "var(--accent-strong)" }}>{campaign.joined}</b> / {campaign.capacity}명 신청
             </>
           ) : (
             "모집 인원 미정"
@@ -140,7 +155,10 @@ export function CampaignListCard({ campaign }: { campaign: Campaign }) {
             <div className="absolute right-3 top-3" style={{ transform: "translateZ(40px)" }}>
               <StatusBadge lifecycle={lifecycle} />
             </div>
-            <div className="absolute bottom-3 left-3 right-3 text-[12px] text-white/90">
+            <div
+              className="absolute bottom-3 left-3 right-3 text-[12px] font-medium"
+              style={{ color: "#f6f3ea", textShadow: "0 1px 6px rgba(0,0,0,0.45)" }}
+            >
               {/* D-day 기준은 campaignLifecycle 주석 참고 — 카드·상세 동일 기준 */}
               {lifecycle.dday}
             </div>
@@ -178,7 +196,7 @@ export function CampaignListCard({ campaign }: { campaign: Campaign }) {
                 </p>
               ) : null}
             </div>
-            <ProgressBar campaign={campaign} lifecycle={lifecycle} />
+            <ProgressBar campaign={campaign} />
             <CardCta campaign={campaign} lifecycle={lifecycle} />
           </div>
         </div>
