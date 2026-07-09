@@ -3,7 +3,12 @@ package com.dasida.api.post
 import com.dasida.api.auth.UserRepository
 import com.dasida.api.campaign.CampaignRepository
 import com.dasida.api.common.checkPageParams
+import com.dasida.api.common.ListingLimits.MAX_SEARCH_PAGE_SIZE
+import com.dasida.api.common.ListingLimits.MAX_SEARCH_QUERY_LENGTH
+import com.dasida.api.common.ListingLimits.MAX_SITEMAP_PAGE_SIZE
 import com.dasida.api.common.SitemapIdsResponse
+import com.dasida.api.common.presenceByPage
+import com.dasida.api.common.totalPages
 import com.dasida.api.notification.NotificationService
 import com.dasida.api.notification.NotificationType
 import com.dasida.api.security.AuthUser
@@ -255,13 +260,15 @@ class PostService(
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $id not found")
         }
         // 조회수 증가 — 엔티티 dirty checking 대신 원자적 UPDATE 로 동시 조회 유실을 막는다.
+        // (incrementViews 는 clearAutomatically 로 영속성 컨텍스트를 비우므로 post 는 이 시점 detached.
+        //  detached 엔티티를 변경하지 않고, 응답 views 만 이번 조회분(+1)을 copy 로 반영한다.)
+        val viewsAfter = post.views + 1
         repo.incrementViews(id)
-        post.views += 1 // 응답에도 이번 조회를 반영(재조회 없이)
         return post.toResponse(
             viewerId = currentUserId,
             likedByMe = currentUserId != null && likeRepo.existsByPostIdAndUserId(id, currentUserId),
             bookmarkedByMe = currentUserId != null && bookmarkRepo.existsByPostIdAndUserId(id, currentUserId),
-        )
+        ).copy(views = viewsAfter)
     }
 
     /**
@@ -480,26 +487,9 @@ class PostService(
 
     /** 현재 page 의 postId 만 대상으로 좋아요 bulk 조회. 비로그인/빈 page 면 query 생략. */
     private fun likedByPage(userId: Long?, postIds: List<String>): Set<String> =
-        if (userId == null || postIds.isEmpty()) {
-            emptySet()
-        } else {
-            likeRepo.findByUserIdAndPostIdIn(userId, postIds).map { it.postId }.toSet()
-        }
+        presenceByPage(userId, postIds) { uid, ids -> likeRepo.findByUserIdAndPostIdIn(uid, ids).map { it.postId } }
 
     /** 현재 page 의 postId 만 대상으로 북마크 bulk 조회. 비로그인/빈 page 면 query 생략. */
     private fun bookmarkedByPage(userId: Long?, postIds: List<String>): Set<String> =
-        if (userId == null || postIds.isEmpty()) {
-            emptySet()
-        } else {
-            bookmarkRepo.findByUserIdAndPostIdIn(userId, postIds).map { it.postId }.toSet()
-        }
-
-    private companion object {
-        const val MAX_SEARCH_PAGE_SIZE = 50
-        const val MAX_SEARCH_QUERY_LENGTH = 100
-        const val MAX_SITEMAP_PAGE_SIZE = 500
-
-        fun totalPages(totalElements: Long, size: Int): Int =
-            if (totalElements == 0L) 0 else ((totalElements - 1) / size + 1).toInt()
-    }
+        presenceByPage(userId, postIds) { uid, ids -> bookmarkRepo.findByUserIdAndPostIdIn(uid, ids).map { it.postId } }
 }
