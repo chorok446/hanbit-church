@@ -3,7 +3,6 @@ package com.dasida.api.auth
 import com.dasida.api.campaign.CampaignCommentRepository
 import com.dasida.api.campaign.CampaignProofRepository
 import com.dasida.api.campaign.CampaignRepository
-import com.dasida.api.message.DmDeletionService
 import com.dasida.api.post.PostCommentRepository
 import com.dasida.api.post.PostRepository
 import com.dasida.api.security.JwtService
@@ -35,15 +34,23 @@ class AuthService(
     private val campaignProofs: CampaignProofRepository,
     private val denylist: TokenDenylistStore,
     private val accessLogs: AccessLogService,
-    private val userFollows: UserFollowRepository,
-    private val dmDeletion: DmDeletionService,
+    private val userBlocks: UserBlockRepository,
     private val clock: Clock,
+    // 회원가입 관리자 승인제. 테스트에서는 false 로 두어 기존 가입→즉시 사용 플로를 유지한다.
+    @param:org.springframework.beans.factory.annotation.Value("\${app.signup.require-approval:true}")
+    private val signupRequiresApproval: Boolean,
 ) {
     // 유저 없을 때 BCrypt 시간을 맞추기 위한 더미 해시(1회 계산). 타이밍 기반 가입여부 노출 방지용.
     private val dummyHash = encoder.encode("__no_such_user__")
 
+    /**
+     * 회원가입 결과. 승인제가 켜져 있으면 tokens 없이 승인 대기 상태로 만들어지고,
+     * 꺼져 있으면(테스트) 기존처럼 즉시 로그인 토큰이 발급된다.
+     */
+    data class SignupResult(val user: User, val tokens: IssuedTokens?)
+
     @Transactional
-    fun signup(req: SignupRequest): IssuedTokens {
+    fun signup(req: SignupRequest): SignupResult {
         val email = normalizeEmail(req.email)
         val name = normalizeName(req.name)
         validatePassword(req.password)
@@ -60,13 +67,15 @@ class AuthService(
                     passwordHash = encoder.encode(req.password)!!,
                     name = name,
                     createdAt = Instant.now(clock),
+                    // 승인제: 관리자가 승인할 때까지 로그인 불가.
+                    approvedAt = if (signupRequiresApproval) null else Instant.now(clock),
                 ),
             )
         } catch (e: DataIntegrityViolationException) {
             // 동시 요청이 사전 체크를 둘 다 통과한 경우 → unique 제약 위반을 409 로 변환(500 방지)
             throw ResponseStatusException(HttpStatus.CONFLICT, "email already registered")
         }
-        return issueTokens(user)
+        return SignupResult(user, if (user.isPendingApproval) null else issueTokens(user))
     }
 
     @Transactional(readOnly = true)
@@ -80,9 +89,17 @@ class AuthService(
         if (!encoder.matches(req.password, user.passwordHash)) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid credentials")
         }
-        // 비밀번호 검증 후에만 정지 여부를 알린다(자격 증명 없이 정지 여부가 새지 않도록).
+        // 비밀번호 검증 후에만 정지·승인 대기 여부를 알린다(자격 증명 없이 상태가 새지 않도록).
         requireNotSuspended(user)
+        requireApproved(user)
         return issueTokens(user)
+    }
+
+    /** 승인 대기 계정 로그인 차단. 메시지는 프론트가 그대로 노출한다(403, SuspendedAccountException 과 같은 경로). */
+    private fun requireApproved(user: User) {
+        if (user.isPendingApproval) {
+            throw SuspendedAccountException("관리자 승인 대기 중인 계정입니다. 승인이 완료되면 로그인할 수 있어요.")
+        }
     }
 
     /** 정지 계정 로그인 차단. 사용자에게 그대로 보여줄 한국어 안내를 담는다(403 body 변환은 AuthController). */
@@ -124,8 +141,8 @@ class AuthService(
         if (user == null || user.deletedAt != null) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid refresh token")
         }
-        // 정지 계정은 refresh 로도 세션을 연장할 수 없다.
-        if (user.isSuspendedAt(Instant.now(clock))) {
+        // 정지·승인 대기 계정은 refresh 로도 세션을 연장할 수 없다.
+        if (user.isSuspendedAt(Instant.now(clock)) || user.isPendingApproval) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid refresh token")
         }
         denylist.deny(hashToken(refreshToken), jwt.remainingTtlSeconds(refreshToken))
@@ -256,8 +273,7 @@ class AuthService(
         campaignComments.anonymizeAuthor(id, DELETED_USER_NAME)
         campaignProofs.anonymizeAuthor(id, DELETED_USER_NAME)
         accessLogs.deleteForUser(id)
-        userFollows.deleteAllForUser(id)
-        dmDeletion.deleteAllForUser(id)
+        userBlocks.deleteAllForUser(id)
         return DeleteAccountResponse(deleted = true)
     }
 

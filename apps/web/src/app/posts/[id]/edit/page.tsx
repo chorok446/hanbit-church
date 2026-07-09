@@ -11,13 +11,18 @@ import { PostComposeForm, PostComposeSubmitButton } from "@/components/post-comp
 import { PageShell } from "@/components/page-shell";
 import {
   POST_CATEGORIES,
+  isStaffWriteCategory,
   type Post,
+  type PostAttachment,
   type PostCategory,
   type PostComposeField,
   type PostComposeValues,
   postToComposeValues,
   validatePostCompose,
 } from "@/data/posts";
+import { PostAttachmentsEditor } from "@/components/post-attachments-editor";
+import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
+import { getAdminPermissions } from "@/app/admin/permissions";
 
 type LoadState =
   | { kind: "loading" }
@@ -43,6 +48,14 @@ export default function PostEditPage() {
   });
   const [campaigns, setCampaigns] = useState<{ id: string; title: string }[]>([]);
   const [category, setCategory] = useState<PostCategory>("SHARING");
+  const [attachments, setAttachments] = useState<PostAttachment[]>([]);
+  const { profile } = useCurrentUserProfile();
+  // 공지·주보·설교 작성 권한(최고 관리자·운영자·콘텐츠 관리자) — 백엔드 PostService 정책과 동일.
+  const isStaff = getAdminPermissions(profile?.role).canManageContent;
+  // 공지·주보·설교(STAFF_WRITE)는 스태프 전용(서버 403). 비스태프에게는 선택지를 숨긴다.
+  const visibleCategories = POST_CATEGORIES.filter(
+    (item) => isStaff || !isStaffWriteCategory(item.value) || item.value === category,
+  );
   const [saving, setSaving] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<PostComposeField, string>>>({});
   const [retry, setRetry] = useState(0);
@@ -68,6 +81,7 @@ export default function PostEditPage() {
         }
         setValues(postToComposeValues(post));
         setCategory(post.category);
+        setAttachments(post.attachments ?? []);
         setLoad({ kind: "ready" });
       })
       .catch((error) => {
@@ -137,7 +151,12 @@ export default function PostEditPage() {
     setFieldErrors({});
 
     try {
-      await apiPut(`/api/posts/${id}`, { ...validation.payload, category });
+      await apiPut(`/api/posts/${id}`, {
+        ...validation.payload,
+        category,
+        // 첨부는 스태프 카테고리(공지·주보·설교)에서만 — 서버 normalizeAttachments 와 동일.
+        attachments: isStaffWriteCategory(category) ? attachments : [],
+      });
       if (getSessionId() !== requestToken) return;
       toast.success("게시글이 수정되었습니다.");
       router.replace(`/posts/${id}`);
@@ -234,13 +253,17 @@ export default function PostEditPage() {
             className="ui-control px-3 py-2.5"
             style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
           >
-            {POST_CATEGORIES.map((item) => (
+            {visibleCategories.map((item) => (
               <option key={item.value} value={item.value}>
                 {item.label}
               </option>
             ))}
           </select>
         </div>
+
+        {isStaff && isStaffWriteCategory(category) ? (
+          <PostAttachmentsEditor attachments={attachments} onChange={setAttachments} disabled={saving} />
+        ) : null}
 
         <PostComposeForm
           values={values}

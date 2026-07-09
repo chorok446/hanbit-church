@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { CalendarHeart, MessagesSquare } from "lucide-react";
-import { CHURCH } from "@/data/church";
 
 const CARDS = [
   {
@@ -19,11 +18,20 @@ const CARDS = [
   },
 ] as const;
 
-/** 홈 커뮤니티 안내 + 새가족 초대 배너. */
+/** 홈 커뮤니티(교제·행사) 안내 카드. 새가족 환영 배너는 HomeVisit 으로 이동했다. */
 export function HomeCommunity() {
   return (
-    <section className="px-6 pb-24 pt-4 transition-colors" style={{ background: "var(--surface)" }}>
+    <section className="px-6 pb-24 transition-colors" style={{ background: "var(--surface)" }}>
       <div className="mx-auto max-w-5xl">
+        <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
+          Community
+        </p>
+        <h2
+          className="mb-8 text-[26px] sm:text-[30px]"
+          style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
+        >
+          함께 나누는 교제와 사역
+        </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {CARDS.map(({ href, icon: Icon, title, body, cta }) => (
             <Link
@@ -47,27 +55,6 @@ export function HomeCommunity() {
               </span>
             </Link>
           ))}
-        </div>
-
-        <div
-          className="mt-12 rounded-3xl px-8 py-14 text-center sm:px-14"
-          style={{ background: "var(--surface-deep)" }}
-        >
-          <p
-            className="mx-auto max-w-[26ch] text-[22px] leading-[1.6] text-[#f6f3ea] sm:text-[26px]"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 600, textWrap: "balance" }}
-          >
-            {CHURCH.name}에 처음 오셨나요?
-            <br />
-            한 분 한 분을 기쁨으로 환영합니다.
-          </p>
-          <Link
-            href="/welcome"
-            className="mt-8 inline-block rounded-full border px-8 py-3.5 text-[14px] font-medium text-[#f6f3ea] transition-colors hover:bg-white/10"
-            style={{ borderColor: "rgba(212, 176, 74, 0.6)" }}
-          >
-            새가족 안내 보기
-          </Link>
         </div>
       </div>
     </section>

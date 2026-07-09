@@ -90,6 +90,11 @@ data class AdminUserResponse(
     val createdAt: String?,
     val postCount: Long,
     val campaignCount: Long,
+    @field:Schema(description = "가입 승인 대기 여부")
+    val pendingApproval: Boolean = false,
+    @field:Schema(description = "찬양팀 역할(LEADER/MEMBER/GUEST). null = 찬양팀 아님")
+    val praiseRole: String? = null,
+    val praiseParts: List<String> = emptyList(),
 )
 
 data class AdminUsersPageResponse(
@@ -165,4 +170,12 @@ data class AdminSummaryResponse(
     val totalReports: Long,
     @field:Schema(description = "현재 정지 중인 회원 수")
     val suspendedUsers: Long,
+)
+
+@Schema(description = "찬양팀 역할·파트 지정 요청. role null = 찬양팀 해제.")
+data class SetPraiseRoleRequest(
+    @field:Schema(description = "찬양팀 역할(LEADER/MEMBER/GUEST). null 이면 해제")
+    val praiseRole: String? = null,
+    @field:Schema(description = "파트 목록(PraisePart)")
+    val praiseParts: List<String> = emptyList(),
 )

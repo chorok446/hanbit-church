@@ -40,6 +40,7 @@ export function PaginatedSection<T>({
   loadingLabel,
   errorLabel,
   watchDeps,
+  requireAuth = true,
 }: {
   identityKey: string;
   page: number;
@@ -51,6 +52,8 @@ export function PaginatedSection<T>({
   errorLabel: string;
   /** 값이 바뀌면 현재 page 를 다시 fetch (identity·page 는 유지). */
   watchDeps?: readonly unknown[];
+  /** false 면 비로그인에서도 fetch 한다(공개 프로필 게시글 등 공개 API 용). */
+  requireAuth?: boolean;
 }) {
   const { sessionId: token } = useAuthSession();
   const [retryTick, setRetryTick] = useState(0);
@@ -81,7 +84,7 @@ export function PaginatedSection<T>({
   }, watchDeps ?? []);
 
   useEffect(() => {
-    if (!token) return;
+    if (requireAuth && !token) return;
     const requestToken = token;
     const guard = beginAuthedRequest(generationRef, requestToken);
 
@@ -174,7 +177,7 @@ export function PaginatedSection<T>({
       </div>
 
       {status === "error" ? (
-        <div className="rounded-xl px-4 py-3 text-[13px]" style={{ background: "rgba(237,92,72,0.12)", color: "var(--danger)" }}>
+        <div className="rounded-xl px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)" }}>
           {errorLabel}
         </div>
       ) : null}

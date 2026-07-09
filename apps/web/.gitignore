@@ -44,3 +44,6 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 /blob-report/
+
+# .env.example은 키 문서라 커밋한다
+!.env.example

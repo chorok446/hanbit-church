@@ -1,7 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
-import { useRef, useState, type FormEvent } from "react";
+import { useImperativeHandle, useRef, useState, type FormEvent, type Ref } from "react";
 import { useRouter } from "next/navigation";
 import { Flag, Loader2, X } from "lucide-react";
 import {
@@ -15,16 +15,24 @@ import { ApiError, apiErrorMessage } from "@/lib/api";
 
 const REASONS = Object.entries(REPORT_REASON_LABELS) as [ReportReason, string][];
 
+/** 외부(⋯ 메뉴 등)에서 신고 다이얼로그를 여는 imperative 핸들. */
+export type ReportButtonHandle = { open: () => void };
+
 export function ReportButton({
   targetType,
   targetId,
   ownedByMe,
   className = "",
+  hideTrigger = false,
+  ref,
 }: {
   targetType: ReportTargetType;
   targetId: string;
   ownedByMe: boolean;
   className?: string;
+  /** true 면 기본 신고 트리거 버튼을 렌더하지 않고 다이얼로그만 유지한다(ref.open 으로 연다). */
+  hideTrigger?: boolean;
+  ref?: Ref<ReportButtonHandle>;
 }) {
   const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -32,8 +40,6 @@ export function ReportButton({
   const [detail, setDetail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-
-  if (ownedByMe) return null;
 
   const loginToast = "로그인 후 신고할 수 있어요.";
 
@@ -52,6 +58,10 @@ export function ReportButton({
     setError("");
     dialogRef.current?.showModal();
   };
+
+  useImperativeHandle(ref, () => ({ open }));
+
+  if (ownedByMe) return null;
 
   const close = () => {
     if (submitting) return;
@@ -116,18 +126,20 @@ export function ReportButton({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={open}
-        aria-label="콘텐츠 신고"
-        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-[12px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ed5c48]/60 ${className}`}
-        style={{
-          background: "rgba(var(--ink-rgb), 0.06)",
-          color: "#b3402f",
-        }}
-      >
-        <Flag size={13} /> 신고
-      </button>
+      {hideTrigger ? null : (
+        <button
+          type="button"
+          onClick={open}
+          aria-label="콘텐츠 신고"
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-[12px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--danger-rgb),0.6)] ${className}`}
+          style={{
+            background: "rgba(var(--ink-rgb), 0.06)",
+            color: "var(--danger)",
+          }}
+        >
+          <Flag size={13} /> 신고
+        </button>
+      )}
 
       <dialog
         ref={dialogRef}
@@ -195,7 +207,7 @@ export function ReportButton({
             <span className="block text-right text-[11px] opacity-55">{detail.length} / 500</span>
           </label>
 
-          {error ? <p role="alert" className="rounded-xl bg-[#ed5c48]/10 px-3 py-2 text-[13px] text-[#b3402f]">{error}</p> : null}
+          {error ? <p role="alert" className="rounded-xl bg-[rgba(var(--danger-rgb),0.1)] px-3 py-2 text-[13px] text-[var(--danger)]">{error}</p> : null}
 
           <div className="flex justify-end gap-2">
             <button
@@ -211,7 +223,7 @@ export function ReportButton({
               disabled={submitting || !reason}
               aria-busy={submitting}
               aria-label={submitting ? "신고 접수 중" : "신고하기"}
-              className="inline-flex items-center gap-2 rounded-full bg-[#ed5c48] px-5 py-2.5 text-[13px] text-white transition-colors hover:bg-[#d94e3c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ed5c48]/60 disabled:cursor-not-allowed disabled:opacity-45"
+              className="inline-flex items-center gap-2 rounded-full bg-[var(--danger-solid)] px-5 py-2.5 text-[13px] text-white transition-colors hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--danger-rgb),0.6)] disabled:cursor-not-allowed disabled:opacity-45"
             >
               {submitting ? <Loader2 size={14} className="animate-spin" /> : <Flag size={14} />}
               {submitting ? "접수 중…" : "신고하기"}

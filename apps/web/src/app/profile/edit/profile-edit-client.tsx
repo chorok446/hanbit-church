@@ -72,7 +72,7 @@ function ProfileImagePreview({
         type="button"
         onClick={onClear}
         disabled={disabled}
-        className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#ed5c48] text-white shadow-md transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+        className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--danger-solid)] text-white shadow-md transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
         aria-label="프로필 이미지 URL 삭제"
       >
         <Trash2 size={14} aria-hidden />
@@ -247,7 +247,7 @@ function ProfileEditForm({ profile }: { profile: UserProfile }) {
           </div>
 
           {error ? (
-            <p role="alert" aria-live="polite" className="rounded-xl bg-[#ed5c48]/10 px-4 py-3 text-[13px] text-[#ed5c48]">
+            <p role="alert" aria-live="polite" className="rounded-xl bg-[rgba(var(--danger-rgb),0.1)] px-4 py-3 text-[13px] text-[var(--danger)]">
               {error}
             </p>
           ) : null}

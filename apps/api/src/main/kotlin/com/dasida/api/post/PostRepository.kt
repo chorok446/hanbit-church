@@ -42,6 +42,11 @@ interface PostRepository : JpaRepository<Post, String> {
     /** 행사 삭제 시 연결 게시글 존재 확인용. campaign_id 인덱스를 탄다. */
     fun existsByCampaignId(campaignId: String): Boolean
 
+    /** 조회수 원자적 증가. 동시 조회에서도 유실 없이 누적된다. */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update Post p set p.views = p.views + 1 where p.id = :id")
+    fun incrementViews(@Param("id") id: String): Int
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update Post p set p.author.name = :name, p.author.verified = false, p.author.profileImageUrl = null where p.authorUserId = :userId")
     fun anonymizeAuthor(@Param("userId") userId: Long, @Param("name") name: String): Int

@@ -9,6 +9,7 @@ import {
   REPORT_REASON_LABELS,
   REPORT_TARGET_LABELS,
   type ReportItem,
+  type ReportStatus,
 } from "@/data/reports";
 import { getSessionId } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
@@ -22,6 +23,22 @@ const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
 function formatTime(value: string): string {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? value : dateFormatter.format(date);
+}
+
+// 마이페이지 표시용 처리 상태 배지. 백엔드 ReportStatus(PENDING/RESOLVED/DISMISSED) 매핑.
+const STATUS_META: Record<ReportStatus, { label: string; bg: string; fg: string }> = {
+  PENDING: { label: "접수됨", bg: "var(--chip-bg)", fg: "var(--foreground-muted)" },
+  RESOLVED: { label: "처리 완료", bg: "var(--accent-soft)", fg: "var(--accent-strong)" },
+  DISMISSED: { label: "반려됨", bg: "var(--danger-soft)", fg: "var(--danger)" },
+};
+
+function StatusBadge({ status }: { status?: ReportStatus }) {
+  const meta = STATUS_META[status ?? "PENDING"] ?? STATUS_META.PENDING;
+  return (
+    <span className="rounded-full px-2.5 py-1 text-[11px]" style={{ background: meta.bg, color: meta.fg }}>
+      {meta.label}
+    </span>
+  );
 }
 
 function targetHref(report: ReportItem): string | null {
@@ -39,9 +56,13 @@ function ReportCard({ report }: { report: ReportItem }) {
           <span className="rounded-full bg-[var(--accent)]/15 px-2.5 py-1 text-[11px] text-[var(--accent-strong)]">
             {REPORT_TARGET_LABELS[report.targetType]}
           </span>
-          <span className="rounded-full bg-[#ed5c48]/10 px-2.5 py-1 text-[11px] text-[#b3402f]">
+          <span
+            className="rounded-full px-2.5 py-1 text-[11px]"
+            style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
+          >
             {REPORT_REASON_LABELS[report.reason]}
           </span>
+          <StatusBadge status={report.status} />
         </div>
         <time dateTime={report.time} className="text-[11px] opacity-55">{formatTime(report.time)}</time>
       </div>
@@ -83,7 +104,7 @@ export function ReportsList({ page, onPageChange }: { page: number; onPageChange
       empty={
         <StatePanel className="min-h-64 rounded-2xl">
           <FileWarning size={28} className="text-[var(--accent)]" />
-          <p>신고 내역이 없습니다.</p>
+          <p>접수한 신고 내역이 없습니다.</p>
         </StatePanel>
       }
       renderItems={(reports) => (

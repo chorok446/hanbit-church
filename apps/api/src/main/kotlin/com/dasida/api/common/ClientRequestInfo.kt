@@ -2,10 +2,29 @@ package com.dasida.api.common
 
 import jakarta.servlet.http.HttpServletRequest
 
-data class ClientRequestInfo(val ipAddress: String, val os: String) {
+data class ClientRequestInfo(val ipAddress: String, val os: String, val browser: String = "알 수 없음") {
     companion object {
-        fun from(request: HttpServletRequest): ClientRequestInfo =
-            ClientRequestInfo(clientIp(request), parseClientOs(request.getHeader("User-Agent")))
+        fun from(request: HttpServletRequest): ClientRequestInfo {
+            val userAgent = request.getHeader("User-Agent")
+            return ClientRequestInfo(clientIp(request), parseClientOs(userAgent), parseClientBrowser(userAgent))
+        }
+    }
+}
+
+/** User-Agent 에서 대표 브라우저 이름을 뽑는다. 파생 브라우저 토큰이 Chrome/Safari 를 포함하므로 검사 순서가 중요하다. */
+fun parseClientBrowser(userAgent: String?): String {
+    if (userAgent.isNullOrBlank()) return "알 수 없음"
+    return when {
+        userAgent.contains("KAKAOTALK", ignoreCase = true) -> "카카오톡 인앱"
+        userAgent.contains("Edg/", ignoreCase = true) || userAgent.contains("Edge/", ignoreCase = true) -> "Edge"
+        userAgent.contains("Whale/", ignoreCase = true) -> "Whale"
+        userAgent.contains("SamsungBrowser", ignoreCase = true) -> "Samsung Internet"
+        userAgent.contains("OPR/", ignoreCase = true) || userAgent.contains("Opera", ignoreCase = true) -> "Opera"
+        userAgent.contains("Firefox/", ignoreCase = true) -> "Firefox"
+        userAgent.contains("CriOS", ignoreCase = true) -> "Chrome" // iOS Chrome
+        userAgent.contains("Chrome/", ignoreCase = true) -> "Chrome"
+        userAgent.contains("Safari/", ignoreCase = true) -> "Safari"
+        else -> "기타"
     }
 }
 

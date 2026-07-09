@@ -26,10 +26,17 @@ export type SearchUrlState = CampaignDateRangeFilters & {
 
 const TYPE_TABS: { id: SearchType; label: string }[] = [
   { id: "all", label: "전체" },
-  { id: "campaigns", label: "행사" },
+  { id: "campaigns", label: "행사·사역" },
   { id: "posts", label: "게시글" },
   { id: "users", label: "사용자" },
 ];
+
+/** 검색어가 있을 때 탭에 표기하는 도메인별 결과 개수(totalElements). */
+export type SearchTabCounts = {
+  campaigns: number;
+  posts: number;
+  users: number;
+};
 
 const RECRUIT_LABELS: Record<CampaignRecruitState, string> = {
   before_recruit: "모집 예정",
@@ -84,11 +91,13 @@ export function buildSearchFilterChips(
 export function SearchFilters({
   state,
   loading,
+  counts = null,
   onUpdate,
   onReset,
 }: {
   state: SearchUrlState;
   loading: boolean;
+  counts?: SearchTabCounts | null;
   onUpdate: (changes: Partial<SearchUrlState>, replace?: boolean) => void;
   onReset: () => void;
 }) {
@@ -106,30 +115,41 @@ export function SearchFilters({
         className="rounded-full"
       />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {/* 모바일에서는 가로 스크롤 대신 줄바꿈으로 탭을 배치한다. */}
         <div
-          className="flex gap-1 overflow-x-auto rounded-full p-1"
+          className="flex flex-wrap gap-1 rounded-2xl p-1"
           style={{ background: "rgba(var(--ink-rgb), 0.06)" }}
         >
           {TYPE_TABS.map((tab) => {
             const active = state.type === tab.id;
+            const count = counts
+              ? tab.id === "all"
+                ? counts.campaigns + counts.posts + counts.users
+                : counts[tab.id]
+              : null;
             return (
               <button
                 key={tab.id}
                 type="button"
                 aria-pressed={active}
                 onClick={() => onUpdate({ type: tab.id, page: 0 })}
-                className="shrink-0 rounded-full px-5 py-2 text-[13px]"
+                className="shrink-0 rounded-full px-4 py-2 text-[13px] sm:px-5"
                 style={{
                   background: active ? "var(--accent)" : "transparent",
                   color: active ? "var(--surface-dark)" : "var(--foreground-muted)",
+                  fontWeight: active ? 600 : 400,
                 }}
               >
                 {tab.label}
+                {count !== null ? (
+                  <span className="ml-1.5 text-[11px] opacity-75">{count.toLocaleString()}</span>
+                ) : null}
               </button>
             );
           })}
         </div>
         {state.type !== "users" ? (
+          // TODO(관련도 정렬: 백엔드 점수 필요) — 검색어가 있어도 기본 최신순을 유지한다.
           <label className="flex items-center gap-2 self-end text-[13px] sm:self-auto">
             <span className="sr-only">검색 결과 정렬</span>
             <select

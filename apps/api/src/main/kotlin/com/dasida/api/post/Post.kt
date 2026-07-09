@@ -28,7 +28,20 @@ object PostCategory {
     const val PRAYER = "PRAYER" // 기도요청
 
     val ALL = setOf(NOTICE, BULLETIN, SERMON, SHARING, PRAYER)
+
+    /** 교회 공식 소식 카테고리 — 좋아요·신고 비노출, 파일 첨부(주보 PDF 등) 허용. */
+    val ADMIN_ONLY = setOf(NOTICE, BULLETIN)
+
+    /** 스태프(최고 관리자·운영자·콘텐츠 관리자)만 작성·수정할 수 있는 카테고리. 설교는 좋아요·후기는 유지된다. */
+    val STAFF_WRITE = setOf(NOTICE, BULLETIN, SERMON)
 }
+
+/** 게시글 첨부파일(주보 PDF 등). posts.attachments json 컬럼에 배열로 저장된다. */
+data class PostAttachment(
+    val name: String = "",
+    val url: String = "",
+    val size: Long? = null,
+)
 
 @Entity
 @Table(
@@ -64,34 +77,39 @@ class Post(
     @Column(name = "deleted_at") @JsonIgnore var deletedAt: java.time.Instant? = null,
     // 카테고리(PostCategory). 수정 API 에서 변경 가능. positional 생성 호출과의 호환을 위해 마지막 파라미터.
     @Column(nullable = false, length = 20) var category: String = PostCategory.SHARING,
+    // 첨부파일(공지·주보 전용). 기존 row 는 NULL 이므로 nullable — 읽을 때 orEmpty() 로 다룬다.
+    @JdbcTypeCode(SqlTypes.JSON) @Column(columnDefinition = "json") var attachments: List<PostAttachment>? = null,
+    // 조회수. 상세 조회마다 원자적 UPDATE 로 증가(중복 방어는 두지 않는다 — 교회 규모에선 단순함 우선).
+    @Column(nullable = false) var views: Long = 0,
 )
 
 /**
  * 초기 적재 시드. apps/web/src/data/posts.ts 와 1:1 미러. SeedRunner 가 비어있을 때만 저장.
  */
 object PostSeed {
-    private val workshop = Photos.workshop
-    private val nature = Photos.nature
-    private val market = Photos.market
-    private val people = Photos.people
-    private val obj = Photos.obj
+    private val worship = Photos.worship
+    private val bible = Photos.bible
+    private val community = Photos.community
+    private val fellowship = Photos.fellowship
+    private val serve = Photos.serve
+    private val children = Photos.children
 
     val posts: List<Post> = listOf(
         Post("p1", Author("철마제일교회", true), "2시간 전",
             "이번 주일 오후, 여름 청년 수련회 사전 모임이 있습니다. 신청하신 분들은 본당 앞으로 모여주세요.",
-            listOf("#공지", "#청년부"), listOf(people[3]), 42, 0, "c1",
+            listOf("#공지", "#청년부"), listOf(community[0]), 42, 0, "c1",
             category = PostCategory.NOTICE),
         Post("p2", Author("철마제일교회", true), "5시간 전",
             "7월 둘째 주 주보입니다. 예배 순서와 교회 소식을 확인해 주세요.",
-            listOf("#주보"), listOf(market[4]), 18, 0,
+            listOf("#주보"), listOf(worship[0]), 18, 0,
             category = PostCategory.BULLETIN),
         Post("p3", Author("철마제일교회", true), "어제",
-            "주일 설교 — \"항상 기뻐하라\" (데살로니가전서 5:16-18). 다시듣기: https://www.youtube.com/watch?v=dQw4w9WgXcQ 지난 주일 말씀의 요약과 나눔 질문을 함께 올립니다.",
+            "주일 설교 — \"항상 기뻐하라\" (데살로니가전서 5:16-18). 지난 주일 말씀의 요약과 나눔 질문을 함께 올립니다.",
             listOf("#설교", "#주일예배"), emptyList(), 96, 0,
             category = PostCategory.SERMON),
         Post("p4", Author("사랑부", true), "2일 전",
             "토요일 반찬 나눔 봉사 후기. 열두 가정에 반찬을 전해드렸습니다. 함께해 주신 분들 감사합니다 🙏",
-            listOf("#봉사", "#사랑부"), listOf(people[0]), 87, 0, "c2",
+            listOf("#봉사", "#사랑부"), listOf(serve[0]), 87, 0, "c2",
             category = PostCategory.SHARING),
         Post("p5", Author("김은혜", false), "3일 전",
             "어머니 수술이 다음 주로 잡혔습니다. 수술이 잘 되도록 함께 기도해 주세요.",
@@ -99,11 +117,11 @@ object PostSeed {
             category = PostCategory.PRAYER),
         Post("p6", Author("교육부", true), "4일 전",
             "봄 학기 성경공부반이 마쳤습니다. 로마서를 함께 읽으며 나눈 은혜를 사진으로 남깁니다.",
-            listOf("#성경공부", "#교육부"), listOf(workshop[2], workshop[5]), 33, 0, "c5",
+            listOf("#성경공부", "#교육부"), listOf(bible[4], bible[5]), 33, 0, "c5",
             category = PostCategory.SHARING),
         Post("p7", Author("이믿음", false), "5일 전",
             "새가족 등록하고 첫 목장 모임에 다녀왔습니다. 따뜻하게 맞아주셔서 감사했어요.",
-            listOf("#새가족", "#목장"), listOf(market[1]), 29, 0,
+            listOf("#새가족", "#목장"), listOf(fellowship[0]), 29, 0,
             category = PostCategory.SHARING),
         Post("p8", Author("철마제일교회", true), "1주 전",
             "주일 설교 — \"선한 목자\" (시편 23편). 말씀 요약과 함께 한 주간 묵상 구절을 나눕니다.",
@@ -111,11 +129,11 @@ object PostSeed {
             category = PostCategory.SERMON),
         Post("p9", Author("주일학교", false), "1주 전",
             "여름성경학교 준비가 한창입니다. 교사로 함께해 주실 선생님들을 기다립니다!",
-            listOf("#주일학교", "#여름성경학교"), listOf(nature[2]), 38, 0, "c7",
+            listOf("#주일학교", "#여름성경학교"), listOf(children[4]), 38, 0, "c7",
             category = PostCategory.SHARING),
         Post("p10", Author("박소망", false), "2주 전",
             "취업을 준비하고 있습니다. 지치지 않고 걸어갈 수 있도록 기도 부탁드립니다.",
-            listOf("#기도요청", "#청년부"), listOf(obj[5]), 45, 0,
+            listOf("#기도요청", "#청년부"), listOf(bible[1]), 45, 0,
             category = PostCategory.PRAYER),
     )
 }

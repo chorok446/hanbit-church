@@ -1,5 +1,5 @@
 // 행사·사역 작성 화면의 유형별 템플릿. static data로만 관리한다.
-import { marketPhotos, naturePhotos, peoplePhotos, workshopPhotos } from "@/data/photos";
+import { biblePhotos, communityPhotos, fellowshipPhotos, servePhotos } from "@/data/photos";
 import type { CampaignComposeValues } from "@/data/campaigns";
 
 export type CampaignTemplate = {
@@ -28,7 +28,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
 
 📞 문의
 - (예: 담당 교역자 또는 부서 임원)`,
-      thumb: naturePhotos[1],
+      thumb: communityPhotos[1],
       capacity: "60",
     },
   },
@@ -48,7 +48,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
 
 💛 참여 후에는
 - 참여 후기를 남겨 은혜를 나눠주세요`,
-      thumb: peoplePhotos[0],
+      thumb: servePhotos[0],
       capacity: "20",
     },
   },
@@ -69,7 +69,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
 
 📞 신청·문의
 - (예: 담당 교역자)`,
-      thumb: workshopPhotos[2],
+      thumb: biblePhotos[0],
       capacity: "15",
     },
   },
@@ -89,7 +89,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
 
 🙌 함께 지켜요
 - (예: 뒷정리까지 함께해요)`,
-      thumb: marketPhotos[1],
+      thumb: fellowshipPhotos[0],
       capacity: "100",
     },
   },

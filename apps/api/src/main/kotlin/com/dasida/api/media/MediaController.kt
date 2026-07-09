@@ -25,4 +25,12 @@ class MediaController(
         @RequestParam("file") file: MultipartFile,
         @AuthenticationPrincipal user: AuthUser,
     ): MediaUploadResponse = MediaUploadResponse(url = uploads.store(file))
+
+    @Operation(summary = "문서 업로드(관리자)", description = "공지·주보 첨부용 PDF 를 저장하고 공개 URL을 반환한다. ROLE_ADMIN 전용(SecurityConfig).")
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/document", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun uploadDocument(
+        @RequestParam("file") file: MultipartFile,
+        @AuthenticationPrincipal user: AuthUser,
+    ): MediaUploadResponse = MediaUploadResponse(url = uploads.storeDocument(file))
 }

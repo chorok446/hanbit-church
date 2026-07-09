@@ -47,6 +47,59 @@ class AdminUserService(
         )
     }
 
+    /** 가입 승인 대기 회원 목록. 오래 기다린 순(id 오름차순). */
+    @Transactional(readOnly = true)
+    fun getPendingUsers(page: Int, size: Int): AdminUsersPageResponse {
+        checkPageParams(page, size, MAX_PAGE_SIZE)
+        val now = Instant.now(clock)
+        val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id"))
+        val result = users.findByApprovedAtIsNullAndDeletedAtIsNull(pageable)
+        return AdminUsersPageResponse(
+            content = result.content.map { it.toAdminResponse(now) },
+            page = result.number,
+            size = result.size,
+            totalElements = result.totalElements,
+            totalPages = result.totalPages,
+        )
+    }
+
+    /** 가입 승인. 이후 해당 회원이 로그인할 수 있다. 이미 승인된 회원이면 무음으로 현재 상태를 돌려준다. */
+    @Transactional
+    fun approve(adminUserId: Long, userId: Long): AdminUserResponse {
+        val user = users.findById(userId).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
+        }
+        if (user.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
+        }
+        val now = Instant.now(clock)
+        if (user.isPendingApproval) {
+            user.approvedAt = now
+            actionLogs.record(adminUserId, AdminActionType.USER_APPROVED, TARGET_TYPE_USER, userId.toString())
+        }
+        return user.toAdminResponse(now)
+    }
+
+    /** 가입 거절. 계정을 soft delete 해 로그인/재사용을 막는다(같은 이메일 재가입은 가능). */
+    @Transactional
+    fun reject(adminUserId: Long, userId: Long): AdminUserResponse {
+        val user = users.findById(userId).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
+        }
+        if (user.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
+        }
+        if (!user.isPendingApproval) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "user is not pending approval")
+        }
+        val now = Instant.now(clock)
+        user.deletedAt = now
+        // 탈퇴 익명화와 동일하게 이메일 unique 자리를 비워 같은 이메일로 재가입할 수 있게 한다.
+        user.email = "rejected-${user.id}@deleted.local"
+        actionLogs.record(adminUserId, AdminActionType.USER_REJECTED, TARGET_TYPE_USER, userId.toString())
+        return user.toAdminResponse(now)
+    }
+
     @Transactional
     fun setSuspension(adminUserId: Long, userId: Long, request: SetUserSuspensionRequest): AdminUserResponse {
         val user = users.findById(userId).orElseThrow {
@@ -95,12 +148,52 @@ class AdminUserService(
         return user.toAdminResponse(now)
     }
 
+    /** 찬양팀 역할·파트 지정/해제. 사이트 role 과 독립 — 일반 회원도 찬양팀 멤버가 될 수 있다. */
+    @Transactional
+    fun setPraiseRole(adminUserId: Long, userId: Long, request: SetPraiseRoleRequest): AdminUserResponse {
+        val user = users.findById(userId).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
+        }
+        if (user.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
+        }
+        val role = request.praiseRole?.trim()?.takeIf { it.isNotEmpty() }?.let {
+            runCatching { com.dasida.api.auth.PraiseRole.valueOf(it) }.getOrElse {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "praiseRole must be LEADER/MEMBER/GUEST")
+            }
+        }
+        val parts = request.praiseParts.map { part ->
+            runCatching { com.dasida.api.auth.PraisePart.valueOf(part.trim()) }.getOrElse {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid praise part: $part")
+            }.name
+        }.distinct()
+        val newParts = if (role == null) emptyList() else parts
+        val changed = user.praiseRole != role?.name || user.praiseParts.orEmpty() != newParts
+        val previous = user.praiseRole ?: "없음"
+        user.praiseRole = role?.name
+        user.praiseParts = if (role == null) null else parts
+        if (changed) {
+            actionLogs.record(
+                adminUserId,
+                AdminActionType.PRAISE_ROLE_CHANGED,
+                TARGET_TYPE_USER,
+                userId.toString(),
+                detail = "$previous → ${role?.name ?: "없음"}" +
+                    (if (newParts.isNotEmpty()) " · ${newParts.joinToString(", ")}" else ""),
+            )
+        }
+        return user.toAdminResponse(Instant.now(clock))
+    }
+
     @Transactional
     fun setRole(adminUserId: Long, userId: Long, request: SetUserRoleRequest): AdminUserResponse {
         val newRole = try {
             UserRole.valueOf(request.role.trim())
         } catch (_: IllegalArgumentException) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "role must be USER or ADMIN")
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "role must be one of ${UserRole.entries.joinToString("/")}",
+            )
         }
         val user = users.findById(userId).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
@@ -151,6 +244,9 @@ class AdminUserService(
         createdAt = createdAt?.toString(),
         postCount = posts.countByAuthorUserId(requireNotNull(id)),
         campaignCount = campaigns.countByAuthorUserId(requireNotNull(id)),
+        pendingApproval = isPendingApproval,
+        praiseRole = praiseRole,
+        praiseParts = praiseParts.orEmpty(),
     )
 
     private companion object {

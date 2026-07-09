@@ -8,7 +8,8 @@ fun Post.toResponse(
     bookmarkedByMe: Boolean = false,
 ) = PostResponse(
     id = id, author = author, authorId = authorUserId, time = time, text = text, tags = tags, images = images,
-    likes = likes, comments = comments, campaignId = campaignId, category = category, likedByMe = likedByMe,
+    likes = likes, comments = comments, campaignId = campaignId, category = category,
+    attachments = attachments.orEmpty(), views = views, likedByMe = likedByMe,
     bookmarkedByMe = bookmarkedByMe,
     ownedByMe = authorUserId != null && authorUserId == viewerId,
     hidden = hiddenAt != null,

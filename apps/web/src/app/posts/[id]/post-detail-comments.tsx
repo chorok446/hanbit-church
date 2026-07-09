@@ -32,11 +32,20 @@ export function PostDetailComments({
   count,
   onCountChange,
   sectionRef,
+  heading = "댓글",
+  composePlaceholder = "댓글 달기...",
+  loginPrompt = "댓글을 작성하려면 로그인이 필요합니다.",
 }: {
   postId: string;
   count: number;
   onCountChange: Dispatch<SetStateAction<number>>;
   sectionRef: RefObject<HTMLDivElement | null>;
+  /** 섹션 제목. 설교(SERMON)에서는 "은혜 나눔"으로 주입한다. */
+  heading?: string;
+  /** 작성 입력 placeholder. 설교에서는 "은혜 받은 내용을 나눠보세요."로 주입한다. */
+  composePlaceholder?: string;
+  /** 비로그인 안내 문구. 설교에서는 "은혜 나눔을 작성하려면 로그인이 필요합니다."로 주입한다. */
+  loginPrompt?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -183,7 +192,7 @@ export function PostDetailComments({
                 disabled={deletingIds.has(c.id) || savingCommentId === c.id}
                 aria-label={isReply ? "답글 삭제" : "댓글 삭제"}
                 className="flex h-8 w-8 items-center justify-center rounded-full disabled:cursor-wait disabled:opacity-40"
-                style={{ background: "rgba(237,92,72,0.12)", color: "#ed5c48" }}
+                style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
               >
                 <Trash2 size={14} />
               </button>
@@ -240,7 +249,7 @@ export function PostDetailComments({
                 </button>
               </div>
             </div>
-            {editError ? <p role="alert" className="text-[12px] text-[#ed5c48]">{editError}</p> : null}
+            {editError ? <p role="alert" className="text-[12px] text-[var(--danger)]">{editError}</p> : null}
           </form>
         ) : (
           <>
@@ -274,7 +283,7 @@ export function PostDetailComments({
       }}
     >
       <h3 className="mb-6" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, color: "var(--foreground)" }}>
-        댓글 {count}
+        {heading} {count}
       </h3>
       <div
         className="flex items-center gap-3 p-3 rounded-2xl mb-6"
@@ -293,7 +302,7 @@ export function PostDetailComments({
                   void comments.submit();
                 }
               }}
-              placeholder="댓글 달기..."
+              placeholder={composePlaceholder}
               maxLength={MAX_COMMENT_LENGTH}
               disabled={submitting || visibleCommentsLoading || !!listError}
               className="flex-1 bg-transparent outline-none placeholder:opacity-50 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
@@ -313,7 +322,7 @@ export function PostDetailComments({
         ) : (
           <div className="flex w-full flex-col items-center gap-3 py-2 text-center">
             <p className="text-[13px]" style={{ color: "rgba(var(--ink-rgb), 0.7)" }}>
-              로그인해야 댓글을 작성할 수 있어요.
+              {loginPrompt}
             </p>
             <button
               type="button"
@@ -327,7 +336,7 @@ export function PostDetailComments({
       </div>
       <div className="space-y-5 min-h-[64px]">
         {targetNotice ? (
-          <p role="alert" className="text-[13px]" style={{ color: "#ed5c48" }}>
+          <p role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>
             {targetNotice}
           </p>
         ) : null}
@@ -335,7 +344,7 @@ export function PostDetailComments({
           <p className="text-[13px] opacity-50" style={{ color: "var(--foreground)" }}>댓글을 불러오는 중…</p>
         ) : listError ? (
           <div className="flex items-center gap-3">
-            <p className="text-[13px]" style={{ color: "#ed5c48" }}>{listError}</p>
+            <p className="text-[13px]" style={{ color: "var(--danger)" }}>{listError}</p>
             <button
               onClick={comments.reload}
               className="text-[12px] px-3 py-1 rounded-full"

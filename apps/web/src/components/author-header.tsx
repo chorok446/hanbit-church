@@ -1,8 +1,10 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/avatar";
 
 export function AuthorHeader({
   name,
+  nameContent,
   verified,
   profileImageUrl,
   authorId,
@@ -12,6 +14,8 @@ export function AuthorHeader({
   className = "",
 }: {
   name: string;
+  /** 이름 자리에 렌더할 노드(검색 하이라이트 등). 미지정 시 name 그대로 표시. */
+  nameContent?: ReactNode;
   verified: boolean;
   profileImageUrl?: string | null;
   authorId?: number | null;
@@ -24,7 +28,7 @@ export function AuthorHeader({
     <>
       <Avatar name={name} verified={verified} size={avatarSize} src={profileImageUrl ?? undefined} />
       <div>
-        <div style={{ color: "var(--foreground)" }}>{name}</div>
+        <div style={{ color: "var(--foreground)" }}>{nameContent ?? name}</div>
         {time ? (
           <div className={timeClassName} style={{ color: "var(--foreground)" }}>
             {time}

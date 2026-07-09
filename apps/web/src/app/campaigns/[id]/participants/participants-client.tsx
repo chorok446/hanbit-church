@@ -245,7 +245,7 @@ export default function ParticipantsClient({ id }: { id: string }) {
             {actionError ? (
               <div
                 className="mb-3 rounded-xl px-4 py-3 text-[13px]"
-                style={{ background: "rgba(237,92,72,0.12)", color: "var(--danger)" }}
+                style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
               >
                 {actionError}
               </div>
@@ -262,7 +262,7 @@ export default function ParticipantsClient({ id }: { id: string }) {
                     <span className="min-w-0 truncate text-[14px] font-medium">{participant.name}</span>
                     <div className="flex w-full shrink-0 flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end">
                       {participant.verified ? (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--accent)]/20 px-2.5 py-1 text-[11px] text-[#2f9c68]">
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--success-soft)] px-2.5 py-1 text-[11px] text-[var(--success)]">
                           <ShieldCheck size={12} /> 후기 작성자
                         </span>
                       ) : null}
@@ -273,7 +273,7 @@ export default function ParticipantsClient({ id }: { id: string }) {
                           onClick={() => removeParticipant(participant.participantId)}
                           disabled={removingId !== null}
                           className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[12px] transition-colors disabled:cursor-not-allowed disabled:opacity-45"
-                          style={{ background: "rgba(237,92,72,0.12)", color: "var(--danger)" }}
+                          style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
                         >
                           <UserMinus size={13} /> {removingId === participant.participantId ? "처리 중…" : "퇴장"}
                         </button>

@@ -111,7 +111,8 @@ class AdminReportService(
 
     @Transactional(readOnly = true)
     fun getSummary(): AdminSummaryResponse = AdminSummaryResponse(
-        users = users.countByDeletedAtIsNull(),
+        // 승인 대기 계정은 활동 회원에서 제외 — 가입 승인 탭에서 별도로 관리한다.
+        users = users.countByDeletedAtIsNullAndApprovedAtIsNotNull(),
         posts = posts.count(),
         campaigns = campaigns.count(),
         pendingReports = reports.countByStatus(ReportStatus.PENDING.name),

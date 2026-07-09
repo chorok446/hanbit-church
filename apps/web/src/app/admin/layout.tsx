@@ -5,7 +5,8 @@ import { AdminNav } from "./admin-nav";
 
 // 관리자 화면은 검색엔진에 노출하지 않는다.
 export const metadata: Metadata = {
-  title: "관리자 | 철마제일교회",
+  // 루트 레이아웃의 title template("%s | 교회명")이 교회명을 붙인다.
+  title: "관리자",
   robots: { index: false, follow: false },
 };
 

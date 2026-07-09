@@ -126,13 +126,13 @@ export function SavedPostsGrid({ page, onPageChange }: { page: number; onPageCha
       errorLabel="저장한 게시글을 불러오지 못했습니다."
       empty={
         <ListEmptyState
-          title="저장한 글이 없어요."
+          title="아직 저장한 글이 없어요."
           action={
             <Link
               href="/feed"
               className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]"
             >
-              피드 둘러보기
+              교제 둘러보기
             </Link>
           }
         />
@@ -143,7 +143,7 @@ export function SavedPostsGrid({ page, onPageChange }: { page: number; onPageCha
             <div
               className="rounded-xl px-4 py-3 text-[13px]"
               role="alert"
-              style={{ background: "rgba(237,92,72,0.12)", color: "var(--danger)" }}
+              style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
             >
               {actionError}
             </div>

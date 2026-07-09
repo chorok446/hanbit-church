@@ -5,14 +5,15 @@ import { Bookmark, Heart, MessageCircle, Users } from "lucide-react";
 import { AuthorHeader } from "@/components/author-header";
 import { Avatar } from "@/components/avatar";
 import { FallbackImage } from "@/components/fallback-image";
-import { PostPreview } from "@/components/post-text";
 import { ReportButton } from "@/components/report-button";
 import { campaignRecruitMeta, type Campaign } from "@/data/campaigns";
-import type { Post } from "@/data/posts";
+import { postCategoryBadge, type Post } from "@/data/posts";
 import type { PublicUser } from "@/data/users";
 import { progressPercent } from "@/lib/progress";
+import { richTextPlainPreview } from "@/lib/rich-text-length";
+import { SearchHighlight } from "./search-highlight";
 
-export function CampaignResultCard({ campaign }: { campaign: Campaign }) {
+export function CampaignResultCard({ campaign, highlight }: { campaign: Campaign; highlight?: string }) {
   const progress = progressPercent(campaign.joined, campaign.capacity);
   const meta = campaignRecruitMeta(campaign);
 
@@ -55,10 +56,10 @@ export function CampaignResultCard({ campaign }: { campaign: Campaign }) {
         <div className="space-y-3 p-5">
           <div>
             <h3 className="line-clamp-1 text-[17px] font-semibold" style={{ color: "var(--foreground)" }}>
-              {campaign.title}
+              <SearchHighlight text={campaign.title} query={highlight} />
             </h3>
             <p className="mt-1.5 line-clamp-2 text-[13px] leading-6 opacity-65" style={{ color: "var(--foreground)" }}>
-              {campaign.summary}
+              <SearchHighlight text={campaign.summary} query={highlight} />
             </p>
           </div>
           <div>
@@ -78,7 +79,8 @@ export function CampaignResultCard({ campaign }: { campaign: Campaign }) {
   );
 }
 
-export function UserResultCard({ user }: { user: PublicUser }) {
+export function UserResultCard({ user, highlight }: { user: PublicUser; highlight?: string }) {
+  // 공개 프로필 정보(이름·아바타·게시글 수)만 노출한다 — 이메일·연락처 없음.
   return (
     <Link
       href={`/users/${user.id}`}
@@ -88,18 +90,20 @@ export function UserResultCard({ user }: { user: PublicUser }) {
       <Avatar name={user.name} verified={user.verified} src={user.profileImageUrl ?? undefined} size={44} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-[14px] font-medium" style={{ color: "var(--foreground)" }}>
-          {user.name}
+          <SearchHighlight text={user.name} query={highlight} />
         </p>
         <p className="text-[12px]" style={{ color: "var(--foreground-muted)" }}>
-          게시글 {user.postCount.toLocaleString("ko-KR")}개 · 팔로워 {user.followerCount.toLocaleString("ko-KR")}명
+          게시글 {user.postCount.toLocaleString("ko-KR")}개
         </p>
       </div>
     </Link>
   );
 }
 
-export function PostResultCard({ post }: { post: Post }) {
+export function PostResultCard({ post, highlight }: { post: Post; highlight?: string }) {
   const image = post.images[0];
+  const badge = postCategoryBadge(post.category);
+  const preview = richTextPlainPreview(post.text, 200);
 
   return (
     <article
@@ -113,12 +117,19 @@ export function PostResultCard({ post }: { post: Post }) {
         <AuthorHeader
           className="flex-1 text-[13px] font-medium"
           name={post.author.name}
+          nameContent={<SearchHighlight text={post.author.name} query={highlight} />}
           verified={post.author.verified}
           profileImageUrl={post.author.profileImageUrl}
           authorId={post.authorId}
           time={post.time}
           timeClassName="text-[11px] opacity-50"
         />
+        <span
+          className="shrink-0 rounded-full px-2 py-0.5 text-[11px]"
+          style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}
+        >
+          {badge.emoji} {badge.label}
+        </span>
         {post.bookmarkedByMe ? <Bookmark size={15} fill="var(--accent)" className="shrink-0 text-[var(--accent)]" /> : null}
       </div>
       <Link href={`/posts/${post.id}`} className="block">
@@ -133,26 +144,23 @@ export function PostResultCard({ post }: { post: Post }) {
           </div>
         ) : (
           <div className="flex aspect-[16/9] items-center justify-center bg-gradient-to-br from-[var(--heading)] to-[#2d666c] px-6 text-center text-[13px] leading-6 text-white/75">
-            {post.text.slice(0, 90)}
+            {richTextPlainPreview(post.text, 90)}
           </div>
         )}
         <div className="space-y-3 p-4">
-          <PostPreview
-            text={post.text}
-            className="line-clamp-3 text-[14px] leading-6"
-            style={{ color: "var(--foreground)" }}
-            maxLength={200}
-          />
+          <p className="line-clamp-3 break-words text-[14px] leading-6" style={{ color: "var(--foreground)" }}>
+            <SearchHighlight text={preview} query={highlight} />
+          </p>
           <div className="flex flex-wrap gap-1.5">
             {post.tags.slice(0, 3).map((tag) => (
               <span key={tag} className="rounded-full bg-[var(--accent)]/15 px-2 py-0.5 text-[10px] text-[var(--accent-strong)]">
-                {tag}
+                <SearchHighlight text={tag} query={highlight} />
               </span>
             ))}
           </div>
           <div className="flex items-center gap-4 border-t pt-3 text-[12px] opacity-65" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>
-            <span className="flex items-center gap-1" style={post.likedByMe ? { color: "#ed5c48" } : undefined}>
-              <Heart size={13} fill={post.likedByMe ? "#ed5c48" : "none"} /> {post.likes}
+            <span className="flex items-center gap-1" style={post.likedByMe ? { color: "var(--danger)" } : undefined}>
+              <Heart size={13} fill={post.likedByMe ? "var(--danger)" : "none"} /> {post.likes}
             </span>
             <span className="flex items-center gap-1"><MessageCircle size={13} /> {post.comments}</span>
           </div>

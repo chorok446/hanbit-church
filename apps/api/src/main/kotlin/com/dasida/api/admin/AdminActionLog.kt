@@ -41,6 +41,9 @@ enum class AdminActionType {
     USER_SUSPENDED,
     USER_UNSUSPENDED,
     ROLE_CHANGED,
+    USER_APPROVED,
+    USER_REJECTED,
+    PRAISE_ROLE_CHANGED,
 }
 
 interface AdminActionLogRepository : JpaRepository<AdminActionLog, Long> {

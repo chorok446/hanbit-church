@@ -6,11 +6,12 @@ import { Loader2 } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { StatePanel } from "@/components/ui/state-panel";
 import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
+import { isStaffRole } from "./permissions";
 
 /**
- * 관리자 라우트 가드. 비로그인은 로그인으로 보내고, 로그인했지만 ADMIN 이 아니면
+ * 관리자 라우트 가드. 비로그인은 로그인으로 보내고, 스태프 역할(permissions.ts)이 아니면
  * 404 처리한다(관리자 경로의 존재 자체를 드러내지 않기 위해 403 대신 404).
- * 실제 데이터 접근 통제는 백엔드 /api/admin/** 의 ROLE_ADMIN 이 담당하고, 이 가드는 UX 용이다.
+ * 탭별 세분 권한은 permissions.ts 플래그가, 실제 데이터 접근 통제는 백엔드 SecurityConfig 가 담당한다.
  */
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -20,7 +21,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     if (!loading && !isLoggedIn) router.replace("/login?next=/admin");
   }, [loading, isLoggedIn, router]);
 
-  if (profile && profile.role !== "ADMIN") notFound();
+  if (profile && !isStaffRole(profile.role)) notFound();
 
   if (!profile) {
     return (

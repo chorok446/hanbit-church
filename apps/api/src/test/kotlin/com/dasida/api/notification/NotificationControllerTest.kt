@@ -133,7 +133,7 @@ class NotificationControllerTest(
         save(me, id = "noti-like-read", type = NotificationType.POST_LIKED, read = true)
         save(me, id = "noti-like-unread", type = NotificationType.POST_LIKED, read = false)
         save(me, id = "noti-comment-unread", type = NotificationType.POST_COMMENT_CREATED, read = false)
-        save(me, id = "noti-follow-unread", type = NotificationType.USER_FOLLOWED, read = false)
+        save(me, id = "noti-joined-unread", type = NotificationType.CAMPAIGN_JOINED, read = false)
 
         // types만: 읽음 여부와 무관하게 해당 타입 전부.
         list(types = listOf(NotificationType.POST_LIKED, NotificationType.POST_COMMENT_CREATED)).andExpect {

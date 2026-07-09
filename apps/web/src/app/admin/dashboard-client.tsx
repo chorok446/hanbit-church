@@ -2,33 +2,97 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, Users, FileText, Megaphone, Flag, Inbox, ShieldBan, ScrollText } from "lucide-react";
+import {
+  ArrowUpRight,
+  CircleCheck,
+  FileText,
+  Flag,
+  HeartHandshake,
+  Inbox,
+  ListTodo,
+  Loader2,
+  Megaphone,
+  PenLine,
+  ScrollText,
+  ShieldBan,
+  UserCheck,
+  Users,
+  Zap,
+} from "lucide-react";
 import { StatePanel } from "@/components/ui/state-panel";
 import {
   fetchAdminLogs,
   fetchAdminSummary,
+  fetchPendingUsers,
   type AdminActionLogItem,
   type AdminSummary,
 } from "@/data/admin";
+import { fetchNewFamilyPage } from "@/data/new-family";
+import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
 import { ACTION_LABELS, RESTRICTIVE_ACTIONS } from "./logs/action-labels";
+import { getAdminPermissions, type AdminPermissions } from "./permissions";
 import { StatsChartSection } from "./stats-chart";
 
+// 대시보드가 한 번에 병렬 조회하는 데이터: 요약 통계 + 오늘 처리할 일 카운트.
+// 신고 검토 대기 수는 /api/admin/summary 의 pendingReports(status=PENDING 집계)를 그대로 쓴다
+// — /api/admin/reports?status=PENDING 을 중복 호출하지 않기 위해서다.
+type DashboardData = {
+  summary: AdminSummary;
+  /** 가입 승인 대기(총 건수) — fetchPendingUsers 의 totalElements */
+  pendingApprovals: number;
+  /** 아직 연락하지 않은 새가족 신청 건수 — fetchNewFamilyPage 의 pendingCount */
+  pendingNewFamily: number;
+};
+
 // 저장된 결과의 tick 이 현재 retryTick 과 다르면 로딩 중으로 간주한다(effect 내 동기 setState 회피).
-type SummaryResult = { tick: number; status: "success" | "error"; data: AdminSummary | null };
+type DashboardResult = { tick: number; status: "success" | "error"; data: DashboardData | null };
 
 const RECENT_LOGS_SIZE = 5;
 
+// 빠른 작업: 자주 쓰는 작성·처리 화면으로 바로 이동한다. permission 이 없으면 숨긴다.
+// TODO(콘텐츠 관리 탭: 전용 관리 페이지 필요) — 전용 페이지가 생기면 공지 작성·행사 만들기를
+// 그 탭으로 옮기고 여기서는 탭 진입 링크만 남긴다.
+const QUICK_ACTIONS: {
+  href: string;
+  label: string;
+  icon: typeof Flag;
+  permission: keyof AdminPermissions;
+}[] = [
+  // /posts/new 에서 관리자는 공지(NOTICE)·주보 카테고리를 선택할 수 있다(post-create-client).
+  { href: "/posts/new", label: "공지 작성", icon: PenLine, permission: "canManageContent" },
+  { href: "/campaigns/new", label: "행사 만들기", icon: Megaphone, permission: "canManageContent" },
+  { href: "/admin/approvals", label: "가입 승인", icon: UserCheck, permission: "canApproveSignups" },
+  { href: "/admin/reports", label: "신고 관리", icon: Flag, permission: "canManageReports" },
+  { href: "/admin/new-family", label: "새가족 확인", icon: HeartHandshake, permission: "canManageNewFamily" },
+];
+
 export default function DashboardClient() {
   const [retryTick, setRetryTick] = useState(0);
-  const [result, setResult] = useState<SummaryResult>({ tick: -1, status: "success", data: null });
-  // 최근 조치는 보조 정보라 실패해도 대시보드를 막지 않는다(null = 로딩/실패 → 섹션 숨김).
+  const [result, setResult] = useState<DashboardResult>({ tick: -1, status: "success", data: null });
+  // 최근 활동은 보조 정보라 실패해도 대시보드를 막지 않는다(null = 로딩/실패 → 섹션 숨김).
   const [recentLogs, setRecentLogs] = useState<AdminActionLogItem[] | null>(null);
+  const { profile } = useCurrentUserProfile();
+  const permissions = getAdminPermissions(profile?.role);
 
   useEffect(() => {
     let cancelled = false;
-    fetchAdminSummary()
-      .then((data) => {
-        if (!cancelled) setResult({ tick: retryTick, status: "success", data });
+    // 요약 통계와 오늘 처리할 일 카운트를 병렬 조회한다(size=1 — 목록이 아니라 건수만 필요).
+    Promise.all([
+      fetchAdminSummary(),
+      fetchPendingUsers({ page: 0, size: 1 }),
+      fetchNewFamilyPage({ page: 0, size: 1 }),
+    ])
+      .then(([summary, pendingUsers, newFamily]) => {
+        if (cancelled) return;
+        setResult({
+          tick: retryTick,
+          status: "success",
+          data: {
+            summary,
+            pendingApprovals: pendingUsers.totalElements,
+            pendingNewFamily: newFamily.pendingCount,
+          },
+        });
       })
       .catch(() => {
         if (!cancelled) setResult({ tick: retryTick, status: "error", data: null });
@@ -77,16 +141,101 @@ export default function DashboardClient() {
     );
   }
 
-  const { data } = state;
-  const cards = [
-    { label: "활동 회원", value: data.users, icon: Users },
-    { label: "게시글", value: data.posts, icon: FileText },
-    { label: "행사", value: data.campaigns, icon: Megaphone },
-    { label: "누적 신고", value: data.totalReports, icon: Inbox },
+  const { summary, pendingApprovals, pendingNewFamily } = state.data;
+
+  // 오늘 처리할 일 — 대기 건수가 있는 항목만 노출하고, 권한이 없는 항목은 숨긴다.
+  // TODO(마감 임박 행사: 관리자용 마감 임박 행사 집계 데이터 함수가 생기면 항목 추가)
+  const todos = [
+    {
+      key: "approvals",
+      href: "/admin/approvals",
+      icon: UserCheck,
+      label: "가입 승인 대기",
+      count: pendingApprovals,
+      unit: "건",
+      permission: "canApproveSignups" as const,
+    },
+    {
+      key: "reports",
+      href: "/admin/reports",
+      icon: Flag,
+      label: "신고 검토 대기",
+      count: summary.pendingReports,
+      unit: "건",
+      permission: "canManageReports" as const,
+    },
+    {
+      key: "new-family",
+      href: "/admin/new-family",
+      icon: HeartHandshake,
+      label: "새가족 신청",
+      count: pendingNewFamily,
+      unit: "건",
+      permission: "canManageNewFamily" as const,
+    },
+  ].filter((todo) => permissions[todo.permission]);
+  const activeTodos = todos.filter((todo) => todo.count > 0);
+
+  // 통계 카드: 모두 관련 화면으로 들어가는 진입점이다.
+  // TODO(콘텐츠 관리 탭: 전용 관리 페이지 필요) — 게시글·행사는 전용 관리 페이지가 없어
+  // 우선 공개 목록(/news, /campaigns)으로 연결한다.
+  const statCards = [
+    { label: "활동 회원", value: summary.users, unit: "명", icon: Users, href: "/admin/users", destination: "회원 관리" },
+    { label: "게시글", value: summary.posts, unit: "건", icon: FileText, href: "/news", destination: "소식" },
+    { label: "행사", value: summary.campaigns, unit: "건", icon: Megaphone, href: "/campaigns", destination: "행사·사역" },
+    { label: "누적 신고", value: summary.totalReports, unit: "건", icon: Inbox, href: "/admin/reports", destination: "신고 관리" },
   ];
+
+  const quickActions = QUICK_ACTIONS.filter(({ permission }) => permissions[permission]);
 
   return (
     <div className="space-y-6">
+      {/* 오늘 처리할 일 — 대기 중인 작업 큐를 통계보다 먼저 보여준다. */}
+      <section
+        aria-labelledby="admin-todo-heading"
+        className="rounded-3xl border p-5"
+        style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+      >
+        <h2 id="admin-todo-heading" className="mb-4 inline-flex items-center gap-2 text-[14px] font-semibold">
+          <ListTodo size={16} aria-hidden style={{ color: "var(--accent-secondary)" }} />
+          오늘 처리할 일
+        </h2>
+        {activeTodos.length === 0 ? (
+          <p className="flex items-center gap-2 text-[13.5px]" style={{ color: "var(--foreground-muted)" }}>
+            <CircleCheck size={16} aria-hidden style={{ color: "var(--accent-secondary)" }} />
+            처리할 작업이 없습니다. 모든 운영 상태가 안정적입니다.
+          </p>
+        ) : (
+          <ul className="space-y-2.5">
+            {activeTodos.map(({ key, href, icon: Icon, label, count, unit }) => (
+              <li
+                key={key}
+                className="flex flex-wrap items-center gap-3 rounded-2xl border px-4 py-3"
+                style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+              >
+                <Icon size={16} aria-hidden style={{ color: "var(--accent-secondary)" }} />
+                <span className="text-[13.5px]">
+                  {label}{" "}
+                  <b style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>
+                    {count.toLocaleString()}
+                    {unit}
+                  </b>
+                </span>
+                <Link
+                  href={href}
+                  className="ml-auto inline-flex items-center gap-1 rounded-full px-3.5 py-2 text-[12.5px]"
+                  style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+                  aria-label={`${label} ${count.toLocaleString()}${unit} 확인하기`}
+                >
+                  확인하기
+                  <ArrowUpRight size={13} aria-hidden />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       <div className="grid gap-4 sm:grid-cols-2">
         {/* 대기 신고: 관리자의 핵심 작업 큐라 별도 강조 카드로 노출한다. */}
         <QueueCard
@@ -94,88 +243,133 @@ export default function DashboardClient() {
           icon={Flag}
           title="처리 대기 신고"
           description={
-            data.pendingReports > 0
+            summary.pendingReports > 0
               ? "확인이 필요한 신고가 있습니다. 눌러서 신고 관리로 이동하세요."
               : "대기 중인 신고가 없습니다."
           }
-          count={data.pendingReports}
-          countLabel={`대기 신고 ${data.pendingReports}건`}
-          highlighted={data.pendingReports > 0}
+          count={summary.pendingReports}
+          countLabel={`대기 신고 ${summary.pendingReports}건`}
+          highlighted={summary.pendingReports > 0}
         />
         <QueueCard
           href="/admin/users?filter=suspended"
           icon={ShieldBan}
           title="정지 중 회원"
           description={
-            data.suspendedUsers > 0
+            summary.suspendedUsers > 0
               ? "현재 이용이 정지된 계정입니다. 눌러서 목록을 확인하세요."
               : "정지 중인 회원이 없습니다."
           }
-          count={data.suspendedUsers}
-          countLabel={`정지 중 회원 ${data.suspendedUsers}명`}
+          count={summary.suspendedUsers}
+          countLabel={`정지 중 회원 ${summary.suspendedUsers}명`}
           highlighted={false}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {cards.map(({ label, value, icon: Icon }) => (
-          <div
+        {statCards.map(({ label, value, unit, icon: Icon, href, destination }) => (
+          <Link
             key={label}
-            className="rounded-3xl border p-5"
+            href={href}
+            aria-label={`${label} ${value.toLocaleString()}${unit} — ${destination}(으)로 이동`}
+            className="group rounded-3xl border p-5 transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
             style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
           >
-            <Icon size={18} aria-hidden style={{ color: "var(--accent-secondary)" }} />
+            <div className="flex items-start justify-between">
+              <Icon size={18} aria-hidden style={{ color: "var(--accent-secondary)" }} />
+              <ArrowUpRight
+                size={14}
+                aria-hidden
+                className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                style={{ color: "var(--foreground-muted)" }}
+              />
+            </div>
             <p className="mt-3 text-[24px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>
               {value.toLocaleString()}
             </p>
             <p className="text-[12px]" style={{ color: "var(--foreground-muted)" }}>
               {label}
             </p>
-          </div>
+          </Link>
         ))}
       </div>
 
+      {/* 빠른 작업 — 자주 쓰는 작성·처리 화면 바로가기. */}
+      {quickActions.length > 0 && (
+        <section
+          aria-labelledby="admin-quick-heading"
+          className="rounded-3xl border p-5"
+          style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+        >
+          <h2 id="admin-quick-heading" className="mb-4 inline-flex items-center gap-2 text-[14px] font-semibold">
+            <Zap size={16} aria-hidden style={{ color: "var(--accent-secondary)" }} />
+            빠른 작업
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {quickActions.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-[13px] transition-colors"
+                style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--foreground)" }}
+              >
+                <Icon size={14} aria-hidden style={{ color: "var(--accent-secondary)" }} />
+                {label}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       <StatsChartSection />
 
-      {recentLogs && recentLogs.length > 0 && (
+      {/* 최근 활동 — 감사 로그 최신 5건 요약. 조회 실패 시(null)에는 섹션을 숨긴다. */}
+      {recentLogs !== null && (
         <section
+          aria-labelledby="admin-recent-heading"
           className="rounded-3xl border p-5"
           style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
         >
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="inline-flex items-center gap-2 text-[14px] font-semibold">
+            <h2 id="admin-recent-heading" className="inline-flex items-center gap-2 text-[14px] font-semibold">
               <ScrollText size={16} aria-hidden style={{ color: "var(--accent-secondary)" }} />
-              최근 조치
+              최근 활동
             </h2>
             <Link href="/admin/logs" className="text-[12px] hover:underline" style={{ color: "var(--foreground-muted)" }}>
               전체 보기
             </Link>
           </div>
-          <ul className="space-y-2.5">
-            {recentLogs.map((log) => (
-              <li key={log.id} className="flex flex-wrap items-center gap-2 text-[13px]">
-                <span
-                  className="rounded-full px-2 py-0.5 text-[11px]"
-                  style={
-                    RESTRICTIVE_ACTIONS.has(log.action)
-                      ? { background: "rgba(237,92,72,0.14)", color: "#ed5c48" }
-                      : { background: "var(--accent-soft)", color: "var(--accent-secondary)" }
-                  }
-                >
-                  {ACTION_LABELS[log.action] ?? log.action}
-                </span>
-                <span>{log.admin.name}</span>
-                {log.detail && (
-                  <span className="min-w-0 truncate" style={{ color: "var(--foreground-muted)" }}>
-                    {log.detail}
+          {recentLogs.length === 0 ? (
+            <p className="text-[13px]" style={{ color: "var(--foreground-muted)" }}>
+              최근 활동이 없습니다.
+            </p>
+          ) : (
+            <ul className="space-y-2.5">
+              {recentLogs.map((log) => (
+                <li key={log.id} className="flex flex-wrap items-center gap-2 text-[13px]">
+                  <span
+                    className="rounded-full px-2 py-0.5 text-[11px]"
+                    style={
+                      RESTRICTIVE_ACTIONS.has(log.action)
+                        ? { background: "var(--danger-soft)", color: "var(--danger)" }
+                        : { background: "var(--accent-soft)", color: "var(--accent-secondary)" }
+                    }
+                  >
+                    {ACTION_LABELS[log.action] ?? log.action}
                   </span>
-                )}
-                <span className="ml-auto text-[12px]" style={{ color: "var(--foreground-muted)" }}>
-                  {new Date(log.createdAt).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" })}
-                </span>
-              </li>
-            ))}
-          </ul>
+                  <span>{log.admin.name}</span>
+                  {log.detail && (
+                    <span className="min-w-0 truncate" style={{ color: "var(--foreground-muted)" }}>
+                      {log.detail}
+                    </span>
+                  )}
+                  <span className="ml-auto text-[12px]" style={{ color: "var(--foreground-muted)" }}>
+                    {new Date(log.createdAt).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       )}
     </div>

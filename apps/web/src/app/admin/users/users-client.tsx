@@ -4,19 +4,27 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Search, ShieldBan, ShieldCheck, BadgeCheck, UserCog } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Music, Search, ShieldBan, ShieldCheck, BadgeCheck, UserCog } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
 import { StatePanel } from "@/components/ui/state-panel";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { ApiError, apiErrorMessage } from "@/lib/api";
 import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
+import { USER_ROLE_LABELS } from "@/app/admin/permissions";
 import {
   fetchAdminUsers,
   setAdminUserRole,
   setAdminUserSuspension,
+  setPraiseRole,
   type AdminUserItem,
   type AdminUsersPageResponse,
 } from "@/data/admin";
+import {
+  PRAISE_PARTS,
+  PRAISE_PART_LABELS,
+  PRAISE_ROLE_LABELS,
+  type PraiseTeamRole,
+} from "@/data/praise-team";
 
 const PAGE_SIZE = 20;
 
@@ -216,23 +224,24 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
   // 제재 대상이 아닌 계정(관리자/탈퇴)은 조작 UI를 숨긴다.
   const actionable = !user.deleted && user.role !== "ADMIN";
 
-  const changeRole = async () => {
-    if (busy) return;
-    const promote = user.role === "USER";
+  const changeRole = async (nextRole: AdminUserItem["role"]) => {
+    if (busy || nextRole === user.role) return;
+    const nextLabel = USER_ROLE_LABELS[nextRole];
     const ok = await confirm({
-      title: promote ? `${user.name}님을 관리자로 지정할까요?` : `${user.name}님의 관리자 권한을 해제할까요?`,
-      message: promote
-        ? "관리자는 신고 처리·콘텐츠 숨김·회원 정지 등 모든 관리 기능을 쓸 수 있습니다. 즉시 적용됩니다."
-        : "관리 기능 접근이 즉시 차단됩니다.",
-      confirmLabel: promote ? "관리자 지정" : "권한 해제",
-      destructive: !promote,
+      title: `${user.name}님의 역할을 "${nextLabel}"(으)로 변경할까요?`,
+      message:
+        nextRole === "USER"
+          ? "관리 기능 접근이 즉시 차단됩니다."
+          : "해당 역할의 관리 기능을 즉시 사용할 수 있게 됩니다.",
+      confirmLabel: "역할 변경",
+      destructive: nextRole === "USER",
     });
     if (!ok) return;
     setBusy(true);
     try {
-      const updated = await setAdminUserRole(user.id, promote ? "ADMIN" : "USER");
+      const updated = await setAdminUserRole(user.id, nextRole);
       onUpdated(updated);
-      toast.success(promote ? `${user.name}님을 관리자로 지정했습니다.` : `${user.name}님의 관리자 권한을 해제했습니다.`);
+      toast.success(`${user.name}님의 역할을 ${nextLabel}(으)로 변경했습니다.`);
     } catch (e) {
       toast.error(e instanceof ApiError ? apiErrorMessage(e, "역할 변경에 실패했습니다.") : "역할 변경에 실패했습니다.");
     } finally {
@@ -290,9 +299,9 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
         <span className="text-[12px]" style={{ color: "var(--foreground-muted)" }}>
           {user.email}
         </span>
-        {user.role === "ADMIN" && (
+        {user.role !== "USER" && (
           <span className="rounded-full px-2.5 py-1 text-[11px]" style={{ background: "var(--accent-soft)", color: "var(--accent-secondary)" }}>
-            관리자
+            {USER_ROLE_LABELS[user.role]}
           </span>
         )}
         {user.deleted && (
@@ -300,8 +309,14 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
             탈퇴
           </span>
         )}
+        {user.praiseRole && (
+          <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px]" style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}>
+            <Music size={11} aria-hidden />
+            찬양팀 {PRAISE_ROLE_LABELS[user.praiseRole]}
+          </span>
+        )}
         {user.suspended && user.suspendedUntil && (
-          <span className="rounded-full px-2.5 py-1 text-[11px]" style={{ background: "rgba(237,92,72,0.14)", color: "#ed5c48" }}>
+          <span className="rounded-full px-2.5 py-1 text-[11px]" style={{ background: "var(--danger-soft)", color: "var(--danger)" }}>
             정지 중 · {suspendedUntilLabel(user.suspendedUntil)}까지
           </span>
         )}
@@ -320,16 +335,23 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
       {!user.deleted && (!isSelf || actionable) && (
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {!isSelf && (
-            <button
-              type="button"
-              onClick={changeRole}
-              disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] disabled:opacity-50"
-              style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
-            >
+            <label className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px]" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>
               {busy ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <UserCog size={14} aria-hidden />}
-              {user.role === "USER" ? "관리자 지정" : "관리자 해제"}
-            </button>
+              <span className="sr-only">{user.name}님의 역할</span>
+              <select
+                value={user.role}
+                onChange={(e) => void changeRole(e.target.value as AdminUserItem["role"])}
+                disabled={busy}
+                className="bg-transparent py-0.5 outline-none disabled:opacity-50"
+                style={{ color: "var(--foreground)" }}
+              >
+                {(Object.keys(USER_ROLE_LABELS) as Array<AdminUserItem["role"]>).map((role) => (
+                  <option key={role} value={role}>
+                    {USER_ROLE_LABELS[role]}
+                  </option>
+                ))}
+              </select>
+            </label>
           )}
           {actionable &&
           (user.suspended ? (
@@ -371,7 +393,7 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
                 onClick={suspend}
                 disabled={busy}
                 className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] disabled:opacity-50"
-                style={{ background: "rgba(237,92,72,0.9)", color: "#fff" }}
+                style={{ background: "var(--danger-solid)", color: "#fff" }}
               >
                 {busy ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <ShieldBan size={14} aria-hidden />}
                 정지
@@ -380,6 +402,135 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
           ))}
         </div>
       )}
+
+      {/* 찬양팀 역할·파트 지정 — 사이트 역할과 독립(관리자 계정도 찬양팀 멤버일 수 있다). */}
+      {!user.deleted && <PraiseTeamEditor user={user} onUpdated={onUpdated} />}
     </li>
+  );
+}
+
+/**
+ * 찬양팀 지정 편집기(펼침 영역). PATCH /api/admin/users/{id}/praise (ADMIN 전용).
+ * 역할 "없음"으로 저장하면 파트도 함께 해제된다.
+ */
+function PraiseTeamEditor({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated: AdminUserItem) => void }) {
+  const [open, setOpen] = useState(false);
+  const [role, setRole] = useState<"" | PraiseTeamRole>(user.praiseRole ?? "");
+  const [parts, setParts] = useState<string[]>(user.praiseParts ?? []);
+  const [busy, setBusy] = useState(false);
+
+  const togglePart = (part: string) =>
+    setParts((prev) => (prev.includes(part) ? prev.filter((p) => p !== part) : [...prev, part]));
+
+  const save = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const praiseRole = role === "" ? null : role;
+      const updated = await setPraiseRole(user.id, {
+        praiseRole,
+        praiseParts: praiseRole ? parts : [],
+      });
+      onUpdated(updated);
+      setRole(updated.praiseRole ?? "");
+      setParts(updated.praiseParts ?? []);
+      toast.success(
+        praiseRole
+          ? `${user.name}님을 찬양팀 ${PRAISE_ROLE_LABELS[praiseRole]}(으)로 지정했습니다.`
+          : `${user.name}님의 찬양팀 지정을 해제했습니다.`,
+      );
+    } catch (e) {
+      toast.error(
+        e instanceof ApiError
+          ? apiErrorMessage(e, "찬양팀 지정에 실패했습니다.")
+          : "찬양팀 지정에 실패했습니다.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-3">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px]"
+        style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+      >
+        <Music size={14} aria-hidden style={{ color: "var(--accent)" }} />
+        {user.praiseRole
+          ? `찬양팀: ${PRAISE_ROLE_LABELS[user.praiseRole]}${user.praiseParts.length > 0 ? ` · ${user.praiseParts.length}개 파트` : ""}`
+          : "찬양팀 지정"}
+        {open ? <ChevronUp size={13} aria-hidden /> : <ChevronDown size={13} aria-hidden />}
+      </button>
+
+      {open && (
+        <div
+          className="mt-2 space-y-3 rounded-2xl border p-4"
+          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+        >
+          <label className="flex flex-wrap items-center gap-2 text-[13px]" style={{ color: "var(--foreground)" }}>
+            찬양팀 역할
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as "" | PraiseTeamRole)}
+              disabled={busy}
+              className="rounded-xl border px-3 py-2 text-[13px] disabled:opacity-50"
+              style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+            >
+              <option value="">없음</option>
+              {(Object.keys(PRAISE_ROLE_LABELS) as PraiseTeamRole[]).map((r) => (
+                <option key={r} value={r}>
+                  {PRAISE_ROLE_LABELS[r]}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <fieldset disabled={role === "" || busy}>
+            <legend className="mb-2 text-[13px]" style={{ color: "var(--foreground)" }}>
+              파트 (복수 선택)
+            </legend>
+            <div className="flex flex-wrap gap-x-4 gap-y-2">
+              {PRAISE_PARTS.map((part) => (
+                <label
+                  key={part}
+                  className={`inline-flex items-center gap-1.5 text-[13px] ${role === "" ? "opacity-40" : ""}`}
+                  style={{ color: "var(--foreground)" }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={parts.includes(part)}
+                    onChange={() => togglePart(part)}
+                    className="accent-[var(--accent)]"
+                  />
+                  {PRAISE_PART_LABELS[part]}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={save}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-medium text-[var(--cta-fg)] disabled:opacity-50"
+              style={{ background: "var(--cta-bg)" }}
+            >
+              {busy && <Loader2 size={14} className="animate-spin" aria-hidden />}
+              찬양팀 설정 저장
+            </button>
+            {role === "" && (user.praiseRole || parts.length > 0) ? (
+              <span className="text-[12px]" style={{ color: "var(--foreground-muted)" }}>
+                저장하면 찬양팀 지정이 해제됩니다.
+              </span>
+            ) : null}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -11,7 +11,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "app.cors")
 data class CorsProperties(
     val allowedOrigins: List<String> = listOf("http://localhost:3000", "http://127.0.0.1:3000"),
-    val allowedMethods: List<String> = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS"),
+    // PATCH: 관리자 액션(가입 승인·거절, 정지, 역할 변경, 신고 처리, 새가족 연락 표시)이 전부 PATCH 다.
+    val allowedMethods: List<String> = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"),
     val allowedHeaders: List<String> = listOf("Authorization", "Content-Type", "Accept"),
     val exposedHeaders: List<String> = emptyList(),
     val allowCredentials: Boolean = true,

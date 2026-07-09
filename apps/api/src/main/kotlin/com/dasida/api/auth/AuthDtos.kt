@@ -23,6 +23,9 @@ data class LoginRequest(
 @Schema(description = "인증 응답. token 은 이후 요청에 Bearer 로 사용한다.")
 data class AuthResponse(val token: String, val name: String, val verified: Boolean)
 
+@Schema(description = "회원가입 승인 대기 응답(승인제). 토큰은 발급되지 않는다.")
+data class SignupPendingResponse(val pendingApproval: Boolean = true, val name: String)
+
 /**
  * 토큰 발급 내부 결과. refreshToken 은 응답 body 에 노출하지 않고 httpOnly 쿠키로만 전달한다
  * (JS 접근 차단 — body 에 실으면 localStorage 저장 유혹이 생겨 쿠키 전환 의미가 없어진다).
@@ -39,6 +42,10 @@ data class UserProfileResponse(
     val notifyCampaignUpdates: Boolean = true,
     @field:Schema(description = "역할", allowableValues = ["USER", "ADMIN"])
     val role: String = "USER",
+    @field:Schema(description = "찬양팀 역할(LEADER/MEMBER/GUEST). null = 찬양팀 아님")
+    val praiseRole: String? = null,
+    @field:Schema(description = "찬양팀 파트 목록")
+    val praiseParts: List<String> = emptyList(),
 )
 
 @Schema(description = "공개 프로필(타인 조회용)")
@@ -48,15 +55,8 @@ data class PublicUserResponse(
     val verified: Boolean,
     val profileImageUrl: String? = null,
     val postCount: Long,
-    val followerCount: Long = 0,
-    val followingCount: Long = 0,
-    val followedByMe: Boolean? = null,
     val blockedByMe: Boolean? = null,
 )
-
-data class FollowStatusResponse(val followed: Boolean)
-
-data class RecommendedUsersResponse(val items: List<PublicUserResponse>)
 
 data class PublicUserPageResponse(
     val content: List<PublicUserResponse>,
@@ -114,6 +114,10 @@ data class AccessLogResponse(
     val id: Long,
     val ipAddress: String,
     val os: String,
+    @field:Schema(description = "User-Agent 기반 브라우저 이름")
+    val browser: String = "알 수 없음",
+    @field:Schema(description = "IP 기반 대략적 위치(지역 · 국가). 조회 실패 시 null.")
+    val location: String? = null,
     val accessedAt: String,
 )
 

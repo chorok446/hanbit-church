@@ -86,8 +86,8 @@ function ProofItem({
             aria-label="내 참여 후기 삭제"
             onClick={() => onDelete(proof)}
             disabled={deleting}
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#ed5c48] disabled:cursor-not-allowed disabled:opacity-45"
-            style={{ background: "rgba(237,92,72,0.12)" }}
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--danger)] disabled:cursor-not-allowed disabled:opacity-45"
+            style={{ background: "var(--danger-soft)" }}
           >
             {deleting ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
           </button>
@@ -196,7 +196,7 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
       } else if (error instanceof ApiError && error.status === 403) {
         setMutationError("행사에 참여한 사람만 후기를 남길 수 있어요.");
       } else if (error instanceof ApiError && error.status === 409) {
-        setMutationError("모집 시작 전이거나 이미 인증을 남긴 행사입니다.");
+        setMutationError("모집 시작 전이거나 이미 후기를 남긴 행사입니다.");
         reload();
       } else {
         setMutationError("참여 후기 등록에 실패했습니다. 잠시 후 다시 시도해주세요.");
@@ -208,7 +208,7 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
 
   const removeProof = async (proof: CampaignProof) => {
     if (deletingId) return;
-    if (!(await confirm({ message: "참여 후기을 삭제할까요?", destructive: true, confirmLabel: "삭제" }))) return;
+    if (!(await confirm({ message: "참여 후기를 삭제할까요?", destructive: true, confirmLabel: "삭제" }))) return;
     const requestToken = getSessionId();
     if (!requestToken) return;
     setDeletingId(proof.id);
@@ -231,15 +231,16 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
   };
 
   const proofedByMe = response?.proofedByMe ?? false;
+  // 서버 정책(CampaignProofService): 참여자만, 모집 시작(upcoming 이후)부터, 1인 1후기.
   const canCompose = !!token && campaign.joinedByMe && campaign.status !== "upcoming" && !proofedByMe;
   const composeHint = !token
     ? "로그인 후 참여한 행사의 후기를 남길 수 있어요."
     : campaign.status === "upcoming"
-      ? "모집이 시작되면 참여 후기을 남길 수 있어요."
+      ? "모집이 시작되면 참여 후기를 남길 수 있어요."
       : !campaign.joinedByMe
         ? "행사에 참여한 사람만 후기를 남길 수 있어요."
         : proofedByMe
-          ? "이미 참여 후기을 남겼어요. 삭제 후 다시 작성할 수 있어요."
+          ? "이미 참여 후기를 남겼어요. 삭제 후 다시 작성할 수 있어요."
           : null;
 
   return (
@@ -253,7 +254,7 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
             참여 후기 {status === "success" && response ? response.totalElements.toLocaleString() : ""}
           </h2>
           <p className="mt-1 text-[12px] opacity-60" style={{ color: "var(--foreground)" }}>
-            참여 {campaign.joined.toLocaleString()}명 · 행사에서 실천한 순간을 사진과 함께 남겨보세요.
+            참여 {campaign.joined.toLocaleString()}명 · 행사에 참여한 분은 함께한 순간을 사진과 함께 남겨보세요.
           </p>
         </div>
         <button
@@ -339,19 +340,19 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
           {composeHint}
         </p>
       ) : null}
-      {mutationError ? <p role="alert" className="mt-3 text-[12px] text-[#ed5c48]">{mutationError}</p> : null}
+      {mutationError ? <p role="alert" className="mt-3 text-[12px] text-[var(--danger)]">{mutationError}</p> : null}
 
       <div className="mt-7 space-y-3">
         {status === "loading" ? (
           <StatePanel compact>
             <Loader2 size={24} className="animate-spin text-[var(--accent)]" />
-            <p style={{ color: "var(--foreground-muted)" }}>참여 후기을 불러오는 중입니다.</p>
+            <p style={{ color: "var(--foreground-muted)" }}>참여 후기를 불러오는 중입니다.</p>
           </StatePanel>
         ) : null}
 
         {status === "error" ? (
           <StatePanel compact role="alert">
-            <p style={{ color: "var(--foreground-muted)" }}>참여 후기을 불러오지 못했습니다.</p>
+            <p style={{ color: "var(--foreground-muted)" }}>참여 후기를 불러오지 못했습니다.</p>
             <button type="button" onClick={reload} className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]">
               다시 시도
             </button>
@@ -362,7 +363,7 @@ export function CampaignProofs({ campaign }: { campaign: Campaign }) {
           <StatePanel compact>
             <BadgeCheck size={26} className="opacity-35" />
             <p style={{ color: "rgba(var(--ink-rgb), 0.6)" }}>
-              아직 참여 후기이 없습니다. 첫 후기를 남겨보세요.
+              아직 참여 후기가 없습니다. 행사에 참여하셨다면 첫 후기를 남겨보세요.
             </p>
           </StatePanel>
         ) : null}

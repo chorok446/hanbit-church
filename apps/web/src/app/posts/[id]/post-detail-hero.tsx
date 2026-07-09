@@ -1,31 +1,26 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { useRef } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import {
   Heart,
   MessageCircle,
   Bookmark,
+  CalendarHeart,
   ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
-  Send,
 } from "lucide-react";
 import { AuthorHeader } from "@/components/author-header";
 import { FallbackImage } from "@/components/fallback-image";
 import { PostText } from "@/components/post-text";
+import { PostAttachments } from "@/components/post-attachments";
 import { YouTubeEmbed } from "@/components/youtube-embed";
 import { extractYouTubeId } from "@/lib/youtube";
-import { postCategoryLabel } from "@/data/posts";
+import { isAdminOnlyCategory, postCategoryLabel } from "@/data/posts";
 import { RichBodyImageGrid } from "@/components/rich-body-image-grid";
 import { ShareButton } from "@/components/share-button";
 import { TagLink } from "@/components/tag-link";
-import { createConversation } from "@/data/messages";
-import { getSessionId } from "@/lib/auth";
-import { useAuthSession } from "@/lib/use-auth-session";
-import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
 import type { Post } from "@/data/posts";
 import type { Campaign } from "@/data/campaigns";
 
@@ -68,10 +63,6 @@ export function PostDetailHero({
   onOpenCampaign: (id: string) => void;
   onScrollToComments: () => void;
 }) {
-  const router = useRouter();
-  const { sessionId } = useAuthSession();
-  const { profile } = useCurrentUserProfile();
-  const [messagePending, setMessagePending] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -79,23 +70,8 @@ export function PostDetailHero({
   const sy = useSpring(my, { stiffness: 150, damping: 22 });
   const rY = useTransform(sx, [-0.5, 0.5], [-5, 5]);
   const rX = useTransform(sy, [-0.5, 0.5], [4, -4]);
-  const showMessage = Boolean(sessionId && p.authorId && profile?.id !== p.authorId);
-
-  const startMessage = async () => {
-    if (!getSessionId() || !p.authorId) {
-      toast.error("로그인 후 메시지를 보낼 수 있어요.");
-      return;
-    }
-    setMessagePending(true);
-    try {
-      const conv = await createConversation(p.authorId);
-      router.push(`/messages/${conv.id}`);
-    } catch {
-      toast.error("대화를 시작하지 못했어요.");
-    } finally {
-      setMessagePending(false);
-    }
-  };
+  // 교회 공식 소식(공지·주보)에는 좋아요를 노출하지 않는다.
+  const officialNotice = isAdminOnlyCategory(p.category);
 
   return (
     <div style={{ perspective: 1400 }}>
@@ -118,7 +94,7 @@ export function PostDetailHero({
           background: "var(--card)",
           borderColor: "var(--border)",
         }}
-        className="rounded-3xl border overflow-hidden shadow-[0_40px_80px_-30px_rgba(0,0,0,0.4)] grid grid-cols-1 md:grid-cols-[1.2fr_1fr]"
+        className="rounded-3xl border overflow-hidden shadow-[0_40px_80px_-30px_rgba(0,0,0,0.4)] grid grid-cols-1 md:grid-cols-[1.1fr_1fr]"
       >
         <div className="relative aspect-square md:aspect-auto bg-black overflow-hidden">
           {imageFailed ? (
@@ -166,30 +142,15 @@ export function PostDetailHero({
         </div>
 
         <div className="p-7 flex flex-col gap-5">
-          <div className="flex items-start justify-between gap-3">
-            <AuthorHeader
-              name={p.author.name}
-              verified={p.author.verified}
-              profileImageUrl={p.author.profileImageUrl}
-              authorId={p.authorId}
-              avatarSize={40}
-              time={p.time}
-              className="min-w-0 flex-1"
-            />
-            {showMessage ? (
-              <button
-                type="button"
-                disabled={messagePending}
-                onClick={() => void startMessage()}
-                className="flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium disabled:opacity-50"
-                style={{ borderColor: "var(--border)", color: "var(--foreground)", background: "var(--card)" }}
-                aria-label="메시지 보내기"
-              >
-                <Send size={14} aria-hidden />
-                메시지
-              </button>
-            ) : null}
-          </div>
+          <AuthorHeader
+            name={p.author.name}
+            verified={p.author.verified}
+            profileImageUrl={p.author.profileImageUrl}
+            authorId={p.authorId}
+            avatarSize={40}
+            time={p.time}
+            className="min-w-0"
+          />
 
           <span
             className="self-start rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.08em]"
@@ -207,6 +168,8 @@ export function PostDetailHero({
 
           <RichBodyImageGrid images={p.images} altPrefix="게시글 이미지" />
 
+          <PostAttachments attachments={p.attachments} />
+
           <div className="flex flex-wrap gap-1.5">
             {p.tags.map((t) => (
               <TagLink key={t} tag={t} className="text-[12px] px-2.5 py-0.5 rounded-full transition-opacity hover:opacity-75" style={{ background: "var(--accent-soft)", color: "var(--accent-secondary)" }} />
@@ -217,37 +180,68 @@ export function PostDetailHero({
             <button
               type="button"
               onClick={() => onOpenCampaign(linkedCampaign.id)}
-              className="flex items-center gap-3 p-3 rounded-2xl cursor-pointer text-left w-full"
-              style={{
-                background: "var(--accent-soft)",
-                border: "1px solid var(--accent-soft)",
-              }}
+              className="w-full cursor-pointer rounded-2xl border p-4 text-left transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-20px_rgba(0,0,0,0.35)] motion-reduce:transform-none"
+              style={{ background: "var(--accent-soft)", borderColor: "var(--border)" }}
             >
-              <FallbackImage
-                src={linkedCampaign.thumb}
-                alt={`${linkedCampaign.title} 행사 이미지`}
-                className="w-10 h-10 rounded-lg object-cover"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-[11px] opacity-70" style={{ color: "var(--foreground)" }}>연결된 행사</div>
-                <div className="text-[13px] truncate" style={{ color: "var(--foreground)" }}>{linkedCampaign.title}</div>
+              <div className="flex items-center gap-3.5">
+                <FallbackImage
+                  src={linkedCampaign.thumb}
+                  alt={`${linkedCampaign.title} 행사 이미지`}
+                  className="h-14 w-14 shrink-0 rounded-xl object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <div
+                    className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em]"
+                    style={{ color: "var(--accent-strong)" }}
+                  >
+                    <CalendarHeart size={12} aria-hidden style={{ color: "var(--accent)" }} />
+                    연결된 행사
+                  </div>
+                  <div
+                    className="mt-1 truncate text-[15px] leading-snug"
+                    style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
+                  >
+                    {linkedCampaign.title}
+                  </div>
+                  {linkedCampaign.runStart ? (
+                    <div className="mt-0.5 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
+                      {linkedCampaign.runStart}
+                      {linkedCampaign.runEnd && linkedCampaign.runEnd !== linkedCampaign.runStart
+                        ? ` ~ ${linkedCampaign.runEnd}`
+                        : null}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+              <div
+                className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t pt-3"
+                style={{ borderColor: "var(--border)" }}
+              >
+                <span className="text-[12px]" style={{ color: "var(--foreground-muted)" }}>
+                  일정과 신청 안내를 확인해 주세요.
+                </span>
+                <span className="text-[13px] font-medium" style={{ color: "var(--heading)" }}>
+                  행사 자세히 보기 →
+                </span>
               </div>
             </button>
           )}
 
           <div className="flex items-center gap-2 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
-            <motion.button
-              whileTap={{ scale: 0.85 }}
-              onClick={onLike}
-              disabled={liking || refreshing}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px] disabled:opacity-50"
-              style={{
-                background: liked ? "rgba(237,92,72,0.15)" : "var(--border)",
-                color: liked ? "#ed5c48" : "var(--foreground)",
-              }}
-            >
-              <Heart size={14} fill={liked ? "#ed5c48" : "transparent"} /> {likes}
-            </motion.button>
+            {officialNotice ? null : (
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                onClick={onLike}
+                disabled={liking || refreshing}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px] disabled:opacity-50"
+                style={{
+                  background: liked ? "var(--danger-soft)" : "var(--border)",
+                  color: liked ? "var(--danger)" : "var(--foreground)",
+                }}
+              >
+                <Heart size={14} fill={liked ? "var(--danger)" : "transparent"} /> {likes}
+              </motion.button>
+            )}
             <button
               type="button"
               onClick={onScrollToComments}

@@ -87,19 +87,7 @@ export function AuthShell({
           </div>
         </motion.div>
 
-        <motion.div
-          style={{ transform: "translateZ(120px)" }}
-          className="hidden sm:flex absolute -right-6 -top-6 h-20 w-20 items-center justify-center rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.4)]"
-        >
-          <div className="absolute inset-0 rounded-2xl bg-[var(--surface-deep)]" />
-          <span
-            className="relative text-center"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, color: "var(--accent)", lineHeight: 1.3 }}
-          >
-            철마
-            <br />제일교회
-          </span>
-        </motion.div>
+        {/* 카드 우상단에 띄우던 교회명 배지는 카드·제목과 겹쳐 보여 제거 — 로고는 상단 헤더에 이미 있다. */}
       </motion.div>
     </section>
   );
@@ -149,11 +137,11 @@ export function FieldInput({
           onChange={onChange ? (e) => onChange(e.target.value) : undefined}
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
-          className="flex-1 bg-transparent outline-none placeholder:opacity-50"
+          className="flex-1 bg-transparent outline-none placeholder:opacity-70"
           style={{ color: "var(--foreground)" }}
         />
       </div>
-      {error && <p id={errorId} role="alert" className="mt-1.5 pl-1 text-[12px] text-[#ed5c48]">{error}</p>}
+      {error && <p id={errorId} role="alert" className="mt-1.5 pl-1 text-[12px]" style={{ color: "var(--danger)" }}>{error}</p>}
     </div>
   );
 }

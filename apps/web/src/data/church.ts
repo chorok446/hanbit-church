@@ -1,11 +1,22 @@
-/** 교회 기본 정보. 실제 값 확정 전 자리표시 — 교회 확인 후 이 파일만 고치면 된다. */
+/**
+ * 교회 기본 정보. 실제 인적사항(담임목사·주소·전화·이메일)은 리포에 커밋하지 않고
+ * apps/web/.env.local 의 NEXT_PUBLIC_CHURCH_* 로 관리한다 — 키 목록은 .env.example 참고.
+ * env 미설정 시 아래 자리표시 값으로 렌더링된다.
+ */
 export const CHURCH = {
-  name: "철마제일교회",
-  nameEn: "CHEOLMA JEIL CHURCH",
-  // TODO(교회 확인): 실제 주소·연락처로 교체
-  address: "부산광역시 기장군 철마면 (상세 주소 확인 중)",
-  phone: "051-000-0000",
-  email: "cheolmajeil@church.kr",
+  name: process.env.NEXT_PUBLIC_CHURCH_NAME ?? "철마제일교회",
+  nameEn: process.env.NEXT_PUBLIC_CHURCH_NAME_EN ?? "CHEOLMA JEIL CHURCH",
+  pastor: process.env.NEXT_PUBLIC_CHURCH_PASTOR ?? "",
+  address: process.env.NEXT_PUBLIC_CHURCH_ADDRESS ?? "부산광역시 기장군 철마면",
+  phone: process.env.NEXT_PUBLIC_CHURCH_PHONE ?? "051-000-0000",
+  email: process.env.NEXT_PUBLIC_CHURCH_EMAIL ?? "cheolmajeil@church.kr",
+} as const;
+
+/** SNS·채널 링크. env 미설정(빈 값)이면 푸터에서 해당 아이콘을 숨긴다. */
+export const CHURCH_LINKS = {
+  youtube: process.env.NEXT_PUBLIC_CHURCH_YOUTUBE ?? "",
+  instagram: process.env.NEXT_PUBLIC_CHURCH_INSTAGRAM ?? "",
+  kakao: process.env.NEXT_PUBLIC_CHURCH_KAKAO ?? "",
 } as const;
 
 export type WorshipService = {
@@ -13,14 +24,48 @@ export type WorshipService = {
   time: string;
   place: string;
   note?: string;
+  /** 예배 성격 한 줄 소개 (예배안내 상세에서만 노출) */
+  description?: string;
+  /** 참석 대상 (예: 전교인, 누구나) */
+  audience?: string;
+  /** 예상 예배 시간 (예: 약 70분) */
+  duration?: string;
 };
 
-// TODO(교회 확인): 실제 예배 시간표로 교체
+// TODO(교회 확인): 예배 설명·대상·예상 시간은 예시 값 — 교회 확인 후 확정.
 export const WORSHIP_SERVICES: WorshipService[] = [
-  { name: "주일 1부 예배", time: "주일 오전 9:00", place: "본당" },
-  { name: "주일 2부 예배", time: "주일 오전 11:00", place: "본당" },
-  { name: "수요 예배", time: "수요일 저녁 7:30", place: "본당" },
-  { name: "새벽 기도회", time: "매일 오전 5:30", place: "본당" },
+  {
+    name: "주일 1부 예배",
+    time: "주일 오전 11:00",
+    place: "본당",
+    description: "말씀과 찬양으로 함께 드리는 주일의 중심 예배입니다.",
+    audience: "전교인",
+    duration: "약 70분",
+  },
+  {
+    name: "주일 2부 예배",
+    time: "주일 오후 2:00",
+    place: "본당",
+    description: "오전 참석이 어려운 분들을 위해 오후에 드리는 예배입니다.",
+    audience: "전교인",
+    duration: "약 60분",
+  },
+  {
+    name: "수요 예배",
+    time: "수요일 저녁 8:30",
+    place: "본당",
+    description: "한 주의 중심에서 말씀을 깊이 묵상하는 주중 예배입니다.",
+    audience: "누구나",
+    duration: "약 60분",
+  },
+  {
+    name: "새벽 기도회",
+    time: "매일 오전 6:00",
+    place: "본당",
+    description: "하루를 말씀과 기도로 시작하는 새벽 기도회입니다.",
+    audience: "누구나",
+    duration: "약 40분",
+  },
 ];
 
 export type MonthlyVerse = {

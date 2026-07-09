@@ -21,10 +21,15 @@ import {
   validatePostCompose,
   POST_CATEGORIES,
   postCategoryLabel,
+  isStaffWriteCategory,
+  type PostAttachment,
   type PostCategory,
 } from "@/data/posts";
 import { POST_TEMPLATES, type PostTemplate } from "@/data/post-templates";
 import { PageShell } from "@/components/page-shell";
+import { PostAttachmentsEditor } from "@/components/post-attachments-editor";
+import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
+import { getAdminPermissions } from "@/app/admin/permissions";
 
 const EMPTY_VALUES: PostComposeValues = {
   text: "",
@@ -49,16 +54,32 @@ export default function PostCreateClient() {
 
   const [values, setValues] = useState<PostComposeValues>(EMPTY_VALUES);
   const [category, setCategory] = useState<PostCategory>("SHARING");
+  const [attachments, setAttachments] = useState<PostAttachment[]>([]);
   const [campaigns, setCampaigns] = useState<{ id: string; title: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<PostComposeField, string>>>({});
 
   const { name } = useAuthSession();
+  const { profile } = useCurrentUserProfile();
+  // 공지·주보·설교 작성 권한(최고 관리자·운영자·콘텐츠 관리자) — 백엔드 PostService 정책과 동일.
+  const isStaff = getAdminPermissions(profile?.role).canManageContent;
   const confirm = useConfirm();
   const authorName = name ?? "사용자";
 
+  // 공지·주보·설교(STAFF_WRITE)는 스태프 전용(서버 403). 비스태프에게는 선택지·예시를 숨기고,
+  // 초안 복원 등으로 이미 선택돼 있으면 렌더 시점에 나눔으로 취급한다(effect 내 setState 대신 파생값 사용).
+  // profile 로딩 전에는 되돌리지 않는다.
+  const visibleCategories = POST_CATEGORIES.filter(
+    (item) => isStaff || !isStaffWriteCategory(item.value),
+  );
+  const visibleTemplates = POST_TEMPLATES.filter(
+    (template) => isStaff || !isStaffWriteCategory(template.category),
+  );
+  const effectiveCategory: PostCategory =
+    profile && !isStaff && isStaffWriteCategory(category) ? "SHARING" : category;
+
   const { draftSaved, clearDraft } = usePostComposeDraft(
-    { ...values, category },
+    { ...values, category: effectiveCategory },
     (draft) => {
       if (restoredRef.current) return;
       restoredRef.current = true;
@@ -143,7 +164,12 @@ export default function PostCreateClient() {
     setFieldErrors({});
 
     try {
-      await apiPost("/api/posts", { ...validation.payload, category });
+      await apiPost("/api/posts", {
+        ...validation.payload,
+        category: effectiveCategory,
+        // 첨부는 스태프 카테고리(공지·주보·설교)에서만 — 서버 normalizeAttachments 와 동일.
+        attachments: isStaffWriteCategory(effectiveCategory) ? attachments : [],
+      });
       if (getSessionId() !== requestToken) return;
       clearDraft();
       toast.success("게시글이 등록되었습니다.");
@@ -187,7 +213,7 @@ export default function PostCreateClient() {
                 기록 예시로 시작하기 <span className="normal-case tracking-normal opacity-70">(선택)</span>
               </p>
               <ul className="flex flex-wrap gap-2" aria-label="기록 예시 목록">
-                {POST_TEMPLATES.map((template) => (
+                {visibleTemplates.map((template) => (
                   <li key={template.id}>
                     <button
                       type="button"
@@ -217,7 +243,7 @@ export default function PostCreateClient() {
               </label>
               <select
                 id="post-category"
-                value={category}
+                value={effectiveCategory}
                 onChange={(e) => setCategory(e.target.value as PostCategory)}
                 className="ui-control px-3 py-2.5"
                 style={{
@@ -226,13 +252,63 @@ export default function PostCreateClient() {
                   color: "var(--foreground)",
                 }}
               >
-                {POST_CATEGORIES.map((item) => (
+                {visibleCategories.map((item) => (
                   <option key={item.value} value={item.value}>
                     {item.label}
                   </option>
                 ))}
               </select>
             </div>
+
+            {effectiveCategory === "PRAYER" ? (
+              <div className="space-y-4">
+                <div
+                  className="rounded-xl border px-4 py-3 text-[13px] leading-relaxed"
+                  style={{ borderColor: "var(--border)", background: "var(--panel)", color: "var(--foreground)" }}
+                  role="note"
+                >
+                  <span aria-hidden>🙏</span> 기도요청에는 개인 정보가 포함될 수 있습니다. 실명·연락처 등 민감한
+                  내용은 빼고 작성해 주세요.
+                </div>
+
+                {/* TODO(백엔드: posts.visibility/anonymous 필드·접근 제어 도입 시 활성화)
+                    아래 공개 범위·익명 컨트롤은 아직 서버 스키마가 없어 "전체 공개"만 동작한다.
+                    준비 중 옵션을 활성화하려면 백엔드 필드 추가 후 payload 에 함께 실어야 한다. */}
+                <div>
+                  <label htmlFor="post-visibility" className="mb-2 block text-[12px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
+                    공개 범위
+                  </label>
+                  <select
+                    id="post-visibility"
+                    value="public"
+                    onChange={() => {}}
+                    className="ui-control px-3 py-2.5"
+                    style={{
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
+                      color: "var(--foreground)",
+                    }}
+                  >
+                    <option value="public">전체 공개</option>
+                    <option value="members" disabled>
+                      교인만 공개 (준비 중)
+                    </option>
+                    <option value="prayer-team" disabled>
+                      기도팀만 공개 (준비 중)
+                    </option>
+                  </select>
+                </div>
+
+                <label className="flex items-center gap-2 text-[13px] opacity-60" style={{ color: "var(--foreground)" }}>
+                  <input type="checkbox" disabled checked={false} readOnly className="accent-[var(--accent-strong)]" />
+                  익명으로 올리기 (준비 중)
+                </label>
+              </div>
+            ) : null}
+
+            {isStaff && isStaffWriteCategory(effectiveCategory) ? (
+              <PostAttachmentsEditor attachments={attachments} onChange={setAttachments} disabled={submitting} />
+            ) : null}
 
             <PostComposeForm
               values={values}
@@ -283,7 +359,7 @@ export default function PostCreateClient() {
                     {authorName}
                   </div>
                   <div className="text-[11px] opacity-60" style={{ color: "var(--foreground)" }}>
-                    방금 전 · {postCategoryLabel(category)}
+                    방금 전 · {postCategoryLabel(effectiveCategory)}
                   </div>
                 </div>
               </div>

@@ -1,26 +1,113 @@
 "use client";
 
-import { useRef } from "react";
+import { toast } from "sonner";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
-import { Pencil, Trash2, Users, Bookmark } from "lucide-react";
+import { Flag, Link2, MoreHorizontal, Pencil, Trash2, Users, Bookmark } from "lucide-react";
 import { progressPercent } from "@/lib/progress";
-import { campaignRecruitMeta, type Campaign } from "@/data/campaigns";
+import { campaignLifecycle, campaignProgressLabel, type Campaign } from "@/data/campaigns";
 import { Avatar } from "@/components/avatar";
-import { FallbackImage } from "@/components/fallback-image";
-import { ReportButton } from "@/components/report-button";
+import { ReportButton, type ReportButtonHandle } from "@/components/report-button";
 import { AdminModerationButton } from "@/components/admin-moderation-button";
-import { ShareButton } from "@/components/share-button";
+import { CampaignThumb } from "../campaign-thumb";
 
 function StatusBadge({ c }: { c: Campaign }) {
-  const m = campaignRecruitMeta(c);
+  const badge = campaignLifecycle(c).badge;
   return (
     <span
       className="text-[11px] tracking-[0.2em] px-3 py-1.5 rounded-full inline-block"
-      style={{ background: m.color, color: m.fg }}
+      style={{ background: badge.color, color: badge.fg }}
     >
-      {m.label}
+      {badge.label}
     </span>
+  );
+}
+
+/** posts 상세의 PostActionsMenu 패턴 — 링크 복사·신고를 ⋯ 메뉴로 묶어 상단 액션 위계를 낮춘다. */
+function CampaignActionsMenu({ campaignId, canReport }: { campaignId: string; canReport: boolean }) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const reportRef = useRef<ReportButtonHandle>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  const copyLink = async () => {
+    setOpen(false);
+    try {
+      await navigator.clipboard.writeText(location.href);
+      toast.success("링크를 복사했어요.");
+    } catch {
+      toast.error("링크 복사에 실패했습니다.");
+    }
+  };
+
+  const menuItemClass =
+    "flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-[13px] transition-colors hover:bg-[rgba(var(--ink-rgb),0.05)]";
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="행사 메뉴"
+        onClick={() => setOpen((value) => !value)}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-[rgba(var(--ink-rgb),0.06)]"
+        style={{ color: "var(--foreground-muted)" }}
+      >
+        <MoreHorizontal size={17} />
+      </button>
+      {open ? (
+        <div
+          role="menu"
+          aria-label="행사 메뉴"
+          className="absolute right-0 top-full z-20 mt-1 w-36 overflow-hidden rounded-xl border py-1 shadow-xl"
+          style={{ background: "var(--panel)", borderColor: "var(--border)" }}
+        >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => void copyLink()}
+            className={menuItemClass}
+            style={{ color: "var(--foreground)" }}
+          >
+            <Link2 size={13} aria-hidden /> 링크 복사
+          </button>
+          {canReport ? (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                reportRef.current?.open();
+              }}
+              className={menuItemClass}
+              style={{ color: "var(--danger)" }}
+            >
+              <Flag size={13} aria-hidden /> 신고하기
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+      {canReport ? (
+        <ReportButton ref={reportRef} hideTrigger targetType="CAMPAIGN" targetId={campaignId} ownedByMe={false} />
+      ) : null}
+    </div>
   );
 }
 
@@ -45,6 +132,16 @@ export function CampaignHeaderCard({
   const rY = useTransform(sx, [-0.5, 0.5], [-6, 6]);
   const rX = useTransform(sy, [-0.5, 0.5], [5, -5]);
   const pct = progressPercent(c.joined, c.capacity);
+  const lifecycle = campaignLifecycle(c);
+  const progressLabel = campaignProgressLabel(c);
+  // TODO(데이터: 장소·대상·참가비 필드 백엔드 추가 필요) — 값이 없는 행은 "추후 안내" 없이 아예 숨긴다.
+  const optionalRows: { label: string; value: string }[] = [
+    { label: "장소", value: c.place?.trim() ?? "" },
+    { label: "대상", value: c.audience?.trim() ?? "" },
+    { label: "참가비", value: c.fee?.trim() ?? "" },
+    { label: "준비물", value: c.supplies?.trim() ?? "" },
+    { label: "문의", value: c.contact?.trim() ?? "" },
+  ].filter((row) => row.value);
 
   return (
     <div style={{ perspective: 1600 }}>
@@ -70,8 +167,8 @@ export function CampaignHeaderCard({
         className="rounded-3xl border overflow-hidden shadow-[0_40px_80px_-30px_rgba(0,0,0,0.4)]"
       >
         <div className="grid grid-cols-1 md:grid-cols-[400px_1fr]">
-          <div className="relative aspect-square md:aspect-auto overflow-hidden">
-            <FallbackImage src={c.thumb} alt={`${c.title} 행사 이미지`} className="w-full h-full object-cover" />
+          <div className="relative aspect-[4/3] sm:aspect-square md:aspect-auto overflow-hidden">
+            <CampaignThumb src={c.thumb} alt={`${c.title} 행사 이미지`} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-tr from-[var(--surface-dark)]/40 to-transparent" />
             <div className="absolute top-4 left-4 flex items-center gap-2" style={{ transform: "translateZ(50px)" }}>
               <StatusBadge c={c} />
@@ -82,7 +179,7 @@ export function CampaignHeaderCard({
               ) : null}
             </div>
           </div>
-          <div className="p-8 flex flex-col gap-6">
+          <div className="p-6 sm:p-8 flex flex-col gap-6">
             <div className="flex items-start justify-between gap-4">
               <h1
                 style={{
@@ -111,13 +208,7 @@ export function CampaignHeaderCard({
                   </button>
                 ) : null}
                 <AdminModerationButton targetType="CAMPAIGN" targetId={c.id} />
-                <ReportButton targetType="CAMPAIGN" targetId={c.id} ownedByMe={c.ownedByMe} className="!h-9 !px-3" />
-                <ShareButton
-                  title={c.title}
-                  text={c.summary}
-                  className="flex h-9 w-9 items-center justify-center rounded-full"
-                  style={{ background: "var(--border)", color: "var(--foreground)" }}
-                />
+                <CampaignActionsMenu campaignId={c.id} canReport={!c.ownedByMe} />
               </div>
             </div>
 
@@ -125,7 +216,7 @@ export function CampaignHeaderCard({
               {c.summary}
             </p>
 
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[13px]" style={{ color: "var(--foreground)" }}>
+            <div className="grid grid-cols-1 gap-x-6 gap-y-3 text-[13px] sm:grid-cols-2" style={{ color: "var(--foreground)" }}>
               <div>
                 <div className="opacity-60 mb-0.5">모집 기간</div>
                 <div>{c.recruitStart} ~ {c.recruitEnd}</div>
@@ -136,12 +227,14 @@ export function CampaignHeaderCard({
               </div>
               <div>
                 <div className="opacity-60 mb-0.5">모집 인원</div>
-                <div>{c.capacity}명</div>
+                <div>{c.capacity > 0 ? `${c.joined}명 신청 / ${c.capacity}명 모집` : `${c.joined}명 신청 · 인원 미정`}</div>
               </div>
-              <div>
-                <div className="opacity-60 mb-0.5">현재</div>
-                <div>{c.joined}명 참여 중</div>
-              </div>
+              {optionalRows.map((row) => (
+                <div key={row.label}>
+                  <div className="opacity-60 mb-0.5">{row.label}</div>
+                  <div>{row.value}</div>
+                </div>
+              ))}
             </div>
 
             <div>
@@ -154,12 +247,13 @@ export function CampaignHeaderCard({
                   animate={{ width: `${pct}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
                   className="h-full rounded-full"
-                  style={{ background: campaignRecruitMeta(c).color }}
+                  style={{ background: lifecycle.badge.color }}
                 />
               </div>
               <div className="flex justify-between text-[12px] mt-2" style={{ color: "var(--foreground-muted)" }}>
-                <span>{Math.round(pct)}% 달성</span>
-                <span>{c.daysLeftLabel}</span>
+                <span>{progressLabel ?? "모집 인원 미정"}</span>
+                {/* D-day 기준은 campaignLifecycle 주석 참고 — 카드와 동일 기준 */}
+                <span>{lifecycle.dday}</span>
               </div>
             </div>
 
@@ -250,8 +344,8 @@ export function CampaignStatusManagement({
           aria-label={label}
           className="rounded-full px-5 py-2 text-[13px] font-medium disabled:cursor-not-allowed disabled:opacity-45"
           style={{
-            background: target === "closed" ? "rgba(237,92,72,0.16)" : "var(--accent)",
-            color: target === "closed" ? "#ed5c48" : "var(--surface-dark)",
+            background: target === "closed" ? "var(--danger-soft)" : "var(--accent)",
+            color: target === "closed" ? "var(--danger)" : "var(--surface-dark)",
           }}
         >
           {updating ? "처리 중…" : label}
@@ -263,7 +357,7 @@ export function CampaignStatusManagement({
             disabled={disabled}
             aria-label="행사 삭제"
             className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-[13px] font-medium disabled:cursor-not-allowed disabled:opacity-45"
-            style={{ background: "rgba(237,92,72,0.16)", color: "#ed5c48" }}
+            style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
           >
             <Trash2 size={14} /> {deleting ? "삭제 중…" : "행사 삭제"}
           </button>

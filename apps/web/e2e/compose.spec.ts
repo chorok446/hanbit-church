@@ -43,14 +43,17 @@ test("프로필 이미지를 등록하면 기존 글의 피드 아바타에 반�
   await page.getByRole("button", { name: "게시하기" }).click();
   await page.waitForURL("**/feed");
 
-  // 실제 로드 가능한 URL 이어야 한다(onError 시 기본 아바타로 떨어짐) — 앱 자신의 favicon 사용
+  // 실제 로드 가능한 URL 이어야 한다(onError 시 기본 아바타로 떨어짐) — 리브랜딩으로 favicon.ico 가
+  // 사라졌으므로(app/icon.svg 로 대체) public/ 의 정적 svg 를 사용한다.
   await page.goto("/profile/edit");
-  await page.getByLabel("프로필 이미지").fill("http://localhost:3000/favicon.ico");
+  await page.getByLabel("프로필 이미지").fill("http://localhost:3000/globe.svg");
   await page.getByRole("button", { name: "저장하기" }).click();
   await page.waitForURL("**/mypage");
 
   await page.goto("/feed");
   await expect(page.getByText(text).first()).toBeVisible();
+  // 기본 "리스트" 뷰(PostBoardList)에는 아바타가 없다 — 아바타가 렌더되는 갤러리 뷰로 전환해 확인.
+  await page.getByRole("tab", { name: "갤러리" }).click();
   await expect(page.locator(`img[alt="${account.nickname} 프로필 이미지"]`).first()).toBeVisible();
 });
 

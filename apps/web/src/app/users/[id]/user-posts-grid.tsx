@@ -67,6 +67,7 @@ export function UserPostsGrid({ userId }: { userId: number }) {
       identityKey={`user-posts:${userId}`}
       page={page}
       onPageChange={setPage}
+      requireAuth={false} // 공개 프로필 — 비로그인 방문자도 게시글을 볼 수 있다
       fetcher={(p) => fetchUserPostsPage(userId, p)}
       loadingLabel="게시글을 불러오는 중입니다."
       errorLabel="게시글을 불러오지 못했습니다."

@@ -19,8 +19,8 @@ const RANGE_OPTIONS = [7, 30, 90] as const;
 const SERIES = [
   { key: "signups", label: "가입", color: "var(--accent)" },
   { key: "posts", label: "게시글", color: "var(--accent-strong)" },
-  { key: "campaigns", label: "행사", color: "#d9a441" },
-  { key: "reports", label: "신고", color: "#ed5c48" },
+  { key: "campaigns", label: "행사", color: "var(--warning)" },
+  { key: "reports", label: "신고", color: "var(--danger)" },
 ] as const;
 
 // 저장된 결과의 key 가 현재 요청 key 와 다르면 로딩 중으로 간주한다(dashboard-client 패턴).
@@ -61,10 +61,15 @@ export function StatsChartSection() {
       style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="inline-flex items-center gap-2 text-[14px] font-semibold">
-          <TrendingUp size={16} aria-hidden style={{ color: "var(--accent-secondary)" }} />
-          일별 추이
-        </h2>
+        <div>
+          <h2 className="inline-flex items-center gap-2 text-[14px] font-semibold">
+            <TrendingUp size={16} aria-hidden style={{ color: "var(--accent-secondary)" }} />
+            일별 추이
+          </h2>
+          <p className="mt-1 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
+            최근 {days}일 동안의 가입, 게시글, 신고, 행사 등록 추이입니다.
+          </p>
+        </div>
         <div className="flex gap-1" role="group" aria-label="조회 기간">
           {RANGE_OPTIONS.map((option) => (
             <button
@@ -101,8 +106,18 @@ export function StatsChartSection() {
             다시 시도
           </button>
         </p>
+      ) : result.daily.every((day) => day.signups + day.posts + day.campaigns + day.reports === 0) ? (
+        // 전 구간 합계가 0이면 빈 차트 대신 안내 문구를 보여준다.
+        <p className="py-10 text-center text-[13px]" style={{ color: "var(--foreground-muted)" }}>
+          아직 충분한 활동 데이터가 없습니다. 활동이 쌓이면 추이가 표시됩니다.
+        </p>
       ) : (
-        <div className="h-64">
+        // min-w-0: 그리드/플렉스 안에서 차트가 부모 폭을 밀어내지 않게 한다(모바일 가로 스크롤 방지).
+        <div
+          className="h-64 w-full min-w-0"
+          role="img"
+          aria-label={`최근 ${days}일 동안의 가입, 게시글, 신고, 행사 등록 일별 추이 차트`}
+        >
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={result.daily} margin={{ top: 4, right: 8, bottom: 0, left: -18 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />

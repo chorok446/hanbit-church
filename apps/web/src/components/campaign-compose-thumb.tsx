@@ -5,15 +5,15 @@ import { useId, useState } from "react";
 import { Image as ImageIcon, Link2, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { ImageFileUploadButton } from "@/components/image-file-upload-button";
-import { fashionPhotos, marketPhotos, naturePhotos, objectPhotos, workshopPhotos } from "@/data/photos";
+import { biblePhotos, childrenPhotos, communityPhotos, fellowshipPhotos, worshipPhotos } from "@/data/photos";
 import { isValidCampaignImageUrl } from "@/data/campaigns";
 
 const thumbPresets = [
-  workshopPhotos[0],
-  naturePhotos[1],
-  fashionPhotos[0],
-  objectPhotos[0],
-  marketPhotos[1],
+  worshipPhotos[0],
+  communityPhotos[1],
+  biblePhotos[0],
+  childrenPhotos[0],
+  fellowshipPhotos[0],
 ];
 
 function ImagePreview({ src }: { src: string }) {

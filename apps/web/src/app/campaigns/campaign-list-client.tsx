@@ -18,13 +18,17 @@ import { getSessionId } from "@/lib/auth";
 import { ApiError, apiGet } from "@/lib/api";
 import { beginAuthedRequest, clearSessionIfUnauthorized, staleByIdentity } from "@/lib/authed-request";
 import { useAuthSession } from "@/lib/use-auth-session";
+import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
+import { getAdminPermissions } from "@/app/admin/permissions";
 import {
   useCanonicalUrl,
   parsePageParam,
   buildCampaignsHref,
+  parseCampaignListView,
   type CampaignListUrlState,
 } from "@/lib/use-url-query";
 import { PageShell } from "@/components/page-shell";
+import { CampaignCalendarView } from "./campaign-calendar";
 import { CampaignListCard } from "./campaign-list-cards";
 import {
   CampaignListFilters,
@@ -46,6 +50,10 @@ export default function CampaignListClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { sessionId: token } = useAuthSession();
+  // 행사 개설은 관리자 전용. TODO(권한: 사역 담당자 역할 도입 시 확장)
+  const { profile } = useCurrentUserProfile();
+  // 행사 개설 권한(최고 관리자·운영자·사역 담당자).
+  const canCreate = getAdminPermissions(profile?.role).canManageEvents;
   const [retryTick, setRetryTick] = useState(0);
   const generationRef = useRef(0);
 
@@ -57,6 +65,7 @@ export default function CampaignListClient() {
     ...readCampaignDateRangeFilters(searchParams),
     sort: parseCampaignListSort(searchParams.get("sort")),
     page: parsePageParam(searchParams.get("page")),
+    view: parseCampaignListView(searchParams.get("view")),
   }), [searchParams]);
 
   const canonicalHref = buildCampaignsHref(urlState);
@@ -94,6 +103,8 @@ export default function CampaignListClient() {
 
   useEffect(() => {
     if (getSessionId() !== token) return;
+    // 캘린더 보기는 CampaignCalendarView 가 전체 목록(/api/campaigns)을 따로 불러온다.
+    if (urlState.view === "calendar") return;
 
     const params = new URLSearchParams();
     if (urlState.query) params.set("q", urlState.query);
@@ -141,6 +152,7 @@ export default function CampaignListClient() {
     urlState.runStartFrom,
     urlState.runStartTo,
     urlState.sort,
+    urlState.view,
   ]);
 
   const response = currentState.response;
@@ -159,7 +171,7 @@ export default function CampaignListClient() {
       <div className="relative mx-auto max-w-6xl">
         <motion.div className="mb-12 text-center" style={{ y: titleY }}>
           <p className="mb-3 uppercase tracking-[0.4em]" style={{ color: "var(--accent)", fontSize: 11 }}>
-            Campaigns
+            Events &amp; Ministry
           </p>
           <h1
             style={{
@@ -168,25 +180,76 @@ export default function CampaignListClient() {
               color: "var(--foreground)",
             }}
           >
-            함께 만드는 작은 변화
+            행사·사역
           </h1>
           <p className="mx-auto mt-4 max-w-xl" style={{ color: "var(--foreground-muted)" }}>
-            모집중인 행사에 참여하거나, 다가올 행사를 미리 둘러보세요.
+            함께 예배하고, 섬기고, 교제하는 자리에 초대합니다.
+            <br className="hidden sm:block" />
+            모집 중인 행사와 사역을 확인하고 참여 신청을 해보세요.
           </p>
         </motion.div>
 
+        {/* 카드/캘린더 보기 전환 — 기본은 카드, `?view=calendar` 로 딥링크 가능 */}
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div
+            className="flex rounded-full border p-0.5"
+            role="tablist"
+            aria-label="보기 형식"
+            style={{ background: "var(--card)", borderColor: "var(--border)" }}
+          >
+            {([
+              { value: "card", label: "카드 보기" },
+              { value: "calendar", label: "캘린더 보기" },
+            ] as const).map((tab) => {
+              const active = urlState.view === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => updateUrl({ view: tab.value })}
+                  className="rounded-full px-3.5 py-1.5 text-[12px] font-medium"
+                  style={
+                    active
+                      ? { background: "var(--cta-bg)", color: "var(--cta-fg)" }
+                      : { color: "var(--foreground-muted)" }
+                  }
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+          {/* 카드 보기에서는 아래 결과 행에 같은 버튼이 있어 캘린더 보기에서만 노출한다. */}
+          {urlState.view === "calendar" && canCreate ? (
+            <button
+              type="button"
+              onClick={() => router.push("/campaigns/new")}
+              className="shrink-0 rounded-full px-4 py-2 text-[13px] font-medium transition-transform hover:-translate-y-0.5"
+              style={{ background: "var(--accent)", color: "var(--surface-dark)" }}
+            >
+              + 행사 만들기
+            </button>
+          ) : null}
+        </div>
+
+        {urlState.view === "calendar" ? <CampaignCalendarView /> : (
+        <>
         <div className="mb-4 flex items-center justify-between gap-4">
           <p className="text-[13px]" style={{ color: "var(--foreground-muted)" }}>
             {currentState.status === "success" && response ? `검색 결과 ${response.totalElements.toLocaleString()}개` : "행사 검색"}
           </p>
-          <button
-            type="button"
-            onClick={() => router.push("/campaigns/new")}
-            className="shrink-0 rounded-full px-4 py-2 text-[13px] font-medium transition-transform hover:-translate-y-0.5"
-            style={{ background: "var(--accent)", color: "var(--surface-dark)" }}
-          >
-            + 행사 만들기
-          </button>
+          {canCreate ? (
+            <button
+              type="button"
+              onClick={() => router.push("/campaigns/new")}
+              className="shrink-0 rounded-full px-4 py-2 text-[13px] font-medium transition-transform hover:-translate-y-0.5"
+              style={{ background: "var(--accent)", color: "var(--surface-dark)" }}
+            >
+              + 행사 만들기
+            </button>
+          ) : null}
         </div>
 
         <CampaignListFilters
@@ -241,7 +304,7 @@ export default function CampaignListClient() {
                 >
                   전체 행사 보기
                 </button>
-              ) : (
+              ) : canCreate ? (
                 <button
                   type="button"
                   onClick={() => router.push("/campaigns/new")}
@@ -250,7 +313,7 @@ export default function CampaignListClient() {
                 >
                   행사 만들기
                 </button>
-              )
+              ) : null
             }
           />
         ) : null}
@@ -259,24 +322,30 @@ export default function CampaignListClient() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {response.content.map((campaign, i) => (
               <StaggerItem key={campaign.id} index={i}>
-                <CampaignListCard
-                  campaign={campaign}
-                  onOpen={() => router.push(`/campaigns/${campaign.id}`)}
-                />
+                <CampaignListCard campaign={campaign} />
               </StaggerItem>
             ))}
           </div>
         ) : null}
 
         {currentState.status === "success" && response && response.totalElements > 0 ? (
-          <Pagination
-            page={response.page}
-            totalPages={response.totalPages}
-            totalElements={response.totalElements}
-            className="mt-10"
-            onPageChange={(page) => updateUrl({ page })}
-          />
+          response.totalPages > 1 ? (
+            <Pagination
+              page={response.page}
+              totalPages={response.totalPages}
+              totalElements={response.totalElements}
+              className="mt-10"
+              onPageChange={(page) => updateUrl({ page })}
+            />
+          ) : (
+            // 1페이지뿐이면 이전/다음 버튼 없이 총 개수만 낮은 위계로 표시한다.
+            <p className="mt-10 text-center text-[12px] opacity-65" style={{ color: "var(--foreground)" }}>
+              총 {response.totalElements.toLocaleString()}개
+            </p>
+          )
         ) : null}
+        </>
+        )}
       </div>
     </PageShell>
   );

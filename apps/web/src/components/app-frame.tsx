@@ -13,7 +13,8 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
   return (
     <ConfirmProvider>
-      <div className="relative w-full transition-colors pb-14 md:pb-0" style={{ background: "var(--surface)" }}>
+      {/* min-h-screen flex-col + 본문 flex-1 — 콘텐츠가 짧아도 푸터가 뷰포트 하단 이하에 붙는다. */}
+      <div className="relative flex min-h-screen w-full flex-col transition-colors pb-14 md:pb-0" style={{ background: "var(--surface)" }}>
         {/* 키보드 사용자용: 고정 헤더의 링크들을 건너뛰고 본문으로 이동 */}
         <a
           href="#main-content"
@@ -24,7 +25,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
         </a>
         <SiteHeader />
         <ThemeToggle />
-        <div id="main-content" tabIndex={-1} className="outline-none">
+        <div id="main-content" tabIndex={-1} className="flex-1 outline-none">
           {children}
         </div>
         <Footer />

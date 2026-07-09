@@ -27,10 +27,11 @@ function dateAfter(days: number): string {
 
 test("로그아웃하면 세션이 끊기고 재로그인하면 복구된다", async ({ page }) => {
   const account = await signup(page, "e2e-auth");
-  await expect(page.getByRole("button", { name: "로그아웃" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "내 계정 메뉴" })).toBeVisible();
 
-  // 로그아웃 → 비로그인 헤더 (서버 쿠키 만료 응답까지 await)
-  await page.getByRole("button", { name: "로그아웃" }).click();
+  // 로그아웃(프로필 드롭다운) → 비로그인 헤더 (서버 쿠키 만료 응답까지 await)
+  await page.getByRole("button", { name: "내 계정 메뉴" }).click();
+  await page.getByRole("menuitem", { name: "로그아웃" }).click();
   await expect(page.getByRole("link", { name: "로그인", exact: true })).toBeVisible();
 
   // 인증 쿠키가 만료됐어야 한다 — 마이페이지가 비로그인 안내를 보여야 함
@@ -38,7 +39,7 @@ test("로그아웃하면 세션이 끊기고 재로그인하면 복구된다", a
   await expect(page.getByText("마이페이지를 보려면 로그인이 필요합니다.")).toBeVisible();
 
   await login(page, account);
-  await expect(page.getByRole("button", { name: "로그아웃" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "내 계정 메뉴" })).toBeVisible();
 
   // 새 쿠키로 사용자별 페이지 접근
   await page.goto("/mypage");
@@ -59,7 +60,8 @@ test("행사를 개설해 모집을 시작하면 참여와 취소가 된다", as
   await page.waitForURL("**/campaigns/c-*");
 
   // 신규 행사는 upcoming → 개설자가 모집을 시작해야 참여 가능
-  await page.getByRole("button", { name: "모집 시작" }).click();
+  // exact: CTA 의 disabled "모집 시작 전입니다" 버튼과 substring 충돌 방지
+  await page.getByRole("button", { name: "모집 시작", exact: true }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "확인" }).click();
 
   // 참여

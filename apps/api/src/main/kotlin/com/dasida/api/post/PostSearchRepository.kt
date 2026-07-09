@@ -18,7 +18,8 @@ enum class PostSearchSort {
 data class PostSearchCondition(
     val query: String?,
     val tag: String?,
-    val category: String? = null,
+    /** 카테고리 필터(OR). null/빈 목록 = 전체. */
+    val categories: List<String>? = null,
     val campaignOnly: Boolean,
     val authorUserIds: List<Long>?,
     val sort: PostSearchSort,
@@ -52,8 +53,8 @@ class QuerydslPostSearchRepository(
                     .or(post.author.name.lower().like(pattern, QUERYDSL_LIKE_ESCAPE)),
             )
         }
-        condition.category?.let { category ->
-            predicates.and(post.category.eq(category))
+        condition.categories?.takeIf { it.isNotEmpty() }?.let { categories ->
+            predicates.and(post.category.`in`(categories))
         }
         condition.tag?.let { tag ->
             // tags 는 JSON 배열 컬럼. 직렬화 문자열에서 따옴표 감싼 원소 일치로 특정 태그를 찾는다.
