@@ -1,7 +1,7 @@
 // 교회 일정 캘린더 데이터 계층.
-// 소스는 두 곳: 예배 시간표(church.ts WORSHIP_SERVICES 반복 일정)와 행사·사역(백엔드 Campaign).
-// D-day·상태 라벨은 campaignLifecycle() 단일 기준을 재사용한다(카드·상세·캘린더 동일 기준).
-import { campaignLifecycle, isIsoDate, type Campaign } from "@/data/campaigns";
+// 소스는 두 곳: 예배 시간표(church.ts WORSHIP_SERVICES 반복 일정)와 행사·사역(백엔드 Event).
+// D-day·상태 라벨은 eventLifecycle() 단일 기준을 재사용한다(카드·상세·캘린더 동일 기준).
+import { eventLifecycle, isIsoDate, type Event } from "@/data/events";
 import { WORSHIP_SERVICES, type WorshipService } from "@/data/church";
 
 export type CalendarEventType =
@@ -15,7 +15,7 @@ export type CalendarEventType =
   | "holiday" // 대한민국 공휴일 (정적 테이블 — 클릭 불가)
   | "etc";
 
-export type CalendarEventSource = "worship" | "campaign" | "manual" | "holiday";
+export type CalendarEventSource = "worship" | "event" | "manual" | "holiday";
 
 export type CalendarEvent = {
   id: string;
@@ -29,12 +29,12 @@ export type CalendarEvent = {
   startTime?: string;
   location?: string;
   source: CalendarEventSource;
-  /** source 가 campaign 이면 campaign id. */
+  /** source 가 event 이면 event id. */
   sourceId?: string;
-  /** 클릭 시 이동 경로 (행사 → /campaigns/{id}, 예배 → /worship). */
+  /** 클릭 시 이동 경로 (행사 → /events/{id}, 예배 → /worship). */
   href?: string;
   isRecurring?: boolean;
-  /** 상태·D-day 라벨. 행사 계열은 campaignLifecycle().dday 를 그대로 쓴다. */
+  /** 상태·D-day 라벨. 행사 계열은 eventLifecycle().dday 를 그대로 쓴다. */
   status?: string;
 };
 
@@ -236,44 +236,44 @@ export function holidayEventsForRange(start: Date, end: Date): CalendarEvent[] {
   return events;
 }
 
-// ─── 행사(Campaign) → 캘린더 이벤트 ───
+// ─── 행사(Event) → 캘린더 이벤트 ───
 
 /**
  * 행사 하나를 캘린더 이벤트로 변환한다.
  * - 진행 기간(runStart~runEnd): 범위 이벤트 1개 (월간 그리드에서는 각 날짜에 개별 표시).
  * - 신청 마감(recruitEnd): 종일 마감 이벤트 1개.
  * - 모집 시작일은 캘린더 노이즈라 생략(스펙) — D-day 라벨이 모집 시작을 이미 안내한다.
- * status 라벨은 campaignLifecycle() 재사용 — 카드·상세와 동일 기준.
+ * status 라벨은 eventLifecycle() 재사용 — 카드·상세와 동일 기준.
  */
-export function mapCampaignToCalendarEvents(campaign: Campaign): CalendarEvent[] {
-  const lifecycle = campaignLifecycle(campaign);
+export function mapEventToCalendarEvents(event: Event): CalendarEvent[] {
+  const lifecycle = eventLifecycle(event);
   const events: CalendarEvent[] = [];
-  const href = `/campaigns/${campaign.id}`;
+  const href = `/events/${event.id}`;
 
-  if (isIsoDate(campaign.runStart)) {
-    const endDate = isIsoDate(campaign.runEnd) && campaign.runEnd > campaign.runStart ? campaign.runEnd : undefined;
+  if (isIsoDate(event.runStart)) {
+    const endDate = isIsoDate(event.runEnd) && event.runEnd > event.runStart ? event.runEnd : undefined;
     events.push({
-      id: `campaign-${campaign.id}-run`,
-      title: campaign.title,
+      id: `event-${event.id}-run`,
+      title: event.title,
       type: "event",
-      startDate: campaign.runStart,
+      startDate: event.runStart,
       endDate,
-      location: campaign.place ?? undefined,
-      source: "campaign",
-      sourceId: campaign.id,
+      location: event.place ?? undefined,
+      source: "event",
+      sourceId: event.id,
       href,
       status: lifecycle.dday,
     });
   }
 
-  if (isIsoDate(campaign.recruitEnd) && lifecycle.phase !== "ended") {
+  if (isIsoDate(event.recruitEnd) && lifecycle.phase !== "ended") {
     events.push({
-      id: `campaign-${campaign.id}-deadline`,
-      title: `${campaign.title} 신청 마감`,
+      id: `event-${event.id}-deadline`,
+      title: `${event.title} 신청 마감`,
       type: "deadline",
-      startDate: campaign.recruitEnd,
-      source: "campaign",
-      sourceId: campaign.id,
+      startDate: event.recruitEnd,
+      source: "event",
+      sourceId: event.id,
       href,
       status: lifecycle.dday,
     });
@@ -367,7 +367,7 @@ export type MonthEventsOptions = {
 
 /** 해당 월의 날짜별 이벤트 맵 (공휴일 + 예배 반복 + 행사 + extraEvents). key = yyyy-MM-dd. */
 export function getEventsForMonth(
-  campaigns: Campaign[],
+  events: Event[],
   year: number,
   monthIndex: number,
   options: MonthEventsOptions = {},
@@ -377,9 +377,9 @@ export function getEventsForMonth(
   const worship = mapWorshipToCalendarEvents(year, monthIndex).filter(
     (event) => options.includeDaily || event.type !== "prayer",
   );
-  const campaignEvents = campaigns.flatMap(mapCampaignToCalendarEvents);
+  const eventEvents = events.flatMap(mapEventToCalendarEvents);
   return expandByDate(
-    [...holidayEventsForRange(first, last), ...worship, ...campaignEvents, ...(options.extraEvents ?? [])],
+    [...holidayEventsForRange(first, last), ...worship, ...eventEvents, ...(options.extraEvents ?? [])],
     first,
     last,
   );
@@ -392,7 +392,7 @@ export type WeekDayEvents = { dateKey: string; events: CalendarEvent[] };
  * 새벽 기도회(매일 반복)도 포함한다. 일정이 없는 날짜는 결과에서 제외.
  */
 export function getEventsForWeek(
-  campaigns: Campaign[],
+  events: Event[],
   today: Date = new Date(),
   extraEvents: CalendarEvent[] = [],
 ): WeekDayEvents[] {
@@ -400,9 +400,9 @@ export function getEventsForWeek(
   // 오늘이 일요일이면 오늘 하루, 아니면 다가오는 일요일까지.
   const end = start.getDay() === 0 ? start : addDays(start, 7 - start.getDay());
   const worship = worshipEventsForRange(start, end);
-  const campaignEvents = campaigns.flatMap(mapCampaignToCalendarEvents);
+  const eventEvents = events.flatMap(mapEventToCalendarEvents);
   const byDate = expandByDate(
-    [...holidayEventsForRange(start, end), ...worship, ...campaignEvents, ...extraEvents],
+    [...holidayEventsForRange(start, end), ...worship, ...eventEvents, ...extraEvents],
     start,
     end,
   );

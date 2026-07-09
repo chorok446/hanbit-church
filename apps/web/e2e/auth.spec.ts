@@ -50,14 +50,14 @@ test("행사를 개설해 모집을 시작하면 참여와 취소가 된다", as
   await signup(page, "e2e-auth");
 
   // 개설 — 템플릿으로 필수 텍스트를 채우고, 날짜는 오늘 기준으로 참여 가능하게 지정
-  await page.goto("/campaigns/new");
+  await page.goto("/events/new");
   await page.getByRole("button", { name: /템플릿 적용/ }).first().click();
   await page.getByLabel("모집 시작일").fill(dateAfter(0));
   await page.getByLabel("모집 종료일").fill(dateAfter(7));
   await page.getByLabel("진행 시작일").fill(dateAfter(8));
   await page.getByLabel("진행 종료일").fill(dateAfter(14));
   await page.getByRole("button", { name: "행사 등록" }).click();
-  await page.waitForURL("**/campaigns/c-*");
+  await page.waitForURL("**/events/c-*");
 
   // 신규 행사는 upcoming → 개설자가 모집을 시작해야 참여 가능
   // exact: CTA 의 disabled "모집 시작 전입니다" 버튼과 substring 충돌 방지

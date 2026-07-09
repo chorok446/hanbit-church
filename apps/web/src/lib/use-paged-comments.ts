@@ -35,7 +35,7 @@ type TargetLocationState = {
 };
 
 export type UsePagedCommentsArgs<C extends { id: string; text: string }> = {
-  /** postId 또는 campaignId. 요청 identity 의 기준. */
+  /** postId 또는 eventId. 요청 identity 의 기준. */
   scopeId: string;
   /** 현재 페이지(0-base). URL 이든 로컬 state 든 호출자가 소유한다. */
   page: number;

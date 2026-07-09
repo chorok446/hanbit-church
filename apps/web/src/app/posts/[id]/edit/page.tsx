@@ -41,9 +41,9 @@ export default function PostEditPage() {
     text: "",
     images: [],
     tags: [],
-    campaign: "",
+    event: "",
   });
-  const [campaigns, setCampaigns] = useState<{ id: string; title: string }[]>([]);
+  const [events, setEvents] = useState<{ id: string; title: string }[]>([]);
   const [category, setCategory] = useState<PostCategory>("SHARING");
   const [attachments, setAttachments] = useState<PostAttachment[]>([]);
   const { profile } = useCurrentUserProfile();
@@ -58,9 +58,9 @@ export default function PostEditPage() {
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    apiGet<{ id: string; title: string }[]>("/api/campaigns")
-      .then(setCampaigns)
-      .catch(() => setCampaigns([]));
+    apiGet<{ id: string; title: string }[]>("/api/events")
+      .then(setEvents)
+      .catch(() => setEvents([]));
   }, []);
 
   useEffect(() => {
@@ -105,7 +105,7 @@ export default function PostEditPage() {
       values.text.trim().length > 0 ||
       values.images.length > 0 ||
       values.tags.length > 0 ||
-      values.campaign.trim().length > 0;
+      values.event.trim().length > 0;
     if (!hasContent) return;
 
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -265,11 +265,11 @@ export default function PostEditPage() {
         <PostComposeForm
           values={values}
           onChange={setValues}
-          campaigns={campaigns}
+          events={events}
           fieldErrors={fieldErrors}
           onFieldErrorClear={clearFieldError}
           textInputId="edit-post-text"
-          campaignInputId="edit-post-campaign"
+          eventInputId="edit-post-event"
         />
 
         <div className="flex flex-col gap-3 pt-2 sm:flex-row">

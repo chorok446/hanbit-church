@@ -13,14 +13,14 @@ export type PostComposeValues = {
   text: string;
   images: string[];
   tags: string[];
-  campaign: string;
+  event: string;
 };
 
 export type PostComposePayload = {
   text: string;
   images: string[];
   tags: string[];
-  campaignId: string | null;
+  eventId: string | null;
 };
 
 /** 서버 PostCategory 와 동일한 값. */
@@ -154,7 +154,7 @@ export function validatePostCompose(values: PostComposeValues): PostComposeValid
       text: html,
       images,
       tags,
-      campaignId: values.campaign.trim() || null,
+      eventId: values.event.trim() || null,
     },
   };
 }
@@ -164,7 +164,7 @@ export function postToComposeValues(post: Post): PostComposeValues {
     text: mergeRichBodyForEditor(post.text, post.images),
     images: [],
     tags: post.tags,
-    campaign: post.campaignId ?? "",
+    event: post.eventId ?? "",
   };
 }
 
@@ -180,7 +180,7 @@ export type Post = {
   images: string[];
   likes: number;
   comments: number;
-  campaignId?: string;
+  eventId?: string;
   // TODO(백엔드: posts.visibility/anonymous 필드·접근 제어 도입 시 활성화) — 도입되면
   // 리스트/갤러리/상세에 공개 범위·익명 배지를 노출한다. 지금은 스키마가 없어 표시하지 않는다.
   category: PostCategory;

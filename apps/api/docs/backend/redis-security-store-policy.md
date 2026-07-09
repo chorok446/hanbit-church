@@ -36,7 +36,7 @@
 |---|---|
 | login rate limit | `rate-limit:auth:login:ip:{clientIp}` |
 | signup rate limit | `rate-limit:auth:signup:ip:{clientIp}` |
-| comment 작성 rate limit (post·campaign 공유 버킷) | `rate-limit:comment:create:ip:{clientIp}` |
+| comment 작성 rate limit (post·event 공유 버킷) | `rate-limit:comment:create:ip:{clientIp}` |
 | report 작성 rate limit | `rate-limit:report:create:ip:{clientIp}` |
 | logout denylist | `denylist:jwt:access:sha256:{tokenHash}` |
 

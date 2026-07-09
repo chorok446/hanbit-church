@@ -14,7 +14,7 @@ import { CHURCH } from "@/data/church";
 import { isStaffRole } from "@/app/admin/permissions";
 
 // 로그아웃 시 머무르면 안 되는(인증 필요) 경로 prefix.
-const PROTECTED_PREFIXES = ["/posts/new", "/campaigns/new", "/mypage", "/profile/edit"];
+const PROTECTED_PREFIXES = ["/posts/new", "/events/new", "/mypage", "/profile/edit"];
 
 /** 로그인 상태의 아바타 버튼 + 드롭다운(마이페이지 / 관리자 / 로그아웃). */
 function ProfileMenu({

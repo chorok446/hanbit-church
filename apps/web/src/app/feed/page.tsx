@@ -1,15 +1,15 @@
 import { Suspense } from "react";
 import { apiGet } from "@/lib/api";
-import type { CampaignSearchResponse } from "@/data/campaigns";
+import type { EventSearchResponse } from "@/data/events";
 import FeedClient from "./feed-client";
 
 export default async function FeedPage() {
-  const campaigns = await apiGet<CampaignSearchResponse>(
-    "/api/campaigns/search?status=open&availableOnly=true&sort=popular&page=0&size=3",
+  const events = await apiGet<EventSearchResponse>(
+    "/api/events/search?status=open&availableOnly=true&sort=popular&page=0&size=3",
   );
   return (
     <Suspense fallback={<FeedFallback />}>
-      <FeedClient campaigns={campaigns.content} />
+      <FeedClient events={events.content} />
     </Suspense>
   );
 }

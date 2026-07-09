@@ -43,7 +43,7 @@ export type NotificationDeleteReadResponse = {
 
 // 읽음 처리 후 헤더 badge 가 다시 조회하도록 알리는 이벤트(auth 이벤트와 별개).
 // WS 로 unreadCount 가 실려 오면 detail 에 담아 재조회 없이 배지를 갱신한다.
-export const NOTIF_EVENT = "dasida-notif";
+export const NOTIF_EVENT = "cheolma-notif";
 
 export type NotifChangedDetail = {
   unreadCount?: number;
@@ -117,14 +117,14 @@ export function relativeTime(item: Pick<NotificationItem, "createdAt" | "time">)
 }
 
 export function notificationTypeLabel(type: string): string {
-  if (type === "CAMPAIGN_JOINED") return "행사 참여";
+  if (type === "EVENT_JOINED") return "행사 참여";
   if (type === "POST_COMMENT_CREATED") return "게시글 댓글";
   if (type === "COMMENT_REPLY_CREATED") return "댓글 답글";
   if (type === "COMMENT_MENTIONED") return "멘션";
-  if (type === "CAMPAIGN_COMMENT_CREATED") return "행사 댓글";
-  if (type === "CAMPAIGN_PROOF_CREATED") return "행사 참여 후기";
+  if (type === "EVENT_COMMENT_CREATED") return "행사 댓글";
+  if (type === "EVENT_PROOF_CREATED") return "행사 참여 후기";
   if (type === "POST_LIKED") return "게시글 좋아요";
-  if (type === "CAMPAIGN_STATUS_CHANGED") return "행사 상태";
+  if (type === "EVENT_STATUS_CHANGED") return "행사 상태";
   if (type === "REPORT_RESOLVED") return "신고 처리";
   if (type === "CONTENT_HIDDEN") return "콘텐츠 숨김";
   if (type === "CONTENT_RESTORED") return "숨김 해제";

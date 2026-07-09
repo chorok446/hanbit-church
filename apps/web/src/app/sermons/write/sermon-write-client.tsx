@@ -115,7 +115,7 @@ export function SermonWriteClient() {
         text: body,
         images: summaryImages,
         tags: normalizePostTags(["#설교", SERMON_SERVICE_TAGS[serviceType]]),
-        campaignId: null,
+        eventId: null,
         category: "SERMON",
         // 설교도 STAFF_WRITE 카테고리라 첨부(악보·자료 PDF) 허용 — 서버 normalizeAttachments 와 동일.
         attachments,

@@ -6,27 +6,27 @@ import { AuthorHeader } from "@/components/author-header";
 import { Avatar } from "@/components/avatar";
 import { FallbackImage } from "@/components/fallback-image";
 import { ReportButton } from "@/components/report-button";
-import { campaignRecruitMeta, type Campaign } from "@/data/campaigns";
+import { eventRecruitMeta, type Event } from "@/data/events";
 import { postCategoryBadge, type Post } from "@/data/posts";
 import type { PublicUser } from "@/data/users";
 import { progressPercent } from "@/lib/progress";
 import { richTextPlainPreview } from "@/lib/rich-text-length";
 import { SearchHighlight } from "./search-highlight";
 
-export function CampaignResultCard({ campaign, highlight }: { campaign: Campaign; highlight?: string }) {
-  const progress = progressPercent(campaign.joined, campaign.capacity);
-  const meta = campaignRecruitMeta(campaign);
+export function EventResultCard({ event, highlight }: { event: Event; highlight?: string }) {
+  const progress = progressPercent(event.joined, event.capacity);
+  const meta = eventRecruitMeta(event);
 
   return (
     <div className="relative">
       <ReportButton
-        targetType="CAMPAIGN"
-        targetId={campaign.id}
-        ownedByMe={campaign.ownedByMe}
+        targetType="EVENT"
+        targetId={event.id}
+        ownedByMe={event.ownedByMe}
         className="absolute left-3 top-3 z-20 !px-2.5 !py-1.5"
       />
       <Link
-        href={`/campaigns/${campaign.id}`}
+        href={`/events/${event.id}`}
         className="group block overflow-hidden rounded-2xl border transition-transform hover:-translate-y-1"
         style={{
           background: "var(--card)",
@@ -34,10 +34,10 @@ export function CampaignResultCard({ campaign, highlight }: { campaign: Campaign
         }}
       >
         <div className="relative aspect-[16/9] overflow-hidden">
-          {campaign.thumb ? (
+          {event.thumb ? (
             <FallbackImage
-              src={campaign.thumb}
-              alt={`${campaign.title} 행사 이미지`}
+              src={event.thumb}
+              alt={`${event.title} 행사 이미지`}
               thumbnail
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
@@ -56,10 +56,10 @@ export function CampaignResultCard({ campaign, highlight }: { campaign: Campaign
         <div className="space-y-3 p-5">
           <div>
             <h3 className="line-clamp-1 text-[17px] font-semibold" style={{ color: "var(--foreground)" }}>
-              <SearchHighlight text={campaign.title} query={highlight} />
+              <SearchHighlight text={event.title} query={highlight} />
             </h3>
             <p className="mt-1.5 line-clamp-2 text-[13px] leading-6 opacity-65" style={{ color: "var(--foreground)" }}>
-              <SearchHighlight text={campaign.summary} query={highlight} />
+              <SearchHighlight text={event.summary} query={highlight} />
             </p>
           </div>
           <div>
@@ -68,9 +68,9 @@ export function CampaignResultCard({ campaign, highlight }: { campaign: Campaign
             </div>
             <div className="mt-2 flex items-center justify-between text-[11px] opacity-60" style={{ color: "var(--foreground)" }}>
               <span className="flex items-center gap-1.5">
-                <Users size={12} /> {campaign.joined} / {campaign.capacity}명
+                <Users size={12} /> {event.joined} / {event.capacity}명
               </span>
-              <span>{campaign.daysLeftLabel}</span>
+              <span>{event.daysLeftLabel}</span>
             </div>
           </div>
         </div>
