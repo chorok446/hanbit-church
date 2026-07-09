@@ -2,7 +2,7 @@
 
 import { ActiveFilterChips, type FilterChip } from "@/components/active-filter-chips";
 import { SearchField } from "@/components/search-field";
-import { POST_CATEGORIES, postCategoryLabel, type PostCategory, type PostSearchSort } from "@/data/posts";
+import { postCategoryLabel, type PostSearchSort } from "@/data/posts";
 import type { FeedUrlState } from "@/lib/use-url-query";
 
 const POST_SORT_LABELS: Record<PostSearchSort, string> = {
@@ -12,7 +12,7 @@ const POST_SORT_LABELS: Record<PostSearchSort, string> = {
 };
 
 export function feedHasActiveFilters(state: FeedUrlState): boolean {
-  return !!(state.query || state.campaignOnly || state.category || state.sort !== "latest");
+  return !!(state.query || state.eventOnly || state.category || state.sort !== "latest");
 }
 
 function buildFeedFilterChips(state: FeedUrlState, onPatch: (changes: Partial<FeedUrlState>) => void): FilterChip[] {
@@ -24,11 +24,11 @@ function buildFeedFilterChips(state: FeedUrlState, onPatch: (changes: Partial<Fe
       onRemove: () => onPatch({ query: "" }),
     });
   }
-  if (state.campaignOnly) {
+  if (state.eventOnly) {
     chips.push({
-      id: "campaignOnly",
+      id: "eventOnly",
       label: "행사 게시글만",
-      onRemove: () => onPatch({ campaignOnly: false }),
+      onRemove: () => onPatch({ eventOnly: false }),
     });
   }
   if (state.category) {
@@ -53,7 +53,7 @@ export function FeedControls({
   loading,
   onSearch,
   onSort,
-  onCampaignOnly,
+  onEventOnly,
   onPatch,
   onResetAll,
 }: {
@@ -61,7 +61,7 @@ export function FeedControls({
   loading: boolean;
   onSearch: (query: string) => void;
   onSort: (sort: PostSearchSort) => void;
-  onCampaignOnly: (checked: boolean) => void;
+  onEventOnly: (checked: boolean) => void;
   onPatch: (changes: Partial<FeedUrlState>) => void;
   onResetAll: () => void;
 }) {
@@ -85,8 +85,8 @@ export function FeedControls({
         >
           <input
             type="checkbox"
-            checked={state.campaignOnly}
-            onChange={(event) => onCampaignOnly(event.target.checked)}
+            checked={state.eventOnly}
+            onChange={(event) => onEventOnly(event.target.checked)}
             className="accent-[var(--accent-strong)]"
           />
           행사 게시글만

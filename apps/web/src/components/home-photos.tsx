@@ -1,19 +1,16 @@
 import { FallbackImage } from "@/components/fallback-image";
+import { servePhotos, worshipPhotos } from "@/data/photos";
 
-// TODO(교회 확인: 실제 사진 교체) — 실사진이 준비되기 전까지 백엔드 시드(Photos.kt)와 동일한
-// unsplash 무료 이미지 URL 패턴을 사용하는 임시 사진입니다.
-const photo = (id: string, w = 1200) =>
-  `https://images.unsplash.com/${id}?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=${w}&q=80`;
-
+// TODO(교회 확인: 실제 사진 교체) — 실사진이 준비되기 전까지 photos.ts 공용 풀의 임시 사진을 쓴다.
 const PHOTOS = [
   {
-    src: photo("photo-1438232992991-995b7058bbb3", 1400),
-    alt: "빛이 드는 예배당에서 함께 드리는 예배",
+    src: worshipPhotos[1],
+    alt: "은은한 조명 아래 손을 들어 함께 드리는 예배",
     caption: "함께 드리는 예배",
   },
   {
-    src: photo("photo-1593113598332-cd288d649433", 900),
-    alt: "이웃에게 전할 나눔 물품을 나르는 봉사자들",
+    src: servePhotos[0],
+    alt: "이웃에게 전할 나눔 식품을 정리하는 봉사자들",
     caption: "지역과 이웃을 향한 섬김",
   },
 ] as const;
