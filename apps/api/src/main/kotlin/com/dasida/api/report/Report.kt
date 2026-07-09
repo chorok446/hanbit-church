@@ -7,6 +7,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
+import jakarta.persistence.Version
 import java.time.Instant
 
 @Entity
@@ -39,6 +40,8 @@ class Report(
     @Column(name = "resolved_by_user_id") @JsonIgnore var resolvedByUserId: Long? = null,
     @Column(name = "resolved_at") var resolvedAt: Instant? = null,
     @Column(name = "resolution_note", length = 500) var resolutionNote: String? = null,
+    // 낙관적 락. 두 관리자가 같은 신고를 동시에 처리하면 한 쪽만 성공하고(중복 알림·감사로그 방지) 다른 쪽은 409.
+    @Version @Column(nullable = false) var version: Long = 0,
 )
 
 enum class ReportTargetType {
