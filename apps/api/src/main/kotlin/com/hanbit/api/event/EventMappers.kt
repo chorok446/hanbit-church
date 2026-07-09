@@ -1,32 +1,33 @@
-package com.dasida.api.campaign
+package com.hanbit.api.event
 
 import java.time.LocalDate
 
 /** viewerId 기준 소유 여부와 today 기준 모집 상태를 한 곳에서 판정한다. authorUserId 는 노출하지 않는다. */
-fun Campaign.toResponse(
+fun Event.toResponse(
     viewerId: Long?,
     joinedByMe: Boolean,
     bookmarkedByMe: Boolean,
     today: LocalDate,
-): CampaignResponse {
+): EventResponse {
     val recruitment = recruitmentOn(today)
-    return CampaignResponse(
+    return EventResponse(
         id = id, status = status, title = title, summary = summary, thumb = thumb,
-        recruitStart = canonicalCampaignDateOrOriginal(recruitStart),
-        recruitEnd = canonicalCampaignDateOrOriginal(recruitEnd),
-        runStart = canonicalCampaignDateOrOriginal(runStart),
-        runEnd = canonicalCampaignDateOrOriginal(runEnd),
+        recruitStart = canonicalEventDateOrOriginal(recruitStart),
+        recruitEnd = canonicalEventDateOrOriginal(recruitEnd),
+        runStart = canonicalEventDateOrOriginal(runStart),
+        runEnd = canonicalEventDateOrOriginal(runEnd),
         capacity = capacity, joined = joined, daysLeftLabel = recruitment.daysLeftLabel,
         recruitable = recruitment.recruitable, recruitState = recruitment.state.value,
         author = author, body = body, joinedByMe = joinedByMe, bookmarkedByMe = bookmarkedByMe,
         ownedByMe = authorUserId != null && authorUserId == viewerId,
         hidden = hiddenAt != null,
+        place = place, audience = audience, fee = fee, supplies = supplies, contact = contact,
     )
 }
 
-fun CampaignProof.toResponse(viewerId: Long?) = CampaignProofResponse(
+fun EventProof.toResponse(viewerId: Long?) = EventProofResponse(
     id = id,
-    campaignId = campaignId,
+    eventId = eventId,
     author = author,
     text = text,
     images = images,
@@ -34,9 +35,9 @@ fun CampaignProof.toResponse(viewerId: Long?) = CampaignProofResponse(
     ownedByMe = authorUserId == viewerId,
 )
 
-fun CampaignComment.toResponse(viewerId: Long?, replies: List<CampaignCommentResponse> = emptyList()) = CampaignCommentResponse(
+fun EventComment.toResponse(viewerId: Long?, replies: List<EventCommentResponse> = emptyList()) = EventCommentResponse(
     id = id,
-    campaignId = campaignId,
+    eventId = eventId,
     author = author,
     text = text,
     createdAt = createdAt,

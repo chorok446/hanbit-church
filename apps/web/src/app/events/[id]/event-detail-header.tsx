@@ -6,14 +6,14 @@ import Link from "next/link";
 import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import { Flag, Link2, MoreHorizontal, Pencil, Trash2, Users, Bookmark } from "lucide-react";
 import { progressPercent } from "@/lib/progress";
-import { campaignLifecycle, campaignProgressLabel, type Campaign } from "@/data/campaigns";
+import { eventLifecycle, eventProgressLabel, type Event } from "@/data/events";
 import { Avatar } from "@/components/avatar";
 import { ReportButton, type ReportButtonHandle } from "@/components/report-button";
 import { AdminModerationButton } from "@/components/admin-moderation-button";
-import { CampaignThumb } from "../campaign-thumb";
+import { EventThumb } from "../event-thumb";
 
-function StatusBadge({ c }: { c: Campaign }) {
-  const badge = campaignLifecycle(c).badge;
+function StatusBadge({ c }: { c: Event }) {
+  const badge = eventLifecycle(c).badge;
   return (
     <span
       className="text-[11px] tracking-[0.2em] px-3 py-1.5 rounded-full inline-block"
@@ -25,7 +25,7 @@ function StatusBadge({ c }: { c: Campaign }) {
 }
 
 /** posts 상세의 PostActionsMenu 패턴 — 링크 복사·신고를 ⋯ 메뉴로 묶어 상단 액션 위계를 낮춘다. */
-function CampaignActionsMenu({ campaignId, canReport }: { campaignId: string; canReport: boolean }) {
+function EventActionsMenu({ eventId, canReport }: { eventId: string; canReport: boolean }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const reportRef = useRef<ReportButtonHandle>(null);
@@ -105,20 +105,20 @@ function CampaignActionsMenu({ campaignId, canReport }: { campaignId: string; ca
         </div>
       ) : null}
       {canReport ? (
-        <ReportButton ref={reportRef} hideTrigger targetType="CAMPAIGN" targetId={campaignId} ownedByMe={false} />
+        <ReportButton ref={reportRef} hideTrigger targetType="EVENT" targetId={eventId} ownedByMe={false} />
       ) : null}
     </div>
   );
 }
 
-export function CampaignHeaderCard({
+export function EventHeaderCard({
   c,
   bookmarked,
   bookmarking,
   onBookmark,
   bookmarkDisabled,
 }: {
-  c: Campaign;
+  c: Event;
   bookmarked?: boolean;
   bookmarking?: boolean;
   onBookmark?: () => void;
@@ -132,9 +132,9 @@ export function CampaignHeaderCard({
   const rY = useTransform(sx, [-0.5, 0.5], [-6, 6]);
   const rX = useTransform(sy, [-0.5, 0.5], [5, -5]);
   const pct = progressPercent(c.joined, c.capacity);
-  const lifecycle = campaignLifecycle(c);
-  const progressLabel = campaignProgressLabel(c);
-  // TODO(데이터: 장소·대상·참가비 필드 백엔드 추가 필요) — 값이 없는 행은 "추후 안내" 없이 아예 숨긴다.
+  const lifecycle = eventLifecycle(c);
+  const progressLabel = eventProgressLabel(c);
+  // 실무 안내(선택) — 값이 없는 행은 "추후 안내" 없이 아예 숨긴다.
   const optionalRows: { label: string; value: string }[] = [
     { label: "장소", value: c.place?.trim() ?? "" },
     { label: "대상", value: c.audience?.trim() ?? "" },
@@ -168,7 +168,7 @@ export function CampaignHeaderCard({
       >
         <div className="grid grid-cols-1 md:grid-cols-[400px_1fr]">
           <div className="relative aspect-[4/3] sm:aspect-square md:aspect-auto overflow-hidden">
-            <CampaignThumb src={c.thumb} alt={`${c.title} 행사 이미지`} className="w-full h-full object-cover" />
+            <EventThumb src={c.thumb} alt={`${c.title} 행사 이미지`} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-tr from-[var(--surface-dark)]/40 to-transparent" />
             <div className="absolute top-4 left-4 flex items-center gap-2" style={{ transform: "translateZ(50px)" }}>
               <StatusBadge c={c} />
@@ -207,8 +207,8 @@ export function CampaignHeaderCard({
                     <Bookmark size={14} fill={bookmarked ? "var(--surface-dark)" : "transparent"} />
                   </button>
                 ) : null}
-                <AdminModerationButton targetType="CAMPAIGN" targetId={c.id} />
-                <CampaignActionsMenu campaignId={c.id} canReport={!c.ownedByMe} />
+                <AdminModerationButton targetType="EVENT" targetId={c.id} />
+                <EventActionsMenu eventId={c.id} canReport={!c.ownedByMe} />
               </div>
             </div>
 
@@ -252,7 +252,7 @@ export function CampaignHeaderCard({
               </div>
               <div className="flex justify-between text-[12px] mt-2" style={{ color: "var(--foreground-muted)" }}>
                 <span>{progressLabel ?? "모집 인원 미정"}</span>
-                {/* D-day 기준은 campaignLifecycle 주석 참고 — 카드와 동일 기준 */}
+                {/* D-day 기준은 eventLifecycle 주석 참고 — 카드와 동일 기준 */}
                 <span>{lifecycle.dday}</span>
               </div>
             </div>
@@ -269,7 +269,7 @@ export function CampaignHeaderCard({
   );
 }
 
-export function CampaignStatusManagement({
+export function EventStatusManagement({
   c,
   ownershipConfirmed,
   updating,
@@ -278,7 +278,7 @@ export function CampaignStatusManagement({
   onChange,
   onDelete,
 }: {
-  c: Campaign;
+  c: Event;
   ownershipConfirmed: boolean;
   updating: boolean;
   deleting: boolean;
@@ -306,7 +306,7 @@ export function CampaignStatusManagement({
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Link
-          href={`/campaigns/${c.id}/participants`}
+          href={`/events/${c.id}/participants`}
           aria-label="참가자 관리"
           aria-disabled={disabled}
           tabIndex={disabled ? -1 : undefined}
@@ -322,7 +322,7 @@ export function CampaignStatusManagement({
         </Link>
         {c.status === "upcoming" ? (
           <Link
-            href={`/campaigns/${c.id}/edit`}
+            href={`/events/${c.id}/edit`}
             aria-label="행사 수정"
             aria-disabled={disabled}
             tabIndex={disabled ? -1 : undefined}

@@ -1,18 +1,18 @@
-package com.dasida.api.campaign
+package com.hanbit.api.event
 
-import com.dasida.api.auth.UserRepository
-import com.dasida.api.common.checkPageParams
-import com.dasida.api.common.ListingLimits.MAX_SEARCH_PAGE_SIZE
-import com.dasida.api.common.ListingLimits.MAX_SEARCH_QUERY_LENGTH
-import com.dasida.api.common.ListingLimits.MAX_SITEMAP_PAGE_SIZE
-import com.dasida.api.common.SitemapIdsResponse
-import com.dasida.api.common.presenceByPage
-import com.dasida.api.common.totalPages
-import com.dasida.api.notification.NotificationService
-import com.dasida.api.notification.NotificationType
-import com.dasida.api.post.Author
-import com.dasida.api.post.PostRepository
-import com.dasida.api.security.AuthUser
+import com.hanbit.api.auth.UserRepository
+import com.hanbit.api.common.checkPageParams
+import com.hanbit.api.common.ListingLimits.MAX_SEARCH_PAGE_SIZE
+import com.hanbit.api.common.ListingLimits.MAX_SEARCH_QUERY_LENGTH
+import com.hanbit.api.common.ListingLimits.MAX_SITEMAP_PAGE_SIZE
+import com.hanbit.api.common.SitemapIdsResponse
+import com.hanbit.api.common.presenceByPage
+import com.hanbit.api.common.totalPages
+import com.hanbit.api.notification.NotificationService
+import com.hanbit.api.notification.NotificationType
+import com.hanbit.api.post.Author
+import com.hanbit.api.post.PostRepository
+import com.hanbit.api.security.AuthUser
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
@@ -29,26 +29,26 @@ import java.util.UUID
  * Controller 에서 옮겨온 validation, 날짜 정규화, 소유권 판정, 모집 상태 전이, N+1 회피 bulk 조회, row lock, 트랜잭션을 이 계층에 둔다.
  */
 @Service
-class CampaignService(
-    private val repo: CampaignRepository,
-    private val campaignSearch: CampaignSearchRepository,
+class EventService(
+    private val repo: EventRepository,
+    private val eventSearch: EventSearchRepository,
     private val users: UserRepository,
-    private val participants: CampaignParticipantRepository,
-    private val bookmarkRepo: CampaignBookmarkRepository,
+    private val participants: EventParticipantRepository,
+    private val bookmarkRepo: EventBookmarkRepository,
     private val posts: PostRepository,
-    private val comments: CampaignCommentRepository,
-    private val proofs: CampaignProofRepository,
+    private val comments: EventCommentRepository,
+    private val proofs: EventProofRepository,
     private val clock: Clock,
     private val notifications: NotificationService,
 ) {
     @Transactional(readOnly = true)
-    fun listCampaigns(currentUserId: Long?): List<CampaignResponse> {
+    fun listEvents(currentUserId: Long?): List<EventResponse> {
         val today = LocalDate.now(clock)
-        val campaigns = repo.findByHiddenAtIsNull(Sort.by(Sort.Direction.DESC, "seq"))
-        // N+1 회피: 내가 참여·북마크한 campaignId 를 각각 한 번에 조회.
-        val joinedIds = joinedByPage(currentUserId, campaigns.map { it.id })
-        val bookmarkedIds = bookmarkedByPage(currentUserId, campaigns.map { it.id })
-        return campaigns.map {
+        val events = repo.findByHiddenAtIsNull(Sort.by(Sort.Direction.DESC, "seq"))
+        // N+1 회피: 내가 참여·북마크한 eventId 를 각각 한 번에 조회.
+        val joinedIds = joinedByPage(currentUserId, events.map { it.id })
+        val bookmarkedIds = bookmarkedByPage(currentUserId, events.map { it.id })
+        return events.map {
             it.toResponse(
                 viewerId = currentUserId,
                 joinedByMe = it.id in joinedIds,
@@ -74,7 +74,7 @@ class CampaignService(
 
     /** 공개 검색. content/count는 Querydsl로 분리하고 현재 page의 참여 상태만 bulk 조회한다. */
     @Transactional(readOnly = true)
-    fun searchCampaigns(
+    fun searchEvents(
         currentUserId: Long?,
         q: String?,
         status: String?,
@@ -87,7 +87,7 @@ class CampaignService(
         recruitEndTo: String?,
         runStartFrom: String?,
         runStartTo: String?,
-    ): CampaignSearchResponse {
+    ): EventSearchResponse {
         checkPageParams(page, size, MAX_SEARCH_PAGE_SIZE)
 
         val query = q?.trim()?.takeIf { it.isNotEmpty() }
@@ -97,27 +97,27 @@ class CampaignService(
                 "q must not exceed $MAX_SEARCH_QUERY_LENGTH characters",
             )
         }
-        if (status != null && status !in CAMPAIGN_STATUSES) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid campaign status")
+        if (status != null && status !in EVENT_STATUSES) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid event status")
         }
         val recruitStateFilter = when (recruitState) {
             null -> null
-            "before_recruit" -> CampaignRecruitState.BEFORE_RECRUIT
-            "recruiting" -> CampaignRecruitState.RECRUITING
-            "ended" -> CampaignRecruitState.ENDED
-            "closed" -> CampaignRecruitState.CLOSED
-            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid campaign recruitState")
+            "before_recruit" -> EventRecruitState.BEFORE_RECRUIT
+            "recruiting" -> EventRecruitState.RECRUITING
+            "ended" -> EventRecruitState.ENDED
+            "closed" -> EventRecruitState.CLOSED
+            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid event recruitState")
         }
         val searchSort = when (sort) {
-            "latest" -> CampaignSearchSort.LATEST
-            "popular" -> CampaignSearchSort.POPULAR
-            "deadline" -> CampaignSearchSort.DEADLINE
-            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid campaign sort")
+            "latest" -> EventSearchSort.LATEST
+            "popular" -> EventSearchSort.POPULAR
+            "deadline" -> EventSearchSort.DEADLINE
+            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid event sort")
         }
-        val normalizedRecruitEndFrom = normalizeOptionalCampaignSearchDate(recruitEndFrom, "recruitEndFrom")
-        val normalizedRecruitEndTo = normalizeOptionalCampaignSearchDate(recruitEndTo, "recruitEndTo")
-        val normalizedRunStartFrom = normalizeOptionalCampaignSearchDate(runStartFrom, "runStartFrom")
-        val normalizedRunStartTo = normalizeOptionalCampaignSearchDate(runStartTo, "runStartTo")
+        val normalizedRecruitEndFrom = normalizeOptionalEventSearchDate(recruitEndFrom, "recruitEndFrom")
+        val normalizedRecruitEndTo = normalizeOptionalEventSearchDate(recruitEndTo, "recruitEndTo")
+        val normalizedRunStartFrom = normalizeOptionalEventSearchDate(runStartFrom, "runStartFrom")
+        val normalizedRunStartTo = normalizeOptionalEventSearchDate(runStartTo, "runStartTo")
         if (normalizedRecruitEndFrom != null &&
             normalizedRecruitEndTo != null &&
             normalizedRecruitEndFrom > normalizedRecruitEndTo
@@ -138,8 +138,8 @@ class CampaignService(
         }
 
         val today = LocalDate.now(clock)
-        val result = campaignSearch.search(
-            CampaignSearchCondition(
+        val result = eventSearch.search(
+            EventSearchCondition(
                 query = query,
                 status = status,
                 recruitState = recruitStateFilter,
@@ -157,7 +157,7 @@ class CampaignService(
         val joinedIds = joinedByPage(currentUserId, result.content.map { it.id })
         val bookmarkedIds = bookmarkedByPage(currentUserId, result.content.map { it.id })
 
-        return CampaignSearchResponse(
+        return EventSearchResponse(
             content = result.content.map {
                 it.toResponse(
                     viewerId = currentUserId,
@@ -175,34 +175,34 @@ class CampaignService(
 
     /**
      * 현재 사용자가 참여한 행사 목록. 인증 필수.
-     * 1) participant 조회(user_id 인덱스) → campaignId 목록 추출
-     * 2) campaign IN 조회(seq DESC) → N+1 없이 2쿼리 완료
+     * 1) participant 조회(user_id 인덱스) → eventId 목록 추출
+     * 2) event IN 조회(seq DESC) → N+1 없이 2쿼리 완료
      * 삭제된 행사의 orphan participant 는 자동으로 결과에서 제외.
      */
     @Transactional(readOnly = true)
-    fun getJoinedCampaigns(userId: Long): List<CampaignResponse> {
+    fun getJoinedEvents(userId: Long): List<EventResponse> {
         val today = LocalDate.now(clock)
-        val campaignIds = participants.findByUserId(userId).map { it.campaignId }
-        if (campaignIds.isEmpty()) return emptyList()
-        val bookmarkedIds = bookmarkRepo.findByUserIdAndCampaignIdIn(userId, campaignIds).map { it.campaignId }.toSet()
-        return repo.findAllByIdInAndHiddenAtIsNullOrderBySeqDesc(campaignIds)
+        val eventIds = participants.findByUserId(userId).map { it.eventId }
+        if (eventIds.isEmpty()) return emptyList()
+        val bookmarkedIds = bookmarkRepo.findByUserIdAndEventIdIn(userId, eventIds).map { it.eventId }.toSet()
+        return repo.findAllByIdInAndHiddenAtIsNullOrderBySeqDesc(eventIds)
             .map { it.toResponse(viewerId = userId, joinedByMe = true, bookmarkedByMe = it.id in bookmarkedIds, today = today) }
     }
 
     /** 현재 사용자가 개설한 행사. 행사와 참여 상태를 각각 bulk 조회해 N+1을 피한다. */
     @Transactional(readOnly = true)
-    fun getMyCampaigns(userId: Long): List<CampaignResponse> {
+    fun getMyEvents(userId: Long): List<EventResponse> {
         val today = LocalDate.now(clock)
-        val campaigns = repo.findByAuthorUserIdAndDeletedAtIsNullOrderBySeqDesc(userId)
-        if (campaigns.isEmpty()) return emptyList()
+        val events = repo.findByAuthorUserIdAndDeletedAtIsNullOrderBySeqDesc(userId)
+        if (events.isEmpty()) return emptyList()
 
-        val joinedIds = participants.findByUserIdAndCampaignIdIn(userId, campaigns.map { it.id })
-            .map { it.campaignId }
+        val joinedIds = participants.findByUserIdAndEventIdIn(userId, events.map { it.id })
+            .map { it.eventId }
             .toSet()
-        val bookmarkedIds = bookmarkRepo.findByUserIdAndCampaignIdIn(userId, campaigns.map { it.id })
-            .map { it.campaignId }
+        val bookmarkedIds = bookmarkRepo.findByUserIdAndEventIdIn(userId, events.map { it.id })
+            .map { it.eventId }
             .toSet()
-        return campaigns.map {
+        return events.map {
             it.toResponse(
                 viewerId = userId,
                 joinedByMe = it.id in joinedIds,
@@ -214,19 +214,19 @@ class CampaignService(
 
     /**
      * 참여 행사 pagination. participant row 를 id ASC(deterministic, 참여 일시 없음)로 page 한 뒤
-     * 해당 page 의 campaignId 만 bulk 조회하고 participant page 순서를 보존한다. 삭제된 행사의 orphan 은 제외.
+     * 해당 page 의 eventId 만 bulk 조회하고 participant page 순서를 보존한다. 삭제된 행사의 orphan 은 제외.
      */
     @Transactional(readOnly = true)
-    fun getJoinedCampaignsPage(userId: Long, page: Int, size: Int): CampaignPageResponse {
+    fun getJoinedEventsPage(userId: Long, page: Int, size: Int): EventPageResponse {
         validatePageParams(page, size)
         val today = LocalDate.now(clock)
         val participantPage = participants.findByUserId(userId, PageRequest.of(page, size, Sort.by("id").ascending()))
-        val campaignIds = participantPage.content.map { it.campaignId }
-        val byId = if (campaignIds.isEmpty()) emptyMap() else repo.findAllById(campaignIds).associateBy { it.id }
+        val eventIds = participantPage.content.map { it.eventId }
+        val byId = if (eventIds.isEmpty()) emptyMap() else repo.findAllById(eventIds).associateBy { it.id }
         // participant page 순서 보존, orphan·숨김 행사 제외
-        val ordered = campaignIds.mapNotNull { byId[it] }.filter { it.hiddenAt == null }
+        val ordered = eventIds.mapNotNull { byId[it] }.filter { it.hiddenAt == null }
         val bookmarkedIds = bookmarkedByPage(userId, ordered.map { it.id })
-        return CampaignPageResponse(
+        return EventPageResponse(
             content = ordered.map {
                 it.toResponse(viewerId = userId, joinedByMe = true, bookmarkedByMe = it.id in bookmarkedIds, today = today)
             },
@@ -239,7 +239,7 @@ class CampaignService(
 
     /** 개설 행사 pagination. 최신순(seq DESC, id). 현재 page 의 id 만 대상으로 참여 상태 bulk 조회. */
     @Transactional(readOnly = true)
-    fun getMyCampaignsPage(userId: Long, page: Int, size: Int): CampaignPageResponse {
+    fun getMyEventsPage(userId: Long, page: Int, size: Int): EventPageResponse {
         validatePageParams(page, size)
         val today = LocalDate.now(clock)
         val result = repo.findByAuthorUserIdAndDeletedAtIsNull(
@@ -248,7 +248,7 @@ class CampaignService(
         )
         val joinedIds = joinedByPage(userId, result.content.map { it.id })
         val bookmarkedIds = bookmarkedByPage(userId, result.content.map { it.id })
-        return CampaignPageResponse(
+        return EventPageResponse(
             content = result.content.map {
                 it.toResponse(
                     viewerId = userId,
@@ -265,22 +265,22 @@ class CampaignService(
     }
 
     @Transactional(readOnly = true)
-    fun getCampaign(id: String, currentUserId: Long?): CampaignResponse {
-        val campaign = repo.findById(id).orElseThrow {
-            ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $id not found")
+    fun getEvent(id: String, currentUserId: Long?): EventResponse {
+        val event = repo.findById(id).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "event $id not found")
         }
         // 삭제(soft delete)된 행사는 개설자에게도 존재하지 않는 것으로 취급한다.
-        if (campaign.deletedAt != null) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $id not found")
+        if (event.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $id not found")
         }
         // 숨김 행사는 개설자에게만 보인다(hidden 플래그 포함). 그 외에는 존재를 드러내지 않는 404.
-        if (campaign.hiddenAt != null && (campaign.authorUserId == null || campaign.authorUserId != currentUserId)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $id not found")
+        if (event.hiddenAt != null && (event.authorUserId == null || event.authorUserId != currentUserId)) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $id not found")
         }
-        return campaign.toResponse(
+        return event.toResponse(
             viewerId = currentUserId,
-            joinedByMe = currentUserId != null && participants.existsByCampaignIdAndUserId(id, currentUserId),
-            bookmarkedByMe = currentUserId != null && bookmarkRepo.existsByCampaignIdAndUserId(id, currentUserId),
+            joinedByMe = currentUserId != null && participants.existsByEventIdAndUserId(id, currentUserId),
+            bookmarkedByMe = currentUserId != null && bookmarkRepo.existsByEventIdAndUserId(id, currentUserId),
             today = LocalDate.now(clock),
         )
     }
@@ -290,93 +290,93 @@ class CampaignService(
      * upcoming → open → closed 단방향 전환만 허용하며 같은 상태 요청은 멱등 처리한다.
      */
     @Transactional
-    fun updateStatus(userId: Long, campaignId: String, req: UpdateCampaignStatusRequest): CampaignResponse {
-        val campaign = repo.findByIdForUpdate(campaignId)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $campaignId not found")
-        if (campaign.deletedAt != null) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $campaignId not found")
+    fun updateStatus(userId: Long, eventId: String, req: UpdateEventStatusRequest): EventResponse {
+        val event = repo.findByIdForUpdate(eventId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
+        if (event.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
         }
-        if (campaign.authorUserId == null || campaign.authorUserId != userId) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "not the campaign owner")
+        if (event.authorUserId == null || event.authorUserId != userId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "not the event owner")
         }
 
         val target = req.status
         if (target != "open" && target != "closed") {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid campaign status")
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid event status")
         }
 
-        if (campaign.status != target) {
+        if (event.status != target) {
             when {
-                campaign.status == "upcoming" && target == "open" -> {
-                    campaign.status = "open"
-                    campaign.daysLeftLabel = "모집중"
+                event.status == "upcoming" && target == "open" -> {
+                    event.status = "open"
+                    event.daysLeftLabel = "모집중"
                 }
-                campaign.status == "open" && target == "closed" -> {
-                    campaign.status = "closed"
-                    campaign.daysLeftLabel = "모집완료"
+                event.status == "open" && target == "closed" -> {
+                    event.status = "closed"
+                    event.daysLeftLabel = "모집완료"
                 }
                 else -> throw ResponseStatusException(HttpStatus.CONFLICT, "invalid status transition")
             }
             val title = if (target == "open") "모집이 시작되었습니다" else "모집이 마감되었습니다"
             // 참여자 알림 팬아웃. 행 락(PESSIMISTIC_WRITE) 보유 시간을 줄이려고 수신자 유저를 한 번에 bulk 로드한다
             // (기존엔 참여자마다 users.findById → N+1). TODO(후속): 알림 생성을 after-commit/async 로 옮겨 락 밖에서 처리.
-            val recipientIds = participants.findByCampaignId(campaignId)
+            val recipientIds = participants.findByEventId(eventId)
                 .map { it.userId }
                 .filter { it != userId }
                 .distinct()
             users.findAllById(recipientIds)
-                .filter { it.notifyCampaignUpdates }
+                .filter { it.notifyEventUpdates }
                 .forEach { recipient ->
                     notifications.notify(
                         recipientUserId = recipient.id,
                         actorUserId = userId,
-                        type = NotificationType.CAMPAIGN_STATUS_CHANGED,
+                        type = NotificationType.EVENT_STATUS_CHANGED,
                         title = title,
-                        body = campaign.title,
-                        href = "/campaigns/$campaignId",
+                        body = event.title,
+                        href = "/events/$eventId",
                     )
                 }
         }
 
-        return campaign.toResponse(
+        return event.toResponse(
             viewerId = userId,
-            joinedByMe = participants.existsByCampaignIdAndUserId(campaignId, userId),
-            bookmarkedByMe = bookmarkRepo.existsByCampaignIdAndUserId(campaignId, userId),
+            joinedByMe = participants.existsByEventIdAndUserId(eventId, userId),
+            bookmarkedByMe = bookmarkRepo.existsByEventIdAndUserId(eventId, userId),
             today = LocalDate.now(clock),
         )
     }
 
     /** 현재 사용자가 저장한 행사. 북마크/행사/참여를 각각 bulk 조회해 N+1을 피한다. */
     @Transactional(readOnly = true)
-    fun getMyBookmarks(userId: Long): List<CampaignResponse> {
+    fun getMyBookmarks(userId: Long): List<EventResponse> {
         val today = LocalDate.now(clock)
-        val campaignIds = bookmarkRepo.findByUserId(userId).map { it.campaignId }.distinct()
-        if (campaignIds.isEmpty()) return emptyList()
+        val eventIds = bookmarkRepo.findByUserId(userId).map { it.eventId }.distinct()
+        if (eventIds.isEmpty()) return emptyList()
 
-        val campaigns = repo.findAllByIdInAndHiddenAtIsNullOrderBySeqDesc(campaignIds)
-        val joinedIds = participants.findByUserIdAndCampaignIdIn(userId, campaignIds)
-            .map { it.campaignId }
+        val events = repo.findAllByIdInAndHiddenAtIsNullOrderBySeqDesc(eventIds)
+        val joinedIds = participants.findByUserIdAndEventIdIn(userId, eventIds)
+            .map { it.eventId }
             .toSet()
-        return campaigns.map {
+        return events.map {
             it.toResponse(viewerId = userId, joinedByMe = it.id in joinedIds, bookmarkedByMe = true, today = today)
         }
     }
 
     /**
      * 저장한 행사 pagination. bookmark row 를 id ASC(deterministic, createdAt 없음)로 page 한 뒤
-     * 해당 page 의 campaignId 만 bulk 조회하고 bookmark page 순서를 보존한다. 삭제된 행사의 orphan bookmark 는 제외.
+     * 해당 page 의 eventId 만 bulk 조회하고 bookmark page 순서를 보존한다. 삭제된 행사의 orphan bookmark 는 제외.
      */
     @Transactional(readOnly = true)
-    fun getMyBookmarksPage(userId: Long, page: Int, size: Int): CampaignPageResponse {
+    fun getMyBookmarksPage(userId: Long, page: Int, size: Int): EventPageResponse {
         validatePageParams(page, size)
         val today = LocalDate.now(clock)
         val bookmarkPage = bookmarkRepo.findByUserId(userId, PageRequest.of(page, size, Sort.by("id").ascending()))
-        val campaignIds = bookmarkPage.content.map { it.campaignId }
-        val campaignsById = if (campaignIds.isEmpty()) emptyMap() else repo.findAllById(campaignIds).associateBy { it.id }
+        val eventIds = bookmarkPage.content.map { it.eventId }
+        val eventsById = if (eventIds.isEmpty()) emptyMap() else repo.findAllById(eventIds).associateBy { it.id }
         // bookmark page 순서 보존, orphan·숨김 행사 제외
-        val ordered = campaignIds.mapNotNull { campaignsById[it] }.filter { it.hiddenAt == null }
+        val ordered = eventIds.mapNotNull { eventsById[it] }.filter { it.hiddenAt == null }
         val joinedIds = joinedByPage(userId, ordered.map { it.id })
-        return CampaignPageResponse(
+        return EventPageResponse(
             content = ordered.map {
                 it.toResponse(viewerId = userId, joinedByMe = it.id in joinedIds, bookmarkedByMe = true, today = today)
             },
@@ -389,14 +389,14 @@ class CampaignService(
 
     /** 북마크. 이미 저장된 경우에도 idempotent(200). */
     @Transactional
-    fun bookmarkCampaign(userId: Long, campaignId: String): CampaignResponse {
-        val campaign = visibleForUpdateOrNotFound(campaignId)
-        if (!bookmarkRepo.existsByCampaignIdAndUserId(campaignId, userId)) {
-            bookmarkRepo.save(CampaignBookmark("cbk-${UUID.randomUUID()}", campaignId, userId))
+    fun bookmarkEvent(userId: Long, eventId: String): EventResponse {
+        val event = visibleForUpdateOrNotFound(eventId)
+        if (!bookmarkRepo.existsByEventIdAndUserId(eventId, userId)) {
+            bookmarkRepo.save(EventBookmark("cbk-${UUID.randomUUID()}", eventId, userId))
         }
-        return campaign.toResponse(
+        return event.toResponse(
             viewerId = userId,
-            joinedByMe = participants.existsByCampaignIdAndUserId(campaignId, userId),
+            joinedByMe = participants.existsByEventIdAndUserId(eventId, userId),
             bookmarkedByMe = true,
             today = LocalDate.now(clock),
         )
@@ -404,12 +404,12 @@ class CampaignService(
 
     /** 북마크 취소. 저장되지 않은 경우에도 idempotent(200). */
     @Transactional
-    fun unbookmarkCampaign(userId: Long, campaignId: String): CampaignResponse {
-        val campaign = visibleForUpdateOrNotFound(campaignId)
-        bookmarkRepo.findByCampaignIdAndUserId(campaignId, userId)?.let(bookmarkRepo::delete)
-        return campaign.toResponse(
+    fun unbookmarkEvent(userId: Long, eventId: String): EventResponse {
+        val event = visibleForUpdateOrNotFound(eventId)
+        bookmarkRepo.findByEventIdAndUserId(eventId, userId)?.let(bookmarkRepo::delete)
+        return event.toResponse(
             viewerId = userId,
-            joinedByMe = participants.existsByCampaignIdAndUserId(campaignId, userId),
+            joinedByMe = participants.existsByEventIdAndUserId(eventId, userId),
             bookmarkedByMe = false,
             today = LocalDate.now(clock),
         )
@@ -417,50 +417,57 @@ class CampaignService(
 
     /** 모집 시작 전 행사 수정. 상태 변경과 같은 row lock 을 가장 먼저 잡아 요청을 직렬화한다. */
     @Transactional
-    fun updateCampaign(userId: Long, campaignId: String, req: UpdateCampaignRequest): CampaignResponse {
-        val campaign = repo.findByIdForUpdate(campaignId)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $campaignId not found")
-        if (campaign.deletedAt != null) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $campaignId not found")
+    fun updateEvent(userId: Long, eventId: String, req: UpdateEventRequest): EventResponse {
+        val event = repo.findByIdForUpdate(eventId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
+        if (event.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
         }
-        if (campaign.authorUserId == null || campaign.authorUserId != userId) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "not the campaign owner")
+        if (event.authorUserId == null || event.authorUserId != userId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "not the event owner")
         }
-        if (campaign.status != "upcoming") {
-            throw ResponseStatusException(HttpStatus.CONFLICT, "only upcoming campaigns can be updated")
+        if (event.status != "upcoming") {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "only upcoming events can be updated")
         }
 
-        val input = normalizeCampaignInput(
+        val input = normalizeEventInput(
             req.title, req.summary, req.body, req.thumb,
             req.recruitStart, req.recruitEnd, req.runStart, req.runEnd, req.capacity,
+            req.place, req.audience, req.fee, req.supplies, req.contact,
         )
-        campaign.title = input.title
-        campaign.summary = input.summary
-        campaign.thumb = input.thumb
-        campaign.recruitStart = input.recruitStart
-        campaign.recruitEnd = input.recruitEnd
-        campaign.runStart = input.runStart
-        campaign.runEnd = input.runEnd
-        campaign.capacity = input.capacity
-        campaign.body = input.body
+        event.title = input.title
+        event.summary = input.summary
+        event.thumb = input.thumb
+        event.recruitStart = input.recruitStart
+        event.recruitEnd = input.recruitEnd
+        event.runStart = input.runStart
+        event.runEnd = input.runEnd
+        event.capacity = input.capacity
+        event.body = input.body
+        event.place = input.place
+        event.audience = input.audience
+        event.fee = input.fee
+        event.supplies = input.supplies
+        event.contact = input.contact
 
-        return campaign.toResponse(
+        return event.toResponse(
             viewerId = userId,
-            joinedByMe = participants.existsByCampaignIdAndUserId(campaignId, userId),
-            bookmarkedByMe = bookmarkRepo.existsByCampaignIdAndUserId(campaignId, userId),
+            joinedByMe = participants.existsByEventIdAndUserId(eventId, userId),
+            bookmarkedByMe = bookmarkRepo.existsByEventIdAndUserId(eventId, userId),
             today = LocalDate.now(clock),
         )
     }
 
     @Transactional
-    fun createCampaign(user: AuthUser, req: CreateCampaignRequest): CampaignResponse {
-        val input = normalizeCampaignInput(
+    fun createEvent(user: AuthUser, req: CreateEventRequest): EventResponse {
+        val input = normalizeEventInput(
             req.title, req.summary, req.body, req.thumb,
             req.recruitStart, req.recruitEnd, req.runStart, req.runEnd, req.capacity,
+            req.place, req.audience, req.fee, req.supplies, req.contact,
         )
 
         return repo.save(
-            Campaign(
+            Event(
                 id = "c-${UUID.randomUUID()}",
                 status = "upcoming",
                 title = input.title,
@@ -481,6 +488,11 @@ class CampaignService(
                 body = input.body,
                 seq = System.currentTimeMillis(),
                 authorUserId = user.id,
+                place = input.place,
+                audience = input.audience,
+                fee = input.fee,
+                supplies = input.supplies,
+                contact = input.contact,
             ),
         ).toResponse(viewerId = user.id, joinedByMe = false, bookmarkedByMe = false, today = LocalDate.now(clock))
     }
@@ -488,62 +500,62 @@ class CampaignService(
     /**
      * 모집 예정 행사 삭제. 개설자만, status=upcoming 이고 참여자·연결 게시글이 없을 때만 허용한다.
      *
-     * 잠금 순서는 다른 행사 변경 API(join/status/update)와 같이 campaign row lock 을 가장 먼저 잡아
+     * 잠금 순서는 다른 행사 변경 API(join/status/update)와 같이 event row lock 을 가장 먼저 잡아
      * 같은 행사의 삭제·참여·수정·모집시작을 직렬화한다. 연결 게시글 존재 확인도 이 lock 안에서 하므로,
-     * 게시글 생성(campaign write lock 보유)과 동시에 실행돼도 둘 중 하나만 통과해 orphan campaignId 가 남지 않는다.
+     * 게시글 생성(event write lock 보유)과 동시에 실행돼도 둘 중 하나만 통과해 orphan eventId 가 남지 않는다.
      * soft delete 미도입 → 이미 지워진 행사를 다시 삭제하면 404.
      */
     @Transactional
-    fun deleteCampaign(userId: Long, campaignId: String) {
-        val campaign = repo.findByIdForUpdate(campaignId)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $campaignId not found")
-        if (campaign.deletedAt != null) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $campaignId not found")
+    fun deleteEvent(userId: Long, eventId: String) {
+        val event = repo.findByIdForUpdate(eventId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
+        if (event.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
         }
-        if (campaign.authorUserId == null || campaign.authorUserId != userId) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "not the campaign owner")
+        if (event.authorUserId == null || event.authorUserId != userId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "not the event owner")
         }
-        if (campaign.status != "upcoming") {
-            throw ResponseStatusException(HttpStatus.CONFLICT, "only upcoming campaigns can be deleted")
+        if (event.status != "upcoming") {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "only upcoming events can be deleted")
         }
         // 참여 카운터와 participant row 가 불일치해도 둘 중 하나라도 0 이 아니면 삭제를 거부한다.
-        if (campaign.joined != 0 || participants.countByCampaignId(campaignId) != 0L) {
-            throw ResponseStatusException(HttpStatus.CONFLICT, "campaign has participants")
+        if (event.joined != 0 || participants.countByEventId(eventId) != 0L) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "event has participants")
         }
-        if (posts.existsByCampaignId(campaignId)) {
-            throw ResponseStatusException(HttpStatus.CONFLICT, "campaign has linked posts")
+        if (posts.existsByEventId(eventId)) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "event has linked posts")
         }
         // soft delete: row 는 남기고 deletedAt/hiddenAt 을 마킹한다(신고 대상 보존·복구 여지).
         // 댓글/북마크 row 도 남긴다 — 공개 노출은 hiddenAt 재사용으로 이미 차단된다.
         val now = Instant.now(clock)
-        campaign.deletedAt = now
-        if (campaign.hiddenAt == null) campaign.hiddenAt = now
+        event.deletedAt = now
+        if (event.hiddenAt == null) event.hiddenAt = now
     }
 
     /**
      * 상호작용(북마크)용 write lock 조회. 숨김 행사는 존재를 드러내지 않는 404 로 차단한다
      * (개설자 권한 경로인 상태 변경/수정/삭제는 별도 — 숨김 상태에서도 허용).
      */
-    private fun visibleForUpdateOrNotFound(campaignId: String): Campaign {
-        val campaign = repo.findByIdForUpdate(campaignId)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $campaignId not found")
-        if (campaign.hiddenAt != null) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "campaign $campaignId not found")
+    private fun visibleForUpdateOrNotFound(eventId: String): Event {
+        val event = repo.findByIdForUpdate(eventId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
+        if (event.hiddenAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
         }
-        return campaign
+        return event
     }
 
     private fun validatePageParams(page: Int, size: Int) = checkPageParams(page, size, MAX_SEARCH_PAGE_SIZE)
 
-    /** 현재 page 의 campaignId 만 대상으로 참여 상태 bulk 조회. 비로그인/빈 page 면 query 생략. */
-    private fun joinedByPage(userId: Long?, campaignIds: List<String>): Set<String> =
-        presenceByPage(userId, campaignIds) { uid, ids -> participants.findByUserIdAndCampaignIdIn(uid, ids).map { it.campaignId } }
+    /** 현재 page 의 eventId 만 대상으로 참여 상태 bulk 조회. 비로그인/빈 page 면 query 생략. */
+    private fun joinedByPage(userId: Long?, eventIds: List<String>): Set<String> =
+        presenceByPage(userId, eventIds) { uid, ids -> participants.findByUserIdAndEventIdIn(uid, ids).map { it.eventId } }
 
-    /** 현재 page 의 campaignId 만 대상으로 북마크 bulk 조회. 비로그인/빈 page 면 query 생략. */
-    private fun bookmarkedByPage(userId: Long?, campaignIds: List<String>): Set<String> =
-        presenceByPage(userId, campaignIds) { uid, ids -> bookmarkRepo.findByUserIdAndCampaignIdIn(uid, ids).map { it.campaignId } }
+    /** 현재 page 의 eventId 만 대상으로 북마크 bulk 조회. 비로그인/빈 page 면 query 생략. */
+    private fun bookmarkedByPage(userId: Long?, eventIds: List<String>): Set<String> =
+        presenceByPage(userId, eventIds) { uid, ids -> bookmarkRepo.findByUserIdAndEventIdIn(uid, ids).map { it.eventId } }
 
     private companion object {
-        val CAMPAIGN_STATUSES = setOf("open", "upcoming", "closed")
+        val EVENT_STATUSES = setOf("open", "upcoming", "closed")
     }
 }

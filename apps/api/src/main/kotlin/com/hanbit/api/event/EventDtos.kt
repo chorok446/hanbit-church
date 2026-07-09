@@ -1,11 +1,11 @@
-package com.dasida.api.campaign
+package com.hanbit.api.event
 
-import com.dasida.api.post.Author
+import com.hanbit.api.post.Author
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 
 @Schema(description = "행사 작성 요청. 날짜는 yyyy-MM-dd 또는 yyyy.MM.dd 를 허용한다.")
-data class CreateCampaignRequest(
+data class CreateEventRequest(
     @field:Schema(description = "제목")
     val title: String,
     @field:Schema(description = "요약")
@@ -24,10 +24,20 @@ data class CreateCampaignRequest(
     val runEnd: String = "",
     @field:Schema(description = "모집 정원", example = "20")
     val capacity: Int = 0,
+    @field:Schema(description = "장소(선택)", example = "본당 2층")
+    val place: String = "",
+    @field:Schema(description = "대상(선택)", example = "청년부")
+    val audience: String = "",
+    @field:Schema(description = "참가비(선택)", example = "1인 1만원")
+    val fee: String = "",
+    @field:Schema(description = "준비물(선택)", example = "성경, 필기구")
+    val supplies: String = "",
+    @field:Schema(description = "문의(선택)", example = "청년부 임원")
+    val contact: String = "",
 )
 
 @Schema(description = "행사 수정 요청. status 가 upcoming 일 때만 허용된다.")
-data class UpdateCampaignRequest(
+data class UpdateEventRequest(
     @field:Schema(description = "제목")
     val title: String,
     @field:Schema(description = "요약")
@@ -46,22 +56,32 @@ data class UpdateCampaignRequest(
     val runEnd: String = "",
     @field:Schema(description = "모집 정원", example = "20")
     val capacity: Int = 0,
+    @field:Schema(description = "장소(선택)", example = "본당 2층")
+    val place: String = "",
+    @field:Schema(description = "대상(선택)", example = "청년부")
+    val audience: String = "",
+    @field:Schema(description = "참가비(선택)", example = "1인 1만원")
+    val fee: String = "",
+    @field:Schema(description = "준비물(선택)", example = "성경, 필기구")
+    val supplies: String = "",
+    @field:Schema(description = "문의(선택)", example = "청년부 임원")
+    val contact: String = "",
 )
 
 @Schema(description = "모집 상태 변경 요청")
-data class UpdateCampaignStatusRequest(
+data class UpdateEventStatusRequest(
     @field:Schema(description = "목표 상태", example = "open", allowableValues = ["upcoming", "open", "closed"])
     val status: String,
 )
 
-data class CampaignParticipantResponse(
+data class EventParticipantResponse(
     val participantId: String,
     val name: String,
     val verified: Boolean,
 )
 
-data class CampaignParticipantsResponse(
-    val campaignId: String,
+data class EventParticipantsResponse(
+    val eventId: String,
     val title: String,
     val status: String,
     val capacity: Int,
@@ -70,19 +90,19 @@ data class CampaignParticipantsResponse(
     val size: Int,
     val totalElements: Long,
     val totalPages: Int,
-    val participants: List<CampaignParticipantResponse>,
+    val participants: List<EventParticipantResponse>,
 )
 
 /** 참가자 퇴장 결과. 갱신된 joined 를 함께 반환하고 participant.userId 는 노출하지 않는다. */
-data class CampaignParticipantRemovalResponse(
-    val campaignId: String,
+data class EventParticipantRemovalResponse(
+    val eventId: String,
     val participantId: String,
     val removed: Boolean,
     val joined: Int,
 )
 
-/** Campaign 응답. 참여·소유 상태는 현재 요청 사용자 기준이며 authorUserId 자체는 노출하지 않는다. */
-data class CampaignResponse(
+/** Event 응답. 참여·소유 상태는 현재 요청 사용자 기준이며 authorUserId 자체는 노출하지 않는다. */
+data class EventResponse(
     val id: String,
     val status: String,
     val title: String,
@@ -98,16 +118,22 @@ data class CampaignResponse(
     val recruitable: Boolean,
     val recruitState: String,
     val author: Author,
-    val body: CampaignBody,
+    val body: EventBody,
     val joinedByMe: Boolean,
     val bookmarkedByMe: Boolean,
     val ownedByMe: Boolean,
     // 관리자 숨김 여부. 숨김 콘텐츠는 개설자 본인 경로(mine/상세)에서만 응답에 실린다.
     val hidden: Boolean = false,
+    // 실무 안내(전부 선택). null 이면 프론트 상세에서 해당 행을 숨긴다.
+    val place: String? = null,
+    val audience: String? = null,
+    val fee: String? = null,
+    val supplies: String? = null,
+    val contact: String? = null,
 )
 
-data class CampaignSearchResponse(
-    val content: List<CampaignResponse>,
+data class EventSearchResponse(
+    val content: List<EventResponse>,
     val page: Int,
     val size: Int,
     val totalElements: Long,
@@ -115,17 +141,17 @@ data class CampaignSearchResponse(
 )
 
 /** 마이페이지 행사 목록(참여/개설) pagination 응답. Spring Page 를 직접 노출하지 않는다. */
-data class CampaignPageResponse(
-    val content: List<CampaignResponse>,
+data class EventPageResponse(
+    val content: List<EventResponse>,
     val page: Int,
     val size: Int,
     val totalElements: Long,
     val totalPages: Int,
 )
 
-data class CampaignCommentResponse(
+data class EventCommentResponse(
     val id: String,
-    val campaignId: String,
+    val eventId: String,
     val author: Author,
     val text: String,
     val createdAt: Instant,
@@ -134,11 +160,11 @@ data class CampaignCommentResponse(
     val updatedAt: Instant?,
     val parentId: String? = null,
     // 최상위 댓글일 때만 채워지는 1단계 답글 목록(오래된 순).
-    val replies: List<CampaignCommentResponse> = emptyList(),
+    val replies: List<EventCommentResponse> = emptyList(),
 )
 
-data class CampaignCommentsResponse(
-    val content: List<CampaignCommentResponse>,
+data class EventCommentsResponse(
+    val content: List<EventCommentResponse>,
     val page: Int,
     val size: Int,
     // pagination 은 최상위 댓글 기준.
@@ -148,9 +174,9 @@ data class CampaignCommentsResponse(
     val totalComments: Long = 0,
 )
 
-data class CampaignProofResponse(
+data class EventProofResponse(
     val id: String,
-    val campaignId: String,
+    val eventId: String,
     val author: Author,
     val text: String,
     val images: List<String>,
@@ -158,8 +184,8 @@ data class CampaignProofResponse(
     val ownedByMe: Boolean,
 )
 
-data class CampaignProofsResponse(
-    val content: List<CampaignProofResponse>,
+data class EventProofsResponse(
+    val content: List<EventProofResponse>,
     val page: Int,
     val size: Int,
     val totalElements: Long,
@@ -169,7 +195,7 @@ data class CampaignProofsResponse(
 )
 
 @Schema(description = "행사 참여 후기 작성 요청")
-data class CreateCampaignProofRequest(
+data class CreateEventProofRequest(
     @field:Schema(description = "인증 소감(최대 500자)")
     val text: String,
     @field:Schema(description = "후기 사진 URL 목록(최대 4장)")
@@ -177,7 +203,7 @@ data class CreateCampaignProofRequest(
 )
 
 @Schema(description = "행사 댓글 작성 요청")
-data class CreateCampaignCommentRequest(
+data class CreateEventCommentRequest(
     @field:Schema(description = "댓글 본문(최대 500자)")
     val text: String,
     @field:Schema(description = "답글 대상 댓글 id(최상위 댓글만 가능). null 이면 일반 댓글.")
@@ -185,7 +211,7 @@ data class CreateCampaignCommentRequest(
 )
 
 @Schema(description = "행사 댓글 수정 요청")
-data class UpdateCampaignCommentRequest(
+data class UpdateEventCommentRequest(
     @field:Schema(description = "댓글 본문(최대 500자)")
     val text: String,
 )
