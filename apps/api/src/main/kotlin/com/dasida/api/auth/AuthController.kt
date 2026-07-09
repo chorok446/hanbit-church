@@ -32,6 +32,7 @@ import org.springframework.web.server.ResponseStatusException
 @Tag(name = "Auth", description = "인증 및 계정 API")
 class AuthController(
     private val authService: AuthService,
+    private val accountService: AccountService,
     private val authCookies: AuthCookies,
     private val accessLogService: AccessLogService,
 ) {
@@ -107,7 +108,7 @@ class AuthController(
         @RequestBody req: UpdateProfileRequest,
         res: HttpServletResponse,
     ): UpdateProfileResponse =
-        authService.updateProfile(requireUserId(principal), req).also { res.setAuthCookie(it.token) }
+        accountService.updateProfile(requireUserId(principal), req).also { res.setAuthCookie(it.token) }
 
     @Operation(summary = "비밀번호 변경")
     @SecurityRequirement(name = "bearerAuth")
@@ -117,7 +118,7 @@ class AuthController(
         @RequestBody req: ChangePasswordRequest,
         res: HttpServletResponse,
     ): ChangePasswordResponse =
-        authService.changePassword(requireUserId(principal), req).also { result ->
+        accountService.changePassword(requireUserId(principal), req).also { result ->
             result.token?.let { res.setAuthCookie(it) }
         }
 
@@ -129,7 +130,7 @@ class AuthController(
         @RequestBody req: ChangeEmailRequest,
         res: HttpServletResponse,
     ): ChangeEmailResponse =
-        authService.changeEmail(requireUserId(principal), req).also { res.setAuthCookie(it.token) }
+        accountService.changeEmail(requireUserId(principal), req).also { res.setAuthCookie(it.token) }
 
     @Operation(summary = "계정 탈퇴")
     @SecurityRequirement(name = "bearerAuth")
@@ -139,7 +140,7 @@ class AuthController(
         @RequestBody req: DeleteAccountRequest,
         res: HttpServletResponse,
     ): DeleteAccountResponse =
-        authService.deleteAccount(requireUserId(principal), req).also {
+        accountService.deleteAccount(requireUserId(principal), req).also {
             // 탈퇴 사용자는 필터·refresh 모두에서 거절되므로 denylist 없이 쿠키만 정리한다.
             res.expireAuthCookies()
         }
