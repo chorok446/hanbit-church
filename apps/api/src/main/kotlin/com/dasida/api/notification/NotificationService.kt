@@ -130,7 +130,9 @@ class NotificationService(
                 readAt = null,
                 createdAt = Instant.now(),
                 time = "방금 전",
-                seq = System.nanoTime(),
+                // 정렬 키는 벽시계(epoch millis) 기반이어야 재기동·다중 replica 간에도 일관된 최신순이 유지된다.
+                // (System.nanoTime 은 JVM 로컬 기준점이라 재기동/replica 마다 값이 어긋난다.)
+                seq = Instant.now().toEpochMilli(),
             ),
         )
         events.publishEvent(NotificationCreatedEvent(recipientUserId))
