@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Loader2, Music } from "lucide-react";
+import { Loader2, Music } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { StatePanel } from "@/components/ui/state-panel";
 import { ApiError } from "@/lib/api";
@@ -12,7 +11,7 @@ import {
   PRAISE_ROLE_LABELS,
   type PraiseMember,
 } from "@/data/praise-team";
-import { SectionLabel } from "../praise-ui";
+import { PraiseBand } from "../praise-ui";
 
 /** 팀원 목록 — 이름·역할·파트만 표시(이메일·연락처는 API 자체가 주지 않는다). */
 export function MembersClient() {
@@ -50,31 +49,15 @@ export function MembersClient() {
   const members = loading || !result ? [] : result.members;
 
   return (
-    <PageShell orb="right" paddingClassName="px-6 pb-24 pt-32">
-      <div className="mx-auto max-w-4xl">
-        <Link
-          href="/praise-team"
-          className="inline-flex min-h-11 items-center gap-1.5 text-[13px]"
-          style={{ color: "var(--foreground-muted)" }}
-        >
-          <ArrowLeft size={14} aria-hidden />
-          찬양팀 홈
-        </Link>
-
-        <header className="mt-4">
-          <SectionLabel>Members</SectionLabel>
-          <h1
-            className="mt-2 text-[28px] sm:text-[32px]"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
-          >
-            팀원 목록
-          </h1>
-          <p className="mt-2 text-[14px] leading-7" style={{ color: "var(--foreground-muted)" }}>
-            팀원 추가·역할 변경은 관리자 페이지(회원 관리)에서 합니다.
-          </p>
-        </header>
-
-        <div className="mt-6">
+    <>
+      <PraiseBand
+        eyebrow="Members"
+        title="팀원 목록"
+        subtitle="팀원 추가·역할 변경은 관리자 페이지(회원 관리)에서 합니다."
+        back={{ href: "/praise-team", label: "찬양팀 홈" }}
+      />
+      <PageShell orb="right" paddingClassName="px-6 pb-24 pt-10">
+        <div className="mx-auto max-w-[896px]">
           {loading ? (
             <StatePanel compact>
               <Loader2 className="animate-spin" size={20} aria-hidden />
@@ -140,7 +123,7 @@ export function MembersClient() {
             </ul>
           )}
         </div>
-      </div>
-    </PageShell>
+      </PageShell>
+    </>
   );
 }

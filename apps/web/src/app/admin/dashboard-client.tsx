@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
-  CircleCheck,
   FileText,
   Flag,
   HeartHandshake,
@@ -143,18 +142,10 @@ export default function DashboardClient() {
 
   const { summary, pendingApprovals, pendingNewFamily } = state.data;
 
-  // 오늘 처리할 일 — 대기 건수가 있는 항목만 노출하고, 권한이 없는 항목은 숨긴다.
+  // 오늘 처리할 일 — 권한이 있는 항목만 3열로 노출한다(건수 0도 표시해 "처리할 일 없음"을 드러낸다).
+  // 각 항목은 성격에 맞는 틴트를 쓴다: 신고=danger, 승인=gold, 새가족=중립.
   // TODO(마감 임박 행사: 관리자용 마감 임박 행사 집계 데이터 함수가 생기면 항목 추가)
   const todos = [
-    {
-      key: "approvals",
-      href: "/admin/approvals",
-      icon: UserCheck,
-      label: "가입 승인 대기",
-      count: pendingApprovals,
-      unit: "건",
-      permission: "canApproveSignups" as const,
-    },
     {
       key: "reports",
       href: "/admin/reports",
@@ -163,6 +154,19 @@ export default function DashboardClient() {
       count: summary.pendingReports,
       unit: "건",
       permission: "canManageReports" as const,
+      tintBg: "rgba(var(--danger-rgb), 0.08)",
+      numberColor: "var(--danger)",
+    },
+    {
+      key: "approvals",
+      href: "/admin/approvals",
+      icon: UserCheck,
+      label: "가입 승인 대기",
+      count: pendingApprovals,
+      unit: "건",
+      permission: "canApproveSignups" as const,
+      tintBg: "var(--accent-soft)",
+      numberColor: "var(--accent-strong)",
     },
     {
       key: "new-family",
@@ -172,9 +176,10 @@ export default function DashboardClient() {
       count: pendingNewFamily,
       unit: "건",
       permission: "canManageNewFamily" as const,
+      tintBg: "var(--chip-bg)",
+      numberColor: "var(--heading)",
     },
   ].filter((todo) => permissions[todo.permission]);
-  const activeTodos = todos.filter((todo) => todo.count > 0);
 
   // 통계 카드: 모두 관련 화면으로 들어가는 진입점이다.
   // TODO(콘텐츠 관리 탭: 전용 관리 페이지 필요) — 게시글·행사는 전용 관리 페이지가 없어
@@ -190,54 +195,92 @@ export default function DashboardClient() {
 
   return (
     <div className="space-y-6">
-      {/* 오늘 처리할 일 — 대기 중인 작업 큐를 통계보다 먼저 보여준다. */}
-      <section
-        aria-labelledby="admin-todo-heading"
-        className="rounded-3xl border p-5"
-        style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
-      >
-        <h2 id="admin-todo-heading" className="mb-4 inline-flex items-center gap-2 text-[14px] font-semibold">
-          <ListTodo size={16} aria-hidden style={{ color: "var(--accent-secondary)" }} />
-          오늘 처리할 일
-        </h2>
-        {activeTodos.length === 0 ? (
-          <p className="flex items-center gap-2 text-[13.5px]" style={{ color: "var(--foreground-muted)" }}>
-            <CircleCheck size={16} aria-hidden style={{ color: "var(--accent-secondary)" }} />
-            처리할 작업이 없습니다. 모든 운영 상태가 안정적입니다.
-          </p>
-        ) : (
-          <ul className="space-y-2.5">
-            {activeTodos.map(({ key, href, icon: Icon, label, count, unit }) => (
-              <li
+      {/* 오늘 처리할 일 — 대기 중인 작업 큐를 통계보다 먼저, 3열 틴트 카드로 보여준다. */}
+      {todos.length > 0 && (
+        <section aria-labelledby="admin-todo-heading">
+          <h2
+            id="admin-todo-heading"
+            className="mb-3.5 inline-flex items-center gap-2 text-[14px] font-semibold"
+            style={{ color: "var(--foreground)" }}
+          >
+            <ListTodo size={16} aria-hidden style={{ color: "var(--accent-secondary)" }} />
+            오늘 처리할 일
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {todos.map(({ key, href, icon: Icon, label, count, unit, tintBg, numberColor }) => (
+              <Link
                 key={key}
-                className="flex flex-wrap items-center gap-3 rounded-2xl border px-4 py-3"
-                style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                href={href}
+                aria-label={`${label} ${count.toLocaleString()}${unit} 확인하기`}
+                className="group flex flex-col gap-3 rounded-3xl border p-5 transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
+                style={{ background: tintBg, borderColor: "var(--border)", color: "var(--foreground)" }}
               >
-                <Icon size={16} aria-hidden style={{ color: "var(--accent-secondary)" }} />
-                <span className="text-[13.5px]">
-                  {label}{" "}
-                  <b style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>
-                    {count.toLocaleString()}
-                    {unit}
-                  </b>
+                <span className="inline-flex items-center gap-2 text-[13px] font-medium">
+                  <Icon size={16} aria-hidden style={{ color: numberColor }} />
+                  {label}
                 </span>
-                <Link
-                  href={href}
-                  className="ml-auto inline-flex items-center gap-1 rounded-full px-3.5 py-2 text-[12.5px]"
-                  style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
-                  aria-label={`${label} ${count.toLocaleString()}${unit} 확인하기`}
+                <span className="flex items-baseline gap-1">
+                  <b
+                    className="text-[30px] leading-none"
+                    style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: numberColor }}
+                  >
+                    {count.toLocaleString()}
+                  </b>
+                  <span className="text-[13px]" style={{ color: "var(--foreground-muted)" }}>
+                    {unit}
+                  </span>
+                </span>
+                <span
+                  className="inline-flex items-center gap-1 text-[12.5px]"
+                  style={{ color: "var(--accent-strong)" }}
                 >
                   확인하기
                   <ArrowUpRight size={13} aria-hidden />
-                </Link>
-              </li>
+                </span>
+              </Link>
             ))}
-          </ul>
-        )}
-      </section>
+          </div>
+        </section>
+      )}
 
+      {/* 통계 카드 4열 — 각 항목의 관리 화면 진입점. */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {statCards.map(({ label, value, unit, icon: Icon, href, destination }) => (
+          <Link
+            key={label}
+            href={href}
+            aria-label={`${label} ${value.toLocaleString()}${unit} — ${destination}(으)로 이동`}
+            className="group rounded-3xl border p-5 transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
+            style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+          >
+            <Icon size={18} aria-hidden style={{ color: "var(--accent-secondary)" }} />
+            <p className="mt-3 flex items-baseline gap-1">
+              <span
+                className="text-[30px] leading-none"
+                style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
+              >
+                {value.toLocaleString()}
+              </span>
+              <span className="text-[13px]" style={{ color: "var(--foreground-muted)" }}>
+                {unit}
+              </span>
+            </p>
+            <p className="mt-1.5 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
+              {label}
+            </p>
+            <span
+              className="mt-3 inline-flex items-center gap-1 text-[12px]"
+              style={{ color: "var(--accent-strong)" }}
+            >
+              {destination}
+              <ArrowUpRight size={12} aria-hidden />
+            </span>
+          </Link>
+        ))}
+      </div>
+
+      {/* 처리 대기 신고 + 정지 중 회원 — 관리자 핵심 작업 큐 2열. */}
       <div className="grid gap-4 sm:grid-cols-2">
-        {/* 대기 신고: 관리자의 핵심 작업 큐라 별도 강조 카드로 노출한다. */}
         <QueueCard
           href="/admin/reports"
           icon={Flag}
@@ -249,7 +292,8 @@ export default function DashboardClient() {
           }
           count={summary.pendingReports}
           countLabel={`대기 신고 ${summary.pendingReports}건`}
-          highlighted={summary.pendingReports > 0}
+          ctaLabel="신고 관리로 이동"
+          tone={summary.pendingReports > 0 ? "danger" : "neutral"}
         />
         <QueueCard
           href="/admin/users?filter=suspended"
@@ -262,36 +306,9 @@ export default function DashboardClient() {
           }
           count={summary.suspendedUsers}
           countLabel={`정지 중 회원 ${summary.suspendedUsers}명`}
-          highlighted={false}
+          ctaLabel="회원 관리로 이동"
+          tone="neutral"
         />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {statCards.map(({ label, value, unit, icon: Icon, href, destination }) => (
-          <Link
-            key={label}
-            href={href}
-            aria-label={`${label} ${value.toLocaleString()}${unit} — ${destination}(으)로 이동`}
-            className="group rounded-3xl border p-5 transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
-            style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
-          >
-            <div className="flex items-start justify-between">
-              <Icon size={18} aria-hidden style={{ color: "var(--accent-secondary)" }} />
-              <ArrowUpRight
-                size={14}
-                aria-hidden
-                className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
-                style={{ color: "var(--foreground-muted)" }}
-              />
-            </div>
-            <p className="mt-3 text-[24px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>
-              {value.toLocaleString()}
-            </p>
-            <p className="text-[12px]" style={{ color: "var(--foreground-muted)" }}>
-              {label}
-            </p>
-          </Link>
-        ))}
       </div>
 
       {/* 빠른 작업 — 자주 쓰는 작성·처리 화면 바로가기. */}
@@ -310,7 +327,7 @@ export default function DashboardClient() {
               <Link
                 key={href}
                 href={href}
-                className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-[13px] transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-[13px] transition-colors hover:bg-[var(--surface-muted)]"
                 style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--foreground)" }}
               >
                 <Icon size={14} aria-hidden style={{ color: "var(--accent-secondary)" }} />
@@ -383,7 +400,8 @@ function QueueCard({
   description,
   count,
   countLabel,
-  highlighted,
+  ctaLabel,
+  tone,
 }: {
   href: string;
   icon: typeof Flag;
@@ -391,29 +409,53 @@ function QueueCard({
   description: string;
   count: number;
   countLabel: string;
-  highlighted: boolean;
+  ctaLabel: string;
+  /** danger = 대기 신고 강조(테두리·뱃지·숫자 danger), neutral = 기본 카드 */
+  tone: "danger" | "neutral";
 }) {
+  const danger = tone === "danger";
   return (
     <Link
       href={href}
-      className="flex items-center justify-between gap-4 rounded-3xl border p-6 transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
+      className="group flex flex-col gap-4 rounded-3xl border p-6 transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
       style={{
-        background: highlighted ? "var(--accent-soft)" : "var(--card)",
-        borderColor: "var(--border)",
+        background: "var(--card)",
+        borderColor: danger ? "var(--danger-soft)" : "var(--border)",
         color: "var(--foreground)",
       }}
     >
-      <div className="flex items-center gap-4">
-        <Icon size={22} aria-hidden style={{ color: "var(--accent-secondary)" }} />
-        <div>
-          <p className="text-[14px] font-semibold">{title}</p>
-          <p className="text-[12px]" style={{ color: "var(--foreground-muted)" }}>
-            {description}
-          </p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Icon size={20} aria-hidden style={{ color: danger ? "var(--danger)" : "var(--accent-secondary)" }} />
+          <div>
+            <p className="text-[14px] font-semibold">{title}</p>
+            <p className="mt-0.5 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
+              {description}
+            </p>
+          </div>
         </div>
+        <span
+          className="rounded-full px-2.5 py-1 text-[12px] font-medium"
+          style={
+            danger && count > 0
+              ? { background: "var(--danger-soft)", color: "var(--danger)" }
+              : { background: "var(--chip-bg)", color: "var(--foreground-muted)" }
+          }
+          aria-label={countLabel}
+        >
+          <b style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{count.toLocaleString()}</b>
+        </span>
       </div>
-      <span className="text-[32px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600 }} aria-label={countLabel}>
-        {count.toLocaleString()}
+      <span
+        className="inline-flex items-center gap-1 self-start rounded-full px-4 py-2 text-[12.5px] transition-opacity group-hover:opacity-90"
+        style={
+          danger
+            ? { background: "var(--cta-bg)", color: "var(--cta-fg)" }
+            : { background: "transparent", border: "1px solid var(--border)", color: "var(--foreground)" }
+        }
+      >
+        {ctaLabel}
+        <ArrowUpRight size={13} aria-hidden />
       </span>
     </Link>
   );
