@@ -16,6 +16,8 @@ RUN pnpm install --frozen-lockfile --filter web
 
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# 프로덕션 이미지에서만 standalone 번들을 생성한다(next.config.ts 의 env 게이트).
+ENV NEXT_OUTPUT_STANDALONE=1
 
 RUN pnpm --filter web build
 

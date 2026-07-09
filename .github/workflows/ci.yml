@@ -91,17 +91,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # pnpm audit runs over the whole JS workspace (web + packages); it has no --filter form.
+      # 비차단(continue-on-error): 취약점을 리포트만 하고 빌드는 막지 않는다.
+      # (컨테이너 이미지 스캔은 외부 액션 버전 드리프트로 잡이 통째로 실패할 수 있어 후속 과제로 분리)
       - name: pnpm audit (JS workspace, high+)
         continue-on-error: true
         run: pnpm audit --audit-level=high
-      - name: Trivy filesystem scan
-        continue-on-error: true
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
 
   api:
     name: api (Spring Boot)
