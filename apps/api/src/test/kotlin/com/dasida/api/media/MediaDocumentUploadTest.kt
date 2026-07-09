@@ -81,6 +81,24 @@ class MediaDocumentUploadTest(
     }
 
     @Test
+    fun `pdf 확장자로 위장한 HTML 은 내용 스니핑으로 400`() {
+        mvc.perform(
+            multipart("/api/media/document")
+                .file(MockMultipartFile("file", "bulletin.pdf", "application/pdf", "<html><script>alert(1)</script></html>".toByteArray()))
+                .cookie(authCookie(admin())),
+        ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `png 확장자지만 이미지가 아니면 400`() {
+        mvc.perform(
+            multipart("/api/media/document")
+                .file(MockMultipartFile("file", "fake.png", "image/png", "not an image".toByteArray()))
+                .cookie(authCookie(admin())),
+        ).andExpect(status().isBadRequest)
+    }
+
+    @Test
     fun `10MB 초과 문서는 400`() {
         val big = ByteArray(10 * 1024 * 1024 + 1).also {
             "%PDF-".toByteArray().copyInto(it)

@@ -66,7 +66,10 @@ class MediaUploadService(
     }
 
     /**
-     * 문서(주보 PDF·한글·이미지 등) 저장. 실행형 확장자(BLOCKED_DOCUMENT_EXTENSIONS)만 차단하고 모든 파일 허용.
+     * 문서(주보 PDF·한글·텍스트·이미지 등) 저장. PDF 외 일반 문서도 허용하되 아래 3중 검증으로 위장 페이로드를 막는다:
+     *  1) 실행형 확장자 denylist(BLOCKED_DOCUMENT_EXTENSIONS) 차단
+     *  2) 확장자와 무관하게 내용이 HTML/스크립트/SVG/XML 마크업으로 보이면 차단(`bulletin.pdf` 로 위장한 HTML 등)
+     *  3) 인라인 서빙되는 이미지 확장자(jpg/png/webp)는 실제 이미지 magic bytes 와 일치해야 함
      * 이미지와 달리 축소·썸네일 없이 원본 그대로 저장하고 공개 URL 을 반환한다.
      */
     fun storeDocument(file: MultipartFile): String {
@@ -80,10 +83,18 @@ class MediaUploadService(
         if (bytes.size > MAX_DOCUMENT_BYTES) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file is too large")
         }
-        // 모든 파일 허용하되, 브라우저가 실행/렌더할 수 있는 위험 유형(HTML·SVG·JS 등)은 XSS 방지를 위해 차단.
         val extension = documentExtension(file.originalFilename)
+        // 1) 브라우저가 실행/렌더할 수 있는 위험 확장자 차단.
         if (extension in BLOCKED_DOCUMENT_EXTENSIONS) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported document type")
+        }
+        // 2) 확장자를 우회한 위장(예: HTML 을 .pdf 로 저장)을 내용 기반으로 차단. nosniff+attachment 위에 얹는 방어.
+        if (looksLikeExecutableMarkup(bytes)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported document content")
+        }
+        // 3) 인라인 서빙 대상 이미지 확장자는 실제 이미지여야 한다(mislabeled 문서의 인라인 렌더 차단).
+        if (extension in INLINE_PRAISE_IMAGE_EXTENSIONS && detectImageExtension(bytes) == null) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid image document")
         }
         val filename = "${UUID.randomUUID()}.$extension"
         Files.write(resolveUploadDir().resolve(filename), bytes)
@@ -240,10 +251,26 @@ class MediaUploadService(
          */
         internal val BLOCKED_DOCUMENT_EXTENSIONS = setOf(
             "html", "htm", "xhtml", "xht", "shtml", "shtm", "stm", "mhtml", "mht", "hta",
-            "svg", "xml", "xsl", "swf",
-            "js", "mjs", "css", "vbs", "ps1",
+            "svg", "svgz", "xml", "xsl", "swf",
+            "js", "mjs", "jse", "css", "vbs", "vbscript", "ps1", "wsf", "wsh", "reg",
             "php", "phtml", "phar", "pht", "jsp", "jspx",
+            "jar", "class", "dll",
             "sh", "bat", "cmd", "exe", "com", "scr", "htaccess",
+        )
+
+        /**
+         * 내용이 브라우저에서 실행/렌더될 수 있는 마크업(HTML·스크립트·SVG·XML)인지 앞부분으로 판별한다.
+         * 확장자를 우회한 위장 페이로드(HTML 을 .pdf/.txt 로 저장)를 차단한다.
+         */
+        internal fun looksLikeExecutableMarkup(bytes: ByteArray): Boolean {
+            val head = String(bytes, 0, minOf(bytes.size, 1024), Charsets.UTF_8)
+                .trimStart('﻿', ' ', '\t', '\r', '\n')
+                .lowercase()
+            return MARKUP_MARKERS.any { it in head }
+        }
+
+        private val MARKUP_MARKERS = listOf(
+            "<!doctype html", "<html", "<head", "<body", "<script", "<svg", "<?xml", "<iframe", "<object", "<embed",
         )
 
         /** %PDF- magic bytes. */
