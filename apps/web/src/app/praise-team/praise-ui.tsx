@@ -1,6 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import {
   ATTENDANCE_STATUS_LABELS,
   attendanceStatusStyle,
@@ -46,6 +48,98 @@ export function SectionLabel({ children }: { children: ReactNode }) {
     >
       {children}
     </p>
+  );
+}
+
+// 네이비 밴드 위 크림 텍스트는 배너 관례(#f6f3ea / rgba(246,243,234,a)) 리터럴을 쓴다
+// (--on-banner 토큰이 없으므로 mypage-profile-header 와 같은 값을 재사용).
+const BAND_CREAM = "#f6f3ea";
+const BAND_CREAM_MUTED = "rgba(246, 243, 234, 0.72)";
+const BAND_CREAM_BORDER = "rgba(246, 243, 234, 0.3)";
+
+/** 밴드 하단 nav pill — 아웃라인(크림 border) 또는 채움(크림 배경 + 네이비 텍스트). */
+export function BandPill({
+  href,
+  filled,
+  children,
+}: {
+  href: string;
+  filled?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex min-h-10 items-center gap-1.5 rounded-full px-4 text-[13px] font-medium transition-opacity hover:opacity-90"
+      style={
+        filled
+          ? { background: BAND_CREAM, color: "var(--surface-deep)" }
+          : { border: `1px solid ${BAND_CREAM_BORDER}`, color: BAND_CREAM }
+      }
+    >
+      {children}
+    </Link>
+  );
+}
+
+/**
+ * 찬양팀 상단 "컴팩트 네이비 밴드" — 모든 찬양팀 페이지 상단에 공통으로 쓴다.
+ * eyebrow(골드) + h1(명조 크림) + subtitle(뮤티드 크림) + 선택적 nav pill 메뉴.
+ * pills 는 BandPill 로 구성한다(권한별 노출은 호출부에서 제어).
+ */
+export function PraiseBand({
+  eyebrow,
+  title,
+  subtitle,
+  back,
+  pills,
+}: {
+  eyebrow: string;
+  title: string;
+  subtitle?: ReactNode;
+  /** 좌상단 "찬양팀 홈" 등 돌아가기 링크(하위 페이지). */
+  back?: { href: string; label: string };
+  /** 밴드 하단 nav pill 묶음. */
+  pills?: ReactNode;
+}) {
+  return (
+    <div className="px-6 pt-[124px] pb-11" style={{ background: "var(--banner-bg)" }}>
+      <div className="mx-auto max-w-[896px]">
+        {back ? (
+          <Link
+            href={back.href}
+            className="mb-4 inline-flex min-h-9 items-center gap-1.5 text-[13px] transition-opacity hover:opacity-80"
+            style={{ color: BAND_CREAM_MUTED }}
+          >
+            <ArrowLeft size={14} aria-hidden />
+            {back.label}
+          </Link>
+        ) : null}
+        <p
+          className="text-[11px] font-semibold uppercase tracking-[0.28em]"
+          style={{ color: "var(--accent)" }}
+        >
+          {eyebrow}
+        </p>
+        <h1
+          className="mt-2 break-words"
+          style={{
+            fontFamily: "var(--font-display)",
+            fontWeight: 600,
+            fontSize: "clamp(28px, 5vw, 38px)",
+            color: BAND_CREAM,
+          }}
+        >
+          {title}
+        </h1>
+        {subtitle ? (
+          <p className="mt-3 text-[15px] leading-8" style={{ color: BAND_CREAM_MUTED }}>
+            {subtitle}
+          </p>
+        ) : null}
+        {pills ? <nav className="mt-5 flex flex-wrap gap-2" aria-label="찬양팀 메뉴">{pills}</nav> : null}
+      </div>
+    </div>
   );
 }
 

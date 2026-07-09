@@ -15,7 +15,7 @@ export function MypageTabBar({
 
   return (
     <div
-      className="mx-auto max-w-5xl border-b px-4 sm:px-8"
+      className="mx-auto mt-8 max-w-5xl border-b px-4 sm:px-8"
       style={{ borderColor: "var(--border)" }}
     >
       <div className="flex flex-col gap-3 py-3 sm:flex-row sm:items-end sm:gap-6">

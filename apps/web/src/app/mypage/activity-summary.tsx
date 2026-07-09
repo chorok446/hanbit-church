@@ -65,54 +65,50 @@ export function ActivitySummary({
   const bone = "var(--border)";
   const tiles = TILES.filter((tile) => !tile.adminOnly || isAdmin);
 
+  // 프로필 밴드 위로 겹치는(-mt-6) 흰 카드 오버랩 바. 열 사이 구분선(var(--border)).
+  // 셀 사이 1px 구분선은 컨테이너 배경(border) 위에 gap 을 두어 표현한다.
+  const cols = tiles.length >= 4 ? "min-[420px]:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-3";
   return (
-    <div className="mx-auto max-w-5xl px-6 sm:px-8">
-      <p className="mb-3 text-[11px] tracking-[0.24em] uppercase" style={{ color: "var(--foreground-muted)" }}>
-        활동 요약
-      </p>
+    <div className="mx-auto -mt-6 max-w-5xl px-6 sm:px-8">
       <div
-        className={`grid grid-cols-1 gap-3 pb-8 min-[420px]:grid-cols-2 ${
-          tiles.length === 4 ? "lg:grid-cols-4" : "sm:grid-cols-3"
-        }`}
+        className={`grid grid-cols-1 gap-px overflow-hidden rounded-2xl border shadow-[0_20px_45px_-24px_rgba(31,42,68,0.35)] ${cols}`}
+        style={{ background: bone, borderColor: bone }}
       >
-      {tiles.map(({ tab, label, description, icon: Icon }, i) => (
-        <StaggerItem key={tab} index={i}>
-          <button
-            type="button"
-            onClick={() => onSelectTab(tab)}
-            aria-label={counts ? `${label} ${counts[tab]}개 보기` : `${label} 보기`}
-            className="w-full rounded-2xl border p-5 text-left transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none"
-            style={{
-              background: "var(--glass)",
-              borderColor: bone,
-            }}
-          >
-            <div className="flex items-start justify-between gap-2">
-              {counts ? (
-                <p
-                  style={{
-                    fontFamily: "var(--font-display)", fontWeight: 600,
-                    fontSize: "clamp(26px, 3vw, 34px)",
-                    color: "var(--accent)",
-                    lineHeight: 1.1,
-                  }}
-                >
-                  <CountUp to={counts[tab]} />
+        {tiles.map(({ tab, label, description, icon: Icon }, i) => (
+          <StaggerItem key={tab} index={i} className="h-full">
+            <button
+              type="button"
+              onClick={() => onSelectTab(tab)}
+              aria-label={counts ? `${label} ${counts[tab]}개 보기` : `${label} 보기`}
+              className="flex h-full w-full items-center gap-4 p-5 text-left transition-colors hover:bg-[var(--accent-soft)]"
+              style={{ background: "var(--card)" }}
+            >
+              <div className="min-w-0 flex-1">
+                {counts ? (
+                  <p
+                    style={{
+                      fontFamily: "var(--font-display)", fontWeight: 600,
+                      fontSize: "clamp(26px, 3vw, 30px)",
+                      color: "var(--accent-strong)",
+                      lineHeight: 1.1,
+                    }}
+                  >
+                    <CountUp to={counts[tab]} />
+                  </p>
+                ) : (
+                  <div className="h-7 w-14 animate-pulse rounded-full" style={{ background: bone }} />
+                )}
+                <p className="mt-2 text-[13px] font-medium" style={{ color: "var(--heading)" }}>
+                  {label}
                 </p>
-              ) : (
-                <div className="h-8 w-14 animate-pulse rounded-full" style={{ background: bone }} />
-              )}
-              <Icon size={16} aria-hidden className="mt-1 shrink-0 text-[var(--accent)]" />
-            </div>
-            <p className="mt-2 text-[13px] font-medium" style={{ color: "var(--foreground)" }}>
-              {label}
-            </p>
-            <p className="mt-0.5 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
-              {description}
-            </p>
-          </button>
-        </StaggerItem>
-      ))}
+                <p className="mt-0.5 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
+                  {description}
+                </p>
+              </div>
+              <Icon size={18} aria-hidden className="shrink-0 text-[var(--accent)]" />
+            </button>
+          </StaggerItem>
+        ))}
       </div>
     </div>
   );
