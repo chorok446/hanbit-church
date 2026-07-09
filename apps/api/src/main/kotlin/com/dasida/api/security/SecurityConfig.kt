@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -16,6 +17,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+// URL 매처(아래 requestMatchers)에 더해, 최고권한 admin 작업은 서비스 계층 @PreAuthorize 로 이중 방어한다.
+@EnableMethodSecurity
 class SecurityConfig(
     private val jwtFilter: JwtAuthFilter,
     // 행사 개설을 스태프(최고 관리자·운영자·사역 담당자)로 제한할지. e2e·기존 흐름 보호를 위해 기본 꺼짐.

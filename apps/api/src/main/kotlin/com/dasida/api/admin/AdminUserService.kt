@@ -9,6 +9,7 @@ import com.dasida.api.post.PostRepository
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
@@ -101,6 +102,7 @@ class AdminUserService(
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     fun setSuspension(adminUserId: Long, userId: Long, request: SetUserSuspensionRequest): AdminUserResponse {
         val user = users.findById(userId).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
@@ -150,6 +152,7 @@ class AdminUserService(
 
     /** 찬양팀 역할·파트 지정/해제. 사이트 role 과 독립 — 일반 회원도 찬양팀 멤버가 될 수 있다. */
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     fun setPraiseRole(adminUserId: Long, userId: Long, request: SetPraiseRoleRequest): AdminUserResponse {
         val user = users.findById(userId).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
@@ -186,6 +189,7 @@ class AdminUserService(
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     fun setRole(adminUserId: Long, userId: Long, request: SetUserRoleRequest): AdminUserResponse {
         val newRole = try {
             UserRole.valueOf(request.role.trim())
