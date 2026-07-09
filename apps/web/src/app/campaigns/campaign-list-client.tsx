@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion, useScroll, useTransform } from "motion/react";
+import { Plus } from "lucide-react";
 import { ListEmptyState } from "@/components/list-empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { StatePanel } from "@/components/ui/state-panel";
@@ -88,8 +88,6 @@ export default function CampaignListClient() {
   });
 
   const sectionRef = useRef<HTMLElement>(null);
-  const { scrollY } = useScroll();
-  const titleY = useTransform(scrollY, [0, 600], [0, -80]);
 
   const updateUrl = useCallback((changes: Partial<CampaignListUrlState>, replace = false) => {
     const href = buildCampaignsHref({ ...urlState, ...changes });
@@ -167,28 +165,39 @@ export default function CampaignListClient() {
   });
 
   return (
-    <PageShell ref={sectionRef} paddingClassName="relative min-h-screen overflow-hidden px-6 pb-20 pt-32" orb="right">
-      <div className="relative mx-auto max-w-6xl">
-        <motion.div className="mb-12 text-center" style={{ y: titleY }}>
-          <p className="mb-3 uppercase tracking-[0.4em]" style={{ color: "var(--accent)", fontSize: 11 }}>
-            Events &amp; Ministry
-          </p>
-          <h1
-            style={{
-              fontFamily: "var(--font-display)", fontWeight: 600,
-              fontSize: "clamp(48px, 6vw, 96px)",
-              color: "var(--foreground)",
-            }}
-          >
-            행사·사역
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl" style={{ color: "var(--foreground-muted)" }}>
-            함께 예배하고, 섬기고, 교제하는 자리에 초대합니다.
-            <br className="hidden sm:block" />
-            모집 중인 행사와 사역을 확인하고 참여 신청을 해보세요.
-          </p>
-        </motion.div>
+    <>
+      {/* 컴팩트 네이비 밴드 — 교제(feed) 헤더와 동일 패턴. 좌: 소개, 우: 행사 개설(스태프 전용). */}
+      <section className="px-6 pb-11 pt-[124px]" style={{ background: "var(--banner-bg)" }}>
+        <div className="mx-auto flex max-w-5xl flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="mb-3 text-[11px] uppercase tracking-[0.4em]" style={{ color: "var(--accent)" }}>
+              Events &amp; Ministry
+            </p>
+            <h1
+              className="text-[34px] sm:text-[42px]"
+              style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "#f6f3ea", lineHeight: 1.15 }}
+            >
+              행사·사역
+            </h1>
+            <p className="mt-3 max-w-xl text-[14px]" style={{ color: "rgba(246,243,234,0.72)" }}>
+              함께 예배하고, 섬기고, 교제하는 자리에 초대합니다. 모집 중인 행사와 사역을 확인하고 참여 신청을 해보세요.
+            </p>
+          </div>
+          {canCreate ? (
+            <button
+              type="button"
+              onClick={() => router.push("/campaigns/new")}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-5 py-2.5 text-[13px] font-medium transition-transform hover:-translate-y-0.5"
+              style={{ background: "#f6f3ea", color: "var(--banner-bg)" }}
+            >
+              <Plus size={15} aria-hidden /> 행사 개설
+            </button>
+          ) : null}
+        </div>
+      </section>
 
+      <PageShell ref={sectionRef} paddingClassName="relative min-h-screen overflow-hidden px-6 pb-20 pt-10" orb="right">
+        <div className="relative mx-auto max-w-5xl">
         {/* 카드/캘린더 보기 전환 — 기본은 카드, `?view=calendar` 로 딥링크 가능 */}
         <div className="mb-4 flex items-center justify-between gap-4">
           <div
@@ -221,37 +230,15 @@ export default function CampaignListClient() {
               );
             })}
           </div>
-          {/* 카드 보기에서는 아래 결과 행에 같은 버튼이 있어 캘린더 보기에서만 노출한다. */}
-          {urlState.view === "calendar" && canCreate ? (
-            <button
-              type="button"
-              onClick={() => router.push("/campaigns/new")}
-              className="shrink-0 rounded-full px-4 py-2 text-[13px] font-medium transition-transform hover:-translate-y-0.5"
-              style={{ background: "var(--accent)", color: "var(--surface-dark)" }}
-            >
-              + 행사 만들기
-            </button>
+          {urlState.view !== "calendar" && currentState.status === "success" && response ? (
+            <p className="text-[13px]" style={{ color: "var(--foreground-muted)" }}>
+              검색 결과 {response.totalElements.toLocaleString()}개
+            </p>
           ) : null}
         </div>
 
         {urlState.view === "calendar" ? <CampaignCalendarView /> : (
         <>
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <p className="text-[13px]" style={{ color: "var(--foreground-muted)" }}>
-            {currentState.status === "success" && response ? `검색 결과 ${response.totalElements.toLocaleString()}개` : "행사 검색"}
-          </p>
-          {canCreate ? (
-            <button
-              type="button"
-              onClick={() => router.push("/campaigns/new")}
-              className="shrink-0 rounded-full px-4 py-2 text-[13px] font-medium transition-transform hover:-translate-y-0.5"
-              style={{ background: "var(--accent)", color: "var(--surface-dark)" }}
-            >
-              + 행사 만들기
-            </button>
-          ) : null}
-        </div>
-
         <CampaignListFilters
           state={urlState}
           loading={currentState.status === "loading"}
@@ -346,7 +333,8 @@ export default function CampaignListClient() {
         ) : null}
         </>
         )}
-      </div>
-    </PageShell>
+        </div>
+      </PageShell>
+    </>
   );
 }

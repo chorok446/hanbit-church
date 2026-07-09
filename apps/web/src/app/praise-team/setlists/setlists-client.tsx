@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ListMusic, Loader2, MapPin, PlusCircle, Users } from "lucide-react";
+import { ListMusic, Loader2, MapPin, PlusCircle, Users } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { Pagination } from "@/components/ui/pagination";
 import { StatePanel } from "@/components/ui/state-panel";
@@ -10,7 +10,7 @@ import { formatDateLabel } from "@/data/calendar";
 import { ApiError } from "@/lib/api";
 import { fetchPraiseSetlistPage, type PraiseSetlistPage } from "@/data/praise-team";
 import { usePraiseProfile } from "../praise-team-guard";
-import { SectionLabel, SetlistStatusBadge } from "../praise-ui";
+import { PraiseBand, SetlistStatusBadge } from "../praise-ui";
 
 const PAGE_SIZE = 10;
 
@@ -57,28 +57,16 @@ export function SetlistsClient() {
   const pageData = loading ? null : result?.data ?? null;
 
   return (
-    <PageShell orb="right" paddingClassName="px-6 pb-24 pt-32">
-      <div className="mx-auto max-w-4xl">
-        <Link
-          href="/praise-team"
-          className="inline-flex min-h-11 items-center gap-1.5 text-[13px]"
-          style={{ color: "var(--foreground-muted)" }}
-        >
-          <ArrowLeft size={14} aria-hidden />
-          찬양팀 홈
-        </Link>
-
-        <header className="mt-4 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <SectionLabel>Setlists</SectionLabel>
-            <h1
-              className="mt-2 text-[28px] sm:text-[32px]"
-              style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
-            >
-              콘티 목록
-            </h1>
-          </div>
-          {isLeader ? (
+    <>
+      <PraiseBand
+        eyebrow="Setlists"
+        title="콘티 목록"
+        back={{ href: "/praise-team", label: "찬양팀 홈" }}
+      />
+      <PageShell orb="right" paddingClassName="px-6 pb-24 pt-10">
+        <div className="mx-auto max-w-[896px]">
+        {isLeader ? (
+          <div className="mb-6 flex justify-end">
             <Link
               href="/praise-team/setlists/new"
               className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-[13px] font-medium text-[var(--cta-fg)]"
@@ -86,10 +74,10 @@ export function SetlistsClient() {
             >
               <PlusCircle size={14} aria-hidden />새 콘티 작성
             </Link>
-          ) : null}
-        </header>
+          </div>
+        ) : null}
 
-        <div className="mt-6">
+        <div>
           {loading ? (
             <StatePanel compact>
               <Loader2 className="animate-spin" size={20} aria-hidden />
@@ -168,7 +156,8 @@ export function SetlistsClient() {
             />
           ) : null}
         </div>
-      </div>
-    </PageShell>
+        </div>
+      </PageShell>
+    </>
   );
 }
