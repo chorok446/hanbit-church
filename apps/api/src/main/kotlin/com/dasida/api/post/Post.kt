@@ -52,6 +52,10 @@ data class PostAttachment(
         Index(name = "idx_posts_campaign_id", columnList = "campaign_id"),
         // 소식·설교 목록의 카테고리 필터용.
         Index(name = "idx_posts_category", columnList = "category"),
+        // 공개 목록/검색: 모든 공개 read 가 hidden_at IS NULL + seq 내림차순. 전체 피드용.
+        Index(name = "idx_posts_hidden_seq", columnList = "hidden_at, seq"),
+        // 카테고리 목록(소식·설교·나눔·기도) + 숨김 필터 + seq 정렬 복합.
+        Index(name = "idx_posts_category_hidden_seq", columnList = "category, hidden_at, seq"),
     ],
 )
 class Post(
