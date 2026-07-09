@@ -44,27 +44,32 @@ export function HomeVisit() {
           style={{ background: "var(--banner-bg)", borderColor: "var(--banner-border)" }}
         >
           <p
-            className="mx-auto max-w-[24ch] text-[20px] leading-[1.6] text-[#f6f3ea] sm:text-[24px]"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 600, textWrap: "balance" }}
+            className="mx-auto max-w-[24ch] text-[20px] leading-[1.6] sm:text-[24px]"
+            style={{ fontFamily: "var(--font-display)", fontWeight: 600, textWrap: "balance", color: "var(--cta-fg)" }}
           >
             {CHURCH.name}에 처음 오셨나요?
           </p>
-          <p className="mx-auto mt-3 max-w-[32ch] text-[14px] leading-7 text-[#f6f3ea]/75" style={{ textWrap: "balance" }}>
+          {/* 배너는 항상 딥네이비(라이트·다크 모두) — 뮤티드 크림 텍스트엔 안정적인 크림 리터럴을 쓴다.
+              중앙에 --on-banner(또는 --cta-fg-rgb) 토큰이 생기면 rgba(var(--on-banner), a) 로 교체할 것. */}
+          <p
+            className="mx-auto mt-3 max-w-[32ch] text-[14px] leading-7"
+            style={{ textWrap: "balance", color: "rgba(246, 243, 234, 0.75)" }}
+          >
             예배 시간, 오시는 길, 새가족 안내를 한 번에 확인해보세요.
           </p>
           <Link
             href="/welcome"
-            className="mt-7 inline-flex min-h-11 items-center rounded-full bg-[#f6f3ea] px-8 py-3 text-[14px] font-medium transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
-            style={{ color: "var(--banner-bg)" }}
+            className="mt-7 inline-flex min-h-11 items-center rounded-full px-8 py-3 text-[14px] font-medium transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
+            style={{ background: "var(--cta-fg)", color: "var(--banner-bg)" }}
           >
             새가족 안내 보기
           </Link>
-          <div className="mt-4 flex items-center gap-4 text-[13px] text-[#f6f3ea]/70">
-            <Link href="/worship" className="inline-flex min-h-11 items-center underline-offset-4 hover:text-[#f6f3ea] hover:underline">
+          <div className="mt-4 flex items-center gap-4 text-[13px]" style={{ color: "rgba(246, 243, 234, 0.7)" }}>
+            <Link href="/worship" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
               예배안내
             </Link>
-            <span aria-hidden className="h-3 w-px bg-[#f6f3ea]/25" />
-            <Link href="/about" className="inline-flex min-h-11 items-center underline-offset-4 hover:text-[#f6f3ea] hover:underline">
+            <span aria-hidden className="h-3 w-px" style={{ background: "rgba(246, 243, 234, 0.25)" }} />
+            <Link href="/about" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
               오시는 길
             </Link>
           </div>

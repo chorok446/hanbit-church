@@ -1,48 +1,47 @@
-import { BookOpen, Church, HeartHandshake, Users } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-
-const VISION_ITEMS: Array<{ title: string; body: string; icon: LucideIcon }> = [
-  { title: "예배", icon: Church, body: "하나님을 삶의 중심에 모시고, 온 세대가 함께 예배합니다." },
-  { title: "말씀", icon: BookOpen, body: "성경 말씀을 배우고 삶의 자리에서 순종하도록 돕습니다." },
-  { title: "교제", icon: Users, body: "서로의 삶을 돌보고 기도하며 믿음의 가족으로 함께 걷습니다." },
-  { title: "섬김", icon: HeartHandshake, body: "지역과 이웃을 향해 복음의 사랑을 실천합니다." },
+const VISION_ITEMS: Array<{ title: string; body: string }> = [
+  { title: "예배", body: "하나님을 삶의 중심에 모시고, 온 세대가 함께 예배합니다." },
+  { title: "말씀", body: "성경 말씀을 배우고 삶의 자리에서 순종하도록 돕습니다." },
+  { title: "교제", body: "서로의 삶을 돌보고 기도하며 믿음의 가족으로 함께 걷습니다." },
+  { title: "섬김", body: "지역과 이웃을 향해 복음의 사랑을 실천합니다." },
 ];
 
-/** 우리 교회의 비전 — 예배·말씀·교제·섬김 4카드 (모바일 1열, 데스크톱 2열). */
+/** 우리 교회의 비전 — 웜크림 밴드, 상단 구분선 + 번호 + 명조 제목의 4열(반응형). */
 export function VisionSection() {
   return (
-    <>
-      <h2
-        className="mt-16 text-[22px]"
-        style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
-      >
-        우리 교회의 비전
-      </h2>
-      <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {VISION_ITEMS.map((item, index) => (
-          <li
-            key={item.title}
-            className="rounded-2xl border p-7"
-            style={{ background: "var(--card)", borderColor: "var(--border)" }}
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] font-semibold tracking-[0.3em]" style={{ color: "var(--accent)" }}>
+    <section className="px-6 py-24" style={{ background: "var(--surface-muted)" }}>
+      <div className="mx-auto max-w-5xl">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
+          Vision
+        </p>
+        <h2
+          className="mt-2 text-[28px]"
+          style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
+        >
+          우리 교회의 비전
+        </h2>
+        <ul className="mt-11 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+          {VISION_ITEMS.map((item, index) => (
+            <li key={item.title} className="border-t pt-5" style={{ borderColor: "rgba(var(--ink-rgb), 0.25)" }}>
+              <p
+                aria-hidden
+                className="text-[13px] font-semibold tracking-[0.2em]"
+                style={{ fontFamily: "var(--font-display)", color: "var(--accent-strong)" }}
+              >
                 {String(index + 1).padStart(2, "0")}
               </p>
-              <item.icon size={18} aria-hidden style={{ color: "var(--accent)" }} />
-            </div>
-            <h3
-              className="mt-2 text-[19px]"
-              style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
-            >
-              {item.title}
-            </h3>
-            <p className="mt-2 text-[14px] leading-7" style={{ color: "var(--foreground-muted)" }}>
-              {item.body}
-            </p>
-          </li>
-        ))}
-      </ul>
-    </>
+              <h3
+                className="mt-2.5 text-[21px]"
+                style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
+              >
+                {item.title}
+              </h3>
+              <p className="mt-2 text-[13.5px] leading-[25px]" style={{ color: "var(--foreground-muted)" }}>
+                {item.body}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
   );
 }
