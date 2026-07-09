@@ -6,14 +6,11 @@ import { Heart, MessageCircle } from "lucide-react";
 import { FallbackImage } from "@/components/fallback-image";
 import { ListEmptyState } from "@/components/list-empty-state";
 import { PostPreview } from "@/components/post-text";
-import { useTheme } from "@/lib/theme-context";
 import type { Post } from "@/data/posts";
 import { fetchUserPostsPage } from "@/data/users";
 import { PaginatedSection } from "@/app/mypage/paginated-section";
 
 function UserPostCard({ post }: { post: Post }) {
-  const { theme } = useTheme();
-  const dark = theme === "dark";
   const image = post.images[0];
 
   return (
@@ -33,9 +30,7 @@ function UserPostCard({ post }: { post: Post }) {
           <div
             className="flex aspect-[4/3] items-center p-6"
             style={{
-              background: dark
-                ? "linear-gradient(135deg,var(--accent-soft),rgba(255,255,255,0.03))"
-                : "linear-gradient(135deg,var(--accent-soft),rgba(231,223,203,0.5))",
+              background: "linear-gradient(135deg, var(--accent-soft), var(--chip-bg))",
               color: "var(--foreground)",
             }}
           >

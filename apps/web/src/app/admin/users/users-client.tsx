@@ -9,7 +9,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { StatePanel } from "@/components/ui/state-panel";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { ApiError, apiErrorMessage } from "@/lib/api";
-import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
+import { useAdminProfile } from "@/app/admin/admin-guard";
 import { USER_ROLE_LABELS } from "@/app/admin/permissions";
 import {
   fetchAdminUsers,
@@ -216,8 +216,8 @@ export default function UsersClient() {
 function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated: AdminUserItem) => void }) {
   const confirm = useConfirm();
   // 본인 역할은 변경할 수 없다(마지막 관리자 잠금 방지 — 서버도 400 으로 거부).
-  const { profile } = useCurrentUserProfile();
-  const isSelf = profile?.id === user.id;
+  const profile = useAdminProfile();
+  const isSelf = profile.id === user.id;
   const [days, setDays] = useState<string>("7");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -393,7 +393,7 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
                 onClick={suspend}
                 disabled={busy}
                 className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] disabled:opacity-50"
-                style={{ background: "var(--danger-solid)", color: "#fff" }}
+                style={{ background: "var(--danger-solid)", color: "var(--on-danger)" }}
               >
                 {busy ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <ShieldBan size={14} aria-hidden />}
                 정지

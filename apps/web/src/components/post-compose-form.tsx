@@ -23,8 +23,6 @@ type PostComposeFormProps = {
   values: PostComposeValues;
   onChange: (values: PostComposeValues) => void;
   campaigns: { id: string; title: string }[];
-  /** @deprecated 색상이 CSS 토큰으로 바뀌어 사용하지 않는다. 호출부 정리 후 제거 예정. */
-  dark?: boolean;
   fieldErrors?: Partial<Record<PostComposeField, string>>;
   onFieldErrorClear?: (field: PostComposeField) => void;
   textInputId?: string;
@@ -179,7 +177,7 @@ export function PostComposeForm({
           maxLength={POST_MAX_TEXT_LENGTH}
         />
         {fieldErrors.text ? (
-          <p id={textErrorId} className="mt-1.5 text-[12px] text-red-500" role="alert">
+          <p id={textErrorId} className="mt-1.5 text-[12px]" style={{ color: "var(--danger)" }} role="alert">
             {fieldErrors.text}
           </p>
         ) : null}
@@ -236,7 +234,7 @@ export function PostComposeForm({
           />
         </div>
         {(fieldErrors.images || imageInputError) ? (
-          <p id={imageErrorId} className="mt-1.5 text-[12px] text-red-500" role="alert">
+          <p id={imageErrorId} className="mt-1.5 text-[12px]" style={{ color: "var(--danger)" }} role="alert">
             {fieldErrors.images ?? imageInputError}
           </p>
         ) : null}
@@ -341,7 +339,7 @@ export function PostComposeForm({
           />
         </div>
         {fieldErrors.tags ? (
-          <p id={tagErrorId} className="mt-1.5 text-[12px] text-red-500" role="alert">
+          <p id={tagErrorId} className="mt-1.5 text-[12px]" style={{ color: "var(--danger)" }} role="alert">
             {fieldErrors.tags}
           </p>
         ) : null}

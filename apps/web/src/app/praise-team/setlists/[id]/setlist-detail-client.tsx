@@ -391,7 +391,7 @@ function AssignmentItem({
         <AttendanceBadge status={assignment.status} />
       </div>
       {showMemo && assignment.memo ? (
-        <p className="mt-1.5 pl-23 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
+        <p className="mt-1.5 pl-24 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
           메모: {assignment.memo}
         </p>
       ) : null}

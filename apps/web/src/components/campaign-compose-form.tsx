@@ -17,8 +17,6 @@ export { CAMPAIGN_COMPOSE_DRAFT_KEY };
 type CampaignComposeFormProps = {
   values: CampaignComposeValues;
   onChange: (values: CampaignComposeValues) => void;
-  /** @deprecated 색상이 CSS 토큰으로 바뀌어 사용하지 않는다. 호출부 정리 후 제거 예정. */
-  dark?: boolean;
   fieldErrors?: Partial<Record<CampaignComposeField, string>>;
   onFieldErrorClear?: (field: CampaignComposeField) => void;
   showDraftSaved?: boolean;
@@ -78,7 +76,7 @@ export function CampaignComposeForm({
           style={controlStyle}
         />
         {fieldErrors.title ? (
-          <p id={titleErrorId} className="mt-1.5 text-[12px] text-red-500" role="alert">
+          <p id={titleErrorId} className="mt-1.5 text-[12px]" style={{ color: "var(--danger)" }} role="alert">
             {fieldErrors.title}
           </p>
         ) : null}
@@ -104,7 +102,7 @@ export function CampaignComposeForm({
           style={controlStyle}
         />
         {fieldErrors.summary ? (
-          <p id={summaryErrorId} className="mt-1.5 text-[12px] text-red-500" role="alert">
+          <p id={summaryErrorId} className="mt-1.5 text-[12px]" style={{ color: "var(--danger)" }} role="alert">
             {fieldErrors.summary}
           </p>
         ) : null}

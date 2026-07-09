@@ -173,11 +173,19 @@ export function SermonList() {
   const [filter, setFilter] = useState<SermonServiceType | "ALL">("ALL");
   const [query, setQuery] = useState("");
 
-  const requestKey = `${page}:${retryTick}`;
+  const trimmedQuery = query.trim();
+  const requestKey = `${page}:${trimmedQuery}:${retryTick}`;
 
   useEffect(() => {
     let cancelled = false;
-    apiGet<PostSearchResponse>(`/api/posts/search?category=SERMON&sort=latest&page=${page}&size=${PAGE_SIZE}`)
+    const params = new URLSearchParams({
+      category: "SERMON",
+      sort: "latest",
+      page: String(page),
+      size: String(PAGE_SIZE),
+    });
+    if (trimmedQuery) params.set("q", trimmedQuery);
+    apiGet<PostSearchResponse>(`/api/posts/search?${params.toString()}`)
       .then((data) => {
         if (!cancelled) setResult({ key: requestKey, status: "success", data });
       })
@@ -187,7 +195,7 @@ export function SermonList() {
     return () => {
       cancelled = true;
     };
-  }, [page, retryTick, requestKey]);
+  }, [page, trimmedQuery, retryTick, requestKey]);
 
   const loading = result === null || result.key !== requestKey;
 
@@ -203,17 +211,12 @@ export function SermonList() {
     return map;
   }, [entries]);
 
-  const trimmedQuery = query.trim().toLowerCase();
-  const filtered = entries.filter(({ info }) => {
-    if (filter !== "ALL" && info.serviceType !== filter) return false;
-    if (!trimmedQuery) return true;
-    return [info.title, info.scripture ?? "", info.preacher, info.summary]
-      .join(" ")
-      .toLowerCase()
-      .includes(trimmedQuery);
-  });
+  // 자유 검색어(query)는 서버로 넘긴다. 예배 구분(SUNDAY/…)은 본문에서 파싱하는 값이라
+  // 서버 필드가 없어 로드된 페이지 안에서만 클라이언트로 좁힌다.
+  const searching = trimmedQuery.length > 0;
+  const filtered = entries.filter(({ info }) => filter === "ALL" || info.serviceType === filter);
 
-  const filterActive = filter !== "ALL" || trimmedQuery.length > 0;
+  const filterActive = filter !== "ALL" || searching;
 
   // 최신 1건 강조는 필터·검색이 없는 첫 페이지에서만. 아래 목록에서는 중복 노출하지 않는다.
   const showFeatured = page === 0 && !filterActive && filtered.length > 0;
@@ -234,10 +237,17 @@ export function SermonList() {
           </button>
         </div>
       ) : result.data.content.length === 0 ? (
-        <ListEmptyState
-          title="등록된 설교가 없습니다."
-          description="곧 더 많은 말씀을 확인하실 수 있습니다."
-        />
+        searching ? (
+          <ListEmptyState
+            title="검색 결과가 없습니다."
+            description="다른 키워드로 검색해 주세요."
+          />
+        ) : (
+          <ListEmptyState
+            title="등록된 설교가 없습니다."
+            description="곧 더 많은 말씀을 확인하실 수 있습니다."
+          />
+        )
       ) : (
         <>
           {featured ? <FeaturedSermon entry={featured} /> : null}
@@ -272,7 +282,10 @@ export function SermonList() {
               <input
                 type="search"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setPage(0);
+                }}
                 placeholder="설교 제목, 성경 본문, 설교자 검색"
                 aria-label="설교 검색"
                 className="min-w-0 flex-1 bg-transparent text-[13.5px] outline-none placeholder:opacity-50 [&::-webkit-search-cancel-button]:hidden"
@@ -281,7 +294,10 @@ export function SermonList() {
               {query ? (
                 <button
                   type="button"
-                  onClick={() => setQuery("")}
+                  onClick={() => {
+                    setQuery("");
+                    setPage(0);
+                  }}
                   aria-label="검색어 지우기"
                   className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
                   style={{ background: "var(--chip-bg)", color: "var(--foreground-muted)" }}
@@ -292,7 +308,11 @@ export function SermonList() {
             </div>
             {filterActive ? (
               <p aria-live="polite" className="text-[12.5px]" style={{ color: "var(--foreground-muted)" }}>
-                검색 결과 <span className="font-semibold" style={{ color: "var(--foreground)" }}>{filtered.length}</span>개
+                검색 결과{" "}
+                <span className="font-semibold" style={{ color: "var(--foreground)" }}>
+                  {searching && filter === "ALL" ? result.data.totalElements : filtered.length}
+                </span>
+                개
               </p>
             ) : null}
           </div>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Flag, Users, UserCheck, ScrollText, HeartHandshake } from "lucide-react";
-import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
+import { useAdminProfile } from "./admin-guard";
 import { getAdminPermissions, type AdminPermissions } from "./permissions";
 
 // permission 이 지정된 탭은 해당 권한이 있어야 노출된다(대시보드는 항상 노출).
@@ -26,9 +26,9 @@ const items: {
 
 export function AdminNav() {
   const pathname = usePathname();
-  // AdminGuard 안에서만 렌더링되므로 profile 은 ADMIN 으로 확정된 상태다.
-  const { profile } = useCurrentUserProfile();
-  const permissions = getAdminPermissions(profile?.role);
+  // AdminGuard 안에서만 렌더링되므로 profile 은 스태프로 확정된 상태다(재요청 없이 컨텍스트에서 읽는다).
+  const profile = useAdminProfile();
+  const permissions = getAdminPermissions(profile.role);
   const visible = items.filter(({ permission }) => !permission || permissions[permission]);
 
   return (
