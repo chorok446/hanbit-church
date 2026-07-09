@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
+import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator
 import tools.jackson.databind.json.JsonMapper
 import java.util.concurrent.ConcurrentHashMap
 
@@ -25,12 +26,23 @@ class NotificationSessionHub(
 
     private val conns = ConcurrentHashMap<String, Conn>()
 
+    // userId → 세션 id 집합. deliverToUser 가 전체 커넥션을 스캔하지 않도록 하는 보조 인덱스.
+    private val userSessions = ConcurrentHashMap<Long, MutableSet<String>>()
+
     fun register(session: WebSocketSession, userId: Long) {
-        conns[session.id] = Conn(session, userId)
+        // 로컬 커밋 스레드와 Redis relay 스레드가 같은 세션에 동시 sendMessage 하면 프레임이 깨질 수 있어
+        // ConcurrentWebSocketSessionDecorator 로 전송을 직렬화한다(버퍼 512KB, 전송 제한 5s).
+        val safe = ConcurrentWebSocketSessionDecorator(session, SEND_TIME_LIMIT_MS, BUFFER_SIZE_LIMIT_BYTES)
+        conns[session.id] = Conn(safe, userId)
+        userSessions.computeIfAbsent(userId) { ConcurrentHashMap.newKeySet() }.add(session.id)
     }
 
     fun unregister(session: WebSocketSession) {
-        conns.remove(session.id)
+        val removed = conns.remove(session.id) ?: return
+        userSessions.computeIfPresent(removed.userId) { _, ids ->
+            ids.remove(session.id)
+            ids.ifEmpty { null }
+        }
     }
 
     /** 알림 배지 갱신 이벤트. 대화와 무관한 사용자 단위 이벤트다. */
@@ -47,9 +59,10 @@ class NotificationSessionHub(
     }
 
     private fun deliverToUser(userId: Long, json: String) {
-        conns.values
-            .filter { it.userId == userId && it.session.isOpen }
-            .forEach { send(it.session, json) }
+        val sessionIds = userSessions[userId] ?: return
+        sessionIds.forEach { sessionId ->
+            conns[sessionId]?.session?.let { send(it, json) }
+        }
     }
 
     private fun send(session: WebSocketSession, json: String) {
@@ -65,4 +78,9 @@ class NotificationSessionHub(
                 "payload" to payload,
             ),
         )
+
+    private companion object {
+        const val SEND_TIME_LIMIT_MS = 5_000
+        const val BUFFER_SIZE_LIMIT_BYTES = 512 * 1024
+    }
 }
