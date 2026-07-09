@@ -2,6 +2,7 @@ package com.dasida.api.common.ratelimit
 
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -45,6 +46,7 @@ class RateLimitService(
     private fun ruleConfig(rule: RateLimitRule): RateLimitRuleConfig =
         when (rule) {
             RateLimitRule.AUTH_LOGIN -> properties.auth.login
+            RateLimitRule.AUTH_LOGIN_ACCOUNT -> properties.auth.loginPerAccount
             RateLimitRule.AUTH_SIGNUP -> properties.auth.signup
             RateLimitRule.COMMENT_CREATE -> properties.content.comment
             RateLimitRule.REPORT_CREATE -> properties.content.report
@@ -58,4 +60,10 @@ class RateLimitService(
 
 class RateLimitExceededException(
     val retryAfterSeconds: Long,
-) : ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "too many requests")
+) : ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "too many requests") {
+    // 필터가 아닌 서비스 계층(계정당 로그인 한도 등)에서 던져질 때도 Retry-After 를 응답에 싣는다.
+    override fun getHeaders(): HttpHeaders =
+        HttpHeaders().apply {
+            if (retryAfterSeconds > 0) add(HttpHeaders.RETRY_AFTER, retryAfterSeconds.toString())
+        }
+}

@@ -4,6 +4,7 @@ import com.dasida.api.auth.UserRepository
 import com.dasida.api.auth.findActiveOrThrow
 import com.dasida.api.auth.toAuthorSnapshot
 import com.dasida.api.common.CommentPageLocationResponse
+import com.dasida.api.common.ListingLimits.MAX_COMMENT_PAGE_SIZE
 import com.dasida.api.common.checkPageParams
 import com.dasida.api.common.checkPageSize
 import com.dasida.api.notification.CommentMentionNotifier
@@ -245,7 +246,4 @@ class PostCommentService(
         }
     }
 
-    private companion object {
-        const val MAX_COMMENT_PAGE_SIZE = 100
-    }
 }

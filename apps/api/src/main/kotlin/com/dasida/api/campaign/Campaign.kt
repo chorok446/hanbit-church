@@ -17,7 +17,13 @@ data class CampaignBody(val heading: String, val paragraphs: List<String>, val i
 @Entity
 @Table(
     name = "campaigns",
-    indexes = [Index(name = "idx_campaigns_author_user_id", columnList = "author_user_id")],
+    indexes = [
+        Index(name = "idx_campaigns_author_user_id", columnList = "author_user_id"),
+        // 공개 목록/검색: hidden_at IS NULL + seq 내림차순.
+        Index(name = "idx_campaigns_hidden_seq", columnList = "hidden_at, seq"),
+        // 상태(open/upcoming/closed) 필터 + 숨김 필터 + seq 정렬 복합.
+        Index(name = "idx_campaigns_status_hidden_seq", columnList = "status, hidden_at, seq"),
+    ],
 )
 class Campaign(
     @Id val id: String,

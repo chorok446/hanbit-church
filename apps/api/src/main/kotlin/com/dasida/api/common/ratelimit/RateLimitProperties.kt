@@ -13,6 +13,11 @@ data class RateLimitProperties(
 
 data class AuthRateLimitRules(
     val login: RateLimitRuleConfig = RateLimitRuleConfig(limit = 20, windowSeconds = 60),
+    /**
+     * 계정(email)당 로그인 시도 한도. IP 한도(login)보다 낮게 두어 분산 IP 표적 추측을 막는다.
+     * 잠금형 DoS 를 피하려고 창을 짧게(60s) 유지 — 초과해도 1분 뒤 자동 회복된다.
+     */
+    val loginPerAccount: RateLimitRuleConfig = RateLimitRuleConfig(limit = 10, windowSeconds = 60),
     val signup: RateLimitRuleConfig = RateLimitRuleConfig(limit = 10, windowSeconds = 60),
 )
 

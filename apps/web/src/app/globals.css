@@ -55,6 +55,13 @@
   /* 주요 버튼(CTA) — 라이트: 네이비 바탕 + 크림 글자, 다크: 골드 바탕 + 미드나잇 글자. */
   --cta-bg: #1f2a44;
   --cta-fg: #f6f3ea;
+  /* 채워진 위험 버튼 위에 얹는 글자색. */
+  --on-danger: #ffffff;
+  /* 통계 차트 전용 범주형 팔레트 — 라이트·다크 양쪽에서 4색이 서로 구분되어야 한다. */
+  --chart-1: #2f6fed;
+  --chart-2: #2f9c68;
+  --chart-3: #d98a1f;
+  --chart-4: #d94e3c;
 }
 
 .dark {
@@ -93,6 +100,12 @@
   --warning-soft: rgba(212, 176, 74, 0.2);
   --cta-bg: #d4b04a;
   --cta-fg: #16203a;
+  --on-danger: #ffffff;
+  /* 어두운 배경에서도 4색이 뚜렷하도록 라이트보다 밝은 채도. */
+  --chart-1: #6ba3ff;
+  --chart-2: #5cc493;
+  --chart-3: #eab04a;
+  --chart-4: #f2795f;
 }
 
 html,

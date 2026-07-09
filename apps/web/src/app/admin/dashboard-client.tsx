@@ -28,7 +28,7 @@ import {
   type AdminSummary,
 } from "@/data/admin";
 import { fetchNewFamilyPage } from "@/data/new-family";
-import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
+import { useAdminProfile } from "./admin-guard";
 import { ACTION_LABELS, RESTRICTIVE_ACTIONS } from "./logs/action-labels";
 import { getAdminPermissions, type AdminPermissions } from "./permissions";
 import { StatsChartSection } from "./stats-chart";
@@ -71,8 +71,8 @@ export default function DashboardClient() {
   const [result, setResult] = useState<DashboardResult>({ tick: -1, status: "success", data: null });
   // 최근 활동은 보조 정보라 실패해도 대시보드를 막지 않는다(null = 로딩/실패 → 섹션 숨김).
   const [recentLogs, setRecentLogs] = useState<AdminActionLogItem[] | null>(null);
-  const { profile } = useCurrentUserProfile();
-  const permissions = getAdminPermissions(profile?.role);
+  const profile = useAdminProfile();
+  const permissions = getAdminPermissions(profile.role);
 
   useEffect(() => {
     let cancelled = false;
