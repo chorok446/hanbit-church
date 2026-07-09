@@ -78,6 +78,31 @@ jobs:
           path: apps/web/test-results/
           retention-days: 7
 
+  # 의존성/파일시스템 취약점 스캔. 초기에는 비차단(continue-on-error)으로 리포트만 남긴다.
+  security:
+    name: security (deps scan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # pnpm audit runs over the whole JS workspace (web + packages); it has no --filter form.
+      - name: pnpm audit (JS workspace, high+)
+        continue-on-error: true
+        run: pnpm audit --audit-level=high
+      - name: Trivy filesystem scan
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+
   api:
     name: api (Spring Boot)
     runs-on: ubuntu-latest

@@ -4,12 +4,13 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## Project
 
-"다시, 다" (Dasida) — a Korean upcycling / social-campaign app. pnpm + Gradle monorepo.
+**한빛교회 홈페이지** — a Korean church website (Hanbit First Church) forked from the **다시,다 (Dasida)** community platform and re-skinned as a church site. pnpm + Gradle monorepo. The `upstream` remote points at the original (dasida); only needed improvements are cherry-picked.
 
+- **Domain naming**: 캠페인 = "행사·사역" (events/ministry), 피드 = "교제" (fellowship). Post categories are 공지·주보·설교·나눔·기도. Church info (name/address/service schedule/monthly verse) lives in `apps/web/src/data/church.ts`.
 - **Frontend**: Next.js (App Router) + TypeScript + Tailwind v4 → `apps/web`
 - **Backend**: Kotlin + Spring Boot 4.1 (Gradle Kotlin DSL, Kotlin 2.4) → `apps/api`
 - **DB**: MySQL 8 via JPA/Hibernate (introduced for JWT auth persistence). Local DB runs from `docker-compose.yml` at root (`docker compose up -d`). Domains (posts/campaigns/notifications/users) are JPA entities; list/nested fields are stored as JSON columns. Seed data loads once into empty tables via `SeedRunner`. Tests run on in-memory H2 (MySQL mode), no Docker needed. QueryDSL (openfeign fork) is wired via kapt.
-- **`design-reference/`**: the original **Figma Make export** (a standalone Vite React SPA). This is the **design source of truth**, not shipping code. Port screens from here into `apps/web`; don't run it as part of the app. It has 13 pages (`design-reference/src/app/pages/`) and shadcn/ui components to mirror.
+- **`design-reference/`**: the original **dasida Figma export** (a standalone Vite React SPA). Reference only in the church project — **not** the design source of truth (that's the 모던 클래식 tokens in `CLAUDE.md`). Don't run it as part of the app.
 
 ## Layout
 
