@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { validatePostCompose } from "@/data/posts";
 
 describe("validatePostCompose", () => {
-  const base = { text: "업사이클 기록", images: [], tags: [], campaign: "" };
+  const base = { text: "업사이클 기록", images: [], tags: [], event: "" };
 
   it("rejects empty text", () => {
     const result = validatePostCompose({ ...base, text: "  " });
@@ -15,7 +15,7 @@ describe("validatePostCompose", () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.payload.text).toBe("업사이클 기록");
-      expect(result.payload.campaignId).toBeNull();
+      expect(result.payload.eventId).toBeNull();
     }
   });
 

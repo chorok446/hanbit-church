@@ -3,9 +3,9 @@ import { apiGet, apiPost } from "@/lib/api";
 export type ReportTargetType =
   | "POST"
   | "POST_COMMENT"
-  | "CAMPAIGN"
-  | "CAMPAIGN_COMMENT"
-  | "CAMPAIGN_PROOF";
+  | "EVENT"
+  | "EVENT_COMMENT"
+  | "EVENT_PROOF";
 
 export type ReportReason =
   | "SPAM"
@@ -52,9 +52,9 @@ export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
 export const REPORT_TARGET_LABELS: Record<ReportTargetType, string> = {
   POST: "게시글",
   POST_COMMENT: "게시글 댓글",
-  CAMPAIGN: "행사",
-  CAMPAIGN_COMMENT: "행사 댓글",
-  CAMPAIGN_PROOF: "행사 참여 후기",
+  EVENT: "행사",
+  EVENT_COMMENT: "행사 댓글",
+  EVENT_PROOF: "행사 참여 후기",
 };
 
 export const REPORT_STATUS_LABELS: Record<ReportStatus, string> = {

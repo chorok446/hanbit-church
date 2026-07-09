@@ -59,7 +59,7 @@ const QUICK_ACTIONS: {
 }[] = [
   // /posts/new 에서 관리자는 공지(NOTICE)·주보 카테고리를 선택할 수 있다(post-create-client).
   { href: "/posts/new", label: "공지 작성", icon: PenLine, permission: "canManageContent" },
-  { href: "/campaigns/new", label: "행사 만들기", icon: Megaphone, permission: "canManageContent" },
+  { href: "/events/new", label: "행사 만들기", icon: Megaphone, permission: "canManageContent" },
   { href: "/admin/approvals", label: "가입 승인", icon: UserCheck, permission: "canApproveSignups" },
   { href: "/admin/reports", label: "신고 관리", icon: Flag, permission: "canManageReports" },
   { href: "/admin/new-family", label: "새가족 확인", icon: HeartHandshake, permission: "canManageNewFamily" },
@@ -183,11 +183,11 @@ export default function DashboardClient() {
 
   // 통계 카드: 모두 관련 화면으로 들어가는 진입점이다.
   // TODO(콘텐츠 관리 탭: 전용 관리 페이지 필요) — 게시글·행사는 전용 관리 페이지가 없어
-  // 우선 공개 목록(/news, /campaigns)으로 연결한다.
+  // 우선 공개 목록(/news, /events)으로 연결한다.
   const statCards = [
     { label: "활동 회원", value: summary.users, unit: "명", icon: Users, href: "/admin/users", destination: "회원 관리" },
     { label: "게시글", value: summary.posts, unit: "건", icon: FileText, href: "/news", destination: "소식" },
-    { label: "행사", value: summary.campaigns, unit: "건", icon: Megaphone, href: "/campaigns", destination: "행사·사역" },
+    { label: "행사", value: summary.events, unit: "건", icon: Megaphone, href: "/events", destination: "행사·사역" },
     { label: "누적 신고", value: summary.totalReports, unit: "건", icon: Inbox, href: "/admin/reports", destination: "신고 관리" },
   ];
 

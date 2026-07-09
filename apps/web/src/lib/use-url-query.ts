@@ -3,37 +3,37 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  appendCampaignDateRangeFilters,
-  type CampaignDateRangeFilters,
-  type CampaignRecruitState,
-  type CampaignSearchSort,
-  type CampaignStatus,
-} from "@/data/campaigns";
+  appendEventDateRangeFilters,
+  type EventDateRangeFilters,
+  type EventRecruitState,
+  type EventSearchSort,
+  type EventStatus,
+} from "@/data/events";
 import type { PostCategory, PostSearchSort } from "@/data/posts";
 
 export type FeedUrlState = {
   query: string;
-  campaignOnly: boolean;
+  eventOnly: boolean;
   /** null = 전체. */
   category: PostCategory | null;
   sort: PostSearchSort;
   page: number;
 };
 
-export type CampaignListView = "card" | "calendar";
+export type EventListView = "card" | "calendar";
 
-export type CampaignListUrlState = CampaignDateRangeFilters & {
+export type EventListUrlState = EventDateRangeFilters & {
   query: string;
-  filter: "all" | CampaignStatus;
-  recruitState: CampaignRecruitState | null;
+  filter: "all" | EventStatus;
+  recruitState: EventRecruitState | null;
   availableOnly: boolean;
-  sort: CampaignSearchSort;
+  sort: EventSearchSort;
   page: number;
   /** 목록 표시 형식 — 기본 카드, `?view=calendar` 딥링크로 캘린더 보기. */
-  view: CampaignListView;
+  view: EventListView;
 };
 
-export function parseCampaignListView(value: string | null): CampaignListView {
+export function parseEventListView(value: string | null): EventListView {
   return value === "calendar" ? "calendar" : "card";
 }
 
@@ -41,7 +41,7 @@ export function parseCampaignListView(value: string | null): CampaignListView {
 export function buildFeedHref(state: FeedUrlState): string {
   const params = new URLSearchParams();
   if (state.query) params.set("q", state.query);
-  if (state.campaignOnly) params.set("campaignOnly", "true");
+  if (state.eventOnly) params.set("eventOnly", "true");
   if (state.category) params.set("category", state.category);
   params.set("sort", state.sort);
   params.set("page", state.page.toString());
@@ -49,14 +49,14 @@ export function buildFeedHref(state: FeedUrlState): string {
 }
 
 /** 행사 목록 URL을 canonical 형태로 만든다. */
-export function buildCampaignsHref(state: CampaignListUrlState): string {
+export function buildEventsHref(state: EventListUrlState): string {
   const params = new URLSearchParams();
   if (state.view === "calendar") params.set("view", "calendar");
   if (state.query) params.set("q", state.query);
   if (state.filter !== "all") params.set("status", state.filter);
   if (state.recruitState) params.set("recruitState", state.recruitState);
   if (state.availableOnly) params.set("availableOnly", "true");
-  appendCampaignDateRangeFilters(params, {
+  appendEventDateRangeFilters(params, {
     recruitEndFrom: state.recruitEndFrom,
     recruitEndTo: state.recruitEndTo,
     runStartFrom: state.runStartFrom,
@@ -64,7 +64,7 @@ export function buildCampaignsHref(state: CampaignListUrlState): string {
   });
   params.set("sort", state.sort);
   params.set("page", state.page.toString());
-  return `/campaigns?${params.toString()}`;
+  return `/events?${params.toString()}`;
 }
 
 /** URL 쿼리를 canonical href로 정규화한다. */

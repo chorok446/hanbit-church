@@ -1,0 +1,495 @@
+package com.hanbit.api.post
+
+import com.hanbit.api.auth.UserRepository
+import com.hanbit.api.event.EventRepository
+import com.hanbit.api.common.checkPageParams
+import com.hanbit.api.common.ListingLimits.MAX_SEARCH_PAGE_SIZE
+import com.hanbit.api.common.ListingLimits.MAX_SEARCH_QUERY_LENGTH
+import com.hanbit.api.common.ListingLimits.MAX_SITEMAP_PAGE_SIZE
+import com.hanbit.api.common.SitemapIdsResponse
+import com.hanbit.api.common.presenceByPage
+import com.hanbit.api.common.totalPages
+import com.hanbit.api.notification.NotificationService
+import com.hanbit.api.notification.NotificationType
+import com.hanbit.api.security.AuthUser
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
+import org.springframework.http.HttpStatus
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
+import java.time.Clock
+import java.time.Instant
+import java.util.UUID
+
+/**
+ * 게시글 도메인 서비스. 게시글 조회/검색/작성/수정/삭제와 좋아요·북마크 정책을 담당한다.
+ * Controller 에서 옮겨온 validation, 소유권 판정, N+1 회피용 bulk 조회, 동시성 lock, 트랜잭션을 이 계층에 둔다.
+ */
+@Service
+class PostService(
+    private val repo: PostRepository,
+    private val events: EventRepository,
+    private val users: UserRepository,
+    private val likeRepo: PostLikeRepository,
+    private val bookmarkRepo: PostBookmarkRepository,
+    private val commentRepo: PostCommentRepository,
+    private val postSearch: PostSearchRepository,
+    private val notifications: NotificationService,
+    private val clock: Clock,
+) {
+    @Transactional(readOnly = true)
+    fun listPosts(currentUserId: Long?): List<PostResponse> {
+        val posts = repo.findByHiddenAtIsNull(Sort.by(Sort.Direction.DESC, "seq"))
+        // N+1 회피: 내가 좋아요/북마크한 postId 를 각각 한 번에 조회.
+        val likedIds = likedByPage(currentUserId, posts.map { it.id })
+        val bookmarkedIds = bookmarkedByPage(currentUserId, posts.map { it.id })
+        return posts.map {
+            it.toResponse(viewerId = currentUserId, likedByMe = it.id in likedIds, bookmarkedByMe = it.id in bookmarkedIds)
+        }
+    }
+
+    /** sitemap 전용 id 목록. JSON 본문 없이 id 만 페이지 단위로 반환한다. */
+    @Transactional(readOnly = true)
+    fun listSitemapIds(page: Int, size: Int): SitemapIdsResponse {
+        checkPageParams(page, size, MAX_SITEMAP_PAGE_SIZE)
+        val result = repo.findIds(PageRequest.of(page, size))
+        return SitemapIdsResponse(
+            ids = result.content,
+            page = page,
+            size = size,
+            totalElements = result.totalElements,
+            totalPages = totalPages(result.totalElements, size),
+        )
+    }
+
+    /** 공개 검색. Querydsl content/count와 현재 page 상호작용 bulk 조회를 분리한다. */
+    @Transactional(readOnly = true)
+    fun searchPosts(
+        currentUserId: Long?,
+        q: String?,
+        tag: String?,
+        eventOnly: Boolean,
+        sort: String,
+        page: Int,
+        size: Int,
+        category: String? = null,
+    ): PostSearchResponse {
+        checkPageParams(page, size, MAX_SEARCH_PAGE_SIZE)
+
+        val query = q?.trim()?.takeIf { it.isNotEmpty() }
+        if (query != null && query.length > MAX_SEARCH_QUERY_LENGTH) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "q must not exceed $MAX_SEARCH_QUERY_LENGTH characters",
+            )
+        }
+        // 콤마 구분 다중 카테고리 허용 — 교제 피드가 나눔·기도만(SHARING,PRAYER) 조회하는 데 쓴다.
+        val categoryFilter = category?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.takeIf { it.isNotEmpty() }
+            ?.also { values ->
+                if (values.any { it !in PostCategory.ALL }) {
+                    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid post category")
+                }
+            }
+        val tagFilter = tag?.trim()?.takeIf { it.isNotEmpty() }
+        if (tagFilter != null && tagFilter.length > MAX_SEARCH_QUERY_LENGTH) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "tag must not exceed $MAX_SEARCH_QUERY_LENGTH characters",
+            )
+        }
+        val searchSort = when (sort) {
+            "latest" -> PostSearchSort.LATEST
+            "popular" -> PostSearchSort.POPULAR
+            "discussed" -> PostSearchSort.DISCUSSED
+            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid post sort")
+        }
+
+        val result = postSearch.search(
+            PostSearchCondition(
+                query = query,
+                tag = tagFilter,
+                categories = categoryFilter,
+                eventOnly = eventOnly,
+                authorUserIds = null,
+                sort = searchSort,
+                page = page,
+                size = size,
+            ),
+        )
+        val postIds = result.content.map { it.id }
+        val likedIds = likedByPage(currentUserId, postIds)
+        val bookmarkedIds = bookmarkedByPage(currentUserId, postIds)
+
+        return PostSearchResponse(
+            content = result.content.map {
+                it.toResponse(
+                    viewerId = currentUserId,
+                    likedByMe = it.id in likedIds,
+                    bookmarkedByMe = it.id in bookmarkedIds,
+                )
+            },
+            page = page,
+            size = size,
+            totalElements = result.totalElements,
+            totalPages = totalPages(result.totalElements, size),
+        )
+    }
+
+    /** 특정 사용자의 공개 게시글 목록. */
+    @Transactional(readOnly = true)
+    fun getPostsByAuthorPage(authorUserId: Long, viewerId: Long?, page: Int, size: Int): PostPageResponse {
+        val author = users.findById(authorUserId).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
+        }
+        if (author.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
+        }
+        validatePageParams(page, size)
+        val result = repo.findByAuthorUserIdAndHiddenAtIsNull(
+            authorUserId,
+            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "seq").and(Sort.by("id"))),
+        )
+        val postIds = result.content.map { it.id }
+        val likedIds = likedByPage(viewerId, postIds)
+        val bookmarkedIds = bookmarkedByPage(viewerId, postIds)
+        return PostPageResponse(
+            content = result.content.map {
+                it.toResponse(viewerId = viewerId, likedByMe = it.id in likedIds, bookmarkedByMe = it.id in bookmarkedIds)
+            },
+            page = page,
+            size = size,
+            totalElements = result.totalElements,
+            totalPages = totalPages(result.totalElements, size),
+        )
+    }
+
+    /** 현재 사용자가 저장한 게시글. 북마크/게시글/좋아요를 각각 bulk 조회해 N+1을 피한다. */
+    @Transactional(readOnly = true)
+    fun getMyBookmarks(userId: Long): List<PostResponse> {
+        val postIds = bookmarkRepo.findByUserId(userId).map { it.postId }.distinct()
+        if (postIds.isEmpty()) return emptyList()
+
+        val posts = repo.findAllByIdInAndHiddenAtIsNullOrderBySeqDesc(postIds)
+        if (posts.isEmpty()) return emptyList()
+
+        val likedIds = likeRepo.findByUserIdAndPostIdIn(userId, posts.map { it.id })
+            .map { it.postId }
+            .toSet()
+        return posts.map {
+            it.toResponse(viewerId = userId, likedByMe = it.id in likedIds, bookmarkedByMe = true)
+        }
+    }
+
+    /** 현재 사용자가 작성한 게시글. 소유권은 author.name 이 아니라 authorUserId 로 판단한다. */
+    @Transactional(readOnly = true)
+    fun getMyPosts(userId: Long): List<PostResponse> {
+        val posts = repo.findByAuthorUserIdAndDeletedAtIsNullOrderBySeqDesc(userId)
+        if (posts.isEmpty()) return emptyList()
+
+        val postIds = posts.map { it.id }
+        // N+1 회피: 좋아요/북마크를 각각 한 번씩 bulk 조회.
+        val likedIds = likeRepo.findByUserIdAndPostIdIn(userId, postIds).map { it.postId }.toSet()
+        val bookmarkedIds = bookmarkRepo.findByUserIdAndPostIdIn(userId, postIds).map { it.postId }.toSet()
+        return posts.map {
+            it.toResponse(viewerId = userId, likedByMe = it.id in likedIds, bookmarkedByMe = it.id in bookmarkedIds)
+        }
+    }
+
+    /** 내 게시글 pagination. 최신순(seq DESC, id). 현재 page 의 id 만 대상으로 좋아요/북마크 bulk 조회. */
+    @Transactional(readOnly = true)
+    fun getMyPostsPage(userId: Long, page: Int, size: Int): PostPageResponse {
+        validatePageParams(page, size)
+        val result = repo.findByAuthorUserIdAndDeletedAtIsNull(
+            userId,
+            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "seq").and(Sort.by("id"))),
+        )
+        val postIds = result.content.map { it.id }
+        val likedIds = likedByPage(userId, postIds)
+        val bookmarkedIds = bookmarkedByPage(userId, postIds)
+        return PostPageResponse(
+            content = result.content.map {
+                it.toResponse(viewerId = userId, likedByMe = it.id in likedIds, bookmarkedByMe = it.id in bookmarkedIds)
+            },
+            page = page,
+            size = size,
+            totalElements = result.totalElements,
+            totalPages = totalPages(result.totalElements, size),
+        )
+    }
+
+    /**
+     * 저장한 게시글 pagination. bookmark row 를 id ASC(deterministic, createdAt 없음)로 page 한 뒤
+     * 해당 page 의 postId 만 bulk 조회하고 bookmark page 순서를 보존한다. 삭제된 게시글의 orphan bookmark 는 제외.
+     */
+    @Transactional(readOnly = true)
+    fun getMyBookmarksPage(userId: Long, page: Int, size: Int): PostPageResponse {
+        validatePageParams(page, size)
+        val bookmarkPage = bookmarkRepo.findByUserId(userId, PageRequest.of(page, size, Sort.by("id").ascending()))
+        val postIds = bookmarkPage.content.map { it.postId }
+        val postsById = if (postIds.isEmpty()) emptyMap() else repo.findAllById(postIds).associateBy { it.id }
+        // bookmark page 순서 보존, orphan·숨김 게시글 제외
+        val orderedPosts = postIds.mapNotNull { postsById[it] }.filter { it.hiddenAt == null }
+        val likedIds = likedByPage(userId, orderedPosts.map { it.id })
+        return PostPageResponse(
+            content = orderedPosts.map {
+                it.toResponse(viewerId = userId, likedByMe = it.id in likedIds, bookmarkedByMe = true)
+            },
+            page = page,
+            size = size,
+            totalElements = bookmarkPage.totalElements,
+            totalPages = totalPages(bookmarkPage.totalElements, size),
+        )
+    }
+
+    @Transactional
+    fun getPost(id: String, currentUserId: Long?): PostResponse {
+        val post = repo.findById(id).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "post $id not found")
+        }
+        // 삭제(soft delete)된 게시글은 작성자에게도 존재하지 않는 것으로 취급한다.
+        if (post.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $id not found")
+        }
+        // 숨김 게시글은 작성자에게만 보인다(hidden 플래그 포함). 그 외에는 존재를 드러내지 않는 404.
+        if (post.hiddenAt != null && (post.authorUserId == null || post.authorUserId != currentUserId)) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $id not found")
+        }
+        // 조회수 증가 — 엔티티 dirty checking 대신 원자적 UPDATE 로 동시 조회 유실을 막는다.
+        // (incrementViews 는 clearAutomatically 로 영속성 컨텍스트를 비우므로 post 는 이 시점 detached.
+        //  detached 엔티티를 변경하지 않고, 응답 views 만 이번 조회분(+1)을 copy 로 반영한다.)
+        val viewsAfter = post.views + 1
+        repo.incrementViews(id)
+        return post.toResponse(
+            viewerId = currentUserId,
+            likedByMe = currentUserId != null && likeRepo.existsByPostIdAndUserId(id, currentUserId),
+            bookmarkedByMe = currentUserId != null && bookmarkRepo.existsByPostIdAndUserId(id, currentUserId),
+        ).copy(views = viewsAfter)
+    }
+
+    /**
+     * 좋아요. 이미 누른 경우 idempotent(200, 증가 없음).
+     *
+     * 동시성: 트랜잭션 안에서 post row 를 가장 먼저 write lock 으로 잡아 게시글별로 요청을 직렬화한다.
+     * 서로 다른 유저의 동시 좋아요에서도 likes 증가가 유실되지 않고, 같은 유저 동시 요청은 lock 보유 중
+     * existsBy 재확인으로 idempotent 처리된다. unique 제약은 최종 방어선으로 유지(예외 삼키기 없음).
+     */
+    @Transactional
+    fun likePost(userId: Long, postId: String): PostResponse {
+        val post = visibleForUpdateOrNotFound(postId)
+        if (!likeRepo.existsByPostIdAndUserId(postId, userId)) {
+            likeRepo.save(PostLike("plk-${UUID.randomUUID()}", postId, userId))
+            post.likes += 1
+            repo.save(post)
+            val liker = users.findById(userId).orElseThrow {
+                ResponseStatusException(HttpStatus.UNAUTHORIZED, "user not found")
+            }
+            notifications.notify(
+                recipientUserId = post.authorUserId,
+                actorUserId = userId,
+                type = NotificationType.POST_LIKED,
+                title = "${liker.name}님이 내 게시글을 좋아합니다",
+                body = post.text,
+                href = "/posts/$postId",
+            )
+        }
+        return post.toResponse(
+            viewerId = userId,
+            likedByMe = true,
+            bookmarkedByMe = bookmarkRepo.existsByPostIdAndUserId(postId, userId),
+        )
+    }
+
+    /** 좋아요 취소. 누르지 않은 경우 idempotent(200). likes 는 0 미만으로 내려가지 않음. */
+    @Transactional
+    fun unlikePost(userId: Long, postId: String): PostResponse {
+        // write lock 으로 직렬화 → 서로 다른 유저의 동시 unlike 에서도 감소가 유실되지 않음.
+        val post = visibleForUpdateOrNotFound(postId)
+        likeRepo.findByPostIdAndUserId(postId, userId)?.let {
+            likeRepo.delete(it)
+            post.likes = maxOf(0, post.likes - 1)
+        }
+        return post.toResponse(
+            viewerId = userId,
+            likedByMe = false,
+            bookmarkedByMe = bookmarkRepo.existsByPostIdAndUserId(postId, userId),
+        )
+    }
+
+    /** 북마크. 이미 저장된 경우에도 idempotent(200). */
+    @Transactional
+    fun bookmarkPost(userId: Long, postId: String): PostResponse {
+        // post row lock 뒤 존재 여부를 재확인해 같은 사용자의 동시 요청을 직렬화한다.
+        val post = visibleForUpdateOrNotFound(postId)
+        if (!bookmarkRepo.existsByPostIdAndUserId(postId, userId)) {
+            bookmarkRepo.save(PostBookmark("pbk-${UUID.randomUUID()}", postId, userId))
+        }
+        return post.toResponse(
+            viewerId = userId,
+            likedByMe = likeRepo.existsByPostIdAndUserId(postId, userId),
+            bookmarkedByMe = true,
+        )
+    }
+
+    /** 북마크 취소. 저장되지 않은 경우에도 idempotent(200). */
+    @Transactional
+    fun unbookmarkPost(userId: Long, postId: String): PostResponse {
+        val post = visibleForUpdateOrNotFound(postId)
+        bookmarkRepo.findByPostIdAndUserId(postId, userId)?.let(bookmarkRepo::delete)
+        return post.toResponse(
+            viewerId = userId,
+            likedByMe = likeRepo.existsByPostIdAndUserId(postId, userId),
+            bookmarkedByMe = false,
+        )
+    }
+
+    @Transactional
+    fun createPost(author: AuthUser, req: CreatePostRequest): PostResponse {
+        // @Transactional 로 묶어 normalizeFields 의 event write lock 을 게시글 저장 commit 까지 유지한다.
+        // 행사 삭제와 동시에 실행돼도 둘 중 하나만 통과해 orphan eventId 가 남지 않는다.
+        val category = normalizeCategory(req.category)
+        requireAdminForOfficialCategory(category)
+        val attachments = normalizeAttachments(category, req.attachments)
+        val fields = normalizeFields(req.text, req.tags, req.images, req.eventId)
+        val profileImageUrl = users.findById(author.id).orElse(null)?.profileImageUrl
+        return repo.save(
+            Post(
+                id = "p-${UUID.randomUUID()}",
+                author = Author(author.name, author.verified, profileImageUrl),
+                time = "방금 전",
+                text = fields.text,
+                tags = fields.tags,
+                images = fields.images,
+                likes = 0,
+                comments = 0,
+                eventId = fields.eventId,
+                category = category,
+                seq = System.currentTimeMillis(),
+                authorUserId = author.id,
+                attachments = attachments,
+            ),
+        ).toResponse(viewerId = author.id, likedByMe = false, bookmarkedByMe = false)
+    }
+
+    /**
+     * 공지·주보·설교는 교회 공식 콘텐츠 — 최고 관리자·운영자·콘텐츠 관리자만 쓸 수 있다.
+     * 권한은 JWT 클레임이 아니라 JwtAuthFilter 가 매 요청 DB role 로 채운 SecurityContext 기준(회수 즉시 반영).
+     */
+    private fun requireAdminForOfficialCategory(category: String) {
+        if (category !in PostCategory.STAFF_WRITE) return
+        val allowed = setOf("ROLE_ADMIN", "ROLE_OPERATOR", "ROLE_CONTENT")
+        val hasRole = SecurityContextHolder.getContext().authentication
+            ?.authorities?.any { it.authority in allowed } == true
+        if (!hasRole) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "only staff can write this category")
+        }
+    }
+
+    /**
+     * 게시글 수정. 작성자(authorUserId)만 가능. 소유권은 author.name 이 아니라 authorUserId 로 판정.
+     * 정렬·소유권 필드(seq/time/likes/comments/authorUserId/id/author)는 건드리지 않아 목록 순서가 유지된다.
+     */
+    @Transactional
+    fun updatePost(userId: Long, postId: String, req: UpdatePostRequest): PostResponse {
+        // 상호작용 API 와 같은 잠금 순서로 게시글 row 를 먼저 잠근다.
+        val post = repo.findByIdForUpdate(postId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $postId not found")
+        if (post.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $postId not found")
+        }
+        if (post.authorUserId == null || post.authorUserId != userId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "not the author")
+        }
+        val category = normalizeCategory(req.category)
+        // 공지·주보로 바꾸는 것뿐 아니라 이미 공지·주보인 글의 수정도 관리자만 가능하다.
+        if (post.category in PostCategory.ADMIN_ONLY || category in PostCategory.ADMIN_ONLY) {
+            requireAdminForOfficialCategory(category.takeIf { it in PostCategory.ADMIN_ONLY } ?: post.category)
+        }
+        val attachments = normalizeAttachments(category, req.attachments)
+        val fields = normalizeFields(req.text, req.tags, req.images, req.eventId)
+        post.text = fields.text
+        post.tags = fields.tags
+        post.images = fields.images
+        post.eventId = fields.eventId
+        post.category = category
+        post.attachments = attachments
+        return post.toResponse(
+            viewerId = userId,
+            likedByMe = likeRepo.existsByPostIdAndUserId(postId, userId),
+            bookmarkedByMe = bookmarkRepo.existsByPostIdAndUserId(postId, userId),
+        )
+    }
+
+    /**
+     * 게시글 삭제(soft delete). 작성자만 가능. row 를 지우지 않고 deletedAt 을 마킹해
+     * 신고 대상 보존·복구 여지를 남긴다. hiddenAt 을 함께 세팅해 공개 노출 제외
+     * (목록/검색/sitemap/상호작용 404)를 그대로 재사용하며, 좋아요/북마크/댓글 row 도 남긴다.
+     * 삭제된 게시글은 존재하지 않는 것으로 취급한다(다시 삭제하면 404).
+     */
+    @Transactional
+    fun deletePost(userId: Long, postId: String) {
+        val post = repo.findByIdForUpdate(postId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $postId not found")
+        if (post.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $postId not found")
+        }
+        if (post.authorUserId == null || post.authorUserId != userId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "not the author")
+        }
+        val now = Instant.now(clock)
+        post.deletedAt = now
+        if (post.hiddenAt == null) post.hiddenAt = now
+    }
+
+    /** 생성·수정 공통 검증/정규화. 결과가 어긋나지 않도록 한 곳에서 처리. */
+    private fun normalizeFields(
+        text: String,
+        tags: List<String>,
+        images: List<String>,
+        eventId: String?,
+    ): NormalizedFields {
+        val (normalizedText, mergedImages) = normalizePostFields(text, images)
+        val cid = eventId?.trim()?.ifBlank { null }
+        // 단순 existsById 면 확인과 저장 사이에 행사가 삭제돼 orphan eventId 가 생길 수 있다.
+        // write lock 으로 행사를 잡아 두면 삭제가 게시글 commit 까지 직렬화돼 orphan 을 막는다.
+        // create/update 모두 @Transactional 이라 lock 이 트랜잭션 종료까지 유지된다.
+        if (cid != null && events.findByIdForUpdate(cid).let { it == null || it.deletedAt != null }) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "event not found")
+        }
+        return NormalizedFields(normalizedText, normalizeTags(tags), mergedImages, cid)
+    }
+
+    private data class NormalizedFields(
+        val text: String,
+        val tags: List<String>,
+        val images: List<String>,
+        val eventId: String?,
+    )
+
+    /**
+     * 상호작용(좋아요/북마크)용 write lock 조회. 숨김 게시글은 작성자 여부와 무관하게
+     * 존재를 드러내지 않는 404 로 차단한다(수정/삭제는 작성자 권한 경로라 별도).
+     */
+    private fun visibleForUpdateOrNotFound(postId: String): Post {
+        val post = repo.findByIdForUpdate(postId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $postId not found")
+        if (post.hiddenAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $postId not found")
+        }
+        return post
+    }
+
+    private fun validatePageParams(page: Int, size: Int) = checkPageParams(page, size, MAX_SEARCH_PAGE_SIZE)
+
+    /** 현재 page 의 postId 만 대상으로 좋아요 bulk 조회. 비로그인/빈 page 면 query 생략. */
+    private fun likedByPage(userId: Long?, postIds: List<String>): Set<String> =
+        presenceByPage(userId, postIds) { uid, ids -> likeRepo.findByUserIdAndPostIdIn(uid, ids).map { it.postId } }
+
+    /** 현재 page 의 postId 만 대상으로 북마크 bulk 조회. 비로그인/빈 page 면 query 생략. */
+    private fun bookmarkedByPage(userId: Long?, postIds: List<String>): Set<String> =
+        presenceByPage(userId, postIds) { uid, ids -> bookmarkRepo.findByUserIdAndPostIdIn(uid, ids).map { it.postId } }
+}

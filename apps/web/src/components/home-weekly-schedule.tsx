@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock, MapPin } from "lucide-react";
 import { apiGet } from "@/lib/api";
-import type { Campaign } from "@/data/campaigns";
+import type { Event } from "@/data/events";
 import { fetchPublicPraiseSchedules } from "@/data/praise-team";
 import {
   eventTypeLabel,
@@ -22,7 +22,7 @@ type WeeklyItem = { dateKey: string; event: CalendarEvent };
 
 /**
  * 홈 "이번 주 교회 일정" 요약 — 예배 반복 일정 + 행사 중 앞선 3~5건.
- * 전체 캘린더는 /campaigns?view=calendar. 일정이 없으면 섹션 자체를 숨긴다.
+ * 전체 캘린더는 /events?view=calendar. 일정이 없으면 섹션 자체를 숨긴다.
  */
 export function HomeWeeklySchedule() {
   const [items, setItems] = useState<WeeklyItem[] | null>(null);
@@ -30,13 +30,13 @@ export function HomeWeeklySchedule() {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      apiGet<Campaign[]>("/api/campaigns").catch(() => [] as Campaign[]), // 행사를 못 불러와도 예배 일정은 보여준다.
+      apiGet<Event[]>("/api/events").catch(() => [] as Event[]), // 행사를 못 불러와도 예배 일정은 보여준다.
       // 찬양팀 일정 — 서버가 요청자별 범위(비로그인 PUBLIC / 로그인 CHURCH+PUBLIC / 멤버 전체)로 좁혀 준다.
       fetchPublicPraiseSchedules().catch(() => []),
     ])
-      .then(([campaigns, praiseSchedules]) => {
+      .then(([events, praiseSchedules]) => {
         if (cancelled) return;
-        const week = getEventsForWeek(campaigns, new Date(), mapPraiseScheduleToCalendarEvents(praiseSchedules));
+        const week = getEventsForWeek(events, new Date(), mapPraiseScheduleToCalendarEvents(praiseSchedules));
         setItems(
           week
             .flatMap(({ dateKey, events }) =>
@@ -72,7 +72,7 @@ export function HomeWeeklySchedule() {
             이번 주 교회 일정
           </h2>
           <Link
-            href="/campaigns?view=calendar"
+            href="/events?view=calendar"
             className="flex min-h-11 items-center text-[13px] underline underline-offset-4"
             style={{ color: "var(--foreground-muted)" }}
           >

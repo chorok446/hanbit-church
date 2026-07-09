@@ -9,7 +9,7 @@ import { getAdminPermissions, type AdminPermissions } from "./permissions";
 // permission 이 지정된 탭은 해당 권한이 있어야 노출된다(대시보드는 항상 노출).
 // TODO(콘텐츠 관리 탭: 전용 관리 페이지 필요) — 게시글·행사 전용 관리 페이지가 생기면
 // canManageContent 권한 탭을 여기에 추가한다. 그 전까지는 대시보드의 빠른 작업·통계 카드가
-// 공개 페이지(/news, /campaigns)와 글쓰기(/posts/new, /campaigns/new)로 연결한다.
+// 공개 페이지(/news, /events)와 글쓰기(/posts/new, /events/new)로 연결한다.
 const items: {
   href: string;
   label: string;

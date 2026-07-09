@@ -1,4 +1,4 @@
-export type MypageTab = "posts" | "campaigns" | "created" | "saved" | "account" | "access" | "reports";
+export type MypageTab = "posts" | "events" | "created" | "saved" | "account" | "access" | "reports";
 
 export type MypageTabGroup = {
   label: string;
@@ -10,7 +10,7 @@ export const MYPAGE_TAB_GROUPS: MypageTabGroup[] = [
     label: "활동",
     tabs: [
       { id: "posts", label: "내 게시글" },
-      { id: "campaigns", label: "참여 행사" },
+      { id: "events", label: "참여 행사" },
       // TODO(권한: 사역 담당자 역할 도입 시 확장) — 행사 개설은 현재 관리자 전용
       { id: "created", label: "개설 행사", adminOnly: true },
       { id: "saved", label: "저장됨" },

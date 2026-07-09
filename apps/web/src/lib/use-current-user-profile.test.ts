@@ -16,7 +16,7 @@ const apiGetMock = vi.mocked(apiGet);
 
 const PROFILE: UserProfile = {
   id: 1,
-  email: "user@dasida.test",
+  email: "user@hanbit.test",
   name: "홍길동",
   verified: true,
   profileImageUrl: null,
@@ -68,7 +68,7 @@ describe("useCurrentUserProfile", () => {
     const { result } = renderHook(() => useCurrentUserProfile());
     await waitFor(() => expect(result.current.isLoggedIn).toBe(false));
     expect(result.current.profile).toBeNull();
-    expect(localStorage.getItem("dasida.session")).toBeNull();
+    expect(localStorage.getItem("hanbit.session")).toBeNull();
   });
 
   it("401 외 오류는 세션을 유지하고 에러 메시지를 노출한다", async () => {

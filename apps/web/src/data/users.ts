@@ -7,7 +7,7 @@ export type UserProfile = {
   name: string;
   verified: boolean;
   profileImageUrl?: string | null;
-  notifyCampaignUpdates?: boolean;
+  notifyEventUpdates?: boolean;
   /** 백엔드 UserRole 과 1:1 — 스태프 역할 정의는 app/admin/permissions.ts 참조. */
   role?: "USER" | "ADMIN" | "OPERATOR" | "MINISTRY" | "NEW_FAMILY" | "CONTENT";
   /** 찬양팀 역할 — null·미지정이면 찬양팀 소속이 아니다. 라벨은 data/praise-team.ts 참조. */
@@ -58,7 +58,7 @@ export function fetchUserPostsPage(userId: number, page: number, size = 10): Pro
 export type UpdateProfileRequest = {
   name: string;
   profileImageUrl: string | null;
-  notifyCampaignUpdates?: boolean;
+  notifyEventUpdates?: boolean;
 };
 
 export type UpdateProfileResponse = {

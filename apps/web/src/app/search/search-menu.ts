@@ -45,7 +45,7 @@ export const MENU_SHORTCUTS: MenuShortcut[] = [
     keywords: ["교제", "나눔", "기도", "기도요청"],
   },
   {
-    href: "/campaigns",
+    href: "/events",
     label: "행사·사역",
     description: "교회 행사와 사역 참여 안내",
     keywords: ["행사", "사역", "수련회", "봉사", "참여"],

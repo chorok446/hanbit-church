@@ -17,16 +17,16 @@ import {
   type PostComposeValues,
 } from "@/data/posts";
 
-export const POST_COMPOSE_DRAFT_KEY = "dasida:post-compose-draft";
+export const POST_COMPOSE_DRAFT_KEY = "hanbit:post-compose-draft";
 
 type PostComposeFormProps = {
   values: PostComposeValues;
   onChange: (values: PostComposeValues) => void;
-  campaigns: { id: string; title: string }[];
+  events: { id: string; title: string }[];
   fieldErrors?: Partial<Record<PostComposeField, string>>;
   onFieldErrorClear?: (field: PostComposeField) => void;
   textInputId?: string;
-  campaignInputId?: string;
+  eventInputId?: string;
   showDraftSaved?: boolean;
 };
 
@@ -60,11 +60,11 @@ function ImagePreview({ src, index }: { src: string; index: number }) {
 export function PostComposeForm({
   values,
   onChange,
-  campaigns,
+  events,
   fieldErrors = {},
   onFieldErrorClear,
   textInputId = "post-text",
-  campaignInputId = "post-campaign",
+  eventInputId = "post-event",
   showDraftSaved = false,
 }: PostComposeFormProps) {
   const tagInputId = useId();
@@ -271,20 +271,20 @@ export function PostComposeForm({
       </div>
 
       <div>
-        <label htmlFor={campaignInputId} className="mb-2 block text-[12px] tracking-[0.2em] uppercase" style={labelStyle}>
+        <label htmlFor={eventInputId} className="mb-2 block text-[12px] tracking-[0.2em] uppercase" style={labelStyle}>
           행사 연결
         </label>
         <select
-          id={campaignInputId}
-          value={values.campaign}
-          onChange={(e) => patch({ campaign: e.target.value })}
+          id={eventInputId}
+          value={values.event}
+          onChange={(e) => patch({ event: e.target.value })}
           className="ui-control px-3 py-2.5"
           style={controlStyle}
         >
           <option value="">없음</option>
-          {campaigns.map((campaign) => (
-            <option key={campaign.id} value={campaign.id}>
-              {campaign.title}
+          {events.map((event) => (
+            <option key={event.id} value={event.id}>
+              {event.title}
             </option>
           ))}
         </select>
@@ -362,7 +362,7 @@ export function usePostComposeDraft(
         text: typeof draft.text === "string" ? draft.text : "",
         images: Array.isArray(draft.images) ? draft.images.filter((item) => typeof item === "string") : [],
         tags: Array.isArray(draft.tags) ? draft.tags.filter((item) => typeof item === "string") : [],
-        campaign: typeof draft.campaign === "string" ? draft.campaign : "",
+        event: typeof draft.event === "string" ? draft.event : "",
         category: typeof draft.category === "string" ? draft.category : undefined,
       });
     } catch {
@@ -376,7 +376,7 @@ export function usePostComposeDraft(
       values.text.trim().length > 0 ||
       values.images.length > 0 ||
       values.tags.length > 0 ||
-      values.campaign.trim().length > 0;
+      values.event.trim().length > 0;
 
     if (!hasContent) {
       localStorage.removeItem(POST_COMPOSE_DRAFT_KEY);
@@ -390,7 +390,7 @@ export function usePostComposeDraft(
     values.text.trim().length > 0 ||
     values.images.length > 0 ||
     values.tags.length > 0 ||
-    values.campaign.trim().length > 0;
+    values.event.trim().length > 0;
 
   const clearDraft = () => {
     localStorage.removeItem(POST_COMPOSE_DRAFT_KEY);

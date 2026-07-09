@@ -54,8 +54,8 @@ export function mergeRichBodyForEditor(text: string, images: string[]): string {
 }
 
 // ponytail: 행사 compose 호환 alias
-export function mergeCampaignBodyForEditor(paragraphs: string[], images: string[]): string {
+export function mergeEventBodyForEditor(paragraphs: string[], images: string[]): string {
   return mergeRichBodyForEditor(paragraphs.join("\n\n"), images);
 }
 
-export const splitCampaignBodyHtml = splitRichBodyHtml;
+export const splitEventBodyHtml = splitRichBodyHtml;

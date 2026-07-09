@@ -1,0 +1,256 @@
+package com.hanbit.api.admin
+
+import com.hanbit.api.auth.UserRepository
+import com.hanbit.api.event.EventCommentRepository
+import com.hanbit.api.event.EventProofRepository
+import com.hanbit.api.event.EventRepository
+import com.hanbit.api.common.checkPageParams
+import com.hanbit.api.notification.NotificationService
+import com.hanbit.api.notification.NotificationType
+import com.hanbit.api.post.PostCommentRepository
+import com.hanbit.api.post.PostRepository
+import com.hanbit.api.report.Report
+import com.hanbit.api.report.ReportRepository
+import com.hanbit.api.report.ReportStatus
+import com.hanbit.api.report.ReportTargetType
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
+import org.springframework.http.HttpStatus
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
+import java.time.Clock
+import java.time.Instant
+
+/**
+ * 관리자 신고 처리 서비스. 신고 큐 조회(대상 미리보기 포함)와 처리(제재 확정/기각)를 담당한다.
+ * 처리 시 신고자에게 결과 알림을 생성한다(같은 트랜잭션).
+ */
+@Service
+class AdminReportService(
+    private val reports: ReportRepository,
+    private val users: UserRepository,
+    private val posts: PostRepository,
+    private val postComments: PostCommentRepository,
+    private val events: EventRepository,
+    private val eventComments: EventCommentRepository,
+    private val eventProofs: EventProofRepository,
+    private val notifications: NotificationService,
+    private val content: AdminContentService,
+    private val actionLogs: AdminActionLogService,
+    private val clock: Clock,
+) {
+    @Transactional(readOnly = true)
+    fun getReports(status: String?, targetType: String?, page: Int, size: Int): AdminReportsPageResponse {
+        checkPageParams(page, size, MAX_PAGE_SIZE)
+        val statusFilter = status?.takeIf { it.isNotBlank() }?.let {
+            enumValue<ReportStatus>(it, "invalid report status").name
+        }
+        val targetTypeFilter = targetType?.takeIf { it.isNotBlank() }?.let {
+            enumValue<ReportTargetType>(it, "invalid report target type").name
+        }
+        val pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("seq"), Sort.Order.asc("id")))
+        val result: Page<Report> = when {
+            statusFilter != null && targetTypeFilter != null ->
+                reports.findByStatusAndTargetType(statusFilter, targetTypeFilter, pageable)
+            statusFilter != null -> reports.findByStatus(statusFilter, pageable)
+            targetTypeFilter != null -> reports.findByTargetType(targetTypeFilter, pageable)
+            else -> reports.findAll(pageable)
+        }
+        return AdminReportsPageResponse(
+            content = buildReportResponses(result.content),
+            page = result.number,
+            size = result.size,
+            totalElements = result.totalElements,
+            totalPages = result.totalPages,
+            pendingCount = reports.countByStatus(ReportStatus.PENDING.name),
+        )
+    }
+
+    @Transactional
+    fun resolveReport(adminUserId: Long, reportId: String, request: ResolveReportRequest): AdminReportResponse {
+        val newStatus = enumValue<ReportStatus>(request.status, "invalid resolution status")
+        if (newStatus == ReportStatus.PENDING) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "resolution status must be RESOLVED or DISMISSED")
+        }
+        val note = request.note?.trim()?.ifEmpty { null }
+        if (note != null && note.length > MAX_NOTE_LENGTH) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "note must not exceed $MAX_NOTE_LENGTH characters")
+        }
+        val report = reports.findById(reportId).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "report not found")
+        }
+        if (report.status != ReportStatus.PENDING.name) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "report already processed")
+        }
+
+        report.status = newStatus.name
+        report.resolvedByUserId = adminUserId
+        report.resolvedAt = Instant.now(clock)
+        report.resolutionNote = note
+        // 상태 변경을 먼저 flush 해 @Version 충돌(동시 처리)을 side effect(알림·감사로그·숨김) 전에 잡는다.
+        try {
+            reports.saveAndFlush(report)
+        } catch (_: org.springframework.dao.OptimisticLockingFailureException) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "report already processed")
+        }
+        val action = if (newStatus == ReportStatus.RESOLVED) AdminActionType.REPORT_RESOLVED else AdminActionType.REPORT_DISMISSED
+        actionLogs.record(adminUserId, action, TARGET_TYPE_REPORT, reportId, note)
+        // 제재 확정 시 대상 콘텐츠 숨김까지 한 번에 처리. 대상이 이미 삭제됐으면 조용히 넘어간다.
+        if (newStatus == ReportStatus.RESOLVED && request.hideContent) {
+            val type = runCatching { ReportTargetType.valueOf(report.targetType) }.getOrNull()
+            if (type != null) {
+                try {
+                    // 실제로 숨긴 경우에만 기록한다(직접 숨김 경로의 setVisibility 와 같은 기준).
+                    if (content.hide(type, report.targetId, note)) {
+                        actionLogs.record(adminUserId, AdminActionType.CONTENT_HIDDEN, type.name, report.targetId, note)
+                    }
+                } catch (e: ResponseStatusException) {
+                    if (e.statusCode != HttpStatus.NOT_FOUND) throw e
+                }
+            }
+        }
+        notifyReporter(report, newStatus, note)
+        return report.toAdminResponse()
+    }
+
+    @Transactional(readOnly = true)
+    fun getSummary(): AdminSummaryResponse = AdminSummaryResponse(
+        // 승인 대기 계정은 활동 회원에서 제외 — 가입 승인 탭에서 별도로 관리한다.
+        users = users.countByDeletedAtIsNullAndApprovedAtIsNotNull(),
+        posts = posts.count(),
+        events = events.count(),
+        pendingReports = reports.countByStatus(ReportStatus.PENDING.name),
+        totalReports = reports.count(),
+        suspendedUsers = users.countBySuspendedUntilAfter(Instant.now(clock)),
+    )
+
+    /** 처리 결과를 신고자에게 알린다. 신고자가 탈퇴했으면 생략. */
+    private fun notifyReporter(report: Report, status: ReportStatus, note: String?) {
+        val reporter = users.findById(report.reporterUserId).orElse(null)
+        if (reporter == null || reporter.deletedAt != null) return
+        val summary = if (status == ReportStatus.RESOLVED) {
+            "신고하신 콘텐츠에 대한 조치가 완료되었습니다."
+        } else {
+            "검토 결과 신고하신 콘텐츠는 정책 위반에 해당하지 않았습니다."
+        }
+        notifications.notifyUser(
+            recipientUserId = report.reporterUserId,
+            type = NotificationType.REPORT_RESOLVED,
+            title = "신고 처리 결과 안내",
+            body = if (note != null) "$summary ($note)" else summary,
+            href = targetPreview(report)?.href ?: fallbackHref(report),
+        )
+    }
+
+    /**
+     * 신고 큐 목록 매핑 — 행당 반복 조회(N+1)를 배치로 대체한다:
+     *  - 신고자: users.findAllById 로 한 번에 로드
+     *  - 대상별 신고 건수: countGroupedByTarget 로 한 번에 집계
+     * (대상 미리보기 targetPreview 는 5개 타입 분기라 행당 조회를 유지한다.)
+     */
+    private fun buildReportResponses(page: List<Report>): List<AdminReportResponse> {
+        if (page.isEmpty()) return emptyList()
+        val reporterMap = users.findAllById(page.map { it.reporterUserId }.toSet()).associateBy { it.id }
+        val countMap = reports.countGroupedByTarget(
+            types = page.map { it.targetType }.toSet(),
+            ids = page.map { it.targetId }.toSet(),
+        ).associate { (it[0] as String) + "|" + (it[1] as String) to (it[2] as Long) }
+        return page.map { report ->
+            report.toAdminResponse(
+                reporter = reporterResponse(report, reporterMap[report.reporterUserId]),
+                targetReportCount = countMap["${report.targetType}|${report.targetId}"] ?: 0L,
+            )
+        }
+    }
+
+    private fun Report.toAdminResponse(
+        reporter: AdminReportUserResponse = reporterResponse(this, users.findById(reporterUserId).orElse(null)),
+        targetReportCount: Long = reports.countByTargetTypeAndTargetId(targetType, targetId),
+    ): AdminReportResponse = AdminReportResponse(
+        id = id,
+        targetType = targetType,
+        targetId = targetId,
+        reason = reason,
+        detail = detail,
+        time = time,
+        status = status,
+        resolutionNote = resolutionNote,
+        resolvedAt = resolvedAt?.toString(),
+        reporter = reporter,
+        target = targetPreview(this),
+        targetReportCount = targetReportCount,
+    )
+
+    private fun reporterResponse(report: Report, user: com.hanbit.api.auth.User?): AdminReportUserResponse =
+        AdminReportUserResponse(
+            id = report.reporterUserId,
+            name = user?.name ?: "알 수 없음",
+            // 탈퇴 계정 이메일은 익명화된 placeholder 라 노출 의미가 없다.
+            email = user?.takeIf { it.deletedAt == null }?.email,
+        )
+
+    /** 신고 대상 미리보기. 대상이 이미 삭제됐으면 null(프론트는 "삭제된 콘텐츠"로 표시). */
+    private fun targetPreview(report: Report): AdminReportTargetResponse? {
+        val type = runCatching { ReportTargetType.valueOf(report.targetType) }.getOrNull() ?: return null
+        return when (type) {
+            ReportTargetType.POST -> posts.findById(report.targetId).orElse(null)?.let {
+                AdminReportTargetResponse(excerpt(it.text), it.author.name, "/posts/${it.id}", hidden = it.hiddenAt != null)
+            }
+
+            ReportTargetType.POST_COMMENT -> postComments.findById(report.targetId).orElse(null)?.let {
+                AdminReportTargetResponse(excerpt(it.text), it.author.name, "/posts/${it.postId}", hidden = it.hiddenAt != null)
+            }
+
+            ReportTargetType.EVENT -> events.findById(report.targetId).orElse(null)?.let {
+                AdminReportTargetResponse(
+                    excerpt("${it.title} — ${it.summary}"),
+                    it.author.name,
+                    "/events/${it.id}",
+                    hidden = it.hiddenAt != null,
+                )
+            }
+
+            ReportTargetType.EVENT_COMMENT -> eventComments.findById(report.targetId).orElse(null)?.let {
+                AdminReportTargetResponse(excerpt(it.text), it.author.name, "/events/${it.eventId}", hidden = it.hiddenAt != null)
+            }
+
+            ReportTargetType.EVENT_PROOF -> eventProofs.findById(report.targetId).orElse(null)?.let {
+                AdminReportTargetResponse(
+                    excerpt(it.text),
+                    it.author.name,
+                    "/events/${it.eventId}?tab=proofs",
+                    hidden = it.hiddenAt != null,
+                )
+            }
+        }
+    }
+
+    private fun fallbackHref(report: Report): String = when (report.targetType) {
+        ReportTargetType.EVENT.name, ReportTargetType.EVENT_COMMENT.name -> "/events"
+        else -> "/feed"
+    }
+
+    /** 본문 발췌: 리치 에디터 HTML 태그 제거 후 공백 정리, 최대 200자. */
+    private fun excerpt(raw: String): String {
+        val text = raw.replace(TAG_RE, " ").replace(WS_RE, " ").trim()
+        return if (text.length <= MAX_EXCERPT_LENGTH) text else text.take(MAX_EXCERPT_LENGTH) + "…"
+    }
+
+    private inline fun <reified T : Enum<T>> enumValue(value: String, message: String): T =
+        try {
+            enumValueOf<T>(value.trim())
+        } catch (_: IllegalArgumentException) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, message)
+        }
+
+    private companion object {
+        const val TARGET_TYPE_REPORT = "REPORT"
+        const val MAX_PAGE_SIZE = 100
+        const val MAX_NOTE_LENGTH = 500
+        const val MAX_EXCERPT_LENGTH = 200
+        val TAG_RE = Regex("<[^>]*>")
+        val WS_RE = Regex("\\s+")
+    }
+}

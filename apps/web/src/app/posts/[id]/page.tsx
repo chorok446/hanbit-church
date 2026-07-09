@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { apiGetOrNull } from "@/lib/api";
 import type { Post } from "@/data/posts";
-import type { Campaign } from "@/data/campaigns";
+import type { Event } from "@/data/events";
 import PostDetailClient from "./post-detail-client";
 
 // generateMetadata 와 페이지 본문이 같은 요청 안에서 fetch 를 공유하도록 dedupe.
@@ -35,8 +35,8 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
   const { id } = await params;
   const post = await getPost(id);
   if (!post) notFound();
-  const linkedCampaign = post.campaignId
-    ? await apiGetOrNull<Campaign>(`/api/campaigns/${post.campaignId}`)
+  const linkedEvent = post.eventId
+    ? await apiGetOrNull<Event>(`/api/events/${post.eventId}`)
     : null;
-  return <PostDetailClient post={post} linkedCampaign={linkedCampaign} />;
+  return <PostDetailClient post={post} linkedEvent={linkedEvent} />;
 }

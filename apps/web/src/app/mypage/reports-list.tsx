@@ -43,7 +43,7 @@ function StatusBadge({ status }: { status?: ReportStatus }) {
 
 function targetHref(report: ReportItem): string | null {
   if (report.targetType === "POST") return `/posts/${report.targetId}`;
-  if (report.targetType === "CAMPAIGN") return `/campaigns/${report.targetId}`;
+  if (report.targetType === "EVENT") return `/events/${report.targetId}`;
   return null;
 }
 

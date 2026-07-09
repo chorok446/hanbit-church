@@ -9,7 +9,7 @@ import { useAuthSession } from "@/lib/use-auth-session";
 import { Pagination } from "@/components/ui/pagination";
 import { StatePanel } from "@/components/ui/state-panel";
 import { StaggerItem } from "@/components/scroll-reveal";
-import { RecommendedCampaigns } from "@/components/recommended-campaigns";
+import { RecommendedEvents } from "@/components/recommended-events";
 import { PageShell } from "@/components/page-shell";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { ApiError } from "@/lib/api";
@@ -29,18 +29,18 @@ import { NotificationRow } from "./notification-row";
 
 const PAGE_SIZE = 20;
 
-type NotificationFilterId = "all" | "social" | "campaign" | "praise";
+type NotificationFilterId = "all" | "social" | "event" | "praise";
 
 const FILTER_GROUP_TYPES: Partial<Record<NotificationFilterId, string[]>> = {
-  social: ["POST_LIKED", "POST_COMMENT_CREATED", "CAMPAIGN_COMMENT_CREATED", "COMMENT_REPLY_CREATED", "COMMENT_MENTIONED"],
-  campaign: ["CAMPAIGN_JOINED", "CAMPAIGN_PARTICIPATION_REMOVED", "CAMPAIGN_STATUS_CHANGED", "CAMPAIGN_PROOF_CREATED"],
+  social: ["POST_LIKED", "POST_COMMENT_CREATED", "EVENT_COMMENT_CREATED", "COMMENT_REPLY_CREATED", "COMMENT_MENTIONED"],
+  event: ["EVENT_JOINED", "EVENT_PARTICIPATION_REMOVED", "EVENT_STATUS_CHANGED", "EVENT_PROOF_CREATED"],
   praise: ["PRAISE_ASSIGNED", "PRAISE_UNASSIGNED", "PRAISE_ATTENDANCE_REMINDER", "PRAISE_SCHEDULE_CHANGED"],
 };
 
 const filters: { id: NotificationFilterId; label: string }[] = [
   { id: "all", label: "전체" },
   { id: "social", label: "좋아요·댓글" },
-  { id: "campaign", label: "행사" },
+  { id: "event", label: "행사" },
   { id: "praise", label: "찬양팀" },
 ];
 
@@ -348,7 +348,7 @@ export default function NotificationsClient() {
                   : "관심 있는 행사에 참여하면 소식을 알림으로 받을 수 있어요."}
               </p>
             </StatePanel>
-            {filter === "all" && !unreadOnly ? <RecommendedCampaigns heading="참여해볼 만한 행사" /> : null}
+            {filter === "all" && !unreadOnly ? <RecommendedEvents heading="참여해볼 만한 행사" /> : null}
           </div>
         ) : (
           <div className="space-y-2">

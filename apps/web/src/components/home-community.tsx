@@ -10,7 +10,7 @@ const CARDS = [
     cta: "교제 공간 가기",
   },
   {
-    href: "/campaigns",
+    href: "/events",
     icon: CalendarHeart,
     title: "행사·사역",
     body: "수련회, 봉사, 부서 행사에 온라인으로 신청하고 참여 후기를 남길 수 있습니다.",

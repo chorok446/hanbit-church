@@ -5,9 +5,9 @@ import Link from "next/link";
 import { ListEmptyState } from "@/components/list-empty-state";
 import { SkeletonCards } from "@/components/ui/skeleton-cards";
 import { fetchBookmarkedPostsPage } from "@/data/posts";
-import { fetchBookmarkedCampaignsPage } from "@/data/campaigns";
+import { fetchBookmarkedEventsPage } from "@/data/events";
 import { SavedPostsGrid } from "./saved-posts-grid";
-import { SavedCampaignsGrid } from "./saved-campaigns-grid";
+import { SavedEventsGrid } from "./saved-events-grid";
 
 /**
  * 저장됨 탭. 글·행사 북마크가 모두 비어 있으면 통합 빈 상태 하나만 보여주고,
@@ -16,23 +16,23 @@ import { SavedCampaignsGrid } from "./saved-campaigns-grid";
 export function SavedTabPanel({
   page,
   onPageChange,
-  campaignPage,
-  onCampaignPageChange,
+  eventPage,
+  onEventPageChange,
 }: {
   page: number;
   onPageChange: (page: number) => void;
-  campaignPage: number;
-  onCampaignPageChange: (page: number) => void;
+  eventPage: number;
+  onEventPageChange: (page: number) => void;
 }) {
   // null = 확인 중. 확인 실패 시 섹션 그리드에 맡긴다(자체 오류·재시도 UI 보유).
   const [bothEmpty, setBothEmpty] = useState<boolean | null>(null);
 
   useEffect(() => {
     let alive = true;
-    Promise.all([fetchBookmarkedPostsPage(0), fetchBookmarkedCampaignsPage(0)])
-      .then(([posts, campaigns]) => {
+    Promise.all([fetchBookmarkedPostsPage(0), fetchBookmarkedEventsPage(0)])
+      .then(([posts, events]) => {
         if (!alive) return;
-        setBothEmpty(posts.totalElements === 0 && campaigns.totalElements === 0);
+        setBothEmpty(posts.totalElements === 0 && events.totalElements === 0);
       })
       .catch(() => alive && setBothEmpty(false));
     return () => {
@@ -74,7 +74,7 @@ export function SavedTabPanel({
         <h2 className="mb-6 text-[15px] font-medium" style={{ color: "var(--foreground)" }}>
           저장한 행사
         </h2>
-        <SavedCampaignsGrid page={campaignPage} onPageChange={onCampaignPageChange} />
+        <SavedEventsGrid page={eventPage} onPageChange={onEventPageChange} />
       </section>
     </div>
   );

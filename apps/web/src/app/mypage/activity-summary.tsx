@@ -5,20 +5,20 @@ import { Bookmark, CalendarCheck, Megaphone, PenLine, type LucideIcon } from "lu
 import { CountUp, StaggerItem } from "@/components/scroll-reveal";
 import { fetchBookmarkedPostsPage, fetchMyPostsPage } from "@/data/posts";
 import {
-  fetchBookmarkedCampaignsPage,
-  fetchJoinedCampaignsPage,
-  fetchMyCampaignsPage,
-} from "@/data/campaigns";
+  fetchBookmarkedEventsPage,
+  fetchJoinedEventsPage,
+  fetchMyEventsPage,
+} from "@/data/events";
 
 import type { MypageTab } from "./mypage-types";
 
-type SummaryTab = Extract<MypageTab, "posts" | "campaigns" | "created" | "saved">;
+type SummaryTab = Extract<MypageTab, "posts" | "events" | "created" | "saved">;
 
 type Counts = Record<SummaryTab, number>;
 
 const TILES: { tab: SummaryTab; label: string; description: string; icon: LucideIcon; adminOnly?: boolean }[] = [
   { tab: "posts", label: "내 게시글", description: "내가 작성한 글", icon: PenLine },
-  { tab: "campaigns", label: "참여 행사", description: "참여 신청한 행사·사역", icon: CalendarCheck },
+  { tab: "events", label: "참여 행사", description: "참여 신청한 행사·사역", icon: CalendarCheck },
   // TODO(권한: 사역 담당자 역할 도입 시 확장) — 개설 행사는 현재 관리자 전용
   { tab: "created", label: "개설 행사", description: "내가 개설한 행사·사역", icon: Megaphone, adminOnly: true },
   { tab: "saved", label: "저장됨", description: "저장한 글과 행사", icon: Bookmark },
@@ -39,18 +39,18 @@ export function ActivitySummary({
     let alive = true;
     Promise.all([
       fetchMyPostsPage(0),
-      fetchJoinedCampaignsPage(0),
-      isAdmin ? fetchMyCampaignsPage(0) : Promise.resolve(null),
+      fetchJoinedEventsPage(0),
+      isAdmin ? fetchMyEventsPage(0) : Promise.resolve(null),
       fetchBookmarkedPostsPage(0),
-      fetchBookmarkedCampaignsPage(0),
+      fetchBookmarkedEventsPage(0),
     ])
-      .then(([posts, joined, created, savedPosts, savedCampaigns]) => {
+      .then(([posts, joined, created, savedPosts, savedEvents]) => {
         if (!alive) return;
         setCounts({
           posts: posts.totalElements,
-          campaigns: joined.totalElements,
+          events: joined.totalElements,
           created: created?.totalElements ?? 0,
-          saved: savedPosts.totalElements + savedCampaigns.totalElements,
+          saved: savedPosts.totalElements + savedEvents.totalElements,
         });
       })
       .catch(() => alive && setFailed(true));
