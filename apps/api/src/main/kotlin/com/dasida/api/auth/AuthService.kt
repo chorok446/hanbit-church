@@ -1,10 +1,7 @@
 package com.dasida.api.auth
 
-import com.dasida.api.campaign.CampaignCommentRepository
-import com.dasida.api.campaign.CampaignProofRepository
-import com.dasida.api.campaign.CampaignRepository
-import com.dasida.api.post.PostCommentRepository
-import com.dasida.api.post.PostRepository
+import com.dasida.api.common.ratelimit.RateLimitRule
+import com.dasida.api.common.ratelimit.RateLimitService
 import com.dasida.api.security.JwtService
 import com.dasida.api.security.TokenDenylistStore
 import com.dasida.api.security.hashToken
@@ -16,25 +13,18 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
 
 /**
- * 인증·계정 도메인 서비스. 회원가입/로그인/내 정보 조회/프로필 수정/비밀번호·이메일 변경/계정 탈퇴 정책을 담당한다.
- * Controller 에서 옮겨온 email/password/name validation, BCrypt 검증, JWT 발급, 탈퇴 익명화, 트랜잭션을 이 계층에 둔다.
+ * 인증(세션 수명) 도메인 서비스. 회원가입/로그인/토큰 재발급/로그아웃/내 정보 조회를 담당한다.
+ * 프로필·비밀번호·이메일·탈퇴 등 계정 관리는 AccountService 로 분리했다.
  */
 @Service
 class AuthService(
     private val repo: UserRepository,
     private val encoder: PasswordEncoder,
     private val jwt: JwtService,
-    private val posts: PostRepository,
-    private val postComments: PostCommentRepository,
-    private val campaigns: CampaignRepository,
-    private val campaignComments: CampaignCommentRepository,
-    private val campaignProofs: CampaignProofRepository,
     private val denylist: TokenDenylistStore,
-    private val accessLogs: AccessLogService,
-    private val userBlocks: UserBlockRepository,
+    private val rateLimitService: RateLimitService,
     private val clock: Clock,
     // 회원가입 관리자 승인제. 테스트에서는 false 로 두어 기존 가입→즉시 사용 플로를 유지한다.
     @param:org.springframework.beans.factory.annotation.Value("\${app.signup.require-approval:true}")
@@ -80,7 +70,11 @@ class AuthService(
 
     @Transactional(readOnly = true)
     fun login(req: LoginRequest): IssuedTokens {
-        val user = repo.findByEmail(req.email.trim().lowercase())
+        val emailKey = req.email.trim().lowercase()
+        // IP 한도(AuthRateLimitFilter)와 별개로 계정당 시도를 제한한다 — 분산 IP 로 단일 계정을 노리는 추측 차단.
+        // 존재하지 않는 email 도 동일하게 계수해 계정 존재 여부가 새지 않도록 한다.
+        rateLimitService.enforce(RateLimitRule.AUTH_LOGIN_ACCOUNT, emailKey)
+        val user = repo.findByEmail(emailKey)
         if (user == null || user.deletedAt != null) {
             // ponytail: 유저가 없어도 BCrypt 1회 실행 → 응답시간 차이로 가입 여부가 새는 것을 방지
             encoder.matches(req.password, user?.passwordHash ?: dummyHash)
@@ -187,100 +181,6 @@ class AuthService(
         return user
     }
 
-    @Transactional
-    fun updateProfile(userId: Long, req: UpdateProfileRequest): UpdateProfileResponse {
-        val user = repo.findActiveOrThrow(userId)
-        user.name = normalizeName(req.name)
-        user.profileImageUrl = normalizeProfileImageUrl(req.profileImageUrl)
-        user.notifyCampaignUpdates = req.notifyCampaignUpdates
-        // 기존 작성물의 author snapshot 도 최신 이름·이미지로 맞춘다. (탈퇴 시 anonymizeAuthor 와 같은 전파 패턴)
-        posts.syncAuthorProfile(userId, user.name, user.profileImageUrl)
-        postComments.syncAuthorProfile(userId, user.name, user.profileImageUrl)
-        campaigns.syncAuthorProfile(userId, user.name, user.profileImageUrl)
-        campaignComments.syncAuthorProfile(userId, user.name, user.profileImageUrl)
-        campaignProofs.syncAuthorProfile(userId, user.name, user.profileImageUrl)
-        return UpdateProfileResponse(token = jwt.issue(user), profile = user.toProfile())
-    }
-
-    @Transactional
-    fun changePassword(userId: Long, req: ChangePasswordRequest): ChangePasswordResponse {
-        val user = repo.findActiveOrThrow(userId)
-        if (req.currentPassword.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "current password is required")
-        }
-        if (!encoder.matches(req.currentPassword, user.passwordHash)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "current password is incorrect")
-        }
-        validatePassword(req.newPassword)
-        if (encoder.matches(req.newPassword, user.passwordHash)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "new password must be different")
-        }
-        user.passwordHash = encoder.encode(req.newPassword)!!
-        return ChangePasswordResponse(changed = true, token = jwt.issue(user))
-    }
-
-    @Transactional
-    fun changeEmail(userId: Long, req: ChangeEmailRequest): ChangeEmailResponse {
-        val user = repo.findActiveOrThrow(userId)
-        if (req.currentPassword.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "current password is required")
-        }
-        if (!encoder.matches(req.currentPassword, user.passwordHash)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "current password is incorrect")
-        }
-
-        val email = normalizeEmail(req.newEmail)
-        if (email == user.email) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "new email must be different")
-        }
-        if (repo.existsByEmail(email)) {
-            throw ResponseStatusException(HttpStatus.CONFLICT, "email already registered")
-        }
-
-        user.email = email
-        try {
-            repo.saveAndFlush(user)
-        } catch (_: DataIntegrityViolationException) {
-            // 사전 중복 체크 뒤 발생한 동시 변경 경쟁도 DB unique 제약 기준으로 409 처리한다.
-            throw ResponseStatusException(HttpStatus.CONFLICT, "email already registered")
-        }
-        return ChangeEmailResponse(email = user.email, name = user.name, token = jwt.issue(user))
-    }
-
-    @Transactional
-    fun deleteAccount(userId: Long, req: DeleteAccountRequest): DeleteAccountResponse {
-        val user = repo.findActiveOrThrow(userId)
-        if (req.currentPassword.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "current password is required")
-        }
-        if (req.confirmText.isBlank() || req.confirmText != DELETE_CONFIRM_TEXT) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "delete confirmation is incorrect")
-        }
-        if (!encoder.matches(req.currentPassword, user.passwordHash)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "current password is incorrect")
-        }
-
-        val id = requireNotNull(user.id)
-        user.email = "deleted-$id-${UUID.randomUUID()}@deleted.local"
-        user.name = DELETED_USER_NAME
-        user.passwordHash = encoder.encode(UUID.randomUUID().toString())!!
-        user.deletedAt = Instant.now(clock)
-        repo.saveAndFlush(user)
-
-        posts.anonymizeAuthor(id, DELETED_USER_NAME)
-        postComments.anonymizeAuthor(id, DELETED_USER_NAME)
-        campaigns.anonymizeAuthor(id, DELETED_USER_NAME)
-        campaignComments.anonymizeAuthor(id, DELETED_USER_NAME)
-        campaignProofs.anonymizeAuthor(id, DELETED_USER_NAME)
-        accessLogs.deleteForUser(id)
-        userBlocks.deleteAllForUser(id)
-        return DeleteAccountResponse(deleted = true)
-    }
-
-    private companion object {
-        const val DELETED_USER_NAME = "탈퇴한 사용자"
-        const val DELETE_CONFIRM_TEXT = "탈퇴합니다"
-    }
 }
 
 /**
