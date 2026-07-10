@@ -193,7 +193,24 @@ export type Post = {
   ownedByMe: boolean;
   /** 관리자 숨김 여부. 작성자 본인 경로(mine/상세)에서만 true 로 내려온다. */
   hidden?: boolean;
+  /** 작성 시각(ISO). 시드 게시글·이전 응답 캐시는 null/undefined. */
+  createdAt?: string | null;
 };
+
+/**
+ * 게시글 시각 표기. createdAt 이 있으면 KST 절대 시각("2026.7.10 15:30"), 없으면(시드)
+ * 저장된 time 라벨을 그대로 쓴다. SSR 상세와 클라이언트 hydration 이 같은 문자열을 내도록
+ * Date.now()·로케일 API 없이 고정 +09:00 오프셋(KST 는 DST 없음)으로 계산한다.
+ */
+export function postTimeLabel(post: Pick<Post, "createdAt" | "time">): string {
+  if (!post.createdAt) return post.time;
+  const epoch = new Date(post.createdAt).getTime();
+  if (Number.isNaN(epoch)) return post.time;
+  const kst = new Date(epoch + 9 * 3_600_000);
+  const hh = String(kst.getUTCHours()).padStart(2, "0");
+  const mm = String(kst.getUTCMinutes()).padStart(2, "0");
+  return `${kst.getUTCFullYear()}.${kst.getUTCMonth() + 1}.${kst.getUTCDate()} ${hh}:${mm}`;
+}
 
 export type PostSearchResponse = {
   content: Post[];

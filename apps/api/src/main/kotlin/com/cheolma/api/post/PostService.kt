@@ -371,6 +371,7 @@ class PostService(
                 category = category,
                 seq = System.currentTimeMillis(),
                 authorUserId = author.id,
+                createdAt = Instant.now(clock),
                 attachments = attachments,
             ),
         ).toResponse(viewerId = author.id, likedByMe = false, bookmarkedByMe = false)
