@@ -46,6 +46,8 @@ class SecurityConfig(
                 // 아래 anyRequest().authenticated() 에 걸려 401 로 차단된다.
                 it.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                 it.requestMatchers("/actuator/health").permitAll()
+                // Prometheus scrape(로컬 모니터링 스택). 공개 배포 시 MANAGEMENT_ENDPOINTS=health 로 endpoint 자체를 내린다.
+                it.requestMatchers("/actuator/prometheus").permitAll()
                 // 관리자 API — 역할별 세분(UserRole 참조). 구체 경로를 /api/admin/** ADMIN 폴백보다 먼저 선언한다.
                 // 새가족 신청 관리: 새가족 담당자까지.
                 it.requestMatchers("/api/admin/new-family/**").hasAnyRole("ADMIN", "OPERATOR", "NEW_FAMILY")
