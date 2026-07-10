@@ -137,7 +137,15 @@ data class AccessLogResponse(
     val accessedAt: String,
     @field:Schema(description = "이 기록이 현재 요청 세션(같은 로그인)에서 만들어졌는지")
     val currentSession: Boolean = false,
+    @field:Schema(description = "로그인 세션 식별자 — 원격 로그아웃 호출에 쓴다. 과거 기록은 null")
+    val sessionId: String? = null,
+    @field:Schema(description = "원격 로그아웃 가능 여부(본인·비현재·토큰 수명 내·미해지)")
+    val sessionRevocable: Boolean = false,
+    @field:Schema(description = "이미 원격 로그아웃된 세션인지")
+    val sessionRevoked: Boolean = false,
 )
+
+data class SessionRevokeResponse(val revoked: Boolean, val sessionId: String)
 
 data class AccessLogPageResponse(
     val content: List<AccessLogResponse>,

@@ -31,8 +31,12 @@ class JwtAuthFilter(
             try {
                 val user = jwt.parse(token)
                 // 로그아웃된 토큰은 만료 전이라도 거절. 서명·형식 검증 이후에만 조회한다.
-                if (isDeniedFailClosed(token)) {
+                if (isDeniedFailClosed(hashToken(token))) {
                     throw IllegalArgumentException("denylisted token or denylist unavailable")
+                }
+                // 원격 세션 로그아웃 — 세션(sid) 단위 무효화도 같은 denylist 로 검사한다(fail-closed 동일).
+                if (user.sessionId != null && isDeniedFailClosed(sessionDenyKey(user.sessionId))) {
+                    throw IllegalArgumentException("revoked session")
                 }
                 val storedUser = users.findById(user.id).orElse(null)
                 if (storedUser == null || storedUser.deletedAt != null) {
@@ -70,9 +74,9 @@ class JwtAuthFilter(
      * 무효화됐을 수 있는 토큰을 통과시키지 않고 거절한다(인증 보안 경로 → rate limit 의 fail-open 과 반대).
      * catch-all 에 우연히 묻히지 않도록 unavailable 케이스를 여기서 명시적으로 처리·로깅한다.
      */
-    private fun isDeniedFailClosed(token: String): Boolean =
+    private fun isDeniedFailClosed(denyKey: String): Boolean =
         try {
-            denylist.isDenied(hashToken(token))
+            denylist.isDenied(denyKey)
         } catch (ex: Exception) {
             // store 장애로 무효화 여부 확인 불가 → fail-closed. metric·경고 로그만 남긴다.
             // 로그에 raw token/token hash 를 남기지 않는다(민감정보 미출력).
