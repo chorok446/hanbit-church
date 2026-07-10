@@ -35,6 +35,25 @@ JWT secret(`JWT_SECRET`), DB 접속 정보, CORS origin 등 민감 설정은 운
 
 관련 회귀 테스트: `OpenApiProdProfileTest`, `CorsPropertiesTest`, `CorsProdProfileTest`, `CorsConfigProdGuardTest`, `ActuatorProdProfileTest`, `ActuatorSecurityTest`, `JwtServiceTest`.
 
+## 환경 변수 레퍼런스
+
+`application.properties` 가 읽는 env 전체 목록. 미설정 시 로컬 개발용 기본값이 쓰인다.
+
+| 변수 | 용도 | 기본값(로컬) |
+|---|---|---|
+| `JWT_SECRET` | JWT 서명 키(≥32바이트). prod 는 dev 기본값 거부 | dev-insecure 값 |
+| `JWT_TTL_MS` / `JWT_REFRESH_TTL_MS` | access/refresh 토큰 수명 | 30분 / 14일 |
+| `JWT_COOKIE_SECURE` | 인증 쿠키 Secure 속성(HTTPS 에서 true) | `false` |
+| `DB_URL` / `DB_USER` / `DB_PASSWORD` | MySQL 접속 | `localhost:3307/hanbit` |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_NAME` | 부트스트랩 관리자 시드(비밀번호 설정 시에만 생성) | 이메일 `admin@hanbit.local` |
+| `SIGNUP_REQUIRE_APPROVAL` | 가입 승인제 on/off | `true` |
+| `FEATURE_DM` | DM REST API 플래그 | `false` |
+| `UPLOAD_DIR` / `APP_PUBLIC_URL` | 업로드 저장 경로 / 업로드 파일 공개 URL 베이스 | `uploads` / `http://localhost:8080` |
+| `MANAGEMENT_ENDPOINTS` | actuator web 노출 목록(공개 배포 시 `health` 만 권장) | `health,prometheus` |
+| `SENTRY_DSN` / `SENTRY_ENVIRONMENT` | 에러 추적(미설정 시 SDK 비활성) | 비활성 / `local` |
+
+프론트엔드(env) 목록은 `apps/web/.env.example` 참고.
+
 ## API 문서 (OpenAPI / Swagger)
 
 API 명세는 `springdoc-openapi` 로 코드에서 자동 생성된다. Controller/DTO 를 그대로 반영하므로 별도 수기 문서와 어긋나지 않는다.
