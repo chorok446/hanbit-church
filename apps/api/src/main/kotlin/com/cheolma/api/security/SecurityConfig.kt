@@ -83,6 +83,9 @@ class SecurityConfig(
                 it.requestMatchers(HttpMethod.GET, "/api/events/bookmarks").authenticated()
                 it.requestMatchers(HttpMethod.GET, "/api/events/bookmarks/page").authenticated()
                 it.requestMatchers(HttpMethod.GET, "/api/events/*/participants").authenticated()
+                // 사용자 검색은 로그인 필요 — 비로그인 실명 열거(교인 명단 수집)를 막는다.
+                // 공개 프로필(GET /api/users/{id})은 공개 피드의 작성자 링크로 이미 도달 가능해 공개 유지.
+                it.requestMatchers(HttpMethod.GET, "/api/users/search").authenticated()
                 it.requestMatchers(HttpMethod.POST, "/api/users/*/block").authenticated()
                 it.requestMatchers(HttpMethod.DELETE, "/api/users/*/block").authenticated()
                 // 알림은 사용자별 데이터 → 일반 GET permitAll 보다 먼저 보호한다.

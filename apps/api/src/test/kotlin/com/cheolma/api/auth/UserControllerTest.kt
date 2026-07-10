@@ -118,8 +118,12 @@ class UserControllerTest(
             ),
         )
         val activeId = requireNotNull(active.id).toInt()
+        val viewerToken = jwt.issue(active)
 
-        mvc.get("/api/users/search") { param("q", tag) }
+        mvc.get("/api/users/search") {
+            param("q", tag)
+            header("Authorization", "Bearer $viewerToken")
+        }
             .andExpect { status { isOk() } }
             .andExpect { jsonPath("$.totalElements", Matchers.`is`(1)) }
             .andExpect { jsonPath("$.content[0].id", Matchers.`is`(activeId)) }
@@ -134,7 +138,9 @@ class UserControllerTest(
         val target = users.save(User(email = "st-$tag@t.com", passwordHash = "x", name = "대상-$tag"))
         val token = jwt.issue(viewer)
 
-        mvc.get("/api/users/search")
+        mvc.get("/api/users/search") {
+            header("Authorization", "Bearer $token")
+        }
             .andExpect { status { isOk() } }
             .andExpect { jsonPath("$.totalElements", Matchers.`is`(0)) }
 
@@ -153,7 +159,18 @@ class UserControllerTest(
 
     @Test
     fun `사용자 검색어가 100자를 넘으면 400`() {
-        mvc.get("/api/users/search") { param("q", "a".repeat(101)) }
+        val tag = UUID.randomUUID().toString().take(8)
+        val viewer = users.save(User(email = "sq-$tag@t.com", passwordHash = "x", name = "질의자-$tag"))
+        mvc.get("/api/users/search") {
+            param("q", "a".repeat(101))
+            header("Authorization", "Bearer ${jwt.issue(viewer)}")
+        }
             .andExpect { status { isBadRequest() } }
+    }
+
+    @Test
+    fun `사용자 검색은 비로그인이면 401 — 교인 실명 열거 차단`() {
+        mvc.get("/api/users/search") { param("q", "김") }
+            .andExpect { status { isUnauthorized() } }
     }
 }
