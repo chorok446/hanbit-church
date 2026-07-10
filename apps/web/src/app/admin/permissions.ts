@@ -37,6 +37,8 @@ export type AdminPermissions = {
   canManageContent: boolean;
   /** 행사 개설·관리 (최고 관리자·운영자·사역 담당자) */
   canManageEvents: boolean;
+  /** 교회 일정(수동 등록) 관리 (최고 관리자·운영자) */
+  canManageCalendar: boolean;
 };
 
 const NONE_GRANTED: AdminPermissions = {
@@ -47,6 +49,7 @@ const NONE_GRANTED: AdminPermissions = {
   canViewAuditLog: false,
   canManageContent: false,
   canManageEvents: false,
+  canManageCalendar: false,
 };
 
 /** 역할 → 권한 매핑. 백엔드 SecurityConfig·PostService 정책과 동일하게 유지할 것. */
@@ -59,6 +62,7 @@ export const rolePermissions: Record<UserRole, AdminPermissions> = {
     canViewAuditLog: true,
     canManageContent: true,
     canManageEvents: true,
+    canManageCalendar: true,
   },
   OPERATOR: {
     ...NONE_GRANTED,
@@ -68,6 +72,7 @@ export const rolePermissions: Record<UserRole, AdminPermissions> = {
     canManageNewFamily: true,
     canManageContent: true,
     canManageEvents: true,
+    canManageCalendar: true,
   },
   MINISTRY: { ...NONE_GRANTED, canManageEvents: true },
   NEW_FAMILY: { ...NONE_GRANTED, canManageNewFamily: true },

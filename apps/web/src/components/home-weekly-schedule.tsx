@@ -9,6 +9,7 @@ import { fetchPublicPraiseSchedules } from "@/data/praise-team";
 import {
   eventTypeLabel,
   eventTypeStyle,
+  fetchManualCalendarEvents,
   formatDateLabel,
   getEventsForWeek,
   mapPraiseScheduleToCalendarEvents,
@@ -33,10 +34,15 @@ export function HomeWeeklySchedule() {
       apiGet<Event[]>("/api/events").catch(() => [] as Event[]), // 행사를 못 불러와도 예배 일정은 보여준다.
       // 찬양팀 일정 — 서버가 요청자별 범위(비로그인 PUBLIC / 로그인 CHURCH+PUBLIC / 멤버 전체)로 좁혀 준다.
       fetchPublicPraiseSchedules().catch(() => []),
+      // 관리자 수동 등록 일정(절기·심방 등).
+      fetchManualCalendarEvents().catch(() => [] as CalendarEvent[]),
     ])
-      .then(([events, praiseSchedules]) => {
+      .then(([events, praiseSchedules, manualEvents]) => {
         if (cancelled) return;
-        const week = getEventsForWeek(events, new Date(), mapPraiseScheduleToCalendarEvents(praiseSchedules));
+        const week = getEventsForWeek(events, new Date(), [
+          ...mapPraiseScheduleToCalendarEvents(praiseSchedules),
+          ...manualEvents,
+        ]);
         setItems(
           week
             .flatMap(({ dateKey, events }) =>
