@@ -170,6 +170,40 @@ class ManualCalendarControllerTest(
     }
 
     @Test
+    fun `단건 행사 ics 는 다운로드 헤더와 VEVENT 를 담고 숨김 행사는 404`() {
+        fun saveEvent(id: String, hiddenAt: Instant? = null) = eventsRepo.saveAndFlush(
+            com.hanbit.api.event.Event(
+                id, "open", "수련회; 하계, 연합", "요약", "https://x/t.png",
+                "2026-07-01", "2026-07-31", "2026-08-05", "2026-08-07",
+                10, 0, "라벨", com.hanbit.api.post.Author("개설자", false),
+                com.hanbit.api.event.EventBody("소개", emptyList(), emptyList()),
+                seq = System.nanoTime(),
+                hiddenAt = hiddenAt,
+                place = "본당 2층",
+            ),
+        )
+        saveEvent("ics-one")
+
+        val response = mvc.get("/api/events/ics-one/ics").andExpect {
+            status { isOk() }
+            content { contentTypeCompatibleWith("text/calendar") }
+            header { string("Content-Disposition", "attachment; filename=\"event-ics-one.ics\"") }
+        }.andReturn().response
+        val body = response.contentAsString
+        assertThat(body).startsWith("BEGIN:VCALENDAR")
+        assertThat(body).contains("UID:event-ics-one@hanbit-church")
+        assertThat(body).contains("SUMMARY:수련회\\; 하계\\, 연합")
+        assertThat(body).contains("DTSTART;VALUE=DATE:20260805")
+        assertThat(body).contains("DTEND;VALUE=DATE:20260808")
+        assertThat(body).contains("LOCATION:본당 2층")
+        assertThat(body.trimEnd()).endsWith("END:VCALENDAR")
+
+        saveEvent("ics-hidden", hiddenAt = Instant.now())
+        mvc.get("/api/events/ics-hidden/ics").andExpect { status { isNotFound() } }
+        mvc.get("/api/events/ics-none/ics").andExpect { status { isNotFound() } }
+    }
+
+    @Test
     fun `ics 피드는 종료 1년 지난 행사를 제외한다`() {
         fun saveEvent(id: String, runEnd: String) = eventsRepo.saveAndFlush(
             com.hanbit.api.event.Event(
