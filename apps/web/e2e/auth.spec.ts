@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { signup, type Account } from "./helpers/account";
+import { logout, signup, type Account } from "./helpers/account";
 
 /**
  * 인증·행사 시나리오: httpOnly 쿠키 인증 전환(#202) 이후의 회귀 가드.
@@ -72,4 +72,30 @@ test("행사를 개설해 모집을 시작하면 참여와 취소가 된다", as
   await page.getByRole("button", { name: "참여 취소", exact: true }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "확인" }).click();
   await expect(page.getByRole("button", { name: "행사 참여하기" })).toBeVisible();
+});
+
+test("이메일 기억하기 — 체크 후 로그인하면 다음 로그인 화면에 이메일이 채워진다", async ({ page }) => {
+  const account = await signup(page, "e2e-remember");
+  await logout(page);
+
+  await page.goto("/login");
+  await page.getByLabel("이메일", { exact: true }).fill(account.email);
+  await page.getByLabel("비밀번호", { exact: true }).fill(account.password);
+  await page.getByRole("checkbox", { name: "이메일 기억하기" }).check();
+  await page.getByRole("button", { name: "로그인", exact: true }).click();
+  await page.waitForURL("**/feed");
+  await logout(page);
+
+  await page.goto("/login");
+  await expect(page.getByLabel("이메일", { exact: true })).toHaveValue(account.email);
+  await expect(page.getByRole("checkbox", { name: "이메일 기억하기" })).toBeChecked();
+
+  // 체크 해제 후 로그인하면 저장이 지워진다.
+  await page.getByLabel("비밀번호", { exact: true }).fill(account.password);
+  await page.getByRole("checkbox", { name: "이메일 기억하기" }).uncheck();
+  await page.getByRole("button", { name: "로그인", exact: true }).click();
+  await page.waitForURL("**/feed");
+  await logout(page);
+  await page.goto("/login");
+  await expect(page.getByLabel("이메일", { exact: true })).toHaveValue("");
 });
