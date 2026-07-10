@@ -157,6 +157,50 @@ class PostControllerTest(
         }.andExpect { status { isBadRequest() } }
     }
 
+    @Test
+    fun `익명 기도제목은 작성자가 마스킹되고 본인 소유 표시는 유지된다`() {
+        val id = mvc.post("/api/posts") {
+            headers { add("Authorization", "Bearer $token") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"text":"익명 기도 부탁드립니다","category":"PRAYER","anonymous":true}"""
+        }.andExpect {
+            status { isCreated() }
+            jsonPath("$.anonymous") { value(true) }
+            jsonPath("$.author.name") { value("익명") }
+            jsonPath("$.authorId") { value(null) }
+            jsonPath("$.ownedByMe") { value(true) }
+        }.andReturn().response.contentAsString.let { com.fasterxml.jackson.databind.ObjectMapper().readTree(it)["id"].asText() }
+
+        // 다른 사용자 시점: 마스킹 유지 + ownedByMe false.
+        mvc.get("/api/posts/$id") {
+            headers { add("Authorization", "Bearer $token2") }
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.author.name") { value("익명") }
+            jsonPath("$.authorId") { value(null) }
+            jsonPath("$.ownedByMe") { value(false) }
+        }
+
+        // 작성자 이름 검색으로 익명 글이 노출되지 않는다(텍스트 검색은 정상).
+        mvc.get("/api/posts/search?q=테스터&category=PRAYER").andExpect {
+            status { isOk() }
+            jsonPath("$.content[?(@.id == '$id')]") { isEmpty() }
+        }
+        mvc.get("/api/posts/search?q=익명 기도&category=PRAYER").andExpect {
+            status { isOk() }
+            jsonPath("$.content[?(@.id == '$id')].anonymous") { value(true) }
+        }
+    }
+
+    @Test
+    fun `익명 게시는 기도 카테고리가 아니면 400`() {
+        mvc.post("/api/posts") {
+            headers { add("Authorization", "Bearer $token") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"text":"나눔인데 익명","category":"SHARING","anonymous":true}"""
+        }.andExpect { status { isBadRequest() } }
+    }
+
     private fun postPost(body: String) = mvc.post("/api/posts") {
         headers { add("Authorization", "Bearer $token") }
         contentType = MediaType.APPLICATION_JSON

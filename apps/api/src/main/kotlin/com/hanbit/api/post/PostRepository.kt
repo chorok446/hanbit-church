@@ -42,6 +42,10 @@ interface PostRepository : JpaRepository<Post, String> {
 
     fun findByAuthorUserIdAndHiddenAtIsNull(authorUserId: Long, pageable: Pageable): Page<Post>
 
+    // 공개 프로필용 — 익명 기도제목은 프로필 목록·게시글 수에서 제외해 작성자 연결을 차단한다.
+    fun findByAuthorUserIdAndAnonymousFalseAndHiddenAtIsNull(authorUserId: Long, pageable: Pageable): Page<Post>
+    fun countByAuthorUserIdAndAnonymousFalse(authorUserId: Long): Long
+
     fun findAllByIdInAndHiddenAtIsNullOrderBySeqDesc(ids: Collection<String>): List<Post>
 
     /** 상호작용 동시성 방어용 write lock 조회. like/bookmark/comment 트랜잭션을 게시글별로 직렬화. */

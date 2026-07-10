@@ -17,6 +17,8 @@ data class CreatePostRequest(
     val category: String? = null,
     @field:Schema(description = "첨부파일 목록(공지·주보 전용, 최대 3개)")
     val attachments: List<PostAttachment> = emptyList(),
+    @field:Schema(description = "익명 게시(기도 카테고리 전용). 공개 응답에서 작성자가 마스킹된다.")
+    val anonymous: Boolean = false,
 )
 
 @Schema(description = "게시글 수정 요청")
@@ -97,6 +99,8 @@ data class PostResponse(
     val hidden: Boolean = false,
     // 작성 시각. 시드 게시글은 null(작성 시점 미상).
     val createdAt: Instant? = null,
+    // 익명 기도제목 여부. true 면 author/authorId 가 마스킹된 값이다.
+    val anonymous: Boolean = false,
 )
 
 data class PostSearchResponse(
