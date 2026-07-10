@@ -99,6 +99,14 @@ scripts/db-restore.sh backups/hanbit-20260711-000000.sql.gz 다른DB   # 다른 
 
 복구는 기존 데이터를 덮어쓰므로 대상 DB 이름을 프롬프트에 다시 입력해야 진행된다. 컨테이너 이름·계정은 `DB_CONTAINER`/`DB_USER`/`DB_PASSWORD` env 로 바꿀 수 있다.
 
+업로드 파일(이미지·주보 PDF·찬양팀 자료)은 DB 밖 디스크에 있어 별도로 백업한다:
+
+```bash
+scripts/uploads-backup.sh       # backups/uploads-<시각>.tar.gz (컨테이너 우선, 없으면 apps/api/uploads)
+```
+
+`compose.local.yml` 의 api 서비스는 `hanbit-api-uploads` 볼륨으로 업로드를 영속화한다 — 볼륨 없이 컨테이너를 재생성하면 업로드가 전부 사라진다.
+
 ### Production container images (Docker Hub)
 
 로컬 개발은 `compose.local.yml` + `apps/*/Dockerfile` 을 그대로 사용한다. **운영 배포용 image** 는 `Dockerfile.prod` 로 빌드한다 — main PR 검증은 [`image-verify.yml`](.github/workflows/image-verify.yml), main push 배포 push 는 [`cd.yml`](.github/workflows/cd.yml). (기존 GHCR 계획에서 **Docker Hub**로 전환.)
