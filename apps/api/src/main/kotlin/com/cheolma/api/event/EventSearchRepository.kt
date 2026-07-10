@@ -4,6 +4,7 @@ import com.cheolma.api.common.QUERYDSL_LIKE_ESCAPE
 import com.cheolma.api.common.literalContainsPattern
 import com.querydsl.core.BooleanBuilder
 import com.querydsl.core.types.dsl.CaseBuilder
+import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.core.types.OrderSpecifier
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.springframework.stereotype.Repository
@@ -12,6 +13,9 @@ enum class EventSearchSort {
     LATEST,
     POPULAR,
     DEADLINE,
+
+    /** 관련순 — 제목 일치가 요약 일치보다 상위, 각각 등장 위치가 앞일수록 상위. 검색어 없으면 LATEST. */
+    RELEVANCE,
 }
 
 data class EventSearchCondition(
@@ -87,7 +91,7 @@ class QuerydslEventSearchRepository(
         val content = queryFactory
             .selectFrom(event)
             .where(predicates)
-            .orderBy(*orderSpecifiers(event, condition.sort))
+            .orderBy(*orderSpecifiers(event, condition.sort, condition.query))
             .offset(condition.page.toLong() * condition.size)
             .limit(condition.size.toLong())
             .fetch()
@@ -101,7 +105,7 @@ class QuerydslEventSearchRepository(
         return EventSearchResult(content = content, totalElements = totalElements)
     }
 
-    private fun orderSpecifiers(event: QEvent, sort: EventSearchSort): Array<OrderSpecifier<*>> =
+    private fun orderSpecifiers(event: QEvent, sort: EventSearchSort, query: String?): Array<OrderSpecifier<*>> =
         when (sort) {
             EventSearchSort.LATEST -> arrayOf(event.seq.desc(), event.id.asc())
             EventSearchSort.POPULAR -> arrayOf(event.joined.desc(), event.seq.desc(), event.id.asc())
@@ -111,6 +115,32 @@ class QuerydslEventSearchRepository(
                 event.seq.desc(),
                 event.id.asc(),
             )
+            EventSearchSort.RELEVANCE -> relevanceOrder(event, query)
         }
+
+    /**
+     * 관련순: 제목 locate < 요약 locate 순으로 묶고(제목 일치 우선), 각 묶음 안에서는 등장 위치가
+     * 앞일수록 상위. 동률은 최신순. locate 는 JPQL 표준 함수라 H2·MySQL 공용.
+     */
+    private fun relevanceOrder(event: QEvent, query: String?): Array<OrderSpecifier<*>> {
+        val keyword = query?.trim()?.lowercase()
+        if (keyword.isNullOrEmpty()) return arrayOf(event.seq.desc(), event.id.asc())
+        val titlePosition = Expressions.numberTemplate(
+            Int::class.javaObjectType, "locate({0}, lower({1}))", keyword, event.title,
+        )
+        val summaryPosition = Expressions.numberTemplate(
+            Int::class.javaObjectType, "locate({0}, lower({1}))", keyword, event.summary,
+        )
+        val rank = CaseBuilder()
+            .`when`(titlePosition.gt(0)).then(titlePosition)
+            .`when`(summaryPosition.gt(0)).then(summaryPosition.add(SUMMARY_MATCH_OFFSET))
+            .otherwise(NO_MATCH_RANK)
+        return arrayOf(rank.asc(), event.seq.desc(), event.id.asc())
+    }
+
+    private companion object {
+        const val SUMMARY_MATCH_OFFSET = 10_000
+        const val NO_MATCH_RANK = 1_000_000
+    }
 
 }

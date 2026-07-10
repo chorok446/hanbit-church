@@ -112,6 +112,7 @@ class EventService(
             "latest" -> EventSearchSort.LATEST
             "popular" -> EventSearchSort.POPULAR
             "deadline" -> EventSearchSort.DEADLINE
+            "relevance" -> EventSearchSort.RELEVANCE
             else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid event sort")
         }
         val normalizedRecruitEndFrom = normalizeOptionalEventSearchDate(recruitEndFrom, "recruitEndFrom")
