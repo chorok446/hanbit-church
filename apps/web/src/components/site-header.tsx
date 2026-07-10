@@ -150,8 +150,8 @@ export function SiteHeader() {
       }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2" style={{ color: "var(--accent-secondary)" }}>
-          <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 21 }}>{CHURCH.name}</span>
+        <Link href="/" className="flex shrink-0 items-center gap-2 whitespace-nowrap" style={{ color: "var(--accent-secondary)" }}>
+          <span className="text-[17px] sm:text-[21px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{CHURCH.name}</span>
           <span className="hidden text-[10px] tracking-[0.3em] opacity-90 lg:inline">{CHURCH.nameEn}</span>
         </Link>
         <nav className="hidden md:flex items-center gap-2" aria-label="주요 메뉴">
@@ -220,14 +220,14 @@ export function SiteHeader() {
             <>
               <Link
                 href="/login"
-                className="rounded-full px-3 py-1.5 text-[13px] transition-colors hover:bg-white/10"
+                className="whitespace-nowrap rounded-full px-2 py-1.5 text-[13px] transition-colors hover:bg-white/10 sm:px-3"
                 style={{ color: "rgba(var(--ink-rgb), 0.8)" }}
               >
                 로그인
               </Link>
               <Link
                 href="/signup"
-                className="rounded-full px-3 py-1.5 text-[13px] font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none"
+                className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-[13px] font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none sm:px-3"
                 style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
               >
                 회원가입
