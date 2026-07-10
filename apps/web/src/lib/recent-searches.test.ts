@@ -38,7 +38,7 @@ describe("recent-searches", () => {
     recordRecentSearch("둘");
     removeRecentSearch("하나");
     expect(getRecentSearches()).toEqual(["둘"]);
-    expect(JSON.parse(window.localStorage.getItem("cheolma_recent_searches") ?? "[]")).toEqual(["둘"]);
+    expect(JSON.parse(window.localStorage.getItem("hanbit_recent_searches") ?? "[]")).toEqual(["둘"]);
     clearRecentSearches();
     expect(getRecentSearches()).toEqual([]);
   });

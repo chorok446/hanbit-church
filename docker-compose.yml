@@ -1,5 +1,5 @@
 # 로컬 개발용 MySQL. 원본(dasida)과 동시에 띄울 수 있도록 컨테이너·포트·볼륨·DB명을 분리했다.
-# 백엔드 기본 DB_URL 이 3307/cheolma 를 가리킨다(application.properties).
+# 백엔드 기본 DB_URL 이 3307/hanbit 를 가리킨다(application.properties).
 #
 # 모니터링(선택): docker compose --profile monitoring up -d
 #   Prometheus http://localhost:9090 (호스트 8080 API 를 스크레이프)
@@ -7,32 +7,32 @@
 services:
   mysql:
     image: mysql:8.4
-    container_name: cheolma-mysql
+    container_name: hanbit-mysql
     ports:
       - "3307:3306"
     environment:
-      MYSQL_DATABASE: cheolma
-      MYSQL_USER: cheolma
-      MYSQL_PASSWORD: cheolma
+      MYSQL_DATABASE: hanbit
+      MYSQL_USER: hanbit
+      MYSQL_PASSWORD: hanbit
       MYSQL_ROOT_PASSWORD: root
     volumes:
-      - cheolma-mysql:/var/lib/mysql
+      - hanbit-mysql:/var/lib/mysql
 
   prometheus:
     image: prom/prometheus:v3.4.1
-    container_name: cheolma-prometheus
+    container_name: hanbit-prometheus
     profiles: ["monitoring"]
     ports:
       - "9090:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - cheolma-prometheus:/prometheus
+      - hanbit-prometheus:/prometheus
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
   grafana:
     image: grafana/grafana:12.0.2
-    container_name: cheolma-grafana
+    container_name: hanbit-grafana
     profiles: ["monitoring"]
     ports:
       - "3001:3000" # 3000 은 Next dev 서버가 사용
@@ -41,11 +41,11 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-      - cheolma-grafana:/var/lib/grafana
+      - hanbit-grafana:/var/lib/grafana
     depends_on:
       - prometheus
 
 volumes:
-  cheolma-mysql:
-  cheolma-prometheus:
-  cheolma-grafana:
+  hanbit-mysql:
+  hanbit-prometheus:
+  hanbit-grafana:

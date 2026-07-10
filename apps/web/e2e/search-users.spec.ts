@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { signup, login, logout } from "./helpers/account";
 
-const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "e2e-admin@cheolma.local";
+const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "e2e-admin@hanbit.local";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "E2eAdmin1!";
 
 /**

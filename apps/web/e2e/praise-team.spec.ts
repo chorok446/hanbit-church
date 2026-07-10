@@ -8,7 +8,7 @@ import { login } from "./helpers/account";
  */
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
-const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "e2e-admin@cheolma.local";
+const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "e2e-admin@hanbit.local";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "E2eAdmin1!";
 
 async function adminApi(): Promise<{ api: APIRequestContext; headers: { Authorization: string }; adminId: number }> {

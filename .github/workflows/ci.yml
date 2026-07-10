@@ -43,9 +43,9 @@ jobs:
       mysql:
         image: mysql:8.4
         env:
-          MYSQL_DATABASE: cheolma
-          MYSQL_USER: cheolma
-          MYSQL_PASSWORD: cheolma
+          MYSQL_DATABASE: hanbit
+          MYSQL_USER: hanbit
+          MYSQL_PASSWORD: hanbit
           MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
@@ -69,16 +69,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter web build
       - run: pnpm --filter web exec playwright install --with-deps chromium
-      # API 기본 DB 는 3307/cheolma(로컬 docker-compose) 이므로, e2e MySQL 서비스(3306/cheolma)에
+      # API 기본 DB 는 3307/hanbit(로컬 docker-compose) 이므로, e2e MySQL 서비스(3306/hanbit)에
       # 맞춰 DB env 를 주입한다. 없으면 bootRun 이 Communications link failure 로 기동 실패한다.
       - run: pnpm --filter web e2e
         env:
-          DB_URL: jdbc:mysql://localhost:3306/cheolma
-          DB_USER: cheolma
-          DB_PASSWORD: cheolma
-          # e2e 헬퍼가 기대하는 부트스트랩 관리자(e2e-admin@cheolma.local/E2eAdmin1!)를 SeedRunner 로 시드.
+          DB_URL: jdbc:mysql://localhost:3306/hanbit
+          DB_USER: hanbit
+          DB_PASSWORD: hanbit
+          # e2e 헬퍼가 기대하는 부트스트랩 관리자(e2e-admin@hanbit.local/E2eAdmin1!)를 SeedRunner 로 시드.
           # 없으면 관리자 로그인이 401 로 실패한다(praise-team 등 admin 시드 전제 스펙).
-          ADMIN_EMAIL: e2e-admin@cheolma.local
+          ADMIN_EMAIL: e2e-admin@hanbit.local
           ADMIN_PASSWORD: E2eAdmin1!
           ADMIN_NAME: e2e관리자
       - name: Upload Playwright traces on failure

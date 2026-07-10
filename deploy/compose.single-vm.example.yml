@@ -26,7 +26,7 @@ services:
     image: mysql:8.4
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: cheolma
+      MYSQL_DATABASE: hanbit
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -57,7 +57,7 @@ services:
       redis:
         condition: service_healthy
     environment:
-      DB_URL: jdbc:mysql://mysql:3306/cheolma?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8
+      DB_URL: jdbc:mysql://mysql:3306/hanbit?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: "6379"
 

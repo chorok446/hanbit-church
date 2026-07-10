@@ -11,7 +11,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
  * role=ADMIN, 승인 완료 상태(approvedAt 세팅)여야 승인 API 를 호출할 수 있다.
  * 자격은 env(E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD)가 우선, 없으면 아래 기본값.
  */
-const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "e2e-admin@cheolma.local";
+const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "e2e-admin@hanbit.local";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "E2eAdmin1!";
 
 /** 로그인 후 피드로 이동한다. */

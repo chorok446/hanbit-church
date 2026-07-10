@@ -4,12 +4,12 @@
  * env 미설정 시 아래 자리표시 값으로 렌더링된다.
  */
 export const CHURCH = {
-  name: process.env.NEXT_PUBLIC_CHURCH_NAME ?? "철마제일교회",
-  nameEn: process.env.NEXT_PUBLIC_CHURCH_NAME_EN ?? "CHEOLMA JEIL CHURCH",
+  name: process.env.NEXT_PUBLIC_CHURCH_NAME ?? "한빛교회",
+  nameEn: process.env.NEXT_PUBLIC_CHURCH_NAME_EN ?? "HANBIT CHURCH",
   pastor: process.env.NEXT_PUBLIC_CHURCH_PASTOR ?? "",
-  address: process.env.NEXT_PUBLIC_CHURCH_ADDRESS ?? "부산광역시 기장군 철마면",
+  address: process.env.NEXT_PUBLIC_CHURCH_ADDRESS ?? "서울특별시 한빛구 한빛로 1",
   phone: process.env.NEXT_PUBLIC_CHURCH_PHONE ?? "051-000-0000",
-  email: process.env.NEXT_PUBLIC_CHURCH_EMAIL ?? "cheolmajeil@church.kr",
+  email: process.env.NEXT_PUBLIC_CHURCH_EMAIL ?? "hanbit@church.kr",
 } as const;
 
 /** SNS·채널 링크. env 미설정(빈 값)이면 푸터에서 해당 아이콘을 숨긴다. */

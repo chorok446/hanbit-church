@@ -17,7 +17,7 @@ import {
   type PostComposeValues,
 } from "@/data/posts";
 
-export const POST_COMPOSE_DRAFT_KEY = "cheolma:post-compose-draft";
+export const POST_COMPOSE_DRAFT_KEY = "hanbit:post-compose-draft";
 
 type PostComposeFormProps = {
   values: PostComposeValues;

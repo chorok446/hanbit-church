@@ -40,7 +40,7 @@ export function ChurchHero() {
           className="mx-auto mt-10 max-w-[40ch] text-[14px] leading-7 sm:text-[15px]"
           style={{ color: "var(--foreground-muted)", textWrap: "balance" }}
         >
-          부산 기장 철마에서 예배와 말씀, 교제와 섬김으로 함께 걷는 공동체입니다.
+          우리 마을에서 예배와 말씀, 교제와 섬김으로 함께 걷는 공동체입니다.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

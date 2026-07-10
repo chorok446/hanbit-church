@@ -6,7 +6,7 @@ import { CHURCH } from "@/data/church";
 // 영문 교회명만으로 폴백한다(API 없는 CI 빌드도 성공해야 한다).
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "철마제일교회";
+export const alt = "한빛교회";
 
 async function loadKoreanFont(text: string): Promise<ArrayBuffer | null> {
   try {
@@ -21,7 +21,7 @@ async function loadKoreanFont(text: string): Promise<ArrayBuffer | null> {
 }
 
 export default async function OpengraphImage() {
-  const title = CHURCH.name; // "철마제일교회"
+  const title = CHURCH.name; // "한빛교회"
   const font = await loadKoreanFont(title);
 
   return new ImageResponse(

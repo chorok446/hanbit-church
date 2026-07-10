@@ -11,7 +11,7 @@ export const MENU_SHORTCUTS: MenuShortcut[] = [
   {
     href: "/about",
     label: "교회소개",
-    description: "철마제일교회의 소개와 섬기는 분들",
+    description: "한빛교회의 소개와 섬기는 분들",
     keywords: ["교회", "소개", "비전", "역사"],
   },
   {

@@ -8,7 +8,7 @@ import { login } from "./helpers/account";
  */
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
-const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "e2e-admin@cheolma.local";
+const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "e2e-admin@hanbit.local";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "E2eAdmin1!";
 
 test("관리자가 수동 일정을 등록하면 공개 캘린더 API 에 노출되고 삭제할 수 있다", async ({ page }) => {

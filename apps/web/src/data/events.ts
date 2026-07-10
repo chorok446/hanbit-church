@@ -412,7 +412,7 @@ export const EVENT_MAX_BODY_LENGTH = 8000;
 export const EVENT_MAX_INFO_LENGTH = 200;
 export const EVENT_MAX_SUPPLIES_LENGTH = 500;
 
-export const EVENT_COMPOSE_DRAFT_KEY = "cheolma:event-compose-draft";
+export const EVENT_COMPOSE_DRAFT_KEY = "hanbit:event-compose-draft";
 
 export type EventComposeValues = {
   title: string;

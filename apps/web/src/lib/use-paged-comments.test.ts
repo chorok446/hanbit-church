@@ -121,7 +121,7 @@ describe("usePagedComments", () => {
 
       await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/login"));
       expect(onRequireLogin).toHaveBeenCalled();
-      expect(localStorage.getItem("cheolma.session")).toBeNull();
+      expect(localStorage.getItem("hanbit.session")).toBeNull();
     });
   });
 
@@ -217,7 +217,7 @@ describe("usePagedComments", () => {
       await act(() => result.current.submit());
 
       expect(pushMock).toHaveBeenCalledWith("/login");
-      expect(localStorage.getItem("cheolma.session")).toBeNull();
+      expect(localStorage.getItem("hanbit.session")).toBeNull();
     });
   });
 

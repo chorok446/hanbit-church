@@ -8,7 +8,7 @@ import { fillPostContent } from "./helpers/post-content";
  * 실행: pnpm --filter web e2e admin-content.spec.ts
  */
 
-const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "e2e-admin@cheolma.local";
+const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "e2e-admin@hanbit.local";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "E2eAdmin1!";
 
 test("관리자가 게시글을 숨기면 공개 목록에서 빠지고 복구하면 되살아난다", async ({ page }) => {

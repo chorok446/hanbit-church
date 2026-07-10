@@ -114,7 +114,7 @@ function SermonCard({ entry, index }: { entry: SermonEntry; index: number }) {
           />
         </Link>
         <div className="min-w-0">
-          {/* 메타 한 줄: "주일 설교 · 1주 전 · 철마제일교회" (유형=골드) */}
+          {/* 메타 한 줄: "주일 설교 · 1주 전 · 한빛교회" (유형=골드) */}
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
             <span className="font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--accent-strong)" }}>
               {info.serviceLabel}

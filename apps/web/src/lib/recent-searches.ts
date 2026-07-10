@@ -3,7 +3,7 @@
  * effect 내 동기 setState 없이(레포 lint 규칙) 기록/삭제가 칩 UI 에 반영되게 하기 위함.
  */
 
-const KEY = "cheolma_recent_searches";
+const KEY = "hanbit_recent_searches";
 const MAX_ITEMS = 8;
 
 const EMPTY: string[] = [];

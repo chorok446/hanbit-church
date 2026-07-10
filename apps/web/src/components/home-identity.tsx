@@ -4,7 +4,7 @@ import { BookOpen, Globe, HeartHandshake, Sprout } from "lucide-react";
 const VALUES = [
   { icon: BookOpen, title: "복음 중심", body: "말씀과 기도로 세워지는 예배 공동체를 지향합니다." },
   { icon: Sprout, title: "다음세대", body: "어린이·청소년·청년이 믿음 안에서 자라도록 돕습니다." },
-  { icon: HeartHandshake, title: "지역사회", body: "철마 지역의 이웃과 함께 걷고 함께 섬기는 교회입니다." },
+  { icon: HeartHandshake, title: "지역사회", body: "우리 지역의 이웃과 함께 걷고 함께 섬기는 교회입니다." },
   { icon: Globe, title: "선교", body: "국내외 선교지와 동역하며 복음의 지경을 넓혀 갑니다." },
 ] as const;
 

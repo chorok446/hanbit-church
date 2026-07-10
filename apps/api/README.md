@@ -1,6 +1,6 @@
-# 철마제일교회 API
+# 한빛교회 API
 
-철마제일교회 홈페이지 백엔드 API 서버 (Kotlin + Spring Boot 4.1). 다시,다(Dasida) 플랫폼에서 포크했다.
+한빛교회 홈페이지 백엔드 API 서버 (Kotlin + Spring Boot 4.1). 다시,다(Dasida) 플랫폼에서 포크했다.
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.4.0-7F52FF?logo=kotlin&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F?logo=springboot&logoColor=white)
@@ -66,7 +66,7 @@ API 명세는 `springdoc-openapi` 로 코드에서 자동 생성된다. Controll
 
 ### 로그아웃과 토큰 무효화(denylist)
 
-토큰은 access(`cheolma_token`) + refresh(`cheolma_refresh`, `Path=/api/auth`) 두 개의 **httpOnly 쿠키**로 전달된다(`Authorization: Bearer` 도 허용). refresh 는 `typ=refresh` claim 으로 access 와 구분하며, `POST /api/auth/refresh` 호출 시 **rotation**(새 access + 새 refresh 발급) 된다. 로그아웃은 서버가 해당 access token 을 만료 전까지 denylist 에 올려 재사용을 차단한다.
+토큰은 access(`hanbit_token`) + refresh(`hanbit_refresh`, `Path=/api/auth`) 두 개의 **httpOnly 쿠키**로 전달된다(`Authorization: Bearer` 도 허용). refresh 는 `typ=refresh` claim 으로 access 와 구분하며, `POST /api/auth/refresh` 호출 시 **rotation**(새 access + 새 refresh 발급) 된다. 로그아웃은 서버가 해당 access token 을 만료 전까지 denylist 에 올려 재사용을 차단한다.
 
 - **`POST /api/auth/logout`** (bearerAuth): 현재 access token 을 denylist 에 등록하고 두 쿠키를 만료시킨다.
   - 성공: `200 { "loggedOut": true }`
