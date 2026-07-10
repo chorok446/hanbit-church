@@ -18,6 +18,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.put
 import org.springframework.transaction.annotation.Transactional
@@ -1843,5 +1844,45 @@ class EventControllerTest(
             status { isOk() }
             jsonPath("$[?(@.id == '$id')]") { value(Matchers.empty<Any>()) }
         }
+    }
+
+    private fun increaseCapacity(id: String, capacity: Int, bearer: String? = token) =
+        mvc.patch("/api/events/$id/capacity") {
+            if (bearer != null) headers { add("Authorization", "Bearer $bearer") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"capacity":$capacity}"""
+        }
+
+    @Test
+    fun `모집중 행사 정원은 늘릴 수만 있다`() {
+        val id = saveEvent(status = "open", capacity = 10, authorUserId = 1)
+        increaseCapacity(id, 15).andExpect {
+            status { isOk() }
+            jsonPath("$.capacity") { value(15) }
+        }
+        assertThat(eventRepo.findById(id).get().capacity).isEqualTo(15)
+
+        // 감원·동일 값·미정 전환은 400.
+        increaseCapacity(id, 15).andExpect { status { isBadRequest() } }
+        increaseCapacity(id, 5).andExpect { status { isBadRequest() } }
+        increaseCapacity(id, 0).andExpect { status { isBadRequest() } }
+    }
+
+    @Test
+    fun `정원 증원은 개설자 전용이고 모집중이 아니면 409`() {
+        val id = saveEvent(status = "open", capacity = 10, authorUserId = 1)
+        increaseCapacity(id, 20, bearer = token2).andExpect { status { isForbidden() } }
+        increaseCapacity(id, 20, bearer = null).andExpect { status { isUnauthorized() } }
+
+        val upcoming = saveEvent(status = "upcoming", capacity = 10, authorUserId = 1)
+        increaseCapacity(upcoming, 20).andExpect { status { isConflict() } }
+        val closed = saveEvent(status = "closed", capacity = 10, authorUserId = 1)
+        increaseCapacity(closed, 20).andExpect { status { isConflict() } }
+    }
+
+    @Test
+    fun `인원 미정 행사는 정원 증원 대상이 아니다`() {
+        val id = saveEvent(status = "open", capacity = 0, authorUserId = 1)
+        increaseCapacity(id, 20).andExpect { status { isBadRequest() } }
     }
 }

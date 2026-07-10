@@ -1,5 +1,5 @@
 // 행사 데이터는 백엔드 API가 source of truth. 타입 + 프레젠테이션 메타만 유지.
-import { apiDelete, apiDeleteVoid, apiGet, apiPost, apiPut } from "@/lib/api";
+import { apiDelete, apiDeleteVoid, apiGet, apiPost, apiPut, apiPatch } from "@/lib/api";
 import { mergeEventBodyForEditor } from "@/lib/rich-body-html";
 import { richTextPlainLength } from "@/lib/rich-text-length";
 import type { CommentPageLocationResponse } from "@/data/comments";
@@ -166,6 +166,11 @@ function eventsPage(path: string, page: number): Promise<EventPageResponse> {
 
 export const fetchJoinedEventsPage = (page: number) => eventsPage("/api/events/joined/page", page);
 export const fetchMyEventsPage = (page: number) => eventsPage("/api/events/mine/page", page);
+/** 모집중 행사 정원 증원(개설자 전용) — 늘리기만 허용, 감원·미정 전환은 서버가 400. */
+export function increaseEventCapacity(eventId: string, capacity: number): Promise<Event> {
+  return apiPatch<Event>(`/api/events/${eventId}/capacity`, { capacity });
+}
+
 export const fetchBookmarkedEventsPage = (page: number) => eventsPage("/api/events/bookmarks/page", page);
 
 export function bookmarkEvent(eventId: string): Promise<Event> {

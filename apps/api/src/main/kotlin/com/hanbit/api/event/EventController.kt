@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -205,6 +206,15 @@ class EventController(
         eventService.notifyDetailsUpdated(user.id, id, result)
         return result.response
     }
+
+    @Operation(summary = "정원 증원", description = "모집중 행사에서 늘리기만 허용(개설자 전용). 감원·미정 전환은 불가.")
+    @SecurityRequirement(name = "bearerAuth")
+    @PatchMapping("/{id}/capacity")
+    fun increaseCapacity(
+        @PathVariable id: String,
+        @RequestBody req: IncreaseCapacityRequest,
+        @AuthenticationPrincipal user: AuthUser,
+    ): EventResponse = eventService.increaseCapacity(user.id, id, req.capacity)
 
     @Operation(summary = "행사 삭제")
     @SecurityRequirement(name = "bearerAuth")
