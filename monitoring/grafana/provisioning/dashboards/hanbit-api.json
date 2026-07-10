@@ -3,13 +3,21 @@
   "uid": "hanbit-api",
   "timezone": "browser",
   "refresh": "30s",
-  "time": { "from": "now-1h", "to": "now" },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
   "panels": [
     {
       "id": 1,
       "title": "HTTP 요청률 (req/s, URI별)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
       "targets": [
         {
           "expr": "sum by (uri) (rate(http_server_requests_seconds_count{application=\"hanbit-api\"}[5m]))",
@@ -21,7 +29,12 @@
       "id": 2,
       "title": "HTTP p95 지연 (s)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
       "targets": [
         {
           "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"hanbit-api\"}[5m])))",
@@ -33,7 +46,12 @@
       "id": 3,
       "title": "5xx 에러율 (req/s)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 8
+      },
       "targets": [
         {
           "expr": "sum (rate(http_server_requests_seconds_count{application=\"hanbit-api\", status=~\"5..\"}[5m]))",
@@ -45,7 +63,12 @@
       "id": 4,
       "title": "JVM 힙 사용량",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 8
+      },
       "targets": [
         {
           "expr": "sum (jvm_memory_used_bytes{application=\"hanbit-api\", area=\"heap\"})",
@@ -56,17 +79,54 @@
           "legendFormat": "max"
         }
       ],
-      "fieldConfig": { "defaults": { "unit": "bytes" } }
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        }
+      }
     },
     {
       "id": 5,
       "title": "HikariCP 커넥션 (active/idle/pending)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 8
+      },
       "targets": [
-        { "expr": "hikaricp_connections_active{application=\"hanbit-api\"}", "legendFormat": "active" },
-        { "expr": "hikaricp_connections_idle{application=\"hanbit-api\"}", "legendFormat": "idle" },
-        { "expr": "hikaricp_connections_pending{application=\"hanbit-api\"}", "legendFormat": "pending" }
+        {
+          "expr": "hikaricp_connections_active{application=\"hanbit-api\"}",
+          "legendFormat": "active"
+        },
+        {
+          "expr": "hikaricp_connections_idle{application=\"hanbit-api\"}",
+          "legendFormat": "idle"
+        },
+        {
+          "expr": "hikaricp_connections_pending{application=\"hanbit-api\"}",
+          "legendFormat": "pending"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "로그인·세션 갱신 (건/s)",
+      "type": "timeseries",
+      "datasource": null,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "sum by (new_device) (rate(hanbit_auth_session_recorded_total{application=\"hanbit-api\"}[5m]))",
+          "legendFormat": "new_device={{new_device}}",
+          "refId": "A"
+        }
       ]
     }
   ],

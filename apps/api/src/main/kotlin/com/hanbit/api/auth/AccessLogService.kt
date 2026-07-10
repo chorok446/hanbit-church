@@ -16,6 +16,7 @@ class AccessLogService(
     private val writer: AccessLogWriter,
     private val notifications: com.hanbit.api.notification.NotificationService,
     private val denylist: com.hanbit.api.security.TokenDenylistStore,
+    private val meterRegistry: io.micrometer.core.instrument.MeterRegistry,
     @param:org.springframework.beans.factory.annotation.Value("\${app.jwt.refresh-ttl-millis}") private val refreshTtlMillis: Long,
     private val clock: Clock,
 ) {
@@ -39,6 +40,10 @@ class AccessLogService(
         // 남겨 커밋 시점에 UnexpectedRollbackException 으로 터진다(트랜잭션 안 runCatching 으로는 못 막음).
         runCatching { writer.write(userId, ip, info, geo, now, sessionId) }
         runCatching { writer.pruneOlderThanRetention(now) }
+        // 로그인/세션 갱신 카운터 — Grafana 접속 추이 패널용. 사용자 id 는 태그로 싣지 않는다(카디널리티).
+        runCatching {
+            meterRegistry.counter(LOGIN_METRIC, "new_device", isNewDevice.toString()).increment()
+        }
         if (isNewDevice) {
             val location = listOfNotNull(geo?.region, geo?.country).joinToString(" · ").ifBlank { null }
             runCatching {
@@ -146,6 +151,7 @@ class AccessLogService(
     private fun normalizeIp(ip: String): String = ip.take(45).ifBlank { "unknown" }
 
     private companion object {
+        const val LOGIN_METRIC = "hanbit.auth.session.recorded"
         const val RETENTION_DAYS = 365L
         const val MAX_PAGE_SIZE = 50
     }
