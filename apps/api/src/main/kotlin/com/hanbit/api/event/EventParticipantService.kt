@@ -163,13 +163,19 @@ class EventParticipantService(
         )
     }
 
-    /** 쉼표·따옴표·줄바꿈이 든 필드는 따옴표로 감싸고 내부 따옴표는 이중화한다(RFC 4180). */
-    private fun escapeCsvField(value: String): String =
-        if (value.any { it == ',' || it == '"' || it == '\n' || it == '\r' }) {
-            "\"" + value.replace("\"", "\"\"") + "\""
+    /**
+     * 쉼표·따옴표·줄바꿈이 든 필드는 따옴표로 감싸고 내부 따옴표는 이중화한다(RFC 4180).
+     * 수식 시작 문자(= + - @, 탭)는 작은따옴표를 앞에 붙여 무력화한다 — 이름을 "=HYPERLINK(...)"
+     * 로 지어 명단을 연 관리자의 엑셀에서 수식이 실행되는 CSV 인젝션을 막는다(OWASP 권고).
+     */
+    private fun escapeCsvField(value: String): String {
+        val neutralized = if (value.firstOrNull() in FORMULA_PREFIXES) "'$value" else value
+        return if (neutralized.any { it == ',' || it == '"' || it == '\n' || it == '\r' }) {
+            "\"" + neutralized.replace("\"", "\"\"") + "\""
         } else {
-            value
+            neutralized
         }
+    }
 
     /** 개설자용 참가자 목록. 참가자 page와 사용자 bulk 조회만 수행하며 event row lock은 사용하지 않는다. */
     @Transactional(readOnly = true)
@@ -257,6 +263,9 @@ class EventParticipantService(
     }
 
     private companion object {
+        /** 스프레드시트가 수식으로 해석하는 선행 문자 — escapeCsvField 에서 무력화한다. */
+        val FORMULA_PREFIXES = setOf('=', '+', '-', '@', '\t')
+
         /** 엑셀이 UTF-8 CSV 를 한글 그대로 열도록 붙이는 BOM. */
         val UTF8_BOM = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
 
