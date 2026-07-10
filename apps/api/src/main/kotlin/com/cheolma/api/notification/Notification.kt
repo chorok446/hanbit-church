@@ -30,6 +30,9 @@ object NotificationType {
     const val PRAISE_ATTENDANCE_REMINDER = "PRAISE_ATTENDANCE_REMINDER"
     // 일정 시각·장소가 바뀔 때 연결 콘티 배정자에게(PraiseScheduleService.update).
     const val PRAISE_SCHEDULE_CHANGED = "PRAISE_SCHEDULE_CHANGED"
+
+    // 보안 — 이전 접속 기록에 없는 (IP, 브라우저) 조합으로 로그인했을 때(AccessLogService.record).
+    const val NEW_DEVICE_LOGIN = "NEW_DEVICE_LOGIN"
 }
 
 /**
