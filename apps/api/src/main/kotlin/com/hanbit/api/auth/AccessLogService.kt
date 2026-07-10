@@ -21,7 +21,7 @@ class AccessLogService(
      * 접속 기록. GeoIP 조회(외부 HTTP·최대 ~2s)는 **트랜잭션 밖**에서 먼저 수행한 뒤 DB 쓰기만 트랜잭션으로 넘긴다
      * — 예전엔 @Transactional 안에서 HTTP 를 호출해 로그인 동안 DB 커넥션을 물고 있었다(풀 고갈 위험).
      */
-    fun record(userId: Long, info: ClientRequestInfo) {
+    fun record(userId: Long, info: ClientRequestInfo, sessionId: String? = null) {
         val ip = normalizeIp(info.ipAddress)
         // 위치는 best-effort — 실패해도 로그인 흐름을 막지 않는다(GeoIpService 가 짧은 타임아웃으로 null 반환).
         val geo = geoIp.lookup(ip)
@@ -35,7 +35,7 @@ class AccessLogService(
         // 접속 기록 전체가 best-effort — INSERT/보존기간 삭제가 실패(데드락 등)해도 로그인을 500 으로 만들지 않는다.
         // 삭제는 INSERT 와 **별도 트랜잭션**이어야 한다: 같은 트랜잭션이면 동시 로그인 데드락이 rollback-only 를
         // 남겨 커밋 시점에 UnexpectedRollbackException 으로 터진다(트랜잭션 안 runCatching 으로는 못 막음).
-        runCatching { writer.write(userId, ip, info, geo, now) }
+        runCatching { writer.write(userId, ip, info, geo, now, sessionId) }
         runCatching { writer.pruneOlderThanRetention(now) }
         if (isNewDevice) {
             val location = listOfNotNull(geo?.region, geo?.country).joinToString(" · ").ifBlank { null }
@@ -56,7 +56,7 @@ class AccessLogService(
     }
 
     @Transactional(readOnly = true)
-    fun listForUser(userId: Long, page: Int, size: Int): AccessLogPageResponse {
+    fun listForUser(userId: Long, page: Int, size: Int, currentSessionId: String? = null): AccessLogPageResponse {
         checkPageParams(page, size, MAX_PAGE_SIZE)
         val since = Instant.now(clock).minus(RETENTION_DAYS, ChronoUnit.DAYS)
         val result = repo.findByUserIdAndAccessedAtAfterOrderByAccessedAtDesc(
@@ -65,7 +65,7 @@ class AccessLogService(
             PageRequest.of(page, size),
         )
         return AccessLogPageResponse(
-            content = result.content.map { it.toResponse() },
+            content = result.content.map { it.toResponse(currentSessionId) },
             page = result.number,
             size = result.size,
             totalElements = result.totalElements,
@@ -78,7 +78,7 @@ class AccessLogService(
         repo.deleteByUserId(userId)
     }
 
-    private fun UserAccessLog.toResponse() = AccessLogResponse(
+    private fun UserAccessLog.toResponse(currentSessionId: String?) = AccessLogResponse(
         id = requireNotNull(id),
         ipAddress = ipAddress,
         os = os,
@@ -86,6 +86,8 @@ class AccessLogService(
         // "부산광역시 · 대한민국" 형태의 표시용 위치. 없으면 null.
         location = listOfNotNull(region, country).takeIf { it.isNotEmpty() }?.joinToString(" · "),
         accessedAt = accessedAt.toString(),
+        // sid 없는 과거 기록·구버전 토큰은 항상 false — 배지가 잘못 붙는 것보다 낫다.
+        currentSession = sessionId != null && sessionId == currentSessionId,
     )
 
     private fun normalizeIp(ip: String): String = ip.take(45).ifBlank { "unknown" }
@@ -107,7 +109,7 @@ class AccessLogWriter(
     private val repo: UserAccessLogRepository,
 ) {
     @Transactional
-    fun write(userId: Long, ip: String, info: ClientRequestInfo, geo: GeoLocation?, now: Instant) {
+    fun write(userId: Long, ip: String, info: ClientRequestInfo, geo: GeoLocation?, now: Instant, sessionId: String? = null) {
         repo.save(
             UserAccessLog(
                 userId = userId,
@@ -117,6 +119,7 @@ class AccessLogWriter(
                 browser = info.browser.take(32),
                 country = geo?.country?.take(64),
                 region = geo?.region?.take(64),
+                sessionId = sessionId?.take(36),
             ),
         )
     }

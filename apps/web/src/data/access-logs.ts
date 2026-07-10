@@ -9,6 +9,8 @@ export type AccessLogItem = {
   /** IP 기반 대략적 위치("지역 · 국가"). 조회 실패 시 null. */
   location?: string | null;
   accessedAt: string;
+  /** 이 기록이 현재 로그인 세션에서 만들어졌는지(백엔드 JWT sid 기준). */
+  currentSession?: boolean;
 };
 
 export type AccessLogPageResponse = {

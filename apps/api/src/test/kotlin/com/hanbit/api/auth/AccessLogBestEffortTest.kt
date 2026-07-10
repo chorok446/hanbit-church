@@ -41,6 +41,7 @@ class AccessLogBestEffortTest(
             info: com.hanbit.api.common.ClientRequestInfo,
             geo: GeoLocation?,
             now: Instant,
+            sessionId: String?,
         ): Unit = throw UnexpectedRollbackException("simulated deadlock rollback-only")
 
         override fun pruneOlderThanRetention(now: Instant): Unit =
