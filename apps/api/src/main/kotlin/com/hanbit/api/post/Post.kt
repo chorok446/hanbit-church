@@ -28,6 +28,9 @@ object PostVisibility {
     val ALL = setOf(PUBLIC, MEMBERS)
 }
 
+/** countByAuthorUserIdsAndAnonymousFalse JPQL constructor projection 용. */
+data class AuthorPostCount(val authorUserId: Long, val count: Long)
+
 object PostCategory {
     const val NOTICE = "NOTICE" // 공지
     const val BULLETIN = "BULLETIN" // 주보

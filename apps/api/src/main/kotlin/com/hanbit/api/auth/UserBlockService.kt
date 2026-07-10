@@ -17,6 +17,11 @@ class UserBlockService(
     @Transactional(readOnly = true)
     fun isBlockedEitherWay(a: Long, b: Long): Boolean = blocks.isBlockedEitherWay(a, b)
 
+    /** viewer 가 차단한 대상 bulk 조회 — 목록 매핑용(사용자별 exists N+1 방지). */
+    @Transactional(readOnly = true)
+    fun findBlockedIdsAmong(blockerId: Long, userIds: Collection<Long>): List<Long> =
+        blocks.findBlockedIdsAmong(blockerId, userIds)
+
     @Transactional(readOnly = true)
     fun isBlockedBy(blockerId: Long, blockedId: Long): Boolean =
         blocks.existsByBlockerIdAndBlockedId(blockerId, blockedId)
