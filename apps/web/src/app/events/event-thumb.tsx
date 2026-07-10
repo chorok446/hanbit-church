@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { uploadThumbUrl } from "@/lib/upload-thumb";
+import { CARD_IMAGE_SIZES, unsplashSrcSet } from "@/lib/unsplash-srcset";
 
 /**
  * 행사 썸네일. 이미지가 없거나 로드에 실패하면 네이비(--banner-bg)·골드(--accent)
@@ -16,6 +17,7 @@ export function EventThumb({
   className = "",
   thumbnail = false,
   loading = "lazy",
+  sizes = CARD_IMAGE_SIZES,
 }: {
   src: string;
   alt: string;
@@ -24,6 +26,8 @@ export function EventThumb({
   thumbnail?: boolean;
   /** 첫 화면(상세 헤더 등) 이미지만 "eager". 기본 lazy. */
   loading?: "eager" | "lazy";
+  /** srcSet 이 적용되는 unsplash 소스의 표시 폭 힌트. */
+  sizes?: string;
 }) {
   const [failed, setFailed] = useState(false);
   const [thumbFailed, setThumbFailed] = useState(false);
@@ -52,9 +56,13 @@ export function EventThumb({
     );
   }
 
+  const finalSrc = useThumb ? thumbSrc : trimmed;
+  const srcSet = unsplashSrcSet(finalSrc);
   return (
     <img
-      src={useThumb ? thumbSrc : trimmed}
+      src={finalSrc}
+      srcSet={srcSet}
+      sizes={srcSet ? sizes : undefined}
       alt={alt}
       className={className}
       loading={loading}
