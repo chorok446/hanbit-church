@@ -4,11 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 import { AuthShell, FieldInput } from "@/components/auth-shell";
 import { apiPost, ApiError, apiErrorMessage } from "@/lib/api";
 import { setSession } from "@/lib/auth";
 
-type AuthResponse = { token: string; name: string; verified: boolean };
+type AuthResponse = { token: string; name: string; verified: boolean; passwordChangeRequired?: boolean };
 type LoginResponse = AuthResponse | { twoFactorRequired: true; challengeToken: string };
 
 export default function LoginPage() {
@@ -23,6 +24,12 @@ export default function LoginPage() {
 
   const finishLogin = (res: AuthResponse) => {
     setSession(res.name);
+    // 임시 비밀번호 로그인 — 바로 비밀번호 변경으로 안내한다(계정 탭 배너와 짝).
+    if (res.passwordChangeRequired) {
+      toast.info("임시 비밀번호로 로그인했습니다. 새 비밀번호로 변경해주세요.");
+      router.push("/mypage?tab=account");
+      return;
+    }
     // 보호 페이지에서 넘어온 경우 복귀(open redirect 방지: 내부 경로만 허용).
     const next = new URLSearchParams(window.location.search).get("next");
     router.push(next && next.startsWith("/") ? next : "/feed");

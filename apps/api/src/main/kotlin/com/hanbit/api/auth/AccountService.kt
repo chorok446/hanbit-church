@@ -52,6 +52,8 @@ class AccountService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "new password must be different")
         }
         user.passwordHash = encoder.encode(req.newPassword)!!
+        // 관리자 초기화로 발급된 임시 비밀번호를 새 비밀번호로 교체했으므로 강제 변경 안내를 해제한다.
+        user.passwordResetRequired = false
         return ChangePasswordResponse(changed = true, token = jwt.issue(user, sessionId))
     }
 

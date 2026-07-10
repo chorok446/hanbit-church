@@ -2,7 +2,8 @@
 
 import type { ReactNode } from "react";
 import { TwoFactorSection } from "./two-factor-section";
-import { BellRing } from "lucide-react";
+import { BellRing, KeyRound } from "lucide-react";
+import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
 import { ChangeEmailForm } from "./change-email-form";
 import { ChangePasswordForm } from "./change-password-form";
 import { DeleteAccountForm } from "./delete-account-form";
@@ -66,8 +67,23 @@ export function MypageAccountPanel({
   twoFactorEnabled?: boolean;
   onEmailChanged: (email: string) => void;
 }) {
+  const { profile } = useCurrentUserProfile();
+
   return (
     <div className="space-y-6">
+      {profile?.passwordChangeRequired && (
+        <div
+          className="flex items-start gap-3 rounded-2xl border p-4"
+          role="alert"
+          style={{ borderColor: "var(--danger)", background: "var(--danger-soft)" }}
+        >
+          <KeyRound size={16} aria-hidden className="mt-0.5 shrink-0" style={{ color: "var(--danger)" }} />
+          <p className="text-[13px]" style={{ color: "var(--foreground)" }}>
+            <strong>임시 비밀번호를 사용 중입니다.</strong> 관리자가 초기화한 비밀번호이니 아래에서 새 비밀번호로
+            변경해주세요.
+          </p>
+        </div>
+      )}
       <ChangeEmailForm embedded currentEmail={currentEmail} onChanged={onEmailChanged} />
       <ChangePasswordForm embedded profileName={profileName} />
       <NotificationSettingsForm embedded />

@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -125,6 +126,13 @@ class AdminController(
         @RequestBody request: SetUserRoleRequest,
         @AuthenticationPrincipal admin: AuthUser,
     ): AdminUserResponse = userService.setRole(admin.id, id, request)
+
+    @Operation(summary = "비밀번호 초기화 — 임시 비밀번호 발급(응답에서 한 번만 노출), 다음 변경 시까지 안내 플래그")
+    @PostMapping("/users/{id}/password-reset")
+    fun resetUserPassword(
+        @PathVariable id: Long,
+        @AuthenticationPrincipal admin: AuthUser,
+    ): AdminPasswordResetResponse = userService.resetPassword(admin.id, id)
 
     @Operation(summary = "회원 정지/해제 (로그인·기존 토큰·refresh 즉시 차단)")
     @PatchMapping("/users/{id}/suspension")
