@@ -179,3 +179,23 @@ data class SetPraiseRoleRequest(
     @field:Schema(description = "파트 목록(PraisePart)")
     val praiseParts: List<String> = emptyList(),
 )
+
+/** 콘텐츠 관리 목록 항목 — 게시글(text 요약)·행사(제목) 공통 표현. */
+data class AdminContentItemResponse(
+    val targetType: String, // POST | EVENT
+    val id: String,
+    val title: String,
+    val category: String?, // POST 카테고리 / EVENT 는 모집 상태
+    val authorName: String,
+    val hidden: Boolean,
+    val hiddenReason: String?,
+    val deleted: Boolean,
+)
+
+data class AdminContentPageResponse(
+    val content: List<AdminContentItemResponse>,
+    val page: Int,
+    val size: Int,
+    val totalElements: Long,
+    val totalPages: Int,
+)
