@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { RefreshCw } from "lucide-react";
 import { ListEmptyState } from "@/components/list-empty-state";
 import { Pagination } from "@/components/ui/pagination";
@@ -186,20 +185,11 @@ export function SearchResults({
         />
       ) : null}
 
-      {/* 비로그인 사용자 검색 — 교인 실명 열거 방지 정책으로 로그인 안내를 보여준다(userResponse 는 null). */}
+      {/* 사용자 검색은 회원 관리 권한자 전용 — 비권한 진입(URL 직접 등)은 안내만 보여준다(userResponse 는 null). */}
       {currentState.status === "success" && urlState.type === "users" && query && userResponse === null ? (
         <ListEmptyState
-          title="사용자 검색은 로그인 후 이용할 수 있어요."
-          description="교우 보호를 위해 이름 검색은 교인에게만 제공됩니다."
-          action={
-            <Link
-              href="/login?next=/search"
-              className="rounded-full px-5 py-2 text-[13px] font-medium"
-              style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
-            >
-              로그인
-            </Link>
-          }
+          title="사용자 검색은 관리자만 이용할 수 있어요."
+          description="교우 보호를 위해 전체 회원 검색은 회원 관리 권한자에게만 제공됩니다."
         />
       ) : null}
 

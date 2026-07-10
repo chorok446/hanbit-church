@@ -16,6 +16,8 @@ import { ApiError, apiGet } from "@/lib/api";
 import { getSessionId } from "@/lib/auth";
 import { beginAuthedRequest, clearSessionIfUnauthorized, staleByIdentity } from "@/lib/authed-request";
 import { useAuthSession } from "@/lib/use-auth-session";
+import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
+import { getAdminPermissions } from "@/app/admin/permissions";
 import { useCanonicalUrl, parsePageParam } from "@/lib/use-url-query";
 import { SearchExplore } from "./search-explore";
 import {
@@ -36,6 +38,9 @@ export default function SearchClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { sessionId: token } = useAuthSession();
+  // 사용자 검색(전체 회원 열거)은 회원 관리 권한자 전용 — 백엔드도 ADMIN·OPERATOR 로 잠겨 있다.
+  const { profile } = useCurrentUserProfile();
+  const canSearchUsers = getAdminPermissions(profile?.role).canManageUsers;
   const [retryTick, setRetryTick] = useState(0);
   const generationRef = useRef(0);
 
@@ -133,9 +138,8 @@ export default function SearchClient() {
     // page 는 활성 탭(또는 전체 탭)에만 적용하고, 나머지는 개수 파악용으로 0페이지만 가져온다.
     const wantEvents = urlState.type === "all" || urlState.type === "events" || !!trimmedQuery;
     const wantPosts = urlState.type === "all" || urlState.type === "posts" || !!trimmedQuery;
-    // 사용자는 이름 검색만 지원 → 검색어가 있을 때만, 그리고 로그인 상태에서만 조회한다
-    // (백엔드도 /api/users/search 를 로그인 필수로 잠갔다 — 교인 실명 열거 차단).
-    const wantUsers = !!trimmedQuery && !!token;
+    // 사용자는 이름 검색만 지원 → 검색어가 있을 때만, 회원 관리 권한자만 조회한다.
+    const wantUsers = !!trimmedQuery && canSearchUsers;
 
     const eventParams = new URLSearchParams();
     if (urlState.query) eventParams.set("q", urlState.query);
@@ -211,6 +215,7 @@ export default function SearchClient() {
   }, [
     requestIdentity,
     token,
+    canSearchUsers,
     dateFilterError,
     urlState.availableOnly,
     urlState.page,
@@ -260,6 +265,7 @@ export default function SearchClient() {
           state={urlState}
           loading={currentState.status === "loading"}
           counts={tabCounts}
+          canSearchUsers={canSearchUsers}
           onUpdate={updateUrl}
           onReset={resetFilters}
         />
