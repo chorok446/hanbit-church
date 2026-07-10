@@ -9,6 +9,9 @@ import org.springframework.data.repository.query.Param
 import java.time.Instant
 
 interface NotificationRepository : JpaRepository<Notification, String> {
+    /** 자리 알림 중복 방지용 — 같은 대상·유형·링크의 미읽음 알림 존재 여부. */
+    fun existsByUserIdAndTypeAndHrefAndReadAtIsNull(userId: Long, type: String, href: String): Boolean
+
     fun findByUserId(userId: Long, pageable: Pageable): Page<Notification>
     fun findByUserIdAndReadAtIsNull(userId: Long, pageable: Pageable): Page<Notification>
     fun findByUserIdAndTypeIn(userId: Long, types: List<String>, pageable: Pageable): Page<Notification>

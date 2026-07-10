@@ -40,6 +40,7 @@ class EventService(
     private val proofs: EventProofRepository,
     private val clock: Clock,
     private val notifications: NotificationService,
+    private val notificationRepo: com.hanbit.api.notification.NotificationRepository,
 ) {
     @Transactional(readOnly = true)
     fun listEvents(currentUserId: Long?): List<EventResponse> {
@@ -591,6 +592,15 @@ class EventService(
     @Transactional
     fun notifyCapacityIncreased(actorUserId: Long, eventId: String, result: EventUpdateResult) {
         result.notifyRecipientIds.forEach { recipientId ->
+            // 같은 행사의 자리 알림을 아직 안 읽었으면 또 보내지 않는다(반복 증원·취소 스팸 방지).
+            if (notificationRepo.existsByUserIdAndTypeAndHrefAndReadAtIsNull(
+                    recipientId,
+                    com.hanbit.api.notification.NotificationType.EVENT_CAPACITY_INCREASED,
+                    "/events/$eventId",
+                )
+            ) {
+                return@forEach
+            }
             notifications.notify(
                 recipientUserId = recipientId,
                 actorUserId = actorUserId,

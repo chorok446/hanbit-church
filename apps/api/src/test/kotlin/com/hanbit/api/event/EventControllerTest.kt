@@ -1960,6 +1960,27 @@ class EventControllerTest(
     }
 
     @Test
+    fun `자리 알림은 미읽음이 남아 있으면 중복 발송되지 않는다`() {
+        val id = saveEvent(status = "open", capacity = 1, joined = 1, authorUserId = 9)
+        participantRepo.saveAndFlush(EventParticipant("cp-${java.util.UUID.randomUUID()}", id, 1))
+        bookmarkRepo.saveAndFlush(EventBookmark("eb-${java.util.UUID.randomUUID()}", id, 2))
+
+        // 1차: 취소로 자리 발생 → 알림 1건.
+        mvc.delete("/api/events/$id/join") { headers { add("Authorization", "Bearer $token") } }
+            .andExpect { status { isOk() } }
+        // 재참여 후 다시 취소(정원 1이라 다시 마감→해제) — 미읽음이 남아 있어 추가 발송 없음.
+        mvc.post("/api/events/$id/join") { headers { add("Authorization", "Bearer $token") } }
+            .andExpect { status { isOk() } }
+        mvc.delete("/api/events/$id/join") { headers { add("Authorization", "Bearer $token") } }
+            .andExpect { status { isOk() } }
+
+        val notices = notificationRepo.findAll().filter {
+            it.type == com.hanbit.api.notification.NotificationType.EVENT_CAPACITY_INCREASED && it.href == "/events/$id"
+        }
+        assertThat(notices).hasSize(1)
+    }
+
+    @Test
     fun `인원 미정 행사는 정원 증원 대상이 아니다`() {
         val id = saveEvent(status = "open", capacity = 0, authorUserId = 1)
         increaseCapacity(id, 20).andExpect { status { isBadRequest() } }
