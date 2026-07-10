@@ -7,8 +7,10 @@ import { getSiteUrl } from "@/lib/site-url";
 import { CHURCH } from "@/data/church";
 
 // 제목·성경구절용 명조. 본문은 산세리프 — 명조는 --font-display 로만 노출한다.
+// weight 는 실사용(600) 하나만 싣는다 — 한글 폰트는 웨이트당 @font-face 서브셋 124개(~75KB CSS)라
+// 미사용 웨이트가 렌더 블로킹 CSS 를 그대로 키운다(모바일 LCP). 새 웨이트가 필요하면 실사용 확인 후 추가.
 const serif = Noto_Serif_KR({
-  weight: ["400", "600", "700"],
+  weight: ["600"],
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
