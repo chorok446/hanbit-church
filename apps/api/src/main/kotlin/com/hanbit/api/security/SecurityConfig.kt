@@ -82,7 +82,7 @@ class SecurityConfig(
                 it.requestMatchers(HttpMethod.GET, "/api/events/mine/page").authenticated()
                 it.requestMatchers(HttpMethod.GET, "/api/events/bookmarks").authenticated()
                 it.requestMatchers(HttpMethod.GET, "/api/events/bookmarks/page").authenticated()
-                it.requestMatchers(HttpMethod.GET, "/api/events/*/participants").authenticated()
+                it.requestMatchers(HttpMethod.GET, "/api/events/*/participants", "/api/events/*/participants/export").authenticated()
                 // 사용자 검색(전체 회원 이름 열거)은 회원 관리 권한자(최고 관리자·운영자)만 —
                 // GET /api/admin/users 와 동일 기준. 일반 교인에게도 전체 명단 열거는 열지 않는다.
                 it.requestMatchers(HttpMethod.GET, "/api/users/search").hasAnyRole("ADMIN", "OPERATOR")

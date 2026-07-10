@@ -215,3 +215,6 @@ data class UpdateEventCommentRequest(
     @field:Schema(description = "댓글 본문(최대 500자)")
     val text: String,
 )
+
+/** 참가자 명단 CSV 다운로드 페이로드. bytes 는 UTF-8 BOM 포함. */
+data class EventParticipantsCsv(val filename: String, val bytes: ByteArray)

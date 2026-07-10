@@ -120,6 +120,21 @@ class EventController(
         @AuthenticationPrincipal user: AuthUser,
     ): EventParticipantsResponse = participantService.getParticipants(user.id, id, page, size)
 
+    @Operation(summary = "참가자 명단 CSV 다운로드", description = "행사 개설자만. 이름·인증 여부만 담는다.")
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/{id}/participants/export")
+    fun exportParticipants(
+        @PathVariable id: String,
+        @AuthenticationPrincipal user: AuthUser,
+    ): org.springframework.http.ResponseEntity<ByteArray> {
+        val csv = participantService.exportParticipantsCsv(user.id, id)
+        return org.springframework.http.ResponseEntity.ok()
+            .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"${csv.filename}\"")
+            .header(org.springframework.http.HttpHeaders.CACHE_CONTROL, "no-store")
+            .contentType(org.springframework.http.MediaType.parseMediaType("text/csv;charset=UTF-8"))
+            .body(csv.bytes)
+    }
+
     @Operation(summary = "참가자 퇴장", description = "행사 개설자만 참가자를 퇴장시킬 수 있다.")
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{id}/participants/{participantId}")

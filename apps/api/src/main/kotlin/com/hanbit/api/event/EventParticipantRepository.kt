@@ -13,6 +13,7 @@ interface EventParticipantRepository : JpaRepository<EventParticipant, String> {
     fun findByUserId(userId: Long): List<EventParticipant>
     fun findByUserId(userId: Long, pageable: Pageable): Page<EventParticipant>
     fun findByEventId(eventId: String): List<EventParticipant>
+    fun findByEventId(eventId: String, sort: org.springframework.data.domain.Sort): List<EventParticipant>
     fun findByEventId(eventId: String, pageable: Pageable): Page<EventParticipant>
     fun countByEventId(eventId: String): Long
 

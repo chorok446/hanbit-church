@@ -124,6 +124,53 @@ class EventParticipantService(
         )
     }
 
+    /**
+     * 참가자 명단 CSV(UTF-8 BOM — 엑셀 한글 호환). 개설자 전용(목록 API 와 같은 가드).
+     * 담는 정보도 목록 API 와 동일하게 이름·인증 여부뿐 — 이메일 등 연락처는 앱 내 미노출
+     * 정책(회원 열거 차단)을 내보내기에서도 유지한다.
+     */
+    @Transactional(readOnly = true)
+    fun exportParticipantsCsv(ownerUserId: Long, eventId: String): EventParticipantsCsv {
+        val event = repo.findById(eventId).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
+        }
+        if (event.authorUserId == null || event.authorUserId != ownerUserId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "not the event owner")
+        }
+        val all = participants.findByEventId(eventId, Sort.by("userId").ascending().and(Sort.by("id").ascending()))
+        val usersById = if (all.isEmpty()) {
+            emptyMap()
+        } else {
+            users.findAllById(all.map { it.userId }.distinct()).associateBy { requireNotNull(it.id) }
+        }
+        val lines = buildList {
+            add(listOf("번호", "이름", "인증"))
+            all.forEachIndexed { index, participant ->
+                val participantUser = usersById[participant.userId]
+                add(
+                    listOf(
+                        (index + 1).toString(),
+                        participantUser?.name ?: "탈퇴한 사용자",
+                        if (participantUser?.verified == true) "인증" else "",
+                    ),
+                )
+            }
+        }
+        val csv = lines.joinToString("\r\n") { row -> row.joinToString(",") { escapeCsvField(it) } }
+        return EventParticipantsCsv(
+            filename = "participants-${event.id}.csv",
+            bytes = UTF8_BOM + csv.toByteArray(Charsets.UTF_8),
+        )
+    }
+
+    /** 쉼표·따옴표·줄바꿈이 든 필드는 따옴표로 감싸고 내부 따옴표는 이중화한다(RFC 4180). */
+    private fun escapeCsvField(value: String): String =
+        if (value.any { it == ',' || it == '"' || it == '\n' || it == '\r' }) {
+            "\"" + value.replace("\"", "\"\"") + "\""
+        } else {
+            value
+        }
+
     /** 개설자용 참가자 목록. 참가자 page와 사용자 bulk 조회만 수행하며 event row lock은 사용하지 않는다. */
     @Transactional(readOnly = true)
     fun getParticipants(ownerUserId: Long, eventId: String, page: Int, size: Int): EventParticipantsResponse {
@@ -210,6 +257,9 @@ class EventParticipantService(
     }
 
     private companion object {
+        /** 엑셀이 UTF-8 CSV 를 한글 그대로 열도록 붙이는 BOM. */
+        val UTF8_BOM = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
+
         const val MAX_PARTICIPANT_PAGE_SIZE = 100
     }
 }
