@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MessageCircle, Paperclip } from "lucide-react";
 import { apiGet } from "@/lib/api";
-import { postCategoryBadge, postTimeLabel, type Post, type PostSearchResponse } from "@/data/posts";
+import { HOME_NEWS_PREVIEW_SIZE, postCategoryBadge, postTimeLabel, type Post, type PostSearchResponse } from "@/data/posts";
 
-const PREVIEW_SIZE = 3;
+const PREVIEW_SIZE = HOME_NEWS_PREVIEW_SIZE;
 
 /**
  * 본문에서 제목(첫 줄)과 요약(나머지)을 뽑는다.
@@ -80,11 +80,14 @@ function NewsRow({ post, highlighted }: { post: Post; highlighted: boolean }) {
   );
 }
 
-/** 홈 최신 소식(공지·주보) 미리보기 3개 — 전체 목록은 /news. 홈 전용 리스트 마크업(게시판 뷰는 PostBoardList). */
-export function HomeNews() {
-  const [posts, setPosts] = useState<Post[] | null>(null);
+/** 홈 최신 소식(공지·주보) 미리보기 3개 — 전체 목록은 /news. 홈 전용 리스트 마크업(게시판 뷰는 PostBoardList).
+ * initialPosts: 서버 컴포넌트(ISR)가 선주입한 목록 — 있으면 클라이언트 재요청을 생략한다. */
+export function HomeNews({ initialPosts = null }: { initialPosts?: Post[] | null }) {
+  const [posts, setPosts] = useState<Post[] | null>(initialPosts);
 
   useEffect(() => {
+    // SSR 선주입이 있으면 첫 마운트 재요청 생략(내용 갱신은 ISR 재검증 주기가 담당).
+    if (initialPosts !== null) return;
     let cancelled = false;
     const fetchCategory = (category: string) =>
       apiGet<PostSearchResponse>(`/api/posts/search?category=${category}&sort=latest&page=0&size=${PREVIEW_SIZE}`)
@@ -97,7 +100,7 @@ export function HomeNews() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialPosts]);
 
   return (
     <section className="px-6 pb-20 transition-colors" style={{ background: "var(--surface)" }}>
