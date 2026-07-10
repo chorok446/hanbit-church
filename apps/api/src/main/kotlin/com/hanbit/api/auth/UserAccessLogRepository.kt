@@ -18,6 +18,14 @@ interface UserAccessLogRepository : JpaRepository<UserAccessLog, Long> {
     fun existsByUserId(userId: Long): Boolean
     fun existsByUserIdAndSessionId(userId: Long, sessionId: String): Boolean
 
+    /** 통계(DAU)용 — 기간 내 (userId, accessedAt) 쌍. 일 버킷·distinct 는 서비스에서 처리한다. */
+    @org.springframework.data.jpa.repository.Query(
+        "select l.userId, l.accessedAt from UserAccessLog l where l.accessedAt >= :since",
+    )
+    fun findUserAccessSince(
+        @org.springframework.data.repository.query.Param("since") since: Instant,
+    ): List<Array<Any>>
+
     @org.springframework.data.jpa.repository.Query(
         "select distinct l.sessionId from UserAccessLog l " +
             "where l.userId = :userId and l.sessionId is not null and l.accessedAt > :since",

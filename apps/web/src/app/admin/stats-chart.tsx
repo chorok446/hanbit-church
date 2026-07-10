@@ -19,6 +19,7 @@ const RANGE_OPTIONS = [7, 30, 90] as const;
 // 차트 전용 범주형 팔레트(--chart-1..4). 테마 토큰(--accent 등)은 다크에서 여러 계열이
 // 같은 골드로 뭉개지므로 쓰지 않는다.
 const SERIES = [
+  { key: "activeUsers", label: "활성 회원", color: "var(--chart-5)" },
   { key: "signups", label: "가입", color: "var(--chart-1)" },
   { key: "posts", label: "게시글", color: "var(--chart-2)" },
   { key: "events", label: "행사", color: "var(--chart-3)" },
@@ -108,7 +109,7 @@ export function StatsChartSection() {
             다시 시도
           </button>
         </p>
-      ) : result.daily.every((day) => day.signups + day.posts + day.events + day.reports === 0) ? (
+      ) : result.daily.every((day) => day.signups + day.posts + day.events + day.reports + (day.activeUsers ?? 0) === 0) ? (
         // 전 구간 합계가 0이면 빈 차트 대신 안내 문구를 보여준다.
         <p className="py-10 text-center text-[13px]" style={{ color: "var(--foreground-muted)" }}>
           아직 충분한 활동 데이터가 없습니다. 활동이 쌓이면 추이가 표시됩니다.

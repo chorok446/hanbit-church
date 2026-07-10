@@ -173,6 +173,8 @@ data class AdminDailyStat(
     val posts: Long,
     val events: Long,
     val reports: Long,
+    @field:Schema(description = "일별 활성 회원 수(접속 기록 기준 distinct 사용자)")
+    val activeUsers: Long = 0,
 )
 
 @Schema(description = "관리자 일별 통계 (가입·게시글·행사·신고 추이)")

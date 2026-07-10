@@ -55,6 +55,8 @@ export type AdminDailyStat = {
   posts: number;
   events: number;
   reports: number;
+  /** 일별 활성 회원(접속 기록 distinct 사용자). */
+  activeUsers?: number;
 };
 
 export type AdminStatsResponse = {

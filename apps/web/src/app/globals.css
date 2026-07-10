@@ -69,6 +69,7 @@
   --chart-2: #2f9c68;
   --chart-3: #d98a1f;
   --chart-4: #d94e3c;
+  --chart-5: #7b5bd6;
 }
 
 .dark {
@@ -114,6 +115,7 @@
   --chart-2: #5cc493;
   --chart-3: #eab04a;
   --chart-4: #f2795f;
+  --chart-5: #a78bfa;
 }
 
 html,
