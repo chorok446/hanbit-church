@@ -30,6 +30,9 @@ class User(
     // 가입 승인 시각. null = 관리자 승인 대기(로그인 불가). 기존 사용자는 V19 마이그레이션이 backfill.
     // 엔티티 직접 생성(테스트·시드)은 기본 승인 — 승인 대기는 회원가입 경로에서만 만들어진다.
     @Column(name = "approved_at") @JsonIgnore var approvedAt: Instant? = Instant.EPOCH,
+    // 2단계 인증(TOTP). secret 은 등록 시 저장되고 enabledAt 이 채워져야 활성 — null = 미사용/등록 중.
+    @Column(name = "totp_secret", length = 64) @JsonIgnore var totpSecret: String? = null,
+    @Column(name = "totp_enabled_at") @JsonIgnore var totpEnabledAt: Instant? = null,
     // 찬양팀 역할(PraiseRole: LEADER/MEMBER/GUEST). 사이트 role 과 분리 — null = 찬양팀 아님.
     @Column(name = "praise_role", length = 20) var praiseRole: String? = null,
     // 찬양팀 파트(복수). 예: ["VOCAL","KEYBOARD"]. PraisePart 참조.
@@ -44,6 +47,9 @@ class User(
         @JsonIgnore get() = approvedAt == null
 
     fun isSuspendedAt(now: Instant): Boolean = suspendedUntil?.isAfter(now) == true
+
+    val totpEnabled: Boolean
+        @JsonIgnore get() = totpSecret != null && totpEnabledAt != null
 }
 
 /**

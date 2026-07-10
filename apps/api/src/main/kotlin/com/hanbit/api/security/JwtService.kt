@@ -52,10 +52,27 @@ class JwtService(
             .signWith(key)
             .compact()
 
+    /** 2FA 로그인 챌린지 토큰(5분). typ=2fa 라 access/refresh 자리에 쓸 수 없다. */
+    fun issueTwoFactorChallenge(user: User): String =
+        Jwts.builder()
+            .subject(user.id.toString())
+            .claim("typ", "2fa")
+            .issuedAt(Date())
+            .expiration(Date(System.currentTimeMillis() + TWO_FACTOR_CHALLENGE_TTL_MS))
+            .signWith(key)
+            .compact()
+
+    /** 2FA 챌린지 토큰 검증 → userId. typ=2fa 가 아니면 예외. */
+    fun parseTwoFactorChallenge(token: String): Long {
+        val c = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).payload
+        require(c["typ"] == "2fa") { "not a two-factor challenge token" }
+        return c.subject.toLong()
+    }
+
     /** 유효하지 않으면 예외. 호출부에서 잡아 미인증 처리. refresh token 은 access 로 쓸 수 없다. */
     fun parse(token: String): AuthUser {
         val c = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).payload
-        require(c["typ"] != "refresh") { "refresh token cannot be used as access token" }
+        require(c["typ"] != "refresh" && c["typ"] != "2fa") { "refresh/2fa token cannot be used as access token" }
         return AuthUser(c.subject.toLong(), c["name"] as String, c["verified"] as Boolean, c["sid"] as? String)
     }
 
@@ -72,5 +89,9 @@ class JwtService(
     fun remainingTtlSeconds(token: String): Long {
         val exp = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).payload.expiration
         return ((exp.time - System.currentTimeMillis()) / 1000).coerceAtLeast(0)
+    }
+
+    private companion object {
+        const val TWO_FACTOR_CHALLENGE_TTL_MS = 5 * 60 * 1000L
     }
 }

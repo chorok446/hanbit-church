@@ -46,6 +46,8 @@ data class UserProfileResponse(
     val praiseRole: String? = null,
     @field:Schema(description = "찬양팀 파트 목록")
     val praiseParts: List<String> = emptyList(),
+    @field:Schema(description = "2단계 인증(TOTP) 활성 여부")
+    val twoFactorEnabled: Boolean = false,
 )
 
 @Schema(description = "공개 프로필(타인 조회용)")
@@ -130,3 +132,18 @@ data class AccessLogPageResponse(
     val totalElements: Long,
     val totalPages: Int,
 )
+
+@Schema(description = "2FA 등록 시작 응답 — 인증 앱에 등록할 시크릿과 otpauth URL")
+data class TwoFactorSetupResponse(val secret: String, val otpauthUrl: String)
+
+@Schema(description = "2FA 활성화 요청 — 인증 앱이 표시한 6자리 코드")
+data class TwoFactorEnableRequest(val code: String = "")
+
+@Schema(description = "2FA 해제 요청 — 본인 확인용 비밀번호")
+data class TwoFactorDisableRequest(val password: String = "")
+
+@Schema(description = "2FA 로그인 검증 요청")
+data class TwoFactorVerifyRequest(val challengeToken: String = "", val code: String = "")
+
+@Schema(description = "로그인 1단계 응답 — 2FA 사용자는 토큰 대신 챌린지를 받는다")
+data class TwoFactorChallengeResponse(val twoFactorRequired: Boolean = true, val challengeToken: String)
