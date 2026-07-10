@@ -26,6 +26,13 @@ export function revokeSession(sessionId: string): Promise<SessionRevokeResponse>
   return apiDelete<SessionRevokeResponse>(`/api/auth/sessions/${encodeURIComponent(sessionId)}`);
 }
 
+export type SessionRevokeAllResponse = { revokedCount: number };
+
+/** 현재 세션을 제외한 모든 세션 로그아웃. */
+export function revokeOtherSessions(): Promise<SessionRevokeAllResponse> {
+  return apiDelete<SessionRevokeAllResponse>("/api/auth/sessions");
+}
+
 export type AccessLogPageResponse = {
   content: AccessLogItem[];
   page: number;

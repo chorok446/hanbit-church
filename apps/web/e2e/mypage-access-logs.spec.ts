@@ -40,3 +40,29 @@ test("다른 기기 세션을 접속 기록에서 원격 로그아웃한다", as
   await page.reload();
   await expect(page.getByText("현재 세션").first()).toBeVisible();
 });
+
+test("다른 세션 모두 로그아웃은 현재 세션만 남긴다", async ({ page }) => {
+  const account = await signup(page, "e2e-revokeall");
+
+  const deviceB = await playwrightRequest.newContext({ baseURL: API_URL });
+  const deviceC = await playwrightRequest.newContext({ baseURL: API_URL });
+  for (const device of [deviceB, deviceC]) {
+    const res = await device.post("/api/auth/login", {
+      data: { email: account.email, password: account.password },
+    });
+    expect(res.ok()).toBeTruthy();
+  }
+
+  await page.goto("/mypage?tab=access");
+  await page.getByRole("button", { name: "다른 세션 모두 로그아웃" }).click();
+  await page.getByRole("button", { name: "모두 로그아웃", exact: true }).click();
+  await expect(page.getByText(/개 세션을 로그아웃했습니다/)).toBeVisible();
+
+  await expect.poll(async () => (await deviceB.get("/api/auth/me")).status()).toBe(401);
+  await expect.poll(async () => (await deviceC.get("/api/auth/me")).status()).toBe(401);
+  await deviceB.dispose();
+  await deviceC.dispose();
+
+  // 현재 세션은 유지 — 목록이 다시 로드되고 현재 세션 배지가 보인다.
+  await expect(page.getByText("현재 세션").first()).toBeVisible();
+});

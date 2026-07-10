@@ -107,6 +107,14 @@ class AuthController(
         return res.setAuthCookies(tokens)
     }
 
+    @Operation(summary = "다른 세션 모두 로그아웃", description = "현재 세션을 제외한 모든 세션(refresh 수명 내)을 무효화한다.")
+    @SecurityRequirement(name = "bearerAuth")
+    @DeleteMapping("/sessions")
+    fun revokeOtherSessions(@AuthenticationPrincipal principal: AuthUser?): SessionRevokeAllResponse {
+        val userId = requireUserId(principal)
+        return accessLogService.revokeOtherSessions(userId, principal?.sessionId)
+    }
+
     @Operation(summary = "원격 세션 로그아웃", description = "접속 기록의 다른 세션을 무효화한다. 현재 세션은 400, 남의/모르는 세션은 404.")
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/sessions/{sessionId}")
