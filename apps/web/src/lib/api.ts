@@ -91,7 +91,12 @@ export async function apiGet<T>(path: string): Promise<T> {
  */
 export async function apiGetIsr<T>(path: string, revalidateSeconds = 60): Promise<T | null> {
   try {
-    const res = await fetch(`${getApiBaseUrl()}${path}`, { next: { revalidate: revalidateSeconds } });
+    const res = await fetch(`${getApiBaseUrl()}${path}`, {
+      next: { revalidate: revalidateSeconds },
+      // 짧은 타임아웃으로 fail-fast — Docker 빌드처럼 API 호스트가 즉시 거부하지 않고
+      // hang 하는 환경에서 프리렌더 워커 60초 제한을 넘겨 빌드가 죽는 것을 막는다.
+      signal: AbortSignal.timeout(3_000),
+    });
     if (!res.ok) return null;
     return (await res.json()) as T;
   } catch {
