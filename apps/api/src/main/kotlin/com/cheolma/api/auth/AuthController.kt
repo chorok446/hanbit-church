@@ -35,6 +35,7 @@ class AuthController(
     private val accountService: AccountService,
     private val authCookies: AuthCookies,
     private val accessLogService: AccessLogService,
+    private val twoFactorService: TwoFactorService,
 ) {
 
     @Operation(summary = "회원가입", description = "승인제가 켜져 있으면 토큰 없이 승인 대기 상태(pendingApproval=true)로 응답한다.")
@@ -48,10 +49,52 @@ class AuthController(
         return res.setAuthCookies(tokens)
     }
 
-    @Operation(summary = "로그인")
+    @Operation(summary = "로그인 — 2FA 사용자는 토큰 대신 challengeToken 을 받는다(2fa/verify 로 완료)")
     @PostMapping("/login")
-    fun login(@RequestBody req: LoginRequest, http: HttpServletRequest, res: HttpServletResponse): AuthResponse =
-        res.setAuthCookies(authService.login(req).also { accessLogService.record(it.userId, ClientRequestInfo.from(http), it.sessionId) })
+    fun login(@RequestBody req: LoginRequest, http: HttpServletRequest, res: HttpServletResponse): Any =
+        when (val outcome = authService.login(req)) {
+            is AuthService.LoginOutcome.TwoFactorRequired ->
+                TwoFactorChallengeResponse(challengeToken = outcome.challengeToken)
+            is AuthService.LoginOutcome.Success -> {
+                val tokens = outcome.tokens
+                accessLogService.record(tokens.userId, ClientRequestInfo.from(http), tokens.sessionId)
+                res.setAuthCookies(tokens)
+            }
+        }
+
+    @Operation(summary = "2FA 등록 시작 — 인증 앱에 넣을 시크릿·otpauth URL 발급(아직 미활성)")
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/2fa/setup")
+    fun twoFactorSetup(@AuthenticationPrincipal principal: AuthUser?): TwoFactorSetupResponse =
+        twoFactorService.setup(requireUserId(principal))
+
+    @Operation(summary = "2FA 활성화 — 인증 앱 6자리 코드 확인")
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/2fa/enable")
+    fun twoFactorEnable(
+        @AuthenticationPrincipal principal: AuthUser?,
+        @RequestBody req: TwoFactorEnableRequest,
+    ): UserProfileResponse = twoFactorService.enable(requireUserId(principal), req)
+
+    @Operation(summary = "2FA 해제 — 비밀번호 재확인")
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/2fa/disable")
+    fun twoFactorDisable(
+        @AuthenticationPrincipal principal: AuthUser?,
+        @RequestBody req: TwoFactorDisableRequest,
+    ): UserProfileResponse = twoFactorService.disable(requireUserId(principal), req)
+
+    @Operation(summary = "2FA 로그인 완료 — 챌린지 토큰 + 코드 확인 후 토큰 발급")
+    @PostMapping("/2fa/verify")
+    fun twoFactorVerify(
+        @RequestBody req: TwoFactorVerifyRequest,
+        http: HttpServletRequest,
+        res: HttpServletResponse,
+    ): AuthResponse {
+        val tokens = twoFactorService.verifyLogin(req)
+        accessLogService.record(tokens.userId, ClientRequestInfo.from(http), tokens.sessionId)
+        return res.setAuthCookies(tokens)
+    }
 
     @Operation(summary = "토큰 재발급. refresh 쿠키로 access·refresh 를 재발급한다(rotation).")
     @PostMapping("/refresh")
