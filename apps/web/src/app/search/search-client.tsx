@@ -133,9 +133,9 @@ export default function SearchClient() {
     // page 는 활성 탭(또는 전체 탭)에만 적용하고, 나머지는 개수 파악용으로 0페이지만 가져온다.
     const wantEvents = urlState.type === "all" || urlState.type === "events" || !!trimmedQuery;
     const wantPosts = urlState.type === "all" || urlState.type === "posts" || !!trimmedQuery;
-    // 사용자는 이름 검색만 지원 → 검색어가 있을 때만 조회한다.
-    // TODO(정책: 사용자 검색 로그인 제한 검토) — 현재는 백엔드 공개 정책(탈퇴·정지 제외한 공개 프로필만 반환)을 따른다.
-    const wantUsers = !!trimmedQuery;
+    // 사용자는 이름 검색만 지원 → 검색어가 있을 때만, 그리고 로그인 상태에서만 조회한다
+    // (백엔드도 /api/users/search 를 로그인 필수로 잠갔다 — 교인 실명 열거 차단).
+    const wantUsers = !!trimmedQuery && !!token;
 
     const eventParams = new URLSearchParams();
     if (urlState.query) eventParams.set("q", urlState.query);
