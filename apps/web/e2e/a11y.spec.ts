@@ -54,3 +54,18 @@ test("a11y: 관리자 영역(대시보드·회원 관리)에 serious/critical �
     await expectNoSevereViolations(page);
   }
 });
+
+/**
+ * 다크모드 접근성 스모크 — 대비(color-contrast) 위반은 팔레트별로 달라 라이트 통과가
+ * 다크 통과를 보장하지 않는다(--danger-solid 대비 보정 전례). 같은 페이지를 다크로 재검사한다.
+ */
+for (const path of PAGES) {
+  test(`다크모드 접근성: ${path}`, async ({ page }) => {
+    // next-themes(attribute=class, 기본 storage key "theme") — 로드 전에 다크로 고정한다.
+    await page.addInitScript(() => localStorage.setItem("theme", "dark"));
+    await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await expectNoSevereViolations(page);
+  });
+}
