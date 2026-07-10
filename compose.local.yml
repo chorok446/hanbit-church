@@ -34,6 +34,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    volumes:
+      # 업로드 파일(이미지·주보 PDF·찬양팀 자료) 영속화 — 볼륨이 없으면 컨테이너 재생성 시 전부 소실된다.
+      - hanbit-api-uploads:/app/uploads
     environment:
       SPRING_PROFILES_ACTIVE: local
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/hanbit?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=utf8
@@ -69,3 +72,4 @@ services:
 
 volumes:
   hanbit-mysql-data:
+  hanbit-api-uploads:
