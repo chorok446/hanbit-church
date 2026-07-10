@@ -45,7 +45,8 @@ export function HomeVisit() {
         >
           <p
             className="mx-auto max-w-[24ch] text-[20px] leading-[1.6] sm:text-[24px]"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 600, textWrap: "balance", color: "var(--cta-fg)" }}
+            // 배너는 테마 무관 네이비 — 테마 의존 --cta-fg(다크=미드나잇)를 쓰면 dark-on-dark 가 된다.
+            style={{ fontFamily: "var(--font-display)", fontWeight: 600, textWrap: "balance", color: "rgb(var(--on-banner-rgb))" }}
           >
             {CHURCH.name}에 처음 오셨나요?
           </p>
@@ -60,7 +61,7 @@ export function HomeVisit() {
           <Link
             href="/welcome"
             className="mt-7 inline-flex min-h-11 items-center rounded-full px-8 py-3 text-[14px] font-medium transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
-            style={{ background: "var(--cta-fg)", color: "var(--banner-bg)" }}
+            style={{ background: "rgb(var(--on-banner-rgb))", color: "var(--banner-bg)" }}
           >
             새가족 안내 보기
           </Link>
