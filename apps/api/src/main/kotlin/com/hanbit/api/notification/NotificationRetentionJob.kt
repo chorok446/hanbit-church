@@ -22,7 +22,7 @@ class NotificationRetentionJob(
     private val clock: Clock,
 ) {
     // 접속기록 배치(04:30)·D-1 알림 배치(08:40)와 겹치지 않는 새벽 시간대.
-    @Scheduled(cron = "0 50 4 * * *")
+    @Scheduled(cron = "0 50 4 * * *", zone = "Asia/Seoul")
     @Transactional
     fun purgeExpired() {
         try {
