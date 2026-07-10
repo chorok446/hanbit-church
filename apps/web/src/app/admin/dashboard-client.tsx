@@ -49,8 +49,6 @@ type DashboardResult = { tick: number; status: "success" | "error"; data: Dashbo
 const RECENT_LOGS_SIZE = 5;
 
 // 빠른 작업: 자주 쓰는 작성·처리 화면으로 바로 이동한다. permission 이 없으면 숨긴다.
-// TODO(콘텐츠 관리 탭: 전용 관리 페이지 필요) — 전용 페이지가 생기면 공지 작성·행사 만들기를
-// 그 탭으로 옮기고 여기서는 탭 진입 링크만 남긴다.
 const QUICK_ACTIONS: {
   href: string;
   label: string;
@@ -182,12 +180,10 @@ export default function DashboardClient() {
   ].filter((todo) => permissions[todo.permission]);
 
   // 통계 카드: 모두 관련 화면으로 들어가는 진입점이다.
-  // TODO(콘텐츠 관리 탭: 전용 관리 페이지 필요) — 게시글·행사는 전용 관리 페이지가 없어
-  // 우선 공개 목록(/news, /events)으로 연결한다.
   const statCards = [
     { label: "활동 회원", value: summary.users, unit: "명", icon: Users, href: "/admin/users", destination: "회원 관리" },
-    { label: "게시글", value: summary.posts, unit: "건", icon: FileText, href: "/news", destination: "소식" },
-    { label: "행사", value: summary.events, unit: "건", icon: Megaphone, href: "/events", destination: "행사·사역" },
+    { label: "게시글", value: summary.posts, unit: "건", icon: FileText, href: "/admin/content", destination: "콘텐츠 관리" },
+    { label: "행사", value: summary.events, unit: "건", icon: Megaphone, href: "/admin/content", destination: "콘텐츠 관리" },
     { label: "누적 신고", value: summary.totalReports, unit: "건", icon: Inbox, href: "/admin/reports", destination: "신고 관리" },
   ];
 

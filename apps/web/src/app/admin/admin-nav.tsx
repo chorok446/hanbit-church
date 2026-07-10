@@ -2,14 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Flag, Users, UserCheck, ScrollText, HeartHandshake, CalendarDays } from "lucide-react";
+import { LayoutDashboard, Flag, Users, UserCheck, ScrollText, HeartHandshake, CalendarDays, FileText } from "lucide-react";
 import { useAdminProfile } from "./admin-guard";
 import { getAdminPermissions, type AdminPermissions } from "./permissions";
 
 // permission 이 지정된 탭은 해당 권한이 있어야 노출된다(대시보드는 항상 노출).
-// TODO(콘텐츠 관리 탭: 전용 관리 페이지 필요) — 게시글·행사 전용 관리 페이지가 생기면
-// canManageContent 권한 탭을 여기에 추가한다. 그 전까지는 대시보드의 빠른 작업·통계 카드가
-// 공개 페이지(/news, /events)와 글쓰기(/posts/new, /events/new)로 연결한다.
 const items: {
   href: string;
   label: string;
@@ -21,6 +18,8 @@ const items: {
   { href: "/admin/users", label: "회원 관리", icon: Users, permission: "canManageUsers" },
   { href: "/admin/approvals", label: "가입 승인", icon: UserCheck, permission: "canApproveSignups" },
   { href: "/admin/new-family", label: "새가족", icon: HeartHandshake, permission: "canManageNewFamily" },
+  // 콘텐츠 관리(숨김/복구)는 백엔드 /api/admin/content 가 ADMIN·OPERATOR 전용이라 canManageReports 와 같은 축이다.
+  { href: "/admin/content", label: "콘텐츠", icon: FileText, permission: "canManageReports" },
   { href: "/admin/calendar", label: "교회 일정", icon: CalendarDays, permission: "canManageCalendar" },
   { href: "/admin/logs", label: "감사 로그", icon: ScrollText, permission: "canViewAuditLog" },
 ];
