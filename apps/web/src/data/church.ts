@@ -114,5 +114,8 @@ export const MONTHLY_VERSES: MonthlyVerse[] = [
 ];
 
 export function verseOfMonth(date: Date = new Date()): MonthlyVerse {
-  return MONTHLY_VERSES[date.getMonth()];
+  // 서버 컴포넌트(히어로)에서 실행된다 — UTC 컨테이너에선 getMonth() 가 월말 자정~09시(KST) 사이
+  // 이전 달을 돌려주므로 월 경계를 KST 로 고정한다. postTimeLabel 과 같은 +09:00 고정 오프셋(DST 없음).
+  const kst = new Date(date.getTime() + 9 * 3_600_000);
+  return MONTHLY_VERSES[kst.getUTCMonth()];
 }
