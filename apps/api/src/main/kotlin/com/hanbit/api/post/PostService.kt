@@ -422,6 +422,23 @@ class PostService(
     }
 
     /**
+     * 공지·주보 상단 고정 토글. 공식 카테고리 쓰기와 같은 스태프 권한(ADMIN·OPERATOR·CONTENT).
+     * 고정은 NOTICE·BULLETIN 에서만 의미가 있다 — 다른 카테고리는 400.
+     */
+    @Transactional
+    fun setPinned(postId: String, pinned: Boolean): PostResponse {
+        val post = repo.findById(postId).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "post $postId not found")
+        }
+        if (post.category !in PostCategory.ADMIN_ONLY) {
+            badRequest("공지·주보만 고정할 수 있습니다.")
+        }
+        requireAdminForOfficialCategory(post.category)
+        post.pinnedAt = if (pinned) java.time.Instant.now(clock) else null
+        return post.toResponse(viewerId = null)
+    }
+
+    /**
      * 게시글 수정. 작성자(authorUserId)만 가능. 소유권은 author.name 이 아니라 authorUserId 로 판정.
      * 정렬·소유권 필드(seq/time/likes/comments/authorUserId/id/author)는 건드리지 않아 목록 순서가 유지된다.
      */

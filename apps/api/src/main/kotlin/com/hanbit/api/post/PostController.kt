@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -85,6 +86,15 @@ class PostController(
     @GetMapping("/{id}")
     fun get(@PathVariable id: String, @AuthenticationPrincipal user: AuthUser?): PostResponse =
         postService.getPost(id, user?.id)
+
+    @Operation(summary = "공지·주보 상단 고정 토글", description = "스태프(ADMIN·OPERATOR·CONTENT)만. 다른 카테고리는 400.")
+    @SecurityRequirement(name = "bearerAuth")
+    @PatchMapping("/{id}/pin")
+    fun setPinned(
+        @PathVariable id: String,
+        @RequestBody req: SetPostPinnedRequest,
+        @AuthenticationPrincipal user: AuthUser,
+    ): PostResponse = postService.setPinned(id, req.pinned)
 
     @Operation(summary = "좋아요")
     @SecurityRequirement(name = "bearerAuth")

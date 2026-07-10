@@ -1,6 +1,6 @@
 import { richTextPlainLength } from "@/lib/rich-text-length";
 import { mergeRichBodyForEditor, splitRichBodyHtml } from "@/lib/rich-body-html";
-import { apiGet, apiPut } from "@/lib/api";
+import { apiGet, apiPatch, apiPut } from "@/lib/api";
 import type { CommentPageLocationResponse } from "@/data/comments";
 
 /** 백엔드 PostValidators 와 동일한 제한. */
@@ -199,6 +199,8 @@ export type Post = {
   anonymous?: boolean;
   /** 공개 범위. MEMBERS = 로그인 교인만 열람(기도 전용). 이전 응답 호환을 위해 optional. */
   visibility?: "PUBLIC" | "MEMBERS";
+  /** 공지·주보 상단 고정 여부(서버 pinnedAt 기준). */
+  pinned?: boolean;
 };
 
 /**
@@ -308,4 +310,9 @@ export function updatePostComment(
     `/api/posts/${encodeURIComponent(postId)}/comments/${encodeURIComponent(commentId)}`,
     body,
   );
+}
+
+/** 공지·주보 상단 고정 토글 — 스태프 전용(서버에서 검증). */
+export function setPostPinned(postId: string, pinned: boolean): Promise<Post> {
+  return apiPatch<Post>(`/api/posts/${postId}/pin`, { pinned });
 }

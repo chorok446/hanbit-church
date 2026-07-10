@@ -103,6 +103,8 @@ class Post(
     @Column(nullable = false) val anonymous: Boolean = false,
     // 공개 범위(PostVisibility). MEMBERS = 로그인(승인 교인)만 열람 — PRAYER 전용.
     @Column(nullable = false, length = 20) var visibility: String = PostVisibility.PUBLIC,
+    // 공지·주보 상단 고정 시각. null = 고정 아님. 스태프만 토글(PostService.setPinned).
+    @Column(name = "pinned_at") var pinnedAt: java.time.Instant? = null,
 )
 
 /**
