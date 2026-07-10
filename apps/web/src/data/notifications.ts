@@ -132,6 +132,7 @@ export function notificationTypeLabel(type: string): string {
   if (type === "PRAISE_UNASSIGNED") return "찬양팀 배정 해제";
   if (type === "PRAISE_ATTENDANCE_REMINDER") return "참석 체크 요청";
   if (type === "PRAISE_SCHEDULE_CHANGED") return "찬양팀 일정 변경";
+  if (type === "NEW_DEVICE_LOGIN") return "보안";
   return "알림";
 }
 
