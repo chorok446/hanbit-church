@@ -4,7 +4,7 @@ import { type FormEvent, useRef, useState } from "react";
 import { Loader2, Trash2, TriangleAlert } from "lucide-react";
 import { deleteAccount } from "@/data/auth";
 import { ApiError, apiErrorMessage } from "@/lib/api";
-import { clearSession, getSessionId } from "@/lib/auth";
+import { clearRememberedLoginEmail, clearSession, getSessionId } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 
@@ -59,6 +59,8 @@ export function DeleteAccountForm({ embedded = false }: { embedded?: boolean }) 
         return;
       }
       clearSession();
+      // 탈퇴한 계정의 이메일이 로그인 화면에 프리필로 남지 않게 '기억하기' 저장도 지운다.
+      clearRememberedLoginEmail();
       router.replace("/");
       router.refresh();
     } catch (requestError) {

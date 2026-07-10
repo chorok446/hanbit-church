@@ -7,11 +7,8 @@ import { Mail, Lock, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { AuthShell, FieldInput } from "@/components/auth-shell";
 import { apiPost, ApiError, apiErrorMessage } from "@/lib/api";
-import { setSession } from "@/lib/auth";
+import { REMEMBER_EMAIL_KEY, setSession } from "@/lib/auth";
 import { CHURCH } from "@/data/church";
-
-// '이메일 기억하기' 저장 키 — 이메일만 저장한다(비밀번호·토큰 아님).
-const REMEMBER_EMAIL_KEY = "hanbit.login-email";
 
 type AuthResponse = { token: string; name: string; verified: boolean; passwordChangeRequired?: boolean };
 type LoginResponse = AuthResponse | { twoFactorRequired: true; challengeToken: string };

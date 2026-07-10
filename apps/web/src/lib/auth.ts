@@ -48,6 +48,14 @@ export function clearSession() {
   notify();
 }
 
+// '이메일 기억하기'(로그인 화면) 저장 키 — 이메일만 저장한다(비밀번호·토큰 아님).
+// 로그아웃 시에는 유지하고(기능 목적), 계정 탈퇴 시에만 지운다(공용 PC 에 탈퇴 이메일 잔류 방지).
+export const REMEMBER_EMAIL_KEY = "hanbit.login-email";
+
+export function clearRememberedLoginEmail() {
+  if (typeof window !== "undefined") localStorage.removeItem(REMEMBER_EMAIL_KEY);
+}
+
 export function notifyProfileUpdated() {
   if (typeof window !== "undefined") window.dispatchEvent(new Event(PROFILE_EVENT));
 }

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AUTH_EVENT, clearSession, getName, getSessionId, notifyProfileUpdated, PROFILE_EVENT, setSession } from "./auth";
+import { AUTH_EVENT, clearRememberedLoginEmail, clearSession, getName, getSessionId, notifyProfileUpdated, PROFILE_EVENT, setSession } from "./auth";
 
 describe("auth session marker", () => {
   beforeEach(() => {
@@ -38,6 +38,16 @@ describe("auth session marker", () => {
     localStorage.setItem("hanbit.token", "legacy-jwt");
     setSession("홍길동");
     expect(localStorage.getItem("hanbit.token")).toBeNull();
+  });
+
+  it("clearRememberedLoginEmail 은 기억하기 저장만 지운다 — clearSession 은 유지", () => {
+    localStorage.setItem("hanbit.login-email", "user@test.com");
+    setSession("홍길동");
+    clearSession();
+    // 로그아웃(clearSession)은 기억하기를 유지한다.
+    expect(localStorage.getItem("hanbit.login-email")).toBe("user@test.com");
+    clearRememberedLoginEmail();
+    expect(localStorage.getItem("hanbit.login-email")).toBeNull();
   });
 
   it("notifyProfileUpdated 는 PROFILE_EVENT 를 발화한다", () => {
