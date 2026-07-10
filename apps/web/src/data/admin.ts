@@ -8,6 +8,8 @@ export type AdminSummary = {
   pendingReports: number;
   totalReports: number;
   suspendedUsers: number;
+  /** 모집중 & 마감일 3일 이내(경과 포함) — 마감 처리 대기 행사 수. */
+  closingSoonEvents: number;
 };
 
 export type AdminReportTarget = {

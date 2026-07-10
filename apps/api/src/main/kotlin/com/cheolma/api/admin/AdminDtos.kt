@@ -170,6 +170,8 @@ data class AdminSummaryResponse(
     val totalReports: Long,
     @field:Schema(description = "현재 정지 중인 회원 수")
     val suspendedUsers: Long,
+    @field:Schema(description = "모집중이면서 마감일이 3일 이내(경과 포함)인 행사 수 — 마감 처리 대기")
+    val closingSoonEvents: Long = 0,
 )
 
 @Schema(description = "찬양팀 역할·파트 지정 요청. role null = 찬양팀 해제.")
