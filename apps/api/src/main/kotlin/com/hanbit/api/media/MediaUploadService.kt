@@ -15,7 +15,9 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.UUID
+import javax.imageio.IIOImage
 import javax.imageio.ImageIO
+import javax.imageio.ImageWriteParam
 import kotlin.math.roundToInt
 
 /** storeImageOrPdf 결과 — 전용 디렉터리에 저장된 파일명과 종류(image|pdf). URL 은 인증 엔드포인트가 만든다. */
@@ -56,7 +58,7 @@ class MediaUploadService(
         val image = if (extension == "webp") null else decodeOrNull(bytes)
 
         val filename = "$id.$extension"
-        Files.write(dir.resolve(filename), optimizedOriginal(bytes, image, extension))
+        Files.write(dir.resolve(filename), sanitizedOriginal(bytes, image, extension))
         if (image != null) {
             writeThumbnail(image, dir.resolve("$id$THUMB_SUFFIX"))
         }
@@ -126,10 +128,10 @@ class MediaUploadService(
                 if (bytes.size > MAX_BYTES) {
                     throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file is too large")
                 }
-                // webp 은 ImageIO 디코더가 없어 원본 그대로 저장(축소 생략). 그 외는 원본 저장(썸네일은 만들지 않는다).
+                // webp 은 ImageIO 디코더가 없어 RIFF 청크에서 메타데이터만 떼어 저장(축소 생략). 썸네일은 만들지 않는다.
                 val filename = "${UUID.randomUUID()}.$imageExt"
                 val image = if (imageExt == "webp") null else decodeOrNull(bytes)
-                Files.write(dir.resolve(filename), optimizedOriginal(bytes, image, imageExt))
+                Files.write(dir.resolve(filename), sanitizedOriginal(bytes, image, imageExt))
                 StoredPraiseFile(filename = filename, kind = "image")
             }
             isPdf(bytes) -> {
@@ -175,18 +177,42 @@ class MediaUploadService(
     private fun decodeOrNull(bytes: ByteArray): BufferedImage? =
         runCatching { ImageIO.read(ByteArrayInputStream(bytes)) }.getOrNull()
 
-    /** 원본이 MAX_ORIGINAL_DIM 을 넘으면 같은 포맷으로 축소 재인코딩한다. 실패 시 원본을 그대로 쓴다. */
-    private fun optimizedOriginal(bytes: ByteArray, image: BufferedImage?, extension: String): ByteArray {
-        if (image == null || maxOf(image.width, image.height) <= MAX_ORIGINAL_DIM) return bytes
+    /**
+     * 저장용 원본 인코딩. 디코딩 가능한 이미지(jpg/png)는 크기와 무관하게 항상 재인코딩한다 —
+     * EXIF(GPS 위치·촬영 기기)·PNG 텍스트 청크 같은 메타데이터가 재인코딩 과정에서 제거된다(프라이버시).
+     * MAX_ORIGINAL_DIM 초과분은 축소도 함께 된다. webp 은 ImageIO 디코더가 없어 재인코딩 대신
+     * RIFF 컨테이너에서 EXIF/XMP 청크만 떼어낸다. 디코딩·인코딩 실패(손상 파일)면 원본을 그대로 쓴다.
+     */
+    private fun sanitizedOriginal(bytes: ByteArray, image: BufferedImage?, extension: String): ByteArray {
+        if (extension == "webp") return stripWebpMetadata(bytes)
+        if (image == null) return bytes
         val format = if (extension == "png") "png" else "jpg"
         val scaled = scaleToFit(image, MAX_ORIGINAL_DIM, keepAlpha = format == "png")
+        return encodeOrNull(scaled, format) ?: bytes
+    }
+
+    /** jpg 는 명시 품질(JPEG_QUALITY)로, png 는 기본 인코더로 재인코딩한다. 실패 시 null. */
+    private fun encodeOrNull(image: BufferedImage, format: String): ByteArray? = runCatching {
         val out = ByteArrayOutputStream()
-        return if (runCatching { ImageIO.write(scaled, format, out) }.getOrDefault(false)) {
+        if (format == "jpg") {
+            val writer = ImageIO.getImageWritersByFormatName("jpg").next()
+            try {
+                val param = writer.defaultWriteParam.apply {
+                    compressionMode = ImageWriteParam.MODE_EXPLICIT
+                    compressionQuality = JPEG_QUALITY
+                }
+                ImageIO.createImageOutputStream(out).use { ios ->
+                    writer.output = ios
+                    writer.write(null, IIOImage(image, null, null), param)
+                }
+            } finally {
+                writer.dispose()
+            }
             out.toByteArray()
         } else {
-            bytes
+            if (ImageIO.write(image, format, out)) out.toByteArray() else null
         }
-    }
+    }.getOrNull()
 
     /** 목록 화면용 `<name>.thumb.jpg` 생성. best-effort — 실패해도 업로드는 성공 처리한다. */
     private fun writeThumbnail(image: BufferedImage, target: Path) {
@@ -284,6 +310,56 @@ class MediaUploadService(
 
         /** 원본 저장 시 긴 변 상한. 이보다 크면 축소 재인코딩한다. */
         internal const val MAX_ORIGINAL_DIM = 1920
+
+        /** jpg 재인코딩 품질. ImageIO 기본(0.75)보다 높여 메타데이터 제거 재인코딩의 화질 손실을 줄인다. */
+        private const val JPEG_QUALITY = 0.85f
+
+        /** webp(RIFF) 컨테이너에서 제거할 메타데이터 청크. ICCP(색 프로파일)는 표현에 필요해 유지한다. */
+        private val WEBP_METADATA_CHUNKS = setOf("EXIF", "XMP ")
+
+        /** VP8X 확장 플래그에서 EXIF(0x08)·XMP(0x04) 비트 — 청크 제거 시 함께 클리어해야 한다. */
+        private const val WEBP_VP8X_METADATA_FLAGS = 0x0C
+
+        /**
+         * webp 은 ImageIO 디코더가 없어 재인코딩할 수 없으므로 RIFF 청크 단위로 파싱해
+         * EXIF/XMP 메타데이터 청크를 떼어내고 VP8X 플래그를 정리한다(픽셀 데이터는 무손실 유지).
+         * 컨테이너 구조가 예상과 다르거나 잘린 파일이면 원본을 그대로 반환한다(fail-open).
+         */
+        internal fun stripWebpMetadata(bytes: ByteArray): ByteArray {
+            if (bytes.size < 12) return bytes
+            val kept = mutableListOf<ByteArray>()
+            var removedAny = false
+            var pos = 12
+            while (pos + 8 <= bytes.size) {
+                val fourCC = String(bytes, pos, 4, Charsets.US_ASCII)
+                val size = (bytes[pos + 4].toInt() and 0xFF) or
+                    ((bytes[pos + 5].toInt() and 0xFF) shl 8) or
+                    ((bytes[pos + 6].toInt() and 0xFF) shl 16) or
+                    ((bytes[pos + 7].toInt() and 0xFF) shl 24)
+                if (size < 0) return bytes
+                val total = 8 + size + (size and 1) // 홀수 크기 청크는 1바이트 패딩
+                if (pos + total > bytes.size) return bytes
+                if (fourCC in WEBP_METADATA_CHUNKS) {
+                    removedAny = true
+                } else {
+                    kept += bytes.copyOfRange(pos, pos + total)
+                }
+                pos += total
+            }
+            if (!removedAny) return bytes
+            val bodySize = 4 + kept.sumOf { it.size }
+            val out = ByteArrayOutputStream(8 + bodySize)
+            out.write("RIFF".toByteArray(Charsets.US_ASCII))
+            out.write(byteArrayOf(bodySize.toByte(), (bodySize shr 8).toByte(), (bodySize shr 16).toByte(), (bodySize shr 24).toByte()))
+            out.write("WEBP".toByteArray(Charsets.US_ASCII))
+            for (chunk in kept) {
+                if (chunk.size > 8 && String(chunk, 0, 4, Charsets.US_ASCII) == "VP8X") {
+                    chunk[8] = (chunk[8].toInt() and WEBP_VP8X_METADATA_FLAGS.inv()).toByte()
+                }
+                out.write(chunk)
+            }
+            return out.toByteArray()
+        }
 
         /** 목록 썸네일 긴 변. 피드 카드(≈600px 폭)까지 커버하는 크기. */
         internal const val THUMB_MAX_DIM = 640
