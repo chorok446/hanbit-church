@@ -19,6 +19,13 @@ export const CHURCH_LINKS = {
   kakao: process.env.NEXT_PUBLIC_CHURCH_KAKAO ?? "",
 } as const;
 
+/** 헌금 계좌 안내(/giving). env 미설정(빈 값)이면 계좌 대신 교회 사무실 문의 안내로 대체된다. */
+export const CHURCH_GIVING = {
+  bank: process.env.NEXT_PUBLIC_CHURCH_BANK ?? "",
+  account: process.env.NEXT_PUBLIC_CHURCH_ACCOUNT ?? "",
+  holder: process.env.NEXT_PUBLIC_CHURCH_ACCOUNT_HOLDER ?? "",
+} as const;
+
 export type WorshipService = {
   name: string;
   time: string;
