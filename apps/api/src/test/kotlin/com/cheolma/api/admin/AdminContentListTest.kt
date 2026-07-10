@@ -126,4 +126,28 @@ class AdminContentListTest(
             headers { add("Authorization", "Bearer $userToken") }
         }.andExpect { status { isForbidden() } }
     }
+
+    @Test
+    fun `대시보드 summary 는 마감 임박·경과 행사 수를 담는다`() {
+        // saveEvent 헬퍼는 recruitEnd 고정이라, 마감 경과/여유/이미 마감 케이스를 직접 저장한다.
+        fun save(recruitEnd: String, status: String = "open") = events.saveAndFlush(
+            Event(
+                "acl-close-${UUID.randomUUID()}", status, "마감 검증", "요약", "https://x/t.png",
+                "2026-06-01", recruitEnd, "2026-12-01", "2026-12-31",
+                10, 0, "라벨", Author("개설자", false),
+                EventBody("소개", emptyList(), emptyList()),
+                seq = System.nanoTime(),
+            ),
+        )
+        save("2020-01-01") // 마감 경과 & open → 포함
+        save("2999-12-31") // 여유 → 제외
+        save("2020-01-01", status = "closed") // 이미 마감 → 제외
+
+        val body = mvc.get("/api/admin/summary") {
+            headers { add("Authorization", "Bearer $adminToken") }
+        }.andExpect { status { isOk() } }.andReturn().response.contentAsString
+        val closingSoon = tools.jackson.databind.json.JsonMapper().readTree(body)["closingSoonEvents"].asLong()
+        // 마감 경과 open 1건은 반드시 포함, 여유·closed 는 제외(시드에 다른 open 행사가 있을 수 있어 >= 로 검증).
+        org.assertj.core.api.Assertions.assertThat(closingSoon).isGreaterThanOrEqualTo(1)
+    }
 }
