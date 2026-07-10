@@ -25,7 +25,7 @@ export function ChurchHero() {
         <blockquote className="m-0">
           <p
             className="mx-auto max-w-[22ch] text-[28px] leading-[1.55] sm:text-[40px]"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)", textWrap: "balance" }}
+            style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)", textWrap: "balance", wordBreak: "keep-all" }}
           >
             “{verse.text}”
           </p>
