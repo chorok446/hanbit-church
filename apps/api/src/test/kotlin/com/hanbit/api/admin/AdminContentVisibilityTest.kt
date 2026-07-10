@@ -344,4 +344,62 @@ class AdminContentVisibilityTest(
             jsonPath("$.target") { value(null) }
         }
     }
+
+    private fun bulk(body: String, bearer: String? = adminToken) =
+        mvc.patch("/api/admin/content/bulk") {
+            if (bearer != null) headers { add("Authorization", "Bearer $bearer") }
+            contentType = MediaType.APPLICATION_JSON
+            content = body
+        }
+
+    @Test
+    fun `일괄 숨김은 대상 전부를 숨기고 없는 항목은 건너뛰어 보고한다`() {
+        val a = savePost()
+        val b = savePost()
+        val body = """
+            {"items":[
+                {"targetType":"POST","targetId":"${a.id}"},
+                {"targetType":"POST","targetId":"${b.id}"},
+                {"targetType":"POST","targetId":"vis-post-missing"}
+            ],"hidden":true,"reason":"일괄 정리"}
+        """.trimIndent()
+
+        bulk(body).andExpect {
+            status { isOk() }
+            jsonPath("$.requested") { value(3) }
+            jsonPath("$.processed") { value(2) }
+            jsonPath("$.missing[0].targetId") { value("vis-post-missing") }
+        }
+        assertThat(posts.findById(a.id).orElseThrow().hiddenAt).isNotNull()
+        assertThat(posts.findById(b.id).orElseThrow().hiddenAt).isNotNull()
+        assertThat(posts.findById(a.id).orElseThrow().hiddenReason).isEqualTo("일괄 정리")
+
+        // 일괄 복구
+        val restore = """
+            {"items":[
+                {"targetType":"POST","targetId":"${a.id}"},
+                {"targetType":"POST","targetId":"${b.id}"}
+            ],"hidden":false}
+        """.trimIndent()
+        bulk(restore).andExpect {
+            status { isOk() }
+            jsonPath("$.processed") { value(2) }
+        }
+        assertThat(posts.findById(a.id).orElseThrow().hiddenAt).isNull()
+    }
+
+    @Test
+    fun `일괄 요청은 빈 목록과 50건 초과를 거절한다`() {
+        bulk("""{"items":[],"hidden":true}""").andExpect { status { isBadRequest() } }
+        val tooMany = (1..51).joinToString(",") { """{"targetType":"POST","targetId":"x$it"}""" }
+        bulk("""{"items":[$tooMany],"hidden":true}""").andExpect { status { isBadRequest() } }
+    }
+
+    @Test
+    fun `일괄 처리는 일반 회원 403, 비로그인 401`() {
+        val a = savePost()
+        val body = """{"items":[{"targetType":"POST","targetId":"${a.id}"}],"hidden":true}"""
+        bulk(body, bearer = otherToken).andExpect { status { isForbidden() } }
+        bulk(body, bearer = null).andExpect { status { isUnauthorized() } }
+    }
 }

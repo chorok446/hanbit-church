@@ -65,6 +65,26 @@ data class SetContentVisibilityRequest(
     val reason: String? = null,
 )
 
+@Schema(description = "일괄 숨김/복구 대상 항목")
+data class BulkContentItem(val targetType: String, val targetId: String)
+
+@Schema(description = "콘텐츠 일괄 숨김/복구 요청 (최대 50건)")
+data class SetContentVisibilityBulkRequest(
+    val items: List<BulkContentItem>,
+    @field:Schema(description = "true = 숨김, false = 복구")
+    val hidden: Boolean,
+    @field:Schema(description = "숨김 사유(선택) — 모든 항목에 동일하게 적용, 작성자 알림 포함")
+    val reason: String? = null,
+)
+
+data class ContentVisibilityBulkResponse(
+    val requested: Int,
+    val processed: Int,
+    @field:Schema(description = "찾지 못해 건너뛴 항목")
+    val missing: List<BulkContentItem>,
+    val hidden: Boolean,
+)
+
 data class ContentVisibilityResponse(
     val targetType: String,
     val targetId: String,
