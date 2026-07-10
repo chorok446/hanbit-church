@@ -24,6 +24,9 @@ type Result = { key: string; status: "success" | "error"; data: AdminContentPage
 export default function AdminContentClient() {
   const [type, setType] = useState<"POST" | "EVENT">("POST");
   const [hiddenOnly, setHiddenOnly] = useState(false);
+  const [q, setQ] = useState("");
+  // 검색은 제출(Enter/버튼) 시점에만 반영 — 입력마다 요청하지 않는다.
+  const [appliedQ, setAppliedQ] = useState("");
   const [page, setPage] = useState(0);
   const [retryTick, setRetryTick] = useState(0);
   const [result, setResult] = useState<Result | null>(null);
@@ -32,11 +35,11 @@ export default function AdminContentClient() {
   const [hideReason, setHideReason] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
 
-  const requestKey = `${type}:${hiddenOnly}:${page}:${retryTick}`;
+  const requestKey = `${type}:${hiddenOnly}:${appliedQ}:${page}:${retryTick}`;
 
   useEffect(() => {
     let cancelled = false;
-    fetchAdminContentPage({ type, hiddenOnly, page, size: PAGE_SIZE })
+    fetchAdminContentPage({ type, hiddenOnly, page, size: PAGE_SIZE, q: appliedQ })
       .then((data) => {
         if (!cancelled) setResult({ key: requestKey, status: "success", data });
       })
@@ -46,7 +49,7 @@ export default function AdminContentClient() {
     return () => {
       cancelled = true;
     };
-  }, [type, hiddenOnly, page, retryTick, requestKey]);
+  }, [type, hiddenOnly, appliedQ, page, retryTick, requestKey]);
 
   const applyVisibility = async (item: AdminContentItem, hidden: boolean, reason?: string) => {
     if (savingId) return;
@@ -97,17 +100,44 @@ export default function AdminContentClient() {
             </button>
           ))}
         </div>
-        <label className="flex items-center gap-2 text-[13px]" style={{ color: "var(--foreground)" }}>
-          <input
-            type="checkbox"
-            checked={hiddenOnly}
-            onChange={(e) => {
-              setHiddenOnly(e.target.checked);
+        <div className="flex flex-wrap items-center gap-3">
+          <form
+            className="flex items-center gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              setAppliedQ(q.trim());
               setPage(0);
             }}
-          />
-          숨김만 보기
-        </label>
+          >
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder={type === "POST" ? "본문·작성자 검색" : "제목·작성자 검색"}
+              aria-label="콘텐츠 검색"
+              className="ui-control w-52 placeholder:opacity-50"
+              style={controlStyle}
+            />
+            <button
+              type="submit"
+              className="rounded-full border px-4 py-2 text-[13px]"
+              style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+            >
+              검색
+            </button>
+          </form>
+          <label className="flex items-center gap-2 text-[13px]" style={{ color: "var(--foreground)" }}>
+            <input
+              type="checkbox"
+              checked={hiddenOnly}
+              onChange={(e) => {
+                setHiddenOnly(e.target.checked);
+                setPage(0);
+              }}
+            />
+            숨김만 보기
+          </label>
+        </div>
       </div>
 
       {loading ? (
