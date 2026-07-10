@@ -1,6 +1,8 @@
 package com.hanbit.api.admin
 
 import com.hanbit.api.auth.User
+import com.hanbit.api.auth.UserAccessLog
+import com.hanbit.api.auth.UserAccessLogRepository
 import com.hanbit.api.auth.UserRepository
 import com.hanbit.api.auth.UserRole
 import com.hanbit.api.post.Author
@@ -26,6 +28,7 @@ class AdminStatsControllerTest(
     @param:Autowired private val mvc: MockMvc,
     @param:Autowired private val jwt: JwtService,
     @param:Autowired private val users: UserRepository,
+    @param:Autowired private val accessLogs: UserAccessLogRepository,
     @param:Autowired private val posts: PostRepository,
 ) {
     // user 4 를 관리자로 승격해 사용한다(@Transactional 이라 테스트 후 롤백).
@@ -72,6 +75,24 @@ class AdminStatsControllerTest(
             // 마지막 요소가 오늘(KST) — 방금 만든 가입·게시글이 집계된다.
             jsonPath("$.daily[6].signups") { value(greaterThanOrEqualTo(1)) }
             jsonPath("$.daily[6].posts") { value(greaterThanOrEqualTo(1)) }
+        }
+    }
+
+    @Test
+    fun `일별 활성 회원은 같은 사용자의 중복 접속을 하루 1로 센다`() {
+        val logs = listOf(
+            UserAccessLog(userId = 1, ipAddress = "10.0.0.1", os = "macOS", accessedAt = Instant.now(), sessionId = "s1"),
+            UserAccessLog(userId = 1, ipAddress = "10.0.0.2", os = "iOS", accessedAt = Instant.now(), sessionId = "s2"),
+            UserAccessLog(userId = 4, ipAddress = "10.0.0.3", os = "Windows", accessedAt = Instant.now(), sessionId = "s3"),
+        )
+        logs.forEach { accessLogs.saveAndFlush(it) }
+
+        mvc.get("/api/admin/stats?days=3") {
+            headers { add("Authorization", "Bearer $adminToken") }
+        }.andExpect {
+            status { isOk() }
+            // 사용자 1(중복 2건)과 4 — distinct 로 2명.
+            jsonPath("$.daily[2].activeUsers") { value(greaterThanOrEqualTo(2)) }
         }
     }
 

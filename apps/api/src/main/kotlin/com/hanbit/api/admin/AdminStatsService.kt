@@ -1,5 +1,6 @@
 package com.hanbit.api.admin
 
+import com.hanbit.api.auth.UserAccessLogRepository
 import com.hanbit.api.auth.UserRepository
 import com.hanbit.api.event.EventRepository
 import com.hanbit.api.post.PostRepository
@@ -21,6 +22,7 @@ import java.time.ZoneId
 @Service
 class AdminStatsService(
     private val users: UserRepository,
+    private val accessLogs: UserAccessLogRepository,
     private val posts: PostRepository,
     private val events: EventRepository,
     private val reports: ReportRepository,
@@ -39,6 +41,12 @@ class AdminStatsService(
         val postCounts = posts.creationSeqSince(since.toEpochMilli()).groupingBy { it.toLocalDateAtZone() }.eachCount()
         val eventCounts = events.creationSeqSince(since.toEpochMilli()).groupingBy { it.toLocalDateAtZone() }.eachCount()
         val reportCounts = reports.creationSeqSince(since.toEpochMilli()).groupingBy { it.toLocalDateAtZone() }.eachCount()
+        // 일별 활성 회원(DAU): 접속 기록(로그인·세션 갱신)의 (userId, 날짜) 중복 제거 후 일별 사용자 수.
+        val activeUsers = accessLogs.findUserAccessSince(since)
+            .map { row -> (row[0] as Long) to (row[1] as Instant).toLocalDateAtZone() }
+            .distinct()
+            .groupingBy { it.second }
+            .eachCount()
 
         val daily = (0 until days).map { offset ->
             val date = start.plusDays(offset.toLong())
@@ -48,6 +56,7 @@ class AdminStatsService(
                 posts = (postCounts[date] ?: 0).toLong(),
                 events = (eventCounts[date] ?: 0).toLong(),
                 reports = (reportCounts[date] ?: 0).toLong(),
+                activeUsers = (activeUsers[date] ?: 0).toLong(),
             )
         }
         return AdminStatsResponse(days = days, daily = daily)
