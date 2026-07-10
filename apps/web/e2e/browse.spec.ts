@@ -40,3 +40,15 @@ test("행사 목록 정렬이 URL에 반영된다", async ({ page }) => {
   await page.locator("select").filter({ has: page.locator('option[value="popular"]') }).selectOption("popular");
   await page.waitForURL(/sort=popular/);
 });
+
+/** 정적 안내 페이지 스모크 — 라우트·핵심 콘텐츠 렌더 회귀 가드. */
+test("헌금 안내 페이지가 렌더된다", async ({ page }) => {
+  await page.goto("/giving");
+  await expect(page.getByRole("heading", { name: "헌금 안내" })).toBeVisible();
+  await expect(page.getByText("헌금의 종류")).toBeVisible();
+});
+
+test("개인정보처리방침 페이지가 렌더된다", async ({ page }) => {
+  await page.goto("/privacy");
+  await expect(page.getByRole("heading", { name: "개인정보처리방침" })).toBeVisible();
+});
