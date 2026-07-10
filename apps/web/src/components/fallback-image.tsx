@@ -13,6 +13,8 @@ type FallbackImageProps = {
   decorative?: boolean;
   /** 목록 화면용. 업로드 이미지면 썸네일(`.thumb.jpg`)을 먼저 시도하고 없으면 원본으로 fallback 한다. */
   thumbnail?: boolean;
+  /** 첫 화면(above the fold) 이미지만 "eager". 기본은 lazy — 목록·그리드가 대부분이라 대역폭을 아낀다. */
+  loading?: "eager" | "lazy";
 };
 
 export function FallbackImage({
@@ -22,6 +24,7 @@ export function FallbackImage({
   errorText,
   decorative = false,
   thumbnail = false,
+  loading = "lazy",
 }: FallbackImageProps) {
   const [failed, setFailed] = useState(false);
   const [thumbFailed, setThumbFailed] = useState(false);
@@ -58,6 +61,8 @@ export function FallbackImage({
       src={currentSrc}
       alt={alt}
       className={className}
+      loading={loading}
+      decoding="async"
       onError={() => (useThumb ? setThumbFailed(true) : setFailed(true))}
       aria-hidden={decorative || undefined}
     />
