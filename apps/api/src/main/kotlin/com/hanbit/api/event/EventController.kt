@@ -160,7 +160,14 @@ class EventController(
         @PathVariable id: String,
         @RequestBody req: UpdateEventStatusRequest,
         @AuthenticationPrincipal user: AuthUser,
-    ): EventResponse = eventService.updateStatus(user.id, id, req)
+    ): EventResponse {
+        // 상태 변경(행 락) 커밋 후 알림 팬아웃 — 락 보유 시간에서 알림 INSERT 를 제거한다.
+        val result = eventService.updateStatus(user.id, id, req)
+        if (result.notifyRecipientIds.isNotEmpty()) {
+            runCatching { eventService.notifyStatusChanged(user.id, id, result) }
+        }
+        return result.response
+    }
 
     @Operation(summary = "행사 수정")
     @SecurityRequirement(name = "bearerAuth")

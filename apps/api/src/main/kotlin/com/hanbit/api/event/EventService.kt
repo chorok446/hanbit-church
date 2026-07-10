@@ -285,12 +285,22 @@ class EventService(
         )
     }
 
+    /** 상태 변경 결과 + 락 해제 후 보낼 알림 정보. recipients 가 비면 알림 없음(멱등 재요청 등). */
+    data class StatusChangeResult(
+        val response: EventResponse,
+        val notifyRecipientIds: List<Long>,
+        val notifyTitle: String,
+        val eventTitle: String,
+    )
+
     /**
      * 행사 모집 상태 변경. join 과 같은 row lock 을 가장 먼저 잡아 참여·마감 요청을 직렬화한다.
      * upcoming → open → closed 단방향 전환만 허용하며 같은 상태 요청은 멱등 처리한다.
+     * 알림 팬아웃은 수신자 계산까지만 여기서 하고, 실제 생성은 커밋(락 해제) 후
+     * notifyStatusChanged() 별도 트랜잭션에서 한다 — 락 보유 시간에서 알림 INSERT 를 제거.
      */
     @Transactional
-    fun updateStatus(userId: Long, eventId: String, req: UpdateEventStatusRequest): EventResponse {
+    fun updateStatus(userId: Long, eventId: String, req: UpdateEventStatusRequest): StatusChangeResult {
         val event = repo.findByIdForUpdate(eventId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
         if (event.deletedAt != null) {
@@ -318,32 +328,58 @@ class EventService(
                 else -> throw ResponseStatusException(HttpStatus.CONFLICT, "invalid status transition")
             }
             val title = if (target == "open") "모집이 시작되었습니다" else "모집이 마감되었습니다"
-            // 참여자 알림 팬아웃. 행 락(PESSIMISTIC_WRITE) 보유 시간을 줄이려고 수신자 유저를 한 번에 bulk 로드한다
-            // (기존엔 참여자마다 users.findById → N+1). TODO(후속): 알림 생성을 after-commit/async 로 옮겨 락 밖에서 처리.
+            // 수신자 계산만 락 안에서(참여자 스냅샷 확정). 알림 INSERT 는 컨트롤러가 커밋 후
+            // notifyStatusChanged() 로 수행한다. notifyEventUpdates 필터를 위해 유저를 bulk 로드.
             val recipientIds = participants.findByEventId(eventId)
                 .map { it.userId }
                 .filter { it != userId }
                 .distinct()
-            users.findAllById(recipientIds)
+            val notifyIds = users.findAllById(recipientIds)
                 .filter { it.notifyEventUpdates }
-                .forEach { recipient ->
-                    notifications.notify(
-                        recipientUserId = recipient.id,
-                        actorUserId = userId,
-                        type = NotificationType.EVENT_STATUS_CHANGED,
-                        title = title,
-                        body = event.title,
-                        href = "/events/$eventId",
-                    )
-                }
+                .mapNotNull { it.id }
+            return StatusChangeResult(
+                response = event.toResponse(
+                    viewerId = userId,
+                    joinedByMe = participants.existsByEventIdAndUserId(eventId, userId),
+                    bookmarkedByMe = bookmarkRepo.existsByEventIdAndUserId(eventId, userId),
+                    today = LocalDate.now(clock),
+                ),
+                notifyRecipientIds = notifyIds,
+                notifyTitle = title,
+                eventTitle = event.title,
+            )
         }
 
-        return event.toResponse(
-            viewerId = userId,
-            joinedByMe = participants.existsByEventIdAndUserId(eventId, userId),
-            bookmarkedByMe = bookmarkRepo.existsByEventIdAndUserId(eventId, userId),
-            today = LocalDate.now(clock),
+        // 같은 상태로의 멱등 재요청 — 상태 변화가 없으므로 알림도 없다.
+        return StatusChangeResult(
+            response = event.toResponse(
+                viewerId = userId,
+                joinedByMe = participants.existsByEventIdAndUserId(eventId, userId),
+                bookmarkedByMe = bookmarkRepo.existsByEventIdAndUserId(eventId, userId),
+                today = LocalDate.now(clock),
+            ),
+            notifyRecipientIds = emptyList(),
+            notifyTitle = "",
+            eventTitle = event.title,
         )
+    }
+
+    /**
+     * 상태 변경 알림 팬아웃 — updateStatus 커밋(행 락 해제) 후 컨트롤러가 호출한다.
+     * 별도 트랜잭션이므로 실패해도 상태 변경은 유지된다(알림은 best-effort).
+     */
+    @Transactional
+    fun notifyStatusChanged(actorUserId: Long, eventId: String, result: StatusChangeResult) {
+        result.notifyRecipientIds.forEach { recipientId ->
+            notifications.notify(
+                recipientUserId = recipientId,
+                actorUserId = actorUserId,
+                type = NotificationType.EVENT_STATUS_CHANGED,
+                title = result.notifyTitle,
+                body = result.eventTitle,
+                href = "/events/$eventId",
+            )
+        }
     }
 
     /** 현재 사용자가 저장한 행사. 북마크/행사/참여를 각각 bulk 조회해 N+1을 피한다. */
