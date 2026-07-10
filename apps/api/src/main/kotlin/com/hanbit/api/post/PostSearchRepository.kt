@@ -25,6 +25,8 @@ data class PostSearchCondition(
     val categories: List<String>? = null,
     val eventOnly: Boolean,
     val authorUserIds: List<Long>?,
+    /** false(비로그인)면 교인만 공개(MEMBERS) 글을 결과에서 제외한다. */
+    val includeMembersOnly: Boolean = true,
     val sort: PostSearchSort,
     val page: Int,
     val size: Int,
@@ -48,6 +50,8 @@ class QuerydslPostSearchRepository(
         val predicates = BooleanBuilder()
         // 숨김 콘텐츠는 공개 검색에서 항상 제외.
         predicates.and(post.hiddenAt.isNull)
+        // 교인만 공개(MEMBERS)는 로그인 사용자에게만 노출.
+        if (!condition.includeMembersOnly) predicates.and(post.visibility.eq(PostVisibility.PUBLIC))
 
         condition.query?.let { query ->
             val pattern = literalContainsPattern(query)

@@ -56,6 +56,8 @@ export default function PostCreateClient() {
   const [category, setCategory] = useState<PostCategory>("SHARING");
   // 익명 기도제목(PRAYER 전용) — 서버가 공개 응답에서 작성자를 마스킹한다.
   const [anonymous, setAnonymous] = useState(false);
+  // 공개 범위(PRAYER 전용). MEMBERS = 로그인 교인만 열람.
+  const [visibility, setVisibility] = useState<"PUBLIC" | "MEMBERS">("PUBLIC");
   const [attachments, setAttachments] = useState<PostAttachment[]>([]);
   const [events, setEvents] = useState<{ id: string; title: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -171,8 +173,9 @@ export default function PostCreateClient() {
         category: effectiveCategory,
         // 첨부는 스태프 카테고리(공지·주보·설교)에서만 — 서버 normalizeAttachments 와 동일.
         attachments: isStaffWriteCategory(effectiveCategory) ? attachments : [],
-        // 익명은 기도 카테고리에서만 유효 — 서버 검증과 동일 조건으로만 실어 보낸다.
+        // 익명·공개 범위는 기도 카테고리에서만 유효 — 서버 검증과 동일 조건으로만 실어 보낸다.
         anonymous: effectiveCategory === "PRAYER" && anonymous,
+        visibility: effectiveCategory === "PRAYER" ? visibility : "PUBLIC",
       });
       if (getSessionId() !== requestToken) return;
       clearDraft();
@@ -275,16 +278,15 @@ export default function PostCreateClient() {
                   내용은 빼고 작성해 주세요.
                 </div>
 
-                {/* TODO(백엔드: posts.visibility 접근 제어 도입 시 공개 범위 활성화)
-                    공개 범위 컨트롤은 아직 서버 스키마가 없어 "전체 공개"만 동작한다. */}
                 <div>
                   <label htmlFor="post-visibility" className="mb-2 block text-[12px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
                     공개 범위
                   </label>
                   <select
                     id="post-visibility"
-                    value="public"
-                    onChange={() => {}}
+                    value={visibility === "MEMBERS" ? "members" : "public"}
+                    onChange={(e) => setVisibility(e.target.value === "members" ? "MEMBERS" : "PUBLIC")}
+                    disabled={submitting}
                     className="ui-control px-3 py-2.5"
                     style={{
                       background: "var(--card)",
@@ -293,9 +295,7 @@ export default function PostCreateClient() {
                     }}
                   >
                     <option value="public">전체 공개</option>
-                    <option value="members" disabled>
-                      교인만 공개 (준비 중)
-                    </option>
+                    <option value="members">교인만 공개 (로그인한 교우만 볼 수 있어요)</option>
                     <option value="prayer-team" disabled>
                       기도팀만 공개 (준비 중)
                     </option>

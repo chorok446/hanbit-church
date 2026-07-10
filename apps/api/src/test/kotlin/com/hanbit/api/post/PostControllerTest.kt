@@ -201,6 +201,69 @@ class PostControllerTest(
         }.andExpect { status { isBadRequest() } }
     }
 
+    @Test
+    fun `교인만 공개 기도글은 비로그인에게 목록·검색·상세·댓글 모두 숨겨진다`() {
+        val id = mvc.post("/api/posts") {
+            headers { add("Authorization", "Bearer $token") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"text":"교인만 보는 기도제목입니다","category":"PRAYER","visibility":"MEMBERS"}"""
+        }.andExpect {
+            status { isCreated() }
+            jsonPath("$.visibility") { value("MEMBERS") }
+        }.andReturn().response.contentAsString.let { com.fasterxml.jackson.databind.ObjectMapper().readTree(it)["id"].asText() }
+
+        // 비로그인: 상세 404, 댓글 404, 목록·검색·sitemap 미포함.
+        mvc.get("/api/posts/$id").andExpect { status { isNotFound() } }
+        mvc.get("/api/posts/$id/comments").andExpect { status { isNotFound() } }
+        mvc.get("/api/posts").andExpect {
+            status { isOk() }
+            jsonPath("$[?(@.id == '$id')]") { isEmpty() }
+        }
+        mvc.get("/api/posts/search?q=교인만 보는&category=PRAYER").andExpect {
+            status { isOk() }
+            jsonPath("$.content[?(@.id == '$id')]") { isEmpty() }
+        }
+        mvc.get("/api/posts/sitemap-ids?page=0&size=100").andExpect {
+            status { isOk() }
+            jsonPath("$.ids[?(@ == '$id')]") { isEmpty() }
+        }
+
+        // 로그인(다른 사용자): 상세·검색 모두 보인다.
+        mvc.get("/api/posts/$id") {
+            headers { add("Authorization", "Bearer $token2") }
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.visibility") { value("MEMBERS") }
+        }
+        mvc.get("/api/posts/search?q=교인만 보는&category=PRAYER") {
+            headers { add("Authorization", "Bearer $token2") }
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.content[?(@.id == '$id')].visibility") { value("MEMBERS") }
+        }
+    }
+
+    @Test
+    fun `교인만 공개는 기도 카테고리가 아니면 400, 수정으로 카테고리 이탈도 400`() {
+        mvc.post("/api/posts") {
+            headers { add("Authorization", "Bearer $token") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"text":"나눔인데 교인만","category":"SHARING","visibility":"MEMBERS"}"""
+        }.andExpect { status { isBadRequest() } }
+
+        val id = mvc.post("/api/posts") {
+            headers { add("Authorization", "Bearer $token") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"text":"교인만 기도","category":"PRAYER","visibility":"MEMBERS"}"""
+        }.andReturn().response.contentAsString.let { com.fasterxml.jackson.databind.ObjectMapper().readTree(it)["id"].asText() }
+
+        mvc.put("/api/posts/$id") {
+            headers { add("Authorization", "Bearer $token") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"text":"카테고리 이탈 시도","category":"SHARING"}"""
+        }.andExpect { status { isBadRequest() } }
+    }
+
     private fun postPost(body: String) = mvc.post("/api/posts") {
         headers { add("Authorization", "Bearer $token") }
         contentType = MediaType.APPLICATION_JSON
