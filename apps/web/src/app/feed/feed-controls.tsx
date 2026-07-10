@@ -7,6 +7,7 @@ import type { FeedUrlState } from "@/lib/use-url-query";
 
 const POST_SORT_LABELS: Record<PostSearchSort, string> = {
   latest: "최신순",
+  relevance: "관련순",
   popular: "인기순",
   discussed: "댓글순",
 };

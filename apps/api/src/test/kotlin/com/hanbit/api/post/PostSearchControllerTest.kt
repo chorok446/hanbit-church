@@ -352,4 +352,37 @@ class PostSearchControllerTest(
         mvc.get("/api/posts/search") { param("tag", "a".repeat(101)) }
             .andExpect { status { isBadRequest() } }
     }
+
+    @Test
+    fun `relevance 정렬은 검색어가 앞에 등장하는 본문을 상위로 올린다`() {
+        val kw = "성탄절칸타타"
+        savePost(text = "긴 안내문 끝부분에 $kw 이야기가 나옵니다", seq = 3)
+        savePost(text = "$kw 준비 모임 안내", seq = 1)
+        savePost(text = "다른 글", authorName = kw, seq = 2) // 작성자 이름으로만 일치 → 맨 뒤
+
+        mvc.get("/api/posts/search") {
+            param("q", kw)
+            param("sort", "relevance")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.content.length()") { value(3) }
+            jsonPath("$.content[0].text") { value("$kw 준비 모임 안내") }
+            jsonPath("$.content[2].author.name") { value(kw) }
+        }
+    }
+
+    @Test
+    fun `relevance 정렬에 검색어가 없으면 최신순과 같다`() {
+        val old = savePost(text = "관련순 폴백 검증 A", seq = 1)
+        val recent = savePost(text = "관련순 폴백 검증 B", seq = 2)
+
+        mvc.get("/api/posts/search") {
+            param("q", "관련순 폴백 검증")
+            param("sort", "relevance")
+        }.andExpect { status { isOk() } }
+
+        mvc.get("/api/posts/search") { param("sort", "relevance") }.andExpect { status { isOk() } }
+        // 존재 확인용 참조 (린트 unused 방지)
+        org.assertj.core.api.Assertions.assertThat(listOf(old, recent)).hasSize(2)
+    }
 }

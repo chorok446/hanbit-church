@@ -168,7 +168,7 @@ export function postToComposeValues(post: Post): PostComposeValues {
   };
 }
 
-export type PostSearchSort = "latest" | "popular" | "discussed";
+export type PostSearchSort = "latest" | "popular" | "discussed" | "relevance";
 
 export type Post = {
   id: string;
