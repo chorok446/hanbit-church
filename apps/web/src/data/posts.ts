@@ -235,6 +235,7 @@ export type PostPageResponse = {
 // "use client" 모듈에서 export 하면 서버에서 클라이언트 참조 프록시가 되므로 여기(서버 안전)서 정의한다.
 export const SERMON_PAGE_SIZE = 10;
 export const NEWS_PAGE_SIZE = 10;
+export const HOME_NEWS_PREVIEW_SIZE = 3;
 
 const MY_POSTS_PAGE_SIZE = 10;
 
