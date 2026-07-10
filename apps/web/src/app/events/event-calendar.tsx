@@ -2,14 +2,15 @@
 
 // 행사·사역 "캘린더 보기" — 월간 그리드 + 이번 주 일정 패널.
 // 데이터: 예배 반복 일정(church.ts) + 행사 전체 목록(GET /api/events, 공개 API).
-// TODO(캘린더: 검색·상세 필터 연동) — 카드 보기의 검색어·모집 상태·날짜 범위 필터를
-// 캘린더 보기에도 적용하려면 urlState 를 내려받아 행사 목록을 클라이언트에서 거르면 된다.
+// 카드 보기의 검색어·모집 상태·날짜 범위 필터(urlState)를 내려받아 행사만 클라이언트에서 거른다
+// — 예배·수동 일정·공휴일은 필터와 무관하게 항상 표시한다.
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-react";
 import { apiGet } from "@/lib/api";
 import { getClientApiBaseUrl } from "@/lib/api-url";
 import type { Event } from "@/data/events";
+import type { EventListUrlState } from "@/lib/use-url-query";
 import { fetchPublicPraiseSchedules, type PraiseSchedule } from "@/data/praise-team";
 import {
   eventTypeDotColor,
@@ -101,7 +102,7 @@ type FetchState =
   | { status: "success"; events: Event[] }
   | { status: "error"; events: Event[] };
 
-export function EventCalendarView() {
+export function EventCalendarView({ urlState }: { urlState?: EventListUrlState } = {}) {
   const today = useMemo(() => new Date(), []);
   const todayKey = toDateKey(today);
   const [cursor, setCursor] = useState({ year: today.getFullYear(), month: today.getMonth() });
@@ -146,7 +147,29 @@ export function EventCalendarView() {
     };
   }, [retryTick]);
 
-  const events = fetchState.events;
+  // 카드 보기 필터를 행사에만 적용 — 문자열 비교는 ISO(yyyy-MM-dd) 날짜라 안전하다.
+  const events = useMemo(() => {
+    const all = fetchState.events;
+    if (!urlState) return all;
+    const keyword = urlState.query.trim().toLowerCase();
+    return all.filter((event) => {
+      if (keyword && !event.title.toLowerCase().includes(keyword) && !event.summary.toLowerCase().includes(keyword)) return false;
+      if (urlState.filter !== "all" && event.status !== urlState.filter) return false;
+      if (urlState.recruitState && event.recruitState !== urlState.recruitState) return false;
+      if (urlState.availableOnly && !event.recruitable) return false;
+      if (urlState.recruitEndFrom && event.recruitEnd < urlState.recruitEndFrom) return false;
+      if (urlState.recruitEndTo && event.recruitEnd > urlState.recruitEndTo) return false;
+      if (urlState.runStartFrom && event.runStart < urlState.runStartFrom) return false;
+      if (urlState.runStartTo && event.runStart > urlState.runStartTo) return false;
+      return true;
+    });
+  }, [fetchState.events, urlState]);
+  const eventFilterActive = urlState
+    ? Boolean(
+        urlState.query.trim() || urlState.filter !== "all" || urlState.recruitState || urlState.availableOnly ||
+        urlState.recruitEndFrom || urlState.recruitEndTo || urlState.runStartFrom || urlState.runStartTo,
+      )
+    : false;
   const praiseEvents = useMemo(() => mapPraiseScheduleToCalendarEvents(praiseSchedules), [praiseSchedules]);
   const extraEvents = useMemo(() => [...praiseEvents, ...manualEvents], [praiseEvents, manualEvents]);
 
@@ -252,6 +275,12 @@ export function EventCalendarView() {
           캘린더 구독(.ics)
         </a>
       </div>
+
+      {eventFilterActive ? (
+        <p className="mb-4 text-[12.5px]" style={{ color: "var(--foreground-muted)" }} aria-live="polite">
+          카드 보기의 검색·필터가 적용된 행사 {events.length}건을 표시하고 있습니다. 예배·교회 일정은 필터와 무관하게 항상 보입니다.
+        </p>
+      ) : null}
 
       {fetchState.status === "error" ? (
         <div
