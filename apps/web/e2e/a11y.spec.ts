@@ -69,3 +69,26 @@ for (const path of PAGES) {
     await expectNoSevereViolations(page);
   });
 }
+
+// 로그인·관리자 영역 다크모드 — 공개 다크 스위트(#101)가 실결함을 잡은 전례로 확장.
+test("다크모드 a11y: 로그인 영역(마이페이지·알림)", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("theme", "dark"));
+  await signup(page, "e2e-a11y-dark");
+  for (const path of ["/mypage", "/mypage?tab=account", "/notifications"]) {
+    await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await expectNoSevereViolations(page);
+  }
+});
+
+test("다크모드 a11y: 관리자 영역(대시보드·회원 관리)", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("theme", "dark"));
+  await login(page, { email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
+  for (const path of ["/admin", "/admin/users"]) {
+    await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await expectNoSevereViolations(page);
+  }
+});
