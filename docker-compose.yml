@@ -1,5 +1,9 @@
 # 로컬 개발용 MySQL. 원본(dasida)과 동시에 띄울 수 있도록 컨테이너·포트·볼륨·DB명을 분리했다.
 # 백엔드 기본 DB_URL 이 3307/hanbit 를 가리킨다(application.properties).
+#
+# 모니터링(선택): docker compose --profile monitoring up -d
+#   Prometheus http://localhost:9090 (호스트 8080 API 를 스크레이프)
+#   Grafana    http://localhost:3001 (admin/admin, Prometheus 데이터소스 자동 등록)
 services:
   mysql:
     image: mysql:8.4
@@ -14,5 +18,34 @@ services:
     volumes:
       - hanbit-mysql:/var/lib/mysql
 
+  prometheus:
+    image: prom/prometheus:v3.4.1
+    container_name: hanbit-prometheus
+    profiles: ["monitoring"]
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - hanbit-prometheus:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana:12.0.2
+    container_name: hanbit-grafana
+    profiles: ["monitoring"]
+    ports:
+      - "3001:3000" # 3000 은 Next dev 서버가 사용
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - hanbit-grafana:/var/lib/grafana
+    depends_on:
+      - prometheus
+
 volumes:
   hanbit-mysql:
+  hanbit-prometheus:
+  hanbit-grafana:
