@@ -23,4 +23,14 @@ interface NotificationRepository : JpaRepository<Notification, String> {
     @Modifying
     @Query("delete from Notification n where n.userId = :userId and n.readAt is not null")
     fun deleteReadByUserId(@Param("userId") userId: Long): Int
+
+    /** 보존기간 정리 배치용 — 읽은 지 오래된 알림 삭제(읽은 시각 기준). */
+    @Modifying
+    @Query("delete from Notification n where n.readAt is not null and n.readAt < :cutoff")
+    fun deleteReadBefore(@Param("cutoff") cutoff: java.time.Instant): Int
+
+    /** 보존기간 정리 배치용 — 아주 오래된 미읽음 알림 삭제(생성 기준). */
+    @Modifying
+    @Query("delete from Notification n where n.readAt is null and n.createdAt < :cutoff")
+    fun deleteUnreadCreatedBefore(@Param("cutoff") cutoff: java.time.Instant): Int
 }
