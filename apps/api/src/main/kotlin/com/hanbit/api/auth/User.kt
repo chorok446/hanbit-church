@@ -22,6 +22,8 @@ class User(
     // 알림 유형별 수신 설정. 보안(새 기기 로그인)·운영(숨김/신고 처리) 알림은 설정과 무관하게 전달된다.
     @Column(name = "notify_comments", nullable = false) var notifyComments: Boolean = true,
     @Column(name = "notify_likes", nullable = false) var notifyLikes: Boolean = true,
+    // 관리자 비밀번호 초기화 후 강제 변경 대기. 비밀번호 변경 성공 시 해제된다.
+    @Column(name = "password_reset_required", nullable = false) @JsonIgnore var passwordResetRequired: Boolean = false,
     @Column(name = "deleted_at") @JsonIgnore var deletedAt: Instant? = null,
     // Report.targetType 과 같은 패턴: enum name 을 String 컬럼에 저장(UserRole 참조).
     @Column(nullable = false, length = 20) var role: String = UserRole.USER.name,

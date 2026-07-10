@@ -1,4 +1,4 @@
-import { apiGet, apiPatch } from "@/lib/api";
+import { apiGet, apiPatch, apiPost } from "@/lib/api";
 import type { ReportReason, ReportStatus, ReportTargetType } from "@/data/reports";
 
 export type AdminSummary = {
@@ -171,6 +171,13 @@ export function setPraiseRole(
   return apiPatch<AdminUserItem>(`/api/admin/users/${userId}/praise`, body);
 }
 
+export type AdminPasswordResetResponse = { userId: number; tempPassword: string };
+
+/** 비밀번호 초기화 — 임시 비밀번호는 이 응답에서만 노출된다(서버는 해시만 저장). ADMIN 전용. */
+export function resetAdminUserPassword(userId: number): Promise<AdminPasswordResetResponse> {
+  return apiPost<AdminPasswordResetResponse>(`/api/admin/users/${userId}/password-reset`, {});
+}
+
 /** 회원 정지(suspendedUntil 미래 시각) 또는 해제(null). 로그인·기존 토큰이 즉시 차단된다. */
 export function setAdminUserSuspension(
   userId: number,
@@ -188,6 +195,7 @@ export type AdminActionType =
   | "USER_UNSUSPENDED"
   | "ROLE_CHANGED"
   | "USER_APPROVED"
+  | "PASSWORD_RESET"
   | "USER_REJECTED"
   | "PRAISE_ROLE_CHANGED";
 

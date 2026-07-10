@@ -11,6 +11,7 @@ fun User.toProfile() = UserProfileResponse(
     notifyEventUpdates = notifyEventUpdates,
     notifyComments = notifyComments,
     notifyLikes = notifyLikes,
+    passwordChangeRequired = passwordResetRequired,
     role = role,
     praiseRole = praiseRole,
     praiseParts = praiseParts.orEmpty(),
@@ -23,4 +24,5 @@ fun User.toAuthorSnapshot() = Author(
     profileImageUrl = profileImageUrl,
 )
 
-fun User.toAuthResponse(token: String) = AuthResponse(token = token, name = name, verified = verified)
+fun User.toAuthResponse(token: String) =
+    AuthResponse(token = token, name = name, verified = verified, passwordChangeRequired = passwordResetRequired)

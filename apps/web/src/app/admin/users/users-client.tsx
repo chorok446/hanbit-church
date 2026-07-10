@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, Loader2, Music, Search, ShieldBan, ShieldCheck, BadgeCheck, UserCog } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, KeyRound, Loader2, Music, Search, ShieldBan, ShieldCheck, BadgeCheck, UserCog, X } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
 import { StatePanel } from "@/components/ui/state-panel";
 import { useConfirm } from "@/components/ui/confirm-dialog";
@@ -13,6 +13,7 @@ import { useAdminProfile } from "@/app/admin/admin-guard";
 import { USER_ROLE_LABELS } from "@/app/admin/permissions";
 import {
   fetchAdminUsers,
+  resetAdminUserPassword,
   setAdminUserRole,
   setAdminUserSuspension,
   setPraiseRole,
@@ -221,6 +222,8 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
   const [days, setDays] = useState<string>("7");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
+  // 초기화 직후 임시 비밀번호 — 이 응답에서만 볼 수 있어 닫기 전까지 유지한다.
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
   // 제재 대상이 아닌 계정(관리자/탈퇴)은 조작 UI를 숨긴다.
   const actionable = !user.deleted && user.role !== "ADMIN";
 
@@ -265,6 +268,36 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
       toast.error(e instanceof ApiError ? apiErrorMessage(e, "정지 처리에 실패했습니다.") : "정지 처리에 실패했습니다.");
     } finally {
       setBusy(false);
+    }
+  };
+
+  const resetPassword = async () => {
+    if (busy) return;
+    const ok = await confirm({
+      title: `${user.name}님의 비밀번호를 초기화할까요?`,
+      message: "기존 비밀번호는 즉시 사용할 수 없게 되고, 임시 비밀번호가 한 번만 표시됩니다. 본인에게 직접 전달해주세요.",
+      confirmLabel: "초기화",
+      destructive: true,
+    });
+    if (!ok) return;
+    setBusy(true);
+    try {
+      const result = await resetAdminUserPassword(user.id);
+      setTempPassword(result.tempPassword);
+    } catch (e) {
+      toast.error(e instanceof ApiError ? apiErrorMessage(e, "비밀번호 초기화에 실패했습니다.") : "비밀번호 초기화에 실패했습니다.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const copyTempPassword = async () => {
+    if (!tempPassword) return;
+    try {
+      await navigator.clipboard.writeText(tempPassword);
+      toast.success("임시 비밀번호를 복사했습니다.");
+    } catch {
+      toast.error("복사에 실패했습니다. 직접 선택해 복사해주세요.");
     }
   };
 
@@ -353,6 +386,18 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
               </select>
             </label>
           )}
+          {actionable && (
+            <button
+              type="button"
+              onClick={resetPassword}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] disabled:opacity-50"
+              style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+            >
+              {busy ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <KeyRound size={14} aria-hidden />}
+              비밀번호 초기화
+            </button>
+          )}
           {actionable &&
           (user.suspended ? (
             <button
@@ -400,6 +445,39 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
               </button>
             </>
           ))}
+        </div>
+      )}
+
+      {tempPassword && (
+        <div
+          className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border p-4"
+          role="status"
+          style={{ borderColor: "var(--accent)", background: "var(--accent-soft)" }}
+        >
+          <span className="text-[13px]" style={{ color: "var(--foreground)" }}>
+            임시 비밀번호(한 번만 표시):
+          </span>
+          <code className="rounded-lg px-2.5 py-1 font-mono text-[14px] tracking-wide" style={{ background: "var(--card)", color: "var(--heading)" }}>
+            {tempPassword}
+          </code>
+          <button
+            type="button"
+            onClick={() => void copyTempPassword()}
+            className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[12px]"
+            style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+          >
+            <Copy size={12} aria-hidden />
+            복사
+          </button>
+          <button
+            type="button"
+            onClick={() => setTempPassword(null)}
+            aria-label="임시 비밀번호 닫기"
+            className="ml-auto inline-flex items-center rounded-full border p-1.5"
+            style={{ borderColor: "var(--border)", color: "var(--foreground-muted)" }}
+          >
+            <X size={13} aria-hidden />
+          </button>
         </div>
       )}
 

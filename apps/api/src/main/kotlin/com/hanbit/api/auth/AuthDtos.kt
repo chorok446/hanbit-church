@@ -21,7 +21,13 @@ data class LoginRequest(
 )
 
 @Schema(description = "인증 응답. token 은 이후 요청에 Bearer 로 사용한다.")
-data class AuthResponse(val token: String, val name: String, val verified: Boolean)
+data class AuthResponse(
+    val token: String,
+    val name: String,
+    val verified: Boolean,
+    @field:Schema(description = "임시 비밀번호 사용 중 — 비밀번호 변경 안내 필요")
+    val passwordChangeRequired: Boolean = false,
+)
 
 @Schema(description = "회원가입 승인 대기 응답(승인제). 토큰은 발급되지 않는다.")
 data class SignupPendingResponse(val pendingApproval: Boolean = true, val name: String)
@@ -42,6 +48,8 @@ data class UserProfileResponse(
     val notifyEventUpdates: Boolean = true,
     val notifyComments: Boolean = true,
     val notifyLikes: Boolean = true,
+    @field:Schema(description = "임시 비밀번호 사용 중 — 비밀번호 변경 안내 필요")
+    val passwordChangeRequired: Boolean = false,
     @field:Schema(description = "역할", allowableValues = ["USER", "ADMIN"])
     val role: String = "USER",
     @field:Schema(description = "찬양팀 역할(LEADER/MEMBER/GUEST). null = 찬양팀 아님")

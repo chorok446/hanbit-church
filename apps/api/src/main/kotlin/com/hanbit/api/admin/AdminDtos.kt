@@ -201,3 +201,10 @@ data class AdminContentPageResponse(
     val totalElements: Long,
     val totalPages: Int,
 )
+
+@Schema(description = "비밀번호 초기화 응답 — 임시 비밀번호는 이 응답에서만 노출된다")
+data class AdminPasswordResetResponse(
+    val userId: Long,
+    @field:Schema(description = "한 번만 표시되는 임시 비밀번호. 서버는 해시만 저장한다")
+    val tempPassword: String,
+)

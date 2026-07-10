@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
@@ -27,6 +28,7 @@ class AdminUserService(
     private val posts: PostRepository,
     private val events: EventRepository,
     private val actionLogs: AdminActionLogService,
+    private val encoder: PasswordEncoder,
     private val clock: Clock,
 ) {
     @Transactional(readOnly = true)
@@ -225,6 +227,36 @@ class AdminUserService(
         return user.toAdminResponse(now)
     }
 
+    /**
+     * 비밀번호 초기화 — 이메일 인프라 없이 쓰는 복구 경로. 임시 비밀번호를 생성해 응답으로 한 번만
+     * 돌려주고(저장·로그 금지) 강제 변경 플래그를 세운다. 사용자는 다음 비밀번호 변경 때 해제된다.
+     * 관리자 계정은 대상이 될 수 없다 — 다른 관리자의 계정을 이 API 로 탈취하는 경로를 막는다.
+     */
+    @Transactional
+    fun resetPassword(adminUserId: Long, userId: Long): AdminPasswordResetResponse {
+        val user = users.findById(userId).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
+        }
+        if (user.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
+        }
+        if (user.isAdmin) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "cannot reset an admin account's password")
+        }
+        val tempPassword = generateTempPassword()
+        user.passwordHash = encoder.encode(tempPassword)!!
+        user.passwordResetRequired = true
+        // detail 에 임시 비밀번호를 남기지 않는다 — 감사 로그는 누가/누구를 만 기록한다.
+        actionLogs.record(adminUserId, AdminActionType.PASSWORD_RESET, TARGET_TYPE_USER, userId.toString())
+        return AdminPasswordResetResponse(userId = userId, tempPassword = tempPassword)
+    }
+
+    /** 혼동 문자(0/O, 1/l/I)를 뺀 영대소문자·숫자 12자리. SecureRandom 기반. */
+    private fun generateTempPassword(): String =
+        (1..TEMP_PASSWORD_LENGTH)
+            .map { TEMP_PASSWORD_ALPHABET[SECURE_RANDOM.nextInt(TEMP_PASSWORD_ALPHABET.length)] }
+            .joinToString("")
+
     /** 감사 로그용 정지 요약. AuthService 의 로그인 안내와 같은 기준(50년 초과 = 영구)으로 표기한다. */
     private fun suspensionDetail(until: Instant, now: Instant, reason: String?): String {
         val period = if (until.isAfter(now.plus(java.time.Duration.ofDays(365L * 50)))) {
@@ -254,6 +286,9 @@ class AdminUserService(
     )
 
     private companion object {
+        val SECURE_RANDOM = java.security.SecureRandom()
+        const val TEMP_PASSWORD_LENGTH = 12
+        const val TEMP_PASSWORD_ALPHABET = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789"
         const val TARGET_TYPE_USER = "USER"
         const val MAX_PAGE_SIZE = 100
         const val MAX_QUERY_LENGTH = 100
