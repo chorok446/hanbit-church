@@ -43,12 +43,34 @@ class UserProfileService(
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id")),
         )
         return PublicUserPageResponse(
-            content = result.content.map { toPublicUser(it, viewerId) },
+            content = toPublicUsersBulk(result.content, viewerId),
             page = result.number,
             size = result.size,
             totalElements = result.totalElements,
             totalPages = result.totalPages,
         )
+    }
+
+    /**
+     * 목록 매핑 — 게시글 수(group by)·차단 상태(IN)를 각 1쿼리로 bulk 조회한다.
+     * 기존에는 사용자마다 count + exists 2쿼리가 나가 page 100 기준 요청당 200 쿼리였다.
+     */
+    private fun toPublicUsersBulk(pageUsers: List<User>, viewerId: Long?): List<PublicUserResponse> {
+        if (pageUsers.isEmpty()) return emptyList()
+        val ids = pageUsers.map { requireNotNull(it.id) }
+        val postCounts = posts.countByAuthorUserIdsAndAnonymousFalse(ids).associate { it.authorUserId to it.count }
+        val blockedIds = viewerId?.let { userBlocks.findBlockedIdsAmong(it, ids).toSet() }
+        return pageUsers.map { user ->
+            val id = requireNotNull(user.id)
+            PublicUserResponse(
+                id = id,
+                name = user.name,
+                verified = user.verified,
+                profileImageUrl = user.profileImageUrl,
+                postCount = postCounts[id] ?: 0,
+                blockedByMe = blockedIds?.contains(id),
+            )
+        }
     }
 
     private fun toPublicUser(user: User, viewerId: Long?): PublicUserResponse {

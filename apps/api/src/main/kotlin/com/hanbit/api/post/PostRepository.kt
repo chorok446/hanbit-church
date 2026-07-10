@@ -53,6 +53,15 @@ interface PostRepository : JpaRepository<Post, String> {
     ): Page<Post>
     fun countByAuthorUserIdAndAnonymousFalse(authorUserId: Long): Long
 
+    /** 사용자 목록 매핑용 bulk 집계 — 사용자별 공개 게시글 수(익명 기도 제외). 사용자당 count N+1 방지. */
+    @Query(
+        """
+        select new com.hanbit.api.post.AuthorPostCount(p.authorUserId, count(p))
+        from Post p where p.authorUserId in :userIds and p.anonymous = false group by p.authorUserId
+        """,
+    )
+    fun countByAuthorUserIdsAndAnonymousFalse(@Param("userIds") userIds: Collection<Long>): List<AuthorPostCount>
+
     fun findAllByIdInAndHiddenAtIsNullOrderBySeqDesc(ids: Collection<String>): List<Post>
 
     /** 상호작용 동시성 방어용 write lock 조회. like/bookmark/comment 트랜잭션을 게시글별로 직렬화. */
