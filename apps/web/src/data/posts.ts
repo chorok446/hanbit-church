@@ -201,6 +201,8 @@ export type Post = {
   visibility?: "PUBLIC" | "MEMBERS";
   /** 공지·주보 상단 고정 여부(서버 pinnedAt 기준). */
   pinned?: boolean;
+  /** 예약 게시 시각(ISO) — 예약 글 작성자·관리자 확인용. */
+  publishAt?: string | null;
 };
 
 /**
