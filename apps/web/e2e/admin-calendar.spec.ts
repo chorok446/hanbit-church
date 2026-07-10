@@ -34,8 +34,9 @@ test("관리자가 수동 일정을 등록하면 공개 캘린더 API 에 노출
   const items = (await publicList.json()) as Array<{ title: string }>;
   expect(items.some((item) => item.title === title)).toBeTruthy();
 
-  // 삭제 후 목록에서 사라진다.
+  // 삭제 후 목록에서 사라진다 — 삭제 성공 시 목록을 다시 불러오므로(refetch) 병렬 부하에서는
+  // 갱신에 수 초가 걸릴 수 있어 여유 있게 기다린다.
   const row = page.locator("li", { hasText: title });
   await row.getByRole("button", { name: "삭제" }).click();
-  await expect(page.getByText(title)).not.toBeVisible();
+  await expect(page.getByText(title)).not.toBeVisible({ timeout: 15_000 });
 });

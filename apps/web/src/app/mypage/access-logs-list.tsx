@@ -33,7 +33,6 @@ export function maskIpForDisplay(ip: string): string {
   return trimmed; // 형식을 모르는 값(예: "알 수 없음")은 그대로 표시
 }
 
-// TODO(접속 기록): 백엔드가 세션 식별자를 내려주면 "현재 세션" 배지를 표시한다 — 지금은 식별 데이터가 없어 생략.
 function AccessLogRow({ item }: { item: AccessLogItem }) {
   return (
     <article
@@ -46,6 +45,14 @@ function AccessLogRow({ item }: { item: AccessLogItem }) {
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
+          {item.currentSession ? (
+            <span
+              className="rounded-full px-2.5 py-1 text-[11px] font-medium"
+              style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}
+            >
+              현재 세션
+            </span>
+          ) : null}
           <span
             className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px]"
             style={{ background: "var(--accent-soft)", color: "var(--accent-secondary)" }}

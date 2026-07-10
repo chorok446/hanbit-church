@@ -26,18 +26,18 @@ class AccountService(
     private val clock: Clock,
 ) {
     @Transactional
-    fun updateProfile(userId: Long, req: UpdateProfileRequest): UpdateProfileResponse {
+    fun updateProfile(userId: Long, req: UpdateProfileRequest, sessionId: String? = null): UpdateProfileResponse {
         val user = repo.findActiveOrThrow(userId)
         user.name = normalizeName(req.name)
         user.profileImageUrl = normalizeProfileImageUrl(req.profileImageUrl)
         user.notifyEventUpdates = req.notifyEventUpdates
         // 기존 작성물의 author snapshot 도 최신 이름·이미지로 맞춘다.
         authorSnapshot.syncProfile(userId, user.name, user.profileImageUrl)
-        return UpdateProfileResponse(token = jwt.issue(user), profile = user.toProfile())
+        return UpdateProfileResponse(token = jwt.issue(user, sessionId), profile = user.toProfile())
     }
 
     @Transactional
-    fun changePassword(userId: Long, req: ChangePasswordRequest): ChangePasswordResponse {
+    fun changePassword(userId: Long, req: ChangePasswordRequest, sessionId: String? = null): ChangePasswordResponse {
         val user = repo.findActiveOrThrow(userId)
         if (req.currentPassword.isBlank()) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "current password is required")
@@ -50,11 +50,11 @@ class AccountService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "new password must be different")
         }
         user.passwordHash = encoder.encode(req.newPassword)!!
-        return ChangePasswordResponse(changed = true, token = jwt.issue(user))
+        return ChangePasswordResponse(changed = true, token = jwt.issue(user, sessionId))
     }
 
     @Transactional
-    fun changeEmail(userId: Long, req: ChangeEmailRequest): ChangeEmailResponse {
+    fun changeEmail(userId: Long, req: ChangeEmailRequest, sessionId: String? = null): ChangeEmailResponse {
         val user = repo.findActiveOrThrow(userId)
         if (req.currentPassword.isBlank()) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "current password is required")
@@ -78,7 +78,7 @@ class AccountService(
             // 사전 중복 체크 뒤 발생한 동시 변경 경쟁도 DB unique 제약 기준으로 409 처리한다.
             throw ResponseStatusException(HttpStatus.CONFLICT, "email already registered")
         }
-        return ChangeEmailResponse(email = user.email, name = user.name, token = jwt.issue(user))
+        return ChangeEmailResponse(email = user.email, name = user.name, token = jwt.issue(user, sessionId))
     }
 
     @Transactional

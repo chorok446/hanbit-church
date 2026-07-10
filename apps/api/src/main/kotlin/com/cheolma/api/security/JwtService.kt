@@ -26,11 +26,13 @@ class JwtService(
 
     private val key = Keys.hmacShaKeyFor(secret.toByteArray())
 
-    fun issue(user: User): String =
+    /** sessionId(sid)는 로그인 세션 식별자 — 접속 기록 "현재 세션" 표시용. null 이면 claim 을 싣지 않는다. */
+    fun issue(user: User, sessionId: String? = null): String =
         Jwts.builder()
             .subject(user.id.toString())
             .claim("name", user.name)
             .claim("verified", user.verified)
+            .apply { if (sessionId != null) claim("sid", sessionId) }
             .issuedAt(Date())
             .expiration(Date(System.currentTimeMillis() + ttlMillis))
             .signWith(key)
@@ -40,10 +42,11 @@ class JwtService(
      * refresh token. access 와 같은 키로 서명하되 typ=refresh 로 구분해 access 자리에 쓰이지 못하게 한다
      * (parse 가 거절). 사용자 최신 상태는 refresh 시점에 DB 에서 다시 읽으므로 claim 은 subject 만 둔다.
      */
-    fun issueRefresh(user: User): String =
+    fun issueRefresh(user: User, sessionId: String? = null): String =
         Jwts.builder()
             .subject(user.id.toString())
             .claim("typ", "refresh")
+            .apply { if (sessionId != null) claim("sid", sessionId) }
             .issuedAt(Date())
             .expiration(Date(System.currentTimeMillis() + refreshTtlMillis))
             .signWith(key)
@@ -53,14 +56,16 @@ class JwtService(
     fun parse(token: String): AuthUser {
         val c = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).payload
         require(c["typ"] != "refresh") { "refresh token cannot be used as access token" }
-        return AuthUser(c.subject.toLong(), c["name"] as String, c["verified"] as Boolean)
+        return AuthUser(c.subject.toLong(), c["name"] as String, c["verified"] as Boolean, c["sid"] as? String)
     }
 
-    /** refresh token 검증 → userId. typ=refresh 가 아니면(access 토큰이면) 예외. */
-    fun parseRefresh(token: String): Long {
+    data class RefreshClaims(val userId: Long, val sessionId: String?)
+
+    /** refresh token 검증 → userId + 세션 id. typ=refresh 가 아니면(access 토큰이면) 예외. */
+    fun parseRefresh(token: String): RefreshClaims {
         val c = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).payload
         require(c["typ"] == "refresh") { "not a refresh token" }
-        return c.subject.toLong()
+        return RefreshClaims(c.subject.toLong(), c["sid"] as? String)
     }
 
     /** 토큰의 남은 만료 시간(초). 이미 만료면 0. denylist TTL 산정에 쓴다. 유효하지 않으면 예외. */

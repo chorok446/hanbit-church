@@ -44,14 +44,14 @@ class AuthController(
         val result = authService.signup(req)
         val tokens = result.tokens
             ?: return SignupPendingResponse(name = result.user.name)
-        accessLogService.record(tokens.userId, ClientRequestInfo.from(http))
+        accessLogService.record(tokens.userId, ClientRequestInfo.from(http), tokens.sessionId)
         return res.setAuthCookies(tokens)
     }
 
     @Operation(summary = "로그인")
     @PostMapping("/login")
     fun login(@RequestBody req: LoginRequest, http: HttpServletRequest, res: HttpServletResponse): AuthResponse =
-        res.setAuthCookies(authService.login(req).also { accessLogService.record(it.userId, ClientRequestInfo.from(http)) })
+        res.setAuthCookies(authService.login(req).also { accessLogService.record(it.userId, ClientRequestInfo.from(http), it.sessionId) })
 
     @Operation(summary = "토큰 재발급. refresh 쿠키로 access·refresh 를 재발급한다(rotation).")
     @PostMapping("/refresh")
@@ -59,7 +59,7 @@ class AuthController(
         val refreshToken = req.refreshCookieToken()
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "no refresh token")
         val tokens = authService.refresh(refreshToken)
-        accessLogService.record(tokens.userId, ClientRequestInfo.from(req))
+        accessLogService.record(tokens.userId, ClientRequestInfo.from(req), tokens.sessionId)
         return res.setAuthCookies(tokens)
     }
 
@@ -96,7 +96,8 @@ class AuthController(
         @AuthenticationPrincipal principal: AuthUser?,
         page: Int = 0,
         size: Int = 20,
-    ): AccessLogPageResponse = accessLogService.listForUser(requireUserId(principal), page, size)
+    ): AccessLogPageResponse =
+        accessLogService.listForUser(requireUserId(principal), page, size, principal?.sessionId)
 
     // 프로필/비밀번호/이메일 변경은 claim 이 갱신된 토큰을 재발급한다 → 인증 쿠키도 함께 교체한다.
 
@@ -108,7 +109,7 @@ class AuthController(
         @RequestBody req: UpdateProfileRequest,
         res: HttpServletResponse,
     ): UpdateProfileResponse =
-        accountService.updateProfile(requireUserId(principal), req).also { res.setAuthCookie(it.token) }
+        accountService.updateProfile(requireUserId(principal), req, principal?.sessionId).also { res.setAuthCookie(it.token) }
 
     @Operation(summary = "비밀번호 변경")
     @SecurityRequirement(name = "bearerAuth")
@@ -118,7 +119,7 @@ class AuthController(
         @RequestBody req: ChangePasswordRequest,
         res: HttpServletResponse,
     ): ChangePasswordResponse =
-        accountService.changePassword(requireUserId(principal), req).also { result ->
+        accountService.changePassword(requireUserId(principal), req, principal?.sessionId).also { result ->
             result.token?.let { res.setAuthCookie(it) }
         }
 
@@ -130,7 +131,7 @@ class AuthController(
         @RequestBody req: ChangeEmailRequest,
         res: HttpServletResponse,
     ): ChangeEmailResponse =
-        accountService.changeEmail(requireUserId(principal), req).also { res.setAuthCookie(it.token) }
+        accountService.changeEmail(requireUserId(principal), req, principal?.sessionId).also { res.setAuthCookie(it.token) }
 
     @Operation(summary = "계정 탈퇴")
     @SecurityRequirement(name = "bearerAuth")
