@@ -1,12 +1,24 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
 import { motion } from "motion/react";
 import { useTheme } from "@/lib/theme-context";
 
+// hydration 완료 여부. useAuthSession 과 같은 패턴 — 이펙트 내 setState 없이
+// 서버 스냅샷(false)/클라이언트 스냅샷(true)으로 첫 렌더를 SSR 과 일치시킨다.
+const noopSubscribe = () => () => {};
+function useHydrated() {
+  return useSyncExternalStore(noopSubscribe, () => true, () => false);
+}
+
 export function ThemeToggle() {
   const { theme, toggle } = useTheme();
-  const dark = theme === "dark";
+  const hydrated = useHydrated();
+  // 첫 클라이언트 렌더는 SSR(항상 light)과 동일해야 한다 — localStorage 가 dark 여도
+  // hydration 이 끝난 뒤에 실제 테마로 갱신한다. 안 그러면 aria-label/아이콘 불일치로
+  // React #418(전체 트리 클라이언트 재생성)이 다크 사용자 매 로드마다 발생한다.
+  const dark = hydrated && theme === "dark";
   return (
     <button
       onClick={toggle}
