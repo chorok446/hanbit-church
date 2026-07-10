@@ -61,7 +61,7 @@ class User(
  * - CONTENT: 콘텐츠 관리자 — 공지·주보·설교 작성
  * 경로별 접근 매핑은 SecurityConfig, 카테고리 권한은 PostService 참조.
  */
-/** 찬양팀 역할. 권한 변경은 관리자 감사 로그 대상(TODO: AdminActionType 에 PRAISE_ROLE_CHANGED 추가 검토). */
+/** 찬양팀 역할. 권한 변경은 감사 로그(AdminActionType.PRAISE_ROLE_CHANGED)에 남는다. */
 enum class PraiseRole { LEADER, MEMBER, GUEST }
 
 /** 찬양팀 파트(복수 보유 가능). */
