@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "Calendar", description = "교회 일정(수동 등록) 조회")
 class CalendarController(
     private val service: ManualCalendarService,
+    private val ics: CalendarIcsService,
 ) {
     @Operation(summary = "수동 일정 목록 (공개). from/to(yyyy-MM-dd)로 범위 제한 가능")
     @GetMapping
@@ -29,6 +30,13 @@ class CalendarController(
         @RequestParam(required = false) from: String?,
         @RequestParam(required = false) to: String?,
     ): List<ManualCalendarEventResponse> = service.list(from, to)
+
+    @Operation(summary = "iCalendar(.ics) 구독 피드 — 수동 일정 + 공개 행사(진행 기간)")
+    @GetMapping("/ics", produces = ["text/calendar;charset=UTF-8"])
+    fun icsFeed(): org.springframework.http.ResponseEntity<String> =
+        org.springframework.http.ResponseEntity.ok()
+            .header("Content-Disposition", "inline; filename=cheolma-church.ics")
+            .body(ics.buildFeed())
 }
 
 /** 수동 일정 관리 — ADMIN·OPERATOR (SecurityConfig 참조). */

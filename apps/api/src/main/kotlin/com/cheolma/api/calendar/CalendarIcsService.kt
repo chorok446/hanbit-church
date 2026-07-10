@@ -1,0 +1,88 @@
+package com.cheolma.api.calendar
+
+import com.cheolma.api.event.EventRepository
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+
+/**
+ * 교회 일정 iCalendar(.ics) 피드 — 구글/애플 캘린더에서 URL 구독 가능.
+ * 포함: 수동 일정(절기·심방 등) + 공개 행사(진행 기간, 숨김·삭제 제외).
+ * RFC 5545 최소 구현 — 종일 일정(VALUE=DATE)만 쓰므로 타임존 블록이 필요 없다.
+ */
+@Service
+class CalendarIcsService(
+    private val manualEvents: ManualCalendarEventRepository,
+    private val events: EventRepository,
+) {
+    @Transactional(readOnly = true)
+    fun buildFeed(): String {
+        val lines = mutableListOf(
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//cheolma-church//calendar//KO",
+            "CALSCALE:GREGORIAN",
+            "X-WR-CALNAME:철마제일교회 일정",
+        )
+
+        manualEvents.findAllByOrderByStartDateAscIdAsc().forEach { item ->
+            lines += vevent(
+                uid = "manual-${item.id}@cheolma-church",
+                summary = item.title,
+                startDate = item.startDate,
+                endDate = item.endDate,
+                description = listOfNotNull(item.startTime, item.location).joinToString(" · ").ifBlank { null },
+                location = item.location,
+            )
+        }
+
+        // 공개 행사 — 진행 기간을 종일 일정으로. 숨김/삭제는 목록·검색과 같은 기준으로 제외.
+        events.findAll()
+            .filter { it.hiddenAt == null && it.deletedAt == null }
+            .forEach { event ->
+                lines += vevent(
+                    uid = "event-${event.id}@cheolma-church",
+                    summary = event.title,
+                    startDate = event.runStart,
+                    endDate = event.runEnd.takeIf { it != event.runStart },
+                    description = event.summary.ifBlank { null },
+                    location = event.place,
+                )
+            }
+
+        lines += "END:VCALENDAR"
+        // RFC 5545 는 CRLF 를 요구한다.
+        return lines.joinToString("\r\n", postfix = "\r\n")
+    }
+
+    private fun vevent(
+        uid: String,
+        summary: String,
+        startDate: String,
+        endDate: String?,
+        description: String?,
+        location: String?,
+    ): List<String> {
+        val start = startDate.replace("-", "")
+        // DTEND(VALUE=DATE) 는 exclusive — 마지막 날 포함을 위해 +1일.
+        val endExclusive = java.time.LocalDate.parse(endDate ?: startDate).plusDays(1)
+            .toString().replace("-", "")
+        return buildList {
+            add("BEGIN:VEVENT")
+            add("UID:$uid")
+            add("DTSTAMP:19700101T000000Z") // 결정적 출력(테스트·캐시 친화) — 내용 변경은 UID 단위로 갱신된다.
+            add("DTSTART;VALUE=DATE:$start")
+            add("DTEND;VALUE=DATE:$endExclusive")
+            add("SUMMARY:${escape(summary)}")
+            description?.let { add("DESCRIPTION:${escape(it)}") }
+            location?.let { add("LOCATION:${escape(it)}") }
+            add("END:VEVENT")
+        }
+    }
+
+    /** RFC 5545 TEXT 이스케이프 — 백슬래시·세미콜론·콤마·개행. */
+    private fun escape(value: String): String = value
+        .replace("\\", "\\\\")
+        .replace(";", "\\;")
+        .replace(",", "\\,")
+        .replace("\n", "\\n")
+}
