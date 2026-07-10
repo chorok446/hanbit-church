@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, ArrowRight } from "lucide-react";
@@ -8,21 +8,41 @@ import { toast } from "sonner";
 import { AuthShell, FieldInput } from "@/components/auth-shell";
 import { apiPost, ApiError, apiErrorMessage } from "@/lib/api";
 import { setSession } from "@/lib/auth";
+import { CHURCH } from "@/data/church";
+
+// '이메일 기억하기' 저장 키 — 이메일만 저장한다(비밀번호·토큰 아님).
+const REMEMBER_EMAIL_KEY = "hanbit.login-email";
 
 type AuthResponse = { token: string; name: string; verified: boolean; passwordChangeRequired?: boolean };
 type LoginResponse = AuthResponse | { twoFactorRequired: true; challengeToken: string };
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  // 저장된 이메일 — hydration 중엔 서버 스냅샷(null)이라 SSR 과 첫 렌더가 일치하고,
+  // 직후 재렌더에서 값이 반영된다(theme-toggle 과 같은 패턴, effect-setState 금지 규칙 준수).
+  const savedEmail = useSyncExternalStore(
+    () => () => {},
+    () => localStorage.getItem(REMEMBER_EMAIL_KEY),
+    () => null,
+  );
+  // 사용자가 입력을 시작하기 전까지는 저장값을 표시한다(null = 아직 미입력).
+  const [emailInput, setEmailInput] = useState<string | null>(null);
+  const email = emailInput ?? savedEmail ?? "";
+  const setEmail = (value: string) => setEmailInput(value);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [rememberInput, setRememberInput] = useState<boolean | null>(null);
+  const rememberEmail = rememberInput ?? savedEmail != null;
+  const [showRecoveryHint, setShowRecoveryHint] = useState(false);
   // 2단계 인증 — 1단계 통과 후 challengeToken 을 들고 코드 입력 단계로 전환한다.
   const [challengeToken, setChallengeToken] = useState<string | null>(null);
   const [otpCode, setOtpCode] = useState("");
 
   const finishLogin = (res: AuthResponse) => {
+    // '이메일 기억하기' — 로그인 성공 시점에만 저장/삭제한다(실패한 시도는 기록하지 않음).
+    if (rememberEmail) localStorage.setItem(REMEMBER_EMAIL_KEY, email.trim());
+    else localStorage.removeItem(REMEMBER_EMAIL_KEY);
     setSession(res.name);
     // 임시 비밀번호 로그인 — 바로 비밀번호 변경으로 안내한다(계정 탭 배너와 짝).
     if (res.passwordChangeRequired) {
@@ -158,10 +178,29 @@ export default function LoginPage() {
 
         <div className="flex items-center justify-between text-[13px]" style={{ color: "rgba(var(--ink-rgb), 0.8)" }}>
           <label className="flex cursor-pointer items-center gap-2">
-            <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" />
+            <input
+              type="checkbox"
+              checked={rememberEmail}
+              onChange={(e) => setRememberInput(e.target.checked)}
+              className="h-4 w-4 accent-[var(--accent)]"
+            />
             이메일 기억하기
           </label>
+          <button
+            type="button"
+            onClick={() => setShowRecoveryHint((v) => !v)}
+            aria-expanded={showRecoveryHint}
+            className="underline-offset-4 hover:underline"
+          >
+            비밀번호를 잊으셨나요?
+          </button>
         </div>
+        {showRecoveryHint ? (
+          <p className="rounded-xl border px-4 py-3 text-[13px] leading-6" style={{ borderColor: "var(--border)", background: "var(--card)", color: "var(--foreground)" }}>
+            교회 사무실({CHURCH.phone})로 문의해주세요. 본인 확인 후 임시 비밀번호를 발급해 드리며, 로그인 후 새
+            비밀번호로 변경하시면 됩니다.
+          </p>
+        ) : null}
 
         <button
           type="submit"
