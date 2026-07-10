@@ -54,6 +54,8 @@ export default function PostCreateClient() {
 
   const [values, setValues] = useState<PostComposeValues>(EMPTY_VALUES);
   const [category, setCategory] = useState<PostCategory>("SHARING");
+  // 익명 기도제목(PRAYER 전용) — 서버가 공개 응답에서 작성자를 마스킹한다.
+  const [anonymous, setAnonymous] = useState(false);
   const [attachments, setAttachments] = useState<PostAttachment[]>([]);
   const [events, setEvents] = useState<{ id: string; title: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -169,6 +171,8 @@ export default function PostCreateClient() {
         category: effectiveCategory,
         // 첨부는 스태프 카테고리(공지·주보·설교)에서만 — 서버 normalizeAttachments 와 동일.
         attachments: isStaffWriteCategory(effectiveCategory) ? attachments : [],
+        // 익명은 기도 카테고리에서만 유효 — 서버 검증과 동일 조건으로만 실어 보낸다.
+        anonymous: effectiveCategory === "PRAYER" && anonymous,
       });
       if (getSessionId() !== requestToken) return;
       clearDraft();
@@ -271,9 +275,8 @@ export default function PostCreateClient() {
                   내용은 빼고 작성해 주세요.
                 </div>
 
-                {/* TODO(백엔드: posts.visibility/anonymous 필드·접근 제어 도입 시 활성화)
-                    아래 공개 범위·익명 컨트롤은 아직 서버 스키마가 없어 "전체 공개"만 동작한다.
-                    준비 중 옵션을 활성화하려면 백엔드 필드 추가 후 payload 에 함께 실어야 한다. */}
+                {/* TODO(백엔드: posts.visibility 접근 제어 도입 시 공개 범위 활성화)
+                    공개 범위 컨트롤은 아직 서버 스키마가 없어 "전체 공개"만 동작한다. */}
                 <div>
                   <label htmlFor="post-visibility" className="mb-2 block text-[12px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
                     공개 범위
@@ -299,9 +302,15 @@ export default function PostCreateClient() {
                   </select>
                 </div>
 
-                <label className="flex items-center gap-2 text-[13px] opacity-60" style={{ color: "var(--foreground)" }}>
-                  <input type="checkbox" disabled checked={false} readOnly className="accent-[var(--accent-strong)]" />
-                  익명으로 올리기 (준비 중)
+                <label className="flex cursor-pointer items-center gap-2 text-[13px]" style={{ color: "var(--foreground)" }}>
+                  <input
+                    type="checkbox"
+                    checked={anonymous}
+                    onChange={(e) => setAnonymous(e.target.checked)}
+                    disabled={submitting}
+                    className="h-4 w-4 accent-[var(--accent-strong)]"
+                  />
+                  익명으로 올리기 — 작성자가 &ldquo;익명&rdquo;으로 표시됩니다
                 </label>
               </div>
             ) : null}

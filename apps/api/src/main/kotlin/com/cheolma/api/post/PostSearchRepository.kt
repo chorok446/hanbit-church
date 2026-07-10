@@ -53,7 +53,11 @@ class QuerydslPostSearchRepository(
             val pattern = literalContainsPattern(query)
             predicates.and(
                 post.text.lower().like(pattern, QUERYDSL_LIKE_ESCAPE)
-                    .or(post.author.name.lower().like(pattern, QUERYDSL_LIKE_ESCAPE)),
+                    // 작성자 이름 매칭은 익명 글 제외 — 이름 검색으로 익명 기도제목의 작성자가 유출되면 안 된다.
+                    .or(
+                        post.author.name.lower().like(pattern, QUERYDSL_LIKE_ESCAPE)
+                            .and(post.anonymous.isFalse),
+                    ),
             )
         }
         condition.categories?.takeIf { it.isNotEmpty() }?.let { categories ->
