@@ -29,6 +29,12 @@ test("시드 행사 상세를 열 수 있다", async ({ page }) => {
   await expect(page.getByRole("button", { name: "행사 목록" })).toBeVisible();
   // 구조화 데이터(JSON-LD) 회귀 가드
   await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(1);
+
+  // 행사 메뉴의 캘린더에 추가(.ics 다운로드) 링크
+  await page.getByRole("button", { name: "행사 메뉴" }).click();
+  const icsLink = page.getByRole("menuitem", { name: "캘린더에 추가" });
+  await expect(icsLink).toBeVisible();
+  await expect(icsLink).toHaveAttribute("href", /\/api\/events\/c1\/ics$/);
 });
 
 test("행사 목록 URL이 canonical 형태로 정규화된다", async ({ page }) => {

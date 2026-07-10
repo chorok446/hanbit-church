@@ -4,11 +4,12 @@ import { toast } from "sonner";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
-import { Flag, Link2, MoreHorizontal, Pencil, Trash2, Users, Bookmark } from "lucide-react";
+import { CalendarPlus, Flag, Link2, MoreHorizontal, Pencil, Trash2, Users, Bookmark } from "lucide-react";
 import { progressPercent } from "@/lib/progress";
 import { eventLifecycle, eventProgressLabel, type Event } from "@/data/events";
 import { Avatar } from "@/components/avatar";
 import { ReportButton, type ReportButtonHandle } from "@/components/report-button";
+import { getClientApiBaseUrl } from "@/lib/api-url";
 import { AdminModerationButton } from "@/components/admin-moderation-button";
 import { EventThumb } from "../event-thumb";
 
@@ -56,6 +57,8 @@ function EventActionsMenu({ eventId, canReport }: { eventId: string; canReport: 
     }
   };
 
+  const eventIcsUrl = (id: string) => `${getClientApiBaseUrl()}/api/events/${id}/ics`;
+
   const menuItemClass =
     "flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-[13px] transition-colors hover:bg-[rgba(var(--ink-rgb),0.05)]";
 
@@ -88,6 +91,17 @@ function EventActionsMenu({ eventId, canReport }: { eventId: string; canReport: 
           >
             <Link2 size={13} aria-hidden /> 링크 복사
           </button>
+          {/* 단건 .ics 다운로드 — 캘린더 앱이 일정으로 등록한다(공개 API 라 새 창 없이 즉시 받는다). */}
+          <a
+            role="menuitem"
+            href={eventIcsUrl(eventId)}
+            download={`event-${eventId}.ics`}
+            onClick={() => setOpen(false)}
+            className={menuItemClass}
+            style={{ color: "var(--foreground)" }}
+          >
+            <CalendarPlus size={13} aria-hidden /> 캘린더에 추가
+          </a>
           {canReport ? (
             <button
               type="button"

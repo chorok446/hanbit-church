@@ -27,6 +27,7 @@ class EventController(
     private val participantService: EventParticipantService,
     private val commentService: EventCommentService,
     private val proofService: EventProofService,
+    private val calendarIcs: com.hanbit.api.calendar.CalendarIcsService,
 ) {
     @Operation(summary = "행사 목록 조회", description = "공개 API. JWT 가 있으면 사용자별 참여/소유 상태를 포함한다.")
     @GetMapping
@@ -109,6 +110,13 @@ class EventController(
     @GetMapping("/{id}")
     fun get(@PathVariable id: String, @AuthenticationPrincipal user: AuthUser?): EventResponse =
         eventService.getEvent(id, user?.id)
+
+    @Operation(summary = "행사 .ics 다운로드", description = "공개 API. 캘린더 앱에 일정으로 추가할 수 있다. 숨김·삭제 행사는 404.")
+    @GetMapping("/{id}/ics", produces = ["text/calendar;charset=UTF-8"])
+    fun ics(@PathVariable id: String): org.springframework.http.ResponseEntity<String> =
+        org.springframework.http.ResponseEntity.ok()
+            .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"event-$id.ics\"")
+            .body(calendarIcs.buildSingleEvent(id))
 
     @Operation(summary = "참가자 목록 조회", description = "행사 개설자만 조회할 수 있다.")
     @SecurityRequirement(name = "bearerAuth")

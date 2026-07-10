@@ -58,6 +58,37 @@ class CalendarIcsService(
         return lines.joinToString("\r\n", postfix = "\r\n")
     }
 
+    /**
+     * 단건 행사 .ics — 행사 상세의 "캘린더에 추가" 다운로드용. 공개 상세와 같은 기준으로
+     * 숨김·삭제 행사는 404. 구독 피드와 같은 VEVENT 빌더를 재사용한다.
+     */
+    @Transactional(readOnly = true)
+    fun buildSingleEvent(eventId: String): String {
+        val event = events.findById(eventId).orElse(null)
+        if (event == null || event.hiddenAt != null || event.deletedAt != null) {
+            throw org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.NOT_FOUND,
+                "event $eventId not found",
+            )
+        }
+        val lines = mutableListOf(
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//hanbit-church//calendar//KO",
+            "CALSCALE:GREGORIAN",
+        )
+        lines += vevent(
+            uid = "event-${event.id}@hanbit-church",
+            summary = event.title,
+            startDate = event.runStart,
+            endDate = event.runEnd.takeIf { it != event.runStart },
+            description = event.summary.ifBlank { null },
+            location = event.place,
+        )
+        lines += "END:VCALENDAR"
+        return lines.joinToString("\r\n", postfix = "\r\n")
+    }
+
     private fun vevent(
         uid: String,
         summary: String,
