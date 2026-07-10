@@ -14,6 +14,7 @@ class AccessLogService(
     private val repo: UserAccessLogRepository,
     private val geoIp: GeoIpService,
     private val writer: AccessLogWriter,
+    private val notifications: com.cheolma.api.notification.NotificationService,
     private val clock: Clock,
 ) {
     /**
@@ -25,11 +26,33 @@ class AccessLogService(
         // 위치는 best-effort — 실패해도 로그인 흐름을 막지 않는다(GeoIpService 가 짧은 타임아웃으로 null 반환).
         val geo = geoIp.lookup(ip)
         val now = Instant.now(clock)
+        // 새 기기 판정은 INSERT 전에 한다 — 이력이 있는 사용자가 처음 보는 (IP, 브라우저) 조합이면 새 기기.
+        // 첫 로그인(이력 없음)은 계정 생성 직후라 알리지 않는다.
+        val browser = info.browser.take(32)
+        val isNewDevice = runCatching {
+            repo.existsByUserId(userId) && !repo.existsByUserIdAndIpAddressAndBrowser(userId, ip, browser)
+        }.getOrDefault(false)
         // 접속 기록 전체가 best-effort — INSERT/보존기간 삭제가 실패(데드락 등)해도 로그인을 500 으로 만들지 않는다.
         // 삭제는 INSERT 와 **별도 트랜잭션**이어야 한다: 같은 트랜잭션이면 동시 로그인 데드락이 rollback-only 를
         // 남겨 커밋 시점에 UnexpectedRollbackException 으로 터진다(트랜잭션 안 runCatching 으로는 못 막음).
         runCatching { writer.write(userId, ip, info, geo, now) }
         runCatching { writer.pruneOlderThanRetention(now) }
+        if (isNewDevice) {
+            val location = listOfNotNull(geo?.region, geo?.country).joinToString(" · ").ifBlank { null }
+            runCatching {
+                notifications.notifyUser(
+                    recipientUserId = userId,
+                    type = com.cheolma.api.notification.NotificationType.NEW_DEVICE_LOGIN,
+                    title = "새 기기에서 로그인되었습니다",
+                    body = buildString {
+                        append("${info.browser} · ${info.os}")
+                        if (location != null) append(" · $location")
+                        append(" 에서 로그인했습니다. 본인이 아니면 비밀번호를 변경해 주세요.")
+                    }.take(200),
+                    href = "/mypage?tab=access",
+                )
+            }
+        }
     }
 
     @Transactional(readOnly = true)

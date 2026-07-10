@@ -69,12 +69,12 @@ export function MypageAccountPanel({
       <ChangePasswordForm embedded profileName={profileName} />
       <NotificationSettingsForm embedded />
 
-      <section aria-label="준비 중인 보안 기능" className="space-y-3">
-        {/* TODO(보안: 로그인 알림) — 새 기기 로그인 시 알림 발송 기능 백엔드 미구현, 도입 시 연결 */}
+      <section aria-label="보안 기능" className="space-y-3">
+        {/* 새 기기 로그인 알림 — 접속 기록에 없는 (IP, 브라우저) 조합 로그인 시 자동 발송(AccessLogService). */}
         <UpcomingSecurityRow
           icon={<BellRing size={16} />}
-          title="로그인 알림 (준비 중)"
-          description="새로운 기기에서 로그인하면 알려드려요. 곧 제공될 예정입니다."
+          title="로그인 알림"
+          description="접속 기록에 없는 새 기기·브라우저에서 로그인하면 알림을 보내드려요. 별도 설정 없이 항상 켜져 있습니다."
         />
         {/* TODO(보안: 2단계 인증) — TOTP/OTP 2FA 백엔드 미구현, 도입 시 연결 */}
         <UpcomingSecurityRow
