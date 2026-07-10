@@ -79,7 +79,7 @@ export default function LoginPage() {
       subtitle="Welcome back"
       title="로그인"
       footer={
-        <p className="text-center text-[14px] mt-6" style={{ color: "rgba(var(--ink-rgb), 0.7)" }}>
+        <p className="text-center text-[14px] mt-6" style={{ color: "rgba(var(--ink-rgb), 0.8)" }}>
           아직 회원이 아니신가요?{" "}
           <Link href="/signup" className="underline" style={{ color: "var(--accent)" }}>
             회원가입
@@ -111,7 +111,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={submitting || otpCode.length !== 6}
-            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-40 motion-reduce:transform-none"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-55 motion-reduce:transform-none"
             style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
           >
             {submitting ? "확인 중…" : "인증하고 로그인"} <ArrowRight size={16} aria-hidden="true" />
@@ -123,7 +123,7 @@ export default function LoginPage() {
               setError("");
             }}
             className="w-full text-center text-[13px] underline"
-            style={{ color: "rgba(var(--ink-rgb), 0.6)" }}
+            style={{ color: "rgba(var(--ink-rgb), 0.72)" }}
           >
             처음부터 다시 로그인
           </button>
@@ -149,7 +149,7 @@ export default function LoginPage() {
           error={error}
         />
 
-        <div className="flex items-center justify-between text-[13px]" style={{ color: "rgba(var(--ink-rgb), 0.7)" }}>
+        <div className="flex items-center justify-between text-[13px]" style={{ color: "rgba(var(--ink-rgb), 0.8)" }}>
           <label className="flex cursor-pointer items-center gap-2">
             <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" />
             이메일 기억하기
@@ -159,7 +159,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={submitting || !email.trim() || !password}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-40 motion-reduce:transform-none"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-55 motion-reduce:transform-none"
           style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
         >
           {submitting ? "로그인 중…" : "로그인"} <ArrowRight size={16} aria-hidden="true" />

@@ -143,7 +143,7 @@ export function PostResultCard({ post, highlight }: { post: Post; highlight?: st
             />
           </div>
         ) : (
-          <div className="flex aspect-[16/9] items-center justify-center bg-gradient-to-br from-[var(--heading)] to-[#2d666c] px-6 text-center text-[13px] leading-6 text-white/75">
+          <div className="flex aspect-[16/9] items-center justify-center bg-gradient-to-br from-[#1f2a44] to-[#44557a] px-6 text-center text-[13px] leading-6 text-white/75">
             {richTextPlainPreview(post.text, 90)}
           </div>
         )}

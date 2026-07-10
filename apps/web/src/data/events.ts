@@ -285,16 +285,16 @@ export function deleteEventProof(eventId: string, proofId: string): Promise<void
 }
 
 export const statusMeta: Record<EventStatus, { label: string; color: string; fg: string }> = {
-  open: { label: "모집중", color: "#7dd3a3", fg: "#0f1f22" },
-  upcoming: { label: "모집예정", color: "#148a90", fg: "#ffffff" },
-  closed: { label: "모집마감", color: "rgba(120,120,130,0.7)", fg: "#ffffff" },
+  open: { label: "모집중", color: "var(--success)", fg: "var(--on-banner)" },
+  upcoming: { label: "모집예정", color: "rgba(31,42,68,0.82)", fg: "var(--on-banner)" },
+  closed: { label: "모집마감", color: "rgba(31,42,68,0.6)", fg: "var(--on-banner)" },
 };
 
 const recruitStateMeta: Record<EventRecruitState, { label: string; color: string; fg: string }> = {
-  before_recruit: { label: "모집예정", color: "#148a90", fg: "#ffffff" },
-  recruiting: { label: "모집중", color: "#7dd3a3", fg: "#0f1f22" },
-  ended: { label: "모집종료", color: "rgba(120,120,130,0.7)", fg: "#ffffff" },
-  closed: { label: "모집마감", color: "rgba(120,120,130,0.7)", fg: "#ffffff" },
+  before_recruit: { label: "모집예정", color: "rgba(31,42,68,0.82)", fg: "var(--on-banner)" },
+  recruiting: { label: "모집중", color: "var(--success)", fg: "var(--on-banner)" },
+  ended: { label: "모집종료", color: "rgba(31,42,68,0.6)", fg: "var(--on-banner)" },
+  closed: { label: "모집마감", color: "rgba(31,42,68,0.6)", fg: "var(--on-banner)" },
 };
 
 export function eventRecruitMeta(event: Event) {
@@ -324,11 +324,11 @@ export type EventLifecycle = {
 };
 
 const EVENT_PHASE_BADGES: Record<EventPhase, { label: string; color: string; fg: string }> = {
-  before_recruit: { label: "모집예정", color: "#148a90", fg: "#ffffff" },
-  recruiting: { label: "모집중", color: "#7dd3a3", fg: "#0f1f22" },
-  recruit_closed: { label: "모집마감", color: "rgba(120,120,130,0.7)", fg: "#ffffff" },
-  running: { label: "진행중", color: "#3c5a96", fg: "#ffffff" },
-  ended: { label: "종료", color: "rgba(120,120,130,0.55)", fg: "#ffffff" },
+  before_recruit: { label: "모집예정", color: "rgba(31,42,68,0.82)", fg: "var(--on-banner)" },
+  recruiting: { label: "모집중", color: "var(--success)", fg: "var(--on-banner)" },
+  recruit_closed: { label: "모집마감", color: "rgba(31,42,68,0.6)", fg: "var(--on-banner)" },
+  running: { label: "진행중", color: "rgba(31,42,68,0.82)", fg: "var(--on-banner)" },
+  ended: { label: "종료", color: "rgba(31,42,68,0.45)", fg: "var(--on-banner)" },
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
