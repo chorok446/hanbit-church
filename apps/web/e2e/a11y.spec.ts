@@ -94,7 +94,8 @@ test("다크모드 a11y: 관리자 영역(대시보드·회원 관리)", async (
   }
 });
 
-// 찬양팀 영역 — 멤버 전용이라 공개 스위트가 못 덮는다. 관리자에게 리더 역할을 부여(멱등)해 순회한다.
+// 찬양팀 영역 — 멤버 전용이라 공개 스위트가 못 덮는다. 관리자에게 리더 역할을 부여(멱등)해 순회하고,
+// 콘티 상세(참석 체크·배정 UI)는 API 로 콘티를 만들어 검사한 뒤 정리한다.
 for (const dark of [false, true]) {
   test(`a11y: 찬양팀 영역 (${dark ? "다크" : "라이트"})`, async ({ page, request }) => {
     const api = request;
@@ -102,21 +103,43 @@ for (const dark of [false, true]) {
       data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
     });
     const { token } = (await loginRes.json()) as { token: string };
-    const meRes = await api.get("http://localhost:8080/api/auth/me", { headers: { Authorization: `Bearer ${token}` } });
+    const headers = { Authorization: `Bearer ${token}` };
+    const meRes = await api.get("http://localhost:8080/api/auth/me", { headers });
     const { id } = (await meRes.json()) as { id: number };
     await api.patch(`http://localhost:8080/api/admin/users/${id}/praise`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers,
       data: { praiseRole: "LEADER", praiseParts: ["LEADER"] },
     });
+    const createRes = await api.post("http://localhost:8080/api/praise/setlists", {
+      headers,
+      data: {
+        worshipDate: "2099-12-26",
+        worshipType: "주일 오전",
+        title: `a11y 검사용 콘티 ${Date.now()}`,
+        songs: [{ title: "a11y 찬양", key: "G", bpm: 72, type: "praise", links: [] }],
+      },
+    });
+    const { id: setlistId } = (await createRes.json()) as { id: string };
 
-    if (dark) await page.addInitScript(() => localStorage.setItem("theme", "dark"));
-    await login(page, { email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
-    for (const path of ["/praise-team", "/praise-team/schedule", "/praise-team/setlists", "/praise-team/members"]) {
-      await page.goto(path);
-      await page.waitForLoadState("networkidle");
-      // 404 폴백 위에서 axe 가 통과해버리는 헛검사 방지 — 찬양팀 셸 헤더가 실제로 렌더됐는지 확인.
-      await expect(page.getByText("찬양팀").first()).toBeVisible();
-      await expectNoSevereViolations(page);
+    try {
+      if (dark) await page.addInitScript(() => localStorage.setItem("theme", "dark"));
+      await login(page, { email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
+      const paths = [
+        "/praise-team",
+        "/praise-team/schedule",
+        "/praise-team/setlists",
+        "/praise-team/members",
+        `/praise-team/setlists/${setlistId}`,
+      ];
+      for (const path of paths) {
+        await page.goto(path);
+        await page.waitForLoadState("networkidle");
+        // 404 폴백 위에서 axe 가 통과해버리는 헛검사 방지 — 찬양팀 셸 헤더가 실제로 렌더됐는지 확인.
+        await expect(page.getByText("찬양팀").first()).toBeVisible();
+        await expectNoSevereViolations(page);
+      }
+    } finally {
+      await api.delete(`http://localhost:8080/api/praise/setlists/${setlistId}`, { headers });
     }
   });
 }
