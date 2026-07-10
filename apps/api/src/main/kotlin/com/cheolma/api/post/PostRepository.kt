@@ -44,6 +44,13 @@ interface PostRepository : JpaRepository<Post, String> {
 
     // 공개 프로필용 — 익명 기도제목은 프로필 목록·게시글 수에서 제외해 작성자 연결을 차단한다.
     fun findByAuthorUserIdAndAnonymousFalseAndHiddenAtIsNull(authorUserId: Long, pageable: Pageable): Page<Post>
+
+    // 비로그인 프로필 조회용 — 교인만 공개(MEMBERS)까지 제외한다.
+    fun findByAuthorUserIdAndAnonymousFalseAndVisibilityAndHiddenAtIsNull(
+        authorUserId: Long,
+        visibility: String,
+        pageable: Pageable,
+    ): Page<Post>
     fun countByAuthorUserIdAndAnonymousFalse(authorUserId: Long): Long
 
     fun findAllByIdInAndHiddenAtIsNullOrderBySeqDesc(ids: Collection<String>): List<Post>
@@ -70,6 +77,7 @@ interface PostRepository : JpaRepository<Post, String> {
     @Query("update Post p set p.author.name = :name, p.author.profileImageUrl = :imageUrl where p.authorUserId = :userId")
     fun syncAuthorProfile(@Param("userId") userId: Long, @Param("name") name: String, @Param("imageUrl") imageUrl: String?): Int
 
-    @Query("SELECT p.id FROM Post p WHERE p.hiddenAt IS NULL ORDER BY p.seq DESC, p.id ASC")
+    // sitemap 용 — 크롤러(비로그인) 대상이므로 교인만 공개(MEMBERS)는 제외한다.
+    @Query("SELECT p.id FROM Post p WHERE p.hiddenAt IS NULL AND p.visibility = 'PUBLIC' ORDER BY p.seq DESC, p.id ASC")
     fun findIds(pageable: Pageable): Page<String>
 }

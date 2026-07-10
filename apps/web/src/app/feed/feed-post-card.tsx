@@ -214,6 +214,7 @@ export function FeedPostCard({
                 style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}
               >
                 <span aria-hidden>{badge.emoji}</span> {badge.label}
+                {p.visibility === "MEMBERS" ? <span title="교인만 공개"> · 교인만</span> : null}
               </span>
             );
           })()}
