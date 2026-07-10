@@ -111,8 +111,8 @@ function NewsCard({ post, index }: { post: Post; index: number }) {
   const { title, summary } = splitTitleSummary(post.text);
   const hasAttachments = (post.attachments?.length ?? 0) > 0;
   return (
-    <StaggerItem index={index}>
-      <li>
+    <li>
+      <StaggerItem index={index}>
         <Link
           href={`/posts/${post.id}`}
           className="flex gap-4 rounded-2xl border p-4 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-20px_rgba(0,0,0,0.35)] motion-reduce:transform-none sm:gap-5 sm:p-5"
@@ -168,8 +168,8 @@ function NewsCard({ post, index }: { post: Post; index: number }) {
             </div>
           </div>
         </Link>
-      </li>
-    </StaggerItem>
+      </StaggerItem>
+    </li>
   );
 }
 

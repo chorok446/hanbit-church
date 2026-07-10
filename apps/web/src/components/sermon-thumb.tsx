@@ -28,6 +28,7 @@ export function SermonThumb({
   if (youtubeId) {
     return (
       <div className={`relative overflow-hidden ${className}`.trim()}>
+        {meta ? <span className="sr-only">{meta.title} 설교 썸네일</span> : null}
         <FallbackImage
           src={`https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`}
           alt=""
@@ -52,7 +53,6 @@ export function SermonThumb({
       <div
         className={`flex flex-col justify-between gap-4 overflow-hidden p-5 sm:p-6 ${className}`.trim()}
         style={{ background: "var(--banner-bg)" }}
-        aria-hidden
       >
         <div className="min-w-0">
           <p className="flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.24em]" style={{ color: "var(--accent)" }}>
@@ -86,7 +86,6 @@ export function SermonThumb({
     <div
       className={`flex flex-col items-center justify-center gap-2 ${className}`.trim()}
       style={{ background: "var(--banner-bg)" }}
-      aria-hidden
     >
       <span style={{ color: "var(--accent)", fontSize: 20, lineHeight: 1 }}>✝</span>
       <span
