@@ -111,6 +111,8 @@ data class PostResponse(
     val pinned: Boolean = false,
     @field:Schema(description = "예약 게시 시각 — 예약 글 작성자·관리자 확인용")
     val publishAt: String? = null,
+    @field:Schema(description = "본문 수정 여부 — '수정됨' 표시용")
+    val edited: Boolean = false,
 )
 
 data class PostSearchResponse(

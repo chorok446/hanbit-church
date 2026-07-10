@@ -203,6 +203,8 @@ export type Post = {
   pinned?: boolean;
   /** 예약 게시 시각(ISO) — 예약 글 작성자·관리자 확인용. */
   publishAt?: string | null;
+  /** 본문 수정 여부 — 상세에서 '수정됨' 표시(댓글과 동일 의미). */
+  edited?: boolean;
 };
 
 /**

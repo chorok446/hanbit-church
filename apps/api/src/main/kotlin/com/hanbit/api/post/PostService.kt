@@ -498,6 +498,7 @@ class PostService(
         post.eventId = fields.eventId
         post.category = category
         post.attachments = attachments
+        post.updatedAt = Instant.now(clock)
         return post.toResponse(
             viewerId = userId,
             likedByMe = likeRepo.existsByPostIdAndUserId(postId, userId),

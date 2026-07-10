@@ -148,7 +148,7 @@ export function PostDetailHero({
             profileImageUrl={p.author.profileImageUrl}
             authorId={p.authorId}
             avatarSize={40}
-            time={postTimeLabel(p)}
+            time={p.edited ? `${postTimeLabel(p)} · 수정됨` : postTimeLabel(p)}
             className="min-w-0"
           />
 

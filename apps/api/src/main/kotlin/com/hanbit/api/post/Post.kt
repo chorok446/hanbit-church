@@ -110,6 +110,8 @@ class Post(
     @Column(name = "pinned_at") var pinnedAt: java.time.Instant? = null,
     // 예약 게시 시각(공지·주보 전용). 예약 중에는 hiddenAt 도 세팅돼 공개에서 제외된다.
     @Column(name = "publish_at") var publishAt: java.time.Instant? = null,
+    // 본문 수정 시각 — '수정됨' 표시용(댓글과 동일 의미). 고정/숨김 등 메타 변경은 건드리지 않는다.
+    @Column(name = "updated_at") var updatedAt: java.time.Instant? = null,
 )
 
 /**
