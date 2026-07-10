@@ -25,9 +25,9 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
         </a>
         <SiteHeader />
         <ThemeToggle />
-        <div id="main-content" tabIndex={-1} className="flex-1 outline-none">
+        <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
           {children}
-        </div>
+        </main>
         <Footer />
         <MobileBottomNav />
         <RealtimeUpdates />
