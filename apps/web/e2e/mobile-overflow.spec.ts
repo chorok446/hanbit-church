@@ -1,5 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
-import { signup } from "./helpers/account";
+import { login, signup } from "./helpers/account";
+
+const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "e2e-admin@hanbit.local";
+const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "E2eAdmin1!";
 
 /**
  * 모바일(390px)에서 가로 오버플로(body 가로 스크롤) 회귀 가드.
@@ -42,6 +45,17 @@ test("모바일 390px 에서 마이페이지 탭(계정·접속 기록)에 가�
   await page.setViewportSize({ width: 390, height: 844 });
   await signup(page, "e2e-mobile");
   for (const path of ["/mypage", "/mypage?tab=account", "/mypage?tab=access", "/notifications"]) {
+    await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    await expectNoHorizontalOverflow(page, path);
+  }
+});
+
+test("모바일 390px 에서 관리자 페이지에 가로 스크롤이 없다", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await login(page, { email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
+  // 회원 관리 행(역할 셀렉트·정지·2FA 해제·비밀번호 초기화 버튼)과 콘텐츠 일괄 바가 가장 오버플로 위험.
+  for (const path of ["/admin", "/admin/users", "/admin/content", "/admin/reports", "/admin/approvals", "/admin/logs"]) {
     await page.goto(path);
     await page.waitForLoadState("networkidle");
     await expectNoHorizontalOverflow(page, path);
