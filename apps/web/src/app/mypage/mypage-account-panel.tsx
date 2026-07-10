@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { BellRing, ShieldCheck } from "lucide-react";
+import { TwoFactorSection } from "./two-factor-section";
+import { BellRing } from "lucide-react";
 import { ChangeEmailForm } from "./change-email-form";
 import { ChangePasswordForm } from "./change-password-form";
 import { DeleteAccountForm } from "./delete-account-form";
@@ -57,10 +58,12 @@ function UpcomingSecurityRow({
 export function MypageAccountPanel({
   currentEmail,
   profileName,
+  twoFactorEnabled = false,
   onEmailChanged,
 }: {
   currentEmail: string;
   profileName: string;
+  twoFactorEnabled?: boolean;
   onEmailChanged: (email: string) => void;
 }) {
   return (
@@ -76,12 +79,7 @@ export function MypageAccountPanel({
           title="로그인 알림"
           description="접속 기록에 없는 새 기기·브라우저에서 로그인하면 알림을 보내드려요. 별도 설정 없이 항상 켜져 있습니다."
         />
-        {/* TODO(보안: 2단계 인증) — TOTP/OTP 2FA 백엔드 미구현, 도입 시 연결 */}
-        <UpcomingSecurityRow
-          icon={<ShieldCheck size={16} />}
-          title="2단계 인증 (준비 중)"
-          description="비밀번호 외 추가 인증으로 계정을 보호해요. 곧 제공될 예정입니다."
-        />
+        <TwoFactorSection initialEnabled={twoFactorEnabled} />
       </section>
 
       {/* 위험 영역 구분선 — 아래는 되돌릴 수 없는 동작(계정 탈퇴, 기존 기능 연결) */}
