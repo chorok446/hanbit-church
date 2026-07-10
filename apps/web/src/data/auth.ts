@@ -8,6 +8,8 @@ export type ChangePasswordRequest = {
 export type ChangePasswordResponse = {
   changed: boolean;
   token: string | null;
+  /** 함께 로그아웃된 다른 세션 수. */
+  revokedSessions?: number;
 };
 
 export type ChangeEmailRequest = {

@@ -76,7 +76,11 @@ export function ChangePasswordForm({ profileName, embedded = false }: { profileN
       setConfirmPassword("");
       // setSession 이 세션 마커를 재발급하면 프로필 리페치로 이 폼이 리마운트되므로
       // 인라인 메시지 대신 리마운트에도 남는 toast 로 성공을 알린다.
-      toast.success("비밀번호가 변경되었습니다.");
+      toast.success(
+        response.revokedSessions && response.revokedSessions > 0
+          ? `비밀번호가 변경되었습니다. 다른 기기 세션 ${response.revokedSessions}개를 함께 로그아웃했어요.`
+          : "비밀번호가 변경되었습니다.",
+      );
     } catch (requestError) {
       if (getSessionId() !== requestToken) return;
       if (requestError instanceof ApiError && requestError.status === 401) {
