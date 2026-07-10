@@ -56,7 +56,7 @@ function FeaturedSermon({ entry }: { entry: SermonEntry }) {
       style={{ background: "var(--card)", borderColor: "var(--border)" }}
     >
       <div className="grid grid-cols-1 md:grid-cols-[340px_1fr]">
-        <Link href={detail} aria-label={`${info.title} 자세히 보기`} className="block">
+        <Link href={detail} className="block">
           <SermonThumb
             youtubeId={info.youtubeId}
             meta={{ serviceLabel: info.serviceLabel, title: info.title, scripture: info.scripture }}
@@ -101,15 +101,17 @@ function FeaturedSermon({ entry }: { entry: SermonEntry }) {
 function SermonCard({ entry, index }: { entry: SermonEntry; index: number }) {
   const { post, info } = entry;
   const detail = `/posts/${post.id}`;
+  // 에디토리얼 리스트: border-b 로 구분, 썸네일(190·16:9) | 본문.
+  // ul 직계 자식은 li 여야 하므로(a11y) 애니메이션 래퍼는 li 안쪽에 둔다.
   return (
-    <StaggerItem index={index}>
-      {/* 에디토리얼 리스트: border-b 로 구분, 썸네일(190·16:9) | 본문 */}
-      <li
-        className="grid grid-cols-1 gap-4 border-b py-7 sm:grid-cols-[190px_1fr] sm:gap-6"
-        style={{ borderColor: "var(--border)" }}
-      >
-        <Link href={detail} aria-label={`${info.title} 자세히 보기`} className="block w-full shrink-0">
-          <SermonThumb youtubeId={info.youtubeId} className="aspect-video w-full overflow-hidden rounded-xl" />
+    <li className="border-b" style={{ borderColor: "var(--border)" }}>
+      <StaggerItem index={index} className="grid grid-cols-1 gap-4 py-7 sm:grid-cols-[190px_1fr] sm:gap-6">
+        <Link href={detail} className="block w-full shrink-0">
+          <SermonThumb
+            youtubeId={info.youtubeId}
+            meta={{ serviceLabel: info.serviceLabel, title: info.title, scripture: info.scripture }}
+            className="aspect-video w-full overflow-hidden rounded-xl"
+          />
         </Link>
         <div className="min-w-0">
           {/* 메타 한 줄: "주일 설교 · 1주 전 · 한빛교회" (유형=골드) */}
@@ -159,8 +161,8 @@ function SermonCard({ entry, index }: { entry: SermonEntry; index: number }) {
             </span>
           </div>
         </div>
-      </li>
-    </StaggerItem>
+      </StaggerItem>
+    </li>
   );
 }
 
