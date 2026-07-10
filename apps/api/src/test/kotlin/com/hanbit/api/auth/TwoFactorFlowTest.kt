@@ -52,8 +52,8 @@ class TwoFactorFlowTest(
         // 1) setup — 시크릿 발급, 아직 미활성이라 로그인은 평소처럼 토큰 발급.
         val setupJson = postJson("/api/auth/2fa/setup", "{}", token)
             .andExpect { status { isOk() } }.andReturn().response.contentAsString
-        val secret = objectMapper.readTree(setupJson)["secret"].asText()
-        assertThat(objectMapper.readTree(setupJson)["otpauthUrl"].asText()).startsWith("otpauth://totp/")
+        val secret = objectMapper.readTree(setupJson)["secret"].asString()
+        assertThat(objectMapper.readTree(setupJson)["otpauthUrl"].asString()).startsWith("otpauth://totp/")
 
         // 2) enable — 틀린 코드는 400, 맞는 코드는 활성 + 프로필에 반영.
         postJson("/api/auth/2fa/enable", """{"code":"000000"}""", token).andExpect { status { isBadRequest() } }
@@ -67,7 +67,7 @@ class TwoFactorFlowTest(
         val loginJson = objectMapper.readTree(loginRes.contentAsString)
         assertThat(loginJson["twoFactorRequired"].asBoolean()).isTrue()
         assertThat(loginRes.getCookie(AuthCookies.NAME)).isNull()
-        val challenge = loginJson["challengeToken"].asText()
+        val challenge = loginJson["challengeToken"].asString()
 
         // 4) verify — 틀린 코드 401, 맞는 코드는 쿠키 발급 + 접속 기록.
         postJson("/api/auth/2fa/verify", """{"challengeToken":"$challenge","code":"000000"}""")
@@ -107,14 +107,14 @@ class TwoFactorFlowTest(
         val token = bearer(user)
         val setupJson = postJson("/api/auth/2fa/setup", "{}", token)
             .andExpect { status { isOk() } }.andReturn().response.contentAsString
-        val secret = objectMapper.readTree(setupJson)["secret"].asText()
+        val secret = objectMapper.readTree(setupJson)["secret"].asString()
         postJson("/api/auth/2fa/enable", """{"code":"${currentCode(secret)}"}""", token)
             .andExpect { status { isOk() } }
 
         val challenge = objectMapper.readTree(
             postJson("/api/auth/login", """{"email":"2fa-replay@hanbit.com","password":"$password"}""")
                 .andReturn().response.contentAsString,
-        )["challengeToken"].asText()
+        )["challengeToken"].asString()
 
         // 첫 사용은 성공, 같은 챌린지 재사용은 코드가 맞아도 401.
         postJson("/api/auth/2fa/verify", """{"challengeToken":"$challenge","code":"${currentCode(secret)}"}""")

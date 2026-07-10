@@ -63,7 +63,7 @@ class CurrentSessionBadgeTest(
         // 기록 2건 중 첫 로그인(Chrome) 세션 것만 현재 세션이다.
         val content = objectMapper.readTree(json)["content"]
         assertThat(content.size()).isEqualTo(2)
-        val currentFlagsByBrowser = content.associate { it["browser"].asText() to it["currentSession"].asBoolean() }
+        val currentFlagsByBrowser = content.associate { it["browser"].asString() to it["currentSession"].asBoolean() }
         assertThat(currentFlagsByBrowser["Chrome"]).isTrue()
         assertThat(currentFlagsByBrowser["Safari"]).isFalse()
     }
