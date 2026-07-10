@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-react";
 import { apiGet } from "@/lib/api";
+import { getClientApiBaseUrl } from "@/lib/api-url";
 import type { Event } from "@/data/events";
 import { fetchPublicPraiseSchedules, type PraiseSchedule } from "@/data/praise-team";
 import {
@@ -242,6 +243,14 @@ export function EventCalendarView() {
         >
           새벽 기도회 표시
         </button>
+        {/* iCal 구독 — 구글/애플 캘린더에서 이 URL 을 구독하면 교회 일정이 자동 동기화된다. */}
+        <a
+          href={`${getClientApiBaseUrl()}/api/calendar/ics`}
+          className="ml-auto rounded-full border px-3.5 py-1.5 text-[12px] font-medium transition-colors"
+          style={{ background: "transparent", borderColor: "var(--border)", color: "var(--foreground-muted)" }}
+        >
+          캘린더 구독(.ics)
+        </a>
       </div>
 
       {fetchState.status === "error" ? (
