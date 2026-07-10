@@ -100,4 +100,26 @@ class TwoFactorFlowTest(
         mvc.get("/api/auth/me") { headers { add("Authorization", "Bearer $challenge") } }
             .andExpect { status { isUnauthorized() } }
     }
+
+    @Test
+    fun `사용된 챌린지 토큰은 재사용할 수 없다`() {
+        val user = saveUser("2fa-replay@hanbit.com")
+        val token = bearer(user)
+        val setupJson = postJson("/api/auth/2fa/setup", "{}", token)
+            .andExpect { status { isOk() } }.andReturn().response.contentAsString
+        val secret = objectMapper.readTree(setupJson)["secret"].asText()
+        postJson("/api/auth/2fa/enable", """{"code":"${currentCode(secret)}"}""", token)
+            .andExpect { status { isOk() } }
+
+        val challenge = objectMapper.readTree(
+            postJson("/api/auth/login", """{"email":"2fa-replay@hanbit.com","password":"$password"}""")
+                .andReturn().response.contentAsString,
+        )["challengeToken"].asText()
+
+        // 첫 사용은 성공, 같은 챌린지 재사용은 코드가 맞아도 401.
+        postJson("/api/auth/2fa/verify", """{"challengeToken":"$challenge","code":"${currentCode(secret)}"}""")
+            .andExpect { status { isOk() } }
+        postJson("/api/auth/2fa/verify", """{"challengeToken":"$challenge","code":"${currentCode(secret)}"}""")
+            .andExpect { status { isUnauthorized() } }
+    }
 }

@@ -1,7 +1,9 @@
 package com.hanbit.api.auth
 
 import com.hanbit.api.security.JwtService
+import com.hanbit.api.security.TokenDenylistStore
 import com.hanbit.api.security.Totp
+import com.hanbit.api.security.hashToken
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -21,6 +23,7 @@ class TwoFactorService(
     private val jwt: JwtService,
     private val encoder: PasswordEncoder,
     private val authService: AuthService,
+    private val denylist: TokenDenylistStore,
     private val clock: Clock,
 ) {
     @Transactional
@@ -65,12 +68,21 @@ class TwoFactorService(
         return user.toProfile()
     }
 
-    /** 로그인 2단계 — 챌린지 토큰 + 앱 코드 확인 후 실제 토큰 발급. */
+    /** 로그인 2단계 — 챌린지 토큰 + 앱 코드 확인 후 실제 토큰 발급. 챌린지는 1회용(성공 시 denylist). */
     @Transactional(readOnly = true)
     fun verifyLogin(req: TwoFactorVerifyRequest): IssuedTokens {
         val userId = try {
             jwt.parseTwoFactorChallenge(req.challengeToken)
         } catch (_: Exception) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid challenge")
+        }
+        // 이미 사용된 챌린지 재사용 차단(fail-closed: store 장애 시 거절 — denylist 정책과 동일).
+        val used = try {
+            denylist.isDenied(hashToken(req.challengeToken))
+        } catch (_: Exception) {
+            true
+        }
+        if (used) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid challenge")
         }
         val user = repo.findById(userId).orElse(null)
@@ -84,6 +96,8 @@ class TwoFactorService(
         if (!Totp.verify(requireNotNull(user.totpSecret), req.code, clock)) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid code")
         }
+        // 성공한 챌린지는 남은 TTL 동안 재사용 불가 — 탈취·리플레이로 추가 토큰 발급을 막는다.
+        runCatching { denylist.deny(hashToken(req.challengeToken), jwt.remainingTtlSeconds(req.challengeToken)) }
         return authService.issueTokensFor(user)
     }
 
