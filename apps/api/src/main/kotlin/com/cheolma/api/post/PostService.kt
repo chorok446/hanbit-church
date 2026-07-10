@@ -43,6 +43,8 @@ class PostService(
     @Transactional(readOnly = true)
     fun listPosts(currentUserId: Long?): List<PostResponse> {
         val posts = repo.findByHiddenAtIsNull(Sort.by(Sort.Direction.DESC, "seq"))
+            // 교인만 공개(MEMBERS)는 로그인 사용자에게만 — 승인제라 로그인 = 승인 교인.
+            .filter { currentUserId != null || it.visibility == PostVisibility.PUBLIC }
         // N+1 회피: 내가 좋아요/북마크한 postId 를 각각 한 번에 조회.
         val likedIds = likedByPage(currentUserId, posts.map { it.id })
         val bookmarkedIds = bookmarkedByPage(currentUserId, posts.map { it.id })
@@ -121,6 +123,8 @@ class PostService(
                 sort = searchSort,
                 page = page,
                 size = size,
+                // 교인만 공개(MEMBERS)는 로그인 사용자에게만 검색된다.
+                includeMembersOnly = currentUserId != null,
             ),
         )
         val postIds = result.content.map { it.id }
@@ -153,10 +157,13 @@ class PostService(
         }
         validatePageParams(page, size)
         // 익명 기도제목은 공개 프로필에서 제외 — 프로필 경유로 작성자가 드러나면 안 된다.
-        val result = repo.findByAuthorUserIdAndAnonymousFalseAndHiddenAtIsNull(
-            authorUserId,
-            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "seq").and(Sort.by("id"))),
-        )
+        // 교인만 공개(MEMBERS)는 비로그인 프로필 조회에서 제외.
+        val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "seq").and(Sort.by("id")))
+        val result = if (viewerId != null) {
+            repo.findByAuthorUserIdAndAnonymousFalseAndHiddenAtIsNull(authorUserId, pageable)
+        } else {
+            repo.findByAuthorUserIdAndAnonymousFalseAndVisibilityAndHiddenAtIsNull(authorUserId, PostVisibility.PUBLIC, pageable)
+        }
         val postIds = result.content.map { it.id }
         val likedIds = likedByPage(viewerId, postIds)
         val bookmarkedIds = bookmarkedByPage(viewerId, postIds)
@@ -262,6 +269,10 @@ class PostService(
         if (post.hiddenAt != null && (post.authorUserId == null || post.authorUserId != currentUserId)) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $id not found")
         }
+        // 교인만 공개는 비로그인에게 존재를 드러내지 않는 404.
+        if (post.visibility == PostVisibility.MEMBERS && currentUserId == null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $id not found")
+        }
         // 조회수 증가 — 엔티티 dirty checking 대신 원자적 UPDATE 로 동시 조회 유실을 막는다.
         // (incrementViews 는 clearAutomatically 로 영속성 컨텍스트를 비우므로 post 는 이 시점 detached.
         //  detached 엔티티를 변경하지 않고, 응답 views 만 이번 조회분(+1)을 copy 로 반영한다.)
@@ -360,6 +371,7 @@ class PostService(
         if (req.anonymous && category != PostCategory.PRAYER) {
             badRequest("익명 게시는 기도 카테고리에서만 가능합니다.")
         }
+        val visibility = normalizeVisibility(req.visibility, category)
         val attachments = normalizeAttachments(category, req.attachments)
         val fields = normalizeFields(req.text, req.tags, req.images, req.eventId)
         val profileImageUrl = users.findById(author.id).orElse(null)?.profileImageUrl
@@ -380,8 +392,19 @@ class PostService(
                 createdAt = Instant.now(clock),
                 attachments = attachments,
                 anonymous = req.anonymous,
+                visibility = visibility,
             ),
         ).toResponse(viewerId = author.id, likedByMe = false, bookmarkedByMe = false)
+    }
+
+    /** 공개 범위 정규화. 미지정=PUBLIC, MEMBERS 는 기도 전용, 그 외 값은 400. */
+    private fun normalizeVisibility(raw: String?, category: String): String {
+        val value = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return PostVisibility.PUBLIC
+        if (value !in PostVisibility.ALL) badRequest("공개 범위는 PUBLIC 또는 MEMBERS 만 가능합니다.")
+        if (value == PostVisibility.MEMBERS && category != PostCategory.PRAYER) {
+            badRequest("교인만 공개는 기도 카테고리에서만 가능합니다.")
+        }
+        return value
     }
 
     /**
@@ -421,6 +444,10 @@ class PostService(
         // 익명 글은 기도 카테고리를 벗어날 수 없다(익명 플래그는 불변 — 마스킹 원칙 유지).
         if (post.anonymous && category != PostCategory.PRAYER) {
             badRequest("익명 게시글은 기도 카테고리에서만 유지할 수 있습니다.")
+        }
+        // 교인만 공개 글도 기도 카테고리를 벗어날 수 없다(범위 축소 없이 노출되는 것을 방지).
+        if (post.visibility == PostVisibility.MEMBERS && category != PostCategory.PRAYER) {
+            badRequest("교인만 공개 게시글은 기도 카테고리에서만 유지할 수 있습니다.")
         }
         val attachments = normalizeAttachments(category, req.attachments)
         val fields = normalizeFields(req.text, req.tags, req.images, req.eventId)

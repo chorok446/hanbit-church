@@ -244,6 +244,10 @@ class PostCommentService(
         if (post.hiddenAt != null && (post.authorUserId == null || post.authorUserId != currentUserId)) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $postId not found")
         }
+        // 교인만 공개(MEMBERS) 글의 댓글도 비로그인에게는 404 — 상세와 동일 정책.
+        if (post.visibility == PostVisibility.MEMBERS && currentUserId == null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $postId not found")
+        }
     }
 
 }
