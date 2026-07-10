@@ -1589,4 +1589,26 @@ class PostControllerTest(
         deletePost(id).andExpect { status { isNoContent() } }
         deletePost(id).andExpect { status { isNotFound() } }
     }
+
+    @Test
+    fun `게시글을 수정하면 edited 가 켜지고 새 글은 꺼져 있다`() {
+        val postId = savePost(authorUserId = 1)
+        mvc.get("/api/posts/$postId").andExpect {
+            status { isOk() }
+            jsonPath("$.edited") { value(false) }
+        }
+
+        mvc.put("/api/posts/$postId") {
+            headers { add("Authorization", "Bearer $token") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"text":"수정된 본문"}"""
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.edited") { value(true) }
+        }
+        mvc.get("/api/posts/$postId").andExpect {
+            status { isOk() }
+            jsonPath("$.edited") { value(true) }
+        }
+    }
 }

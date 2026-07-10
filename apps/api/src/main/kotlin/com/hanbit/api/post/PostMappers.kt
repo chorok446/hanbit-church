@@ -25,6 +25,7 @@ fun Post.toResponse(
     visibility = visibility,
     pinned = pinnedAt != null,
     publishAt = publishAt?.toString(),
+    edited = updatedAt != null,
 )
 
 fun PostComment.toResponse(viewerId: Long?, replies: List<PostCommentResponse> = emptyList()) = PostCommentResponse(
