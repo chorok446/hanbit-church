@@ -12,6 +12,7 @@ import { StaggerItem } from "@/components/scroll-reveal";
 import {
   postCategoryBadge,
   postCategoryLabel,
+  postTimeLabel,
   type Post,
   type PostSearchResponse,
 } from "@/data/posts";
@@ -158,7 +159,7 @@ function NewsCard({ post, index }: { post: Post; index: number }) {
             <div className="mt-2.5 flex items-center gap-1.5 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
               <span className="truncate">{post.author.name}</span>
               <span aria-hidden>·</span>
-              <span className="shrink-0">{post.time}</span>
+              <span className="shrink-0">{postTimeLabel(post)}</span>
               <span aria-hidden>·</span>
               <span className="flex shrink-0 items-center gap-1">
                 <MessageCircle size={12} aria-hidden /> {post.comments}

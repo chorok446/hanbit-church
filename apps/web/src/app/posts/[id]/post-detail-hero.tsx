@@ -17,7 +17,7 @@ import { PostText } from "@/components/post-text";
 import { PostAttachments } from "@/components/post-attachments";
 import { YouTubeEmbed } from "@/components/youtube-embed";
 import { extractYouTubeId } from "@/lib/youtube";
-import { isAdminOnlyCategory, postCategoryLabel } from "@/data/posts";
+import { isAdminOnlyCategory, postCategoryLabel, postTimeLabel } from "@/data/posts";
 import { RichBodyImageGrid } from "@/components/rich-body-image-grid";
 import { ShareButton } from "@/components/share-button";
 import { TagLink } from "@/components/tag-link";
@@ -148,7 +148,7 @@ export function PostDetailHero({
             profileImageUrl={p.author.profileImageUrl}
             authorId={p.authorId}
             avatarSize={40}
-            time={p.time}
+            time={postTimeLabel(p)}
             className="min-w-0"
           />
 
