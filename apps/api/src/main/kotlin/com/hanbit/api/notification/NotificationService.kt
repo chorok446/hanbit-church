@@ -1,5 +1,6 @@
 package com.hanbit.api.notification
 
+import com.hanbit.api.auth.UserRepository
 import com.hanbit.api.common.checkPageParams
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.domain.PageRequest
@@ -25,6 +26,7 @@ data class NotificationCreatedEvent(val recipientUserId: Long)
 @Service
 class NotificationService(
     private val repo: NotificationRepository,
+    private val users: UserRepository,
     private val events: ApplicationEventPublisher,
 ) {
 
@@ -94,7 +96,8 @@ class NotificationService(
 
     /**
      * 알림 생성 helper. 도메인 이벤트(댓글/참여) 트랜잭션 안에서 호출되어 같은 트랜잭션에 참여한다.
-     * 수신자가 없거나 actor==receiver 이면 생성하지 않는다. 그 외에는 저장하며, DB 제약 위반은 삼키지 않는다.
+     * 수신자가 없거나 actor==receiver 이거나 수신자가 해당 유형을 꺼 뒀으면 생성하지 않는다.
+     * 그 외에는 저장하며, DB 제약 위반은 삼키지 않는다.
      */
     fun notify(
         recipientUserId: Long?,
@@ -105,7 +108,23 @@ class NotificationService(
         href: String,
     ) {
         if (recipientUserId == null || recipientUserId == actorUserId) return
+        if (mutedByPreference(recipientUserId, type)) return
         notifyUser(recipientUserId, type, title, body, href)
+    }
+
+    /**
+     * 수신자의 유형별 알림 설정. 댓글류·좋아요만 뮤트 가능하다 — 보안(새 기기 로그인)·운영(숨김/신고
+     * 처리)·행사 강제 퇴장은 notifyUser 경로라 이 게이트를 타지 않고, 행사 상태 알림(notifyEventUpdates)은
+     * 팬아웃 시점에 bulk 로드로 필터링돼 여기서 다시 확인하지 않는다.
+     */
+    private fun mutedByPreference(recipientUserId: Long, type: String): Boolean {
+        val muteable = type in COMMENT_NOTIFICATION_TYPES || type == NotificationType.POST_LIKED
+        if (!muteable) return false
+        val recipient = users.findById(recipientUserId).orElse(null) ?: return false
+        return when (type) {
+            in COMMENT_NOTIFICATION_TYPES -> !recipient.notifyComments
+            else -> !recipient.notifyLikes
+        }
     }
 
     /**
@@ -141,5 +160,11 @@ class NotificationService(
     private companion object {
         const val MAX_BODY = 200
         const val MAX_PAGE_SIZE = 100
+        val COMMENT_NOTIFICATION_TYPES = setOf(
+            NotificationType.POST_COMMENT_CREATED,
+            NotificationType.COMMENT_REPLY_CREATED,
+            NotificationType.COMMENT_MENTIONED,
+            NotificationType.EVENT_COMMENT_CREATED,
+        )
     }
 }

@@ -40,6 +40,8 @@ data class UserProfileResponse(
     val verified: Boolean,
     val profileImageUrl: String? = null,
     val notifyEventUpdates: Boolean = true,
+    val notifyComments: Boolean = true,
+    val notifyLikes: Boolean = true,
     @field:Schema(description = "역할", allowableValues = ["USER", "ADMIN"])
     val role: String = "USER",
     @field:Schema(description = "찬양팀 역할(LEADER/MEMBER/GUEST). null = 찬양팀 아님")
@@ -76,6 +78,10 @@ data class UpdateProfileRequest(
     val profileImageUrl: String? = null,
     @field:Schema(description = "행사 상태 변경 알림 수신 여부")
     val notifyEventUpdates: Boolean = true,
+    @field:Schema(description = "댓글·답글·멘션 알림 수신 여부")
+    val notifyComments: Boolean = true,
+    @field:Schema(description = "좋아요 알림 수신 여부")
+    val notifyLikes: Boolean = true,
 )
 
 data class UpdateProfileResponse(val token: String, val profile: UserProfileResponse)

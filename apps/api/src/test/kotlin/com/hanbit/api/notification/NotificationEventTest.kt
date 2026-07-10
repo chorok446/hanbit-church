@@ -214,6 +214,38 @@ class NotificationEventTest(
     }
 
     @Test
+    fun `댓글 알림을 꺼둔 수신자는 댓글 알림을 받지 않는다`() {
+        val muted = users.saveAndFlush(
+            User(email = "muted-comments@test.com", passwordHash = "x", name = "댓글뮤트", notifyComments = false),
+        )
+        val postId = savePost(authorUserId = muted.id)
+        comment(postId, actorToken).andExpect { status { isCreated() } }
+        assertThat(eventsAbout(postId)).isEmpty()
+    }
+
+    @Test
+    fun `좋아요 알림을 꺼둔 수신자는 좋아요 알림을 받지 않는다`() {
+        val muted = users.saveAndFlush(
+            User(email = "muted-likes@test.com", passwordHash = "x", name = "좋아요뮤트", notifyLikes = false),
+        )
+        val postId = savePost(authorUserId = muted.id)
+        like(postId, actorToken).andExpect { status { isOk() } }
+        assertThat(eventsAbout(postId)).isEmpty()
+    }
+
+    @Test
+    fun `좋아요 알림을 꺼도 댓글 알림은 그대로 온다`() {
+        val muted = users.saveAndFlush(
+            User(email = "muted-likes-only@test.com", passwordHash = "x", name = "좋아요만뮤트", notifyLikes = false),
+        )
+        val postId = savePost(authorUserId = muted.id)
+        comment(postId, actorToken).andExpect { status { isCreated() } }
+        val list = eventsAbout(postId)
+        assertThat(list).hasSize(1)
+        assertThat(list[0].type).isEqualTo(NotificationType.POST_COMMENT_CREATED)
+    }
+
+    @Test
     fun `내 게시글에 타인이 좋아요를 누르면 알림이 생성된다`() {
         val postId = savePost(authorUserId = owner)
         like(postId, actorToken).andExpect { status { isOk() } }
