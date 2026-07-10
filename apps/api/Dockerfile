@@ -11,6 +11,8 @@ RUN --mount=type=cache,target=/root/.gradle \
   && ./gradlew bootJar --no-daemon -x test
 
 FROM eclipse-temurin:21-jre-jammy
+# 로그 타임스탬프·JVM 기본 시간대 — 도메인 Clock 은 코드에서 KST 고정이지만 로그도 맞춘다.
+ENV TZ=Asia/Seoul
 WORKDIR /app
 
 COPY --from=build /workspace/build/libs/*.jar app.jar

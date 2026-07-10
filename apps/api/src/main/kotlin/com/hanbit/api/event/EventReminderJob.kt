@@ -33,7 +33,8 @@ class EventReminderJob(
     // 사용자가 아침에 확인할 수 있는 시간대. @Scheduled 와 @Transactional 을 한 메서드에 둔다 —
     // 별도 진입 메서드에서 내부 호출하면 프록시를 우회해 트랜잭션 없이 돌고, 조회된 행사가
     // detached 상태라 멱등성 마킹(recruitEndReminderSentAt)이 flush 되지 않는다.
-    @Scheduled(cron = "0 40 8 * * *")
+    // zone 명시 — @Scheduled 는 Clock 빈이 아니라 JVM 기본 시간대를 쓴다(UTC 컨테이너면 17:40 KST 실행).
+    @Scheduled(cron = "0 40 8 * * *", zone = "Asia/Seoul")
     @Transactional
     fun remindRecruitEndingTomorrow(): Int {
         val tomorrow = LocalDate.now(clock).plusDays(1).toString()
