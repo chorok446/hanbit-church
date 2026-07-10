@@ -199,7 +199,12 @@ class EventController(
         @PathVariable id: String,
         @RequestBody req: UpdateEventRequest,
         @AuthenticationPrincipal user: AuthUser,
-    ): EventResponse = eventService.updateEvent(user.id, id, req)
+    ): EventResponse {
+        val result = eventService.updateEvent(user.id, id, req)
+        // 커밋 후 팬아웃(행 락 밖) — 상태 변경 알림과 동일 패턴.
+        eventService.notifyDetailsUpdated(user.id, id, result)
+        return result.response
+    }
 
     @Operation(summary = "행사 삭제")
     @SecurityRequirement(name = "bearerAuth")

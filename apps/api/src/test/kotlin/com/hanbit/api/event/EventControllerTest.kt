@@ -703,9 +703,51 @@ class EventControllerTest(
     }
 
     @Test
-    fun `open 행사 수정은 409`() {
+    fun `open 행사는 잠금 필드(제목·기간·정원) 변경 시 409, 안내 정보만이면 200`() {
         val id = saveEvent(status = "open", authorUserId = 1)
+        // validUpdateBody 는 제목·기간·정원을 바꾸므로 잠금 위반 — 409.
         updateEvent(id).andExpect { status { isConflict() } }
+
+        // 잠금 필드를 기존 값 그대로 두고 안내 정보(장소)만 바꾸면 허용된다.
+        val saved = eventRepo.findById(id).get()
+        val infoOnly = """
+            {"title":"${saved.title}","summary":"안내 수정 요약","body":"안내 수정 본문",
+             "thumb":"${saved.thumb}",
+             "recruitStart":"${saved.recruitStart}","recruitEnd":"${saved.recruitEnd}",
+             "runStart":"${saved.runStart}","runEnd":"${saved.runEnd}",
+             "capacity":${saved.capacity},"place":"본당 2층으로 변경"}
+        """.trimIndent()
+        updateEvent(id, body = infoOnly).andExpect {
+            status { isOk() }
+            jsonPath("$.place") { value("본당 2층으로 변경") }
+            jsonPath("$.edited") { value(true) }
+        }
+        assertThat(eventRepo.findById(id).get().place).isEqualTo("본당 2층으로 변경")
+    }
+
+    @Test
+    fun `open 행사 안내 수정은 참여자에게 알림이 가고 알림 설정을 존중한다`() {
+        val id = saveEvent(status = "open", authorUserId = 1)
+        // 참여자 2: 수신, 참여자 9: notifyEventUpdates=false 로 제외.
+        participantRepo.saveAndFlush(EventParticipant("cp-${java.util.UUID.randomUUID()}", id, 2))
+        participantRepo.saveAndFlush(EventParticipant("cp-${java.util.UUID.randomUUID()}", id, 9))
+        val muted = userRepo.findById(9).orElseThrow()
+        muted.notifyEventUpdates = false
+        userRepo.saveAndFlush(muted)
+
+        val saved = eventRepo.findById(id).get()
+        val infoOnly = """
+            {"title":"${saved.title}","summary":"s","body":"b","thumb":"${saved.thumb}",
+             "recruitStart":"${saved.recruitStart}","recruitEnd":"${saved.recruitEnd}",
+             "runStart":"${saved.runStart}","runEnd":"${saved.runEnd}",
+             "capacity":${saved.capacity},"place":"수정된 장소"}
+        """.trimIndent()
+        updateEvent(id, body = infoOnly).andExpect { status { isOk() } }
+
+        val notices = notificationRepo.findAll().filter {
+            it.type == com.hanbit.api.notification.NotificationType.EVENT_DETAILS_UPDATED && it.href == "/events/$id"
+        }
+        assertThat(notices.map { it.userId }).containsExactly(2L)
     }
 
     @Test

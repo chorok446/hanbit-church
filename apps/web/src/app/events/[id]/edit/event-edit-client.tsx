@@ -85,7 +85,7 @@ export default function EventEditClient({ id }: { id: string }) {
         if (!isCurrent()) return;
         if (!event.ownedByMe) {
           setLoadState({ identity, kind: "forbidden" });
-        } else if (event.status !== "upcoming") {
+        } else if (event.status !== "upcoming" && event.status !== "open") {
           setLoadState({ identity, kind: "started" });
         } else {
           const formValues = eventToComposeValues(event);
@@ -208,7 +208,7 @@ export default function EventEditClient({ id }: { id: string }) {
   if (currentLoad.kind === "started") {
     return (
       <PageState>
-        <p>모집 시작 전 행사만 수정할 수 있습니다.</p>
+        <p>모집이 마감된 행사는 수정할 수 없습니다.</p>
         <button type="button" onClick={() => router.push(`/events/${id}`)} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
           행사로 돌아가기
         </button>
@@ -260,6 +260,7 @@ export default function EventEditClient({ id }: { id: string }) {
             }}
           >
             <EventComposeForm
+              lockRecruitFields={currentLoad.kind === "ready" && currentLoad.event.status === "open"}
               values={values}
               onChange={setValues}
               fieldErrors={fieldErrors}
