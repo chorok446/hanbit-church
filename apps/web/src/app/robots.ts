@@ -17,6 +17,7 @@ export default function robots(): MetadataRoute.Robots {
         "/events/new",
         "/*/edit",
         "/admin",
+        "/users",
       ],
     },
     sitemap: `${getSiteUrl()}/sitemap.xml`,
