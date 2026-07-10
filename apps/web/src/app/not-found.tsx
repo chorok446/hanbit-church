@@ -48,7 +48,7 @@ export default function NotFound() {
               fontFamily: "var(--font-display)", fontWeight: 600,
               fontSize: "clamp(160px, 22vw, 280px)",
               lineHeight: 1,
-              backgroundImage: "linear-gradient(180deg,#7dd3a3,#3a7a5a)",
+              backgroundImage: "linear-gradient(180deg,#c9a227,#8a6f1c)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
