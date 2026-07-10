@@ -12,6 +12,7 @@ fun User.toProfile() = UserProfileResponse(
     role = role,
     praiseRole = praiseRole,
     praiseParts = praiseParts.orEmpty(),
+    twoFactorEnabled = totpEnabled,
 )
 
 fun User.toAuthorSnapshot() = Author(
