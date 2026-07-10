@@ -31,6 +31,8 @@ import java.time.Instant
             name = "idx_event_proofs_event_created",
             columnList = "event_id, created_at",
         ),
+        // 계정 삭제 익명화·프로필 동기화의 author-first UPDATE 용. uk 는 event-first 라 못 쓴다.
+        Index(name = "idx_event_proofs_author_user_id", columnList = "author_user_id"),
     ],
 )
 class EventProof(
