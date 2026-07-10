@@ -3,6 +3,8 @@ package com.cheolma.api.calendar
 import com.cheolma.api.event.EventRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
+import java.time.LocalDate
 
 /**
  * 교회 일정 iCalendar(.ics) 피드 — 구글/애플 캘린더에서 URL 구독 가능.
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional
 class CalendarIcsService(
     private val manualEvents: ManualCalendarEventRepository,
     private val events: EventRepository,
+    private val clock: Clock,
 ) {
     @Transactional(readOnly = true)
     fun buildFeed(): String {
@@ -35,9 +38,10 @@ class CalendarIcsService(
             )
         }
 
-        // 공개 행사 — 진행 기간을 종일 일정으로. 숨김/삭제는 목록·검색과 같은 기준으로 제외.
-        events.findAll()
-            .filter { it.hiddenAt == null && it.deletedAt == null }
+        // 공개 행사 — 진행 기간을 종일 일정으로. 숨김/삭제 제외 + 종료 1년 지난 행사는 쿼리에서 잘라
+        // 공개 엔드포인트가 테이블 전체를 메모리에 올리지 않게 한다(캘린더 구독은 과거 이력이 목적이 아님).
+        val horizon = LocalDate.now(clock).minusYears(1).toString()
+        events.findByHiddenAtIsNullAndDeletedAtIsNullAndRunEndGreaterThanEqualOrderBySeqDesc(horizon)
             .forEach { event ->
                 lines += vevent(
                     uid = "event-${event.id}@cheolma-church",

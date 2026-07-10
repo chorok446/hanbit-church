@@ -29,6 +29,7 @@ class ManualCalendarControllerTest(
     @param:Autowired private val jwt: JwtService,
     @param:Autowired private val users: UserRepository,
     @param:Autowired private val repo: ManualCalendarEventRepository,
+    @param:Autowired private val eventsRepo: com.cheolma.api.event.EventRepository,
 ) {
     private val adminToken = jwt.issue(
         User(id = 4, email = "test-user-4@cheolma.local", passwordHash = "x", name = "일정관리자"),
@@ -166,5 +167,25 @@ class ManualCalendarControllerTest(
         // DTEND 는 exclusive — 마지막 날(9/2) 포함을 위해 9/3.
         assertThat(body).contains("DTEND;VALUE=DATE:20260903")
         assertThat(body.trimEnd()).endsWith("END:VCALENDAR")
+    }
+
+    @Test
+    fun `ics 피드는 종료 1년 지난 행사를 제외한다`() {
+        fun saveEvent(id: String, runEnd: String) = eventsRepo.saveAndFlush(
+            com.cheolma.api.event.Event(
+                id, "closed", "ics 경계 $id", "요약", "https://x/t.png",
+                "2020-01-01", "2020-01-31", "2020-02-01", runEnd,
+                10, 0, "라벨", com.cheolma.api.post.Author("개설자", false),
+                com.cheolma.api.event.EventBody("소개", emptyList(), emptyList()),
+                seq = System.nanoTime(),
+            ),
+        )
+        saveEvent("ics-old", "2020-03-01") // 1년 초과 과거 → 제외
+        saveEvent("ics-recent", java.time.LocalDate.now().toString()) // 오늘 종료 → 포함
+
+        val body = mvc.get("/api/calendar/ics").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+        assertThat(body).contains("UID:event-ics-recent@cheolma-church")
+        assertThat(body).doesNotContain("UID:event-ics-old@cheolma-church")
     }
 }

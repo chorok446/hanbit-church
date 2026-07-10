@@ -13,6 +13,9 @@ interface EventRepository : JpaRepository<Event, String> {
     // 관리자 대시보드 — 모집중인데 마감일이 임박(또는 경과)한 행사 수. recruitEnd 는 ISO(yyyy-MM-dd)라 문자열 비교 가능.
     fun countByStatusAndHiddenAtIsNullAndDeletedAtIsNullAndRecruitEndLessThanEqual(status: String, recruitEnd: String): Long
 
+    // iCal 피드 — 공개 행사 중 진행 종료가 기준일 이후인 것만(과거 무한 적재 방지). runEnd 는 ISO 문자열.
+    fun findByHiddenAtIsNullAndDeletedAtIsNullAndRunEndGreaterThanEqualOrderBySeqDesc(runEnd: String): List<Event>
+
     // 관리자 콘텐츠 관리 목록 — 숨김 포함 전체 / 숨김만 (+ 제목/작성자 검색).
     fun findAllByOrderBySeqDesc(pageable: Pageable): Page<Event>
     fun findByHiddenAtIsNotNullOrderBySeqDesc(pageable: Pageable): Page<Event>
