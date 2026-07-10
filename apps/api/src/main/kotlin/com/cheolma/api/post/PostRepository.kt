@@ -12,9 +12,15 @@ import org.springframework.data.repository.query.Param
 interface PostRepository : JpaRepository<Post, String> {
     fun findAllByIdInOrderBySeqDesc(ids: Collection<String>): List<Post>
 
-    // 관리자 콘텐츠 관리 목록 — 숨김 포함 전체 / 숨김만.
+    // 관리자 콘텐츠 관리 목록 — 숨김 포함 전체 / 숨김만 (+ 본문/작성자 검색).
     fun findAllByOrderBySeqDesc(pageable: Pageable): Page<Post>
     fun findByHiddenAtIsNotNullOrderBySeqDesc(pageable: Pageable): Page<Post>
+    fun findByTextContainingIgnoreCaseOrAuthorNameContainingIgnoreCaseOrderBySeqDesc(
+        text: String,
+        authorName: String,
+        pageable: Pageable,
+    ): Page<Post>
+    fun findByHiddenAtIsNotNullAndTextContainingIgnoreCaseOrderBySeqDesc(text: String, pageable: Pageable): Page<Post>
 
     // 관리자 통계용. seq 는 작성 시각(epoch millis)이므로 기간 내 값만 가져와 일 단위로 집계한다.
     @Query("select p.seq from Post p where p.seq >= :since")

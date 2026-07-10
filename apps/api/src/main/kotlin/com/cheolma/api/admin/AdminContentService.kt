@@ -33,17 +33,21 @@ class AdminContentService(
     private val actionLogs: AdminActionLogService,
     private val clock: Clock,
 ) {
-    /** 관리자 콘텐츠 목록 — 게시글/행사, 숨김 포함(hiddenOnly 로 숨김만). 최신순. */
+    /** 관리자 콘텐츠 목록 — 게시글/행사, 숨김 포함(hiddenOnly 로 숨김만), q 로 본문·제목/작성자 검색. 최신순. */
     @Transactional(readOnly = true)
-    fun listContent(typeRaw: String, hiddenOnly: Boolean, page: Int, size: Int): AdminContentPageResponse {
+    fun listContent(typeRaw: String, hiddenOnly: Boolean, page: Int, size: Int, q: String? = null): AdminContentPageResponse {
         com.cheolma.api.common.checkPageParams(page, size, MAX_LIST_PAGE_SIZE)
         val pageable = org.springframework.data.domain.PageRequest.of(page, size)
+        val keyword = q?.trim()?.takeIf { it.isNotEmpty() }
         return when (typeRaw.trim().uppercase()) {
             "POST" -> {
-                val result = if (hiddenOnly) {
-                    posts.findByHiddenAtIsNotNullOrderBySeqDesc(pageable)
-                } else {
-                    posts.findAllByOrderBySeqDesc(pageable)
+                val result = when {
+                    hiddenOnly && keyword != null ->
+                        posts.findByHiddenAtIsNotNullAndTextContainingIgnoreCaseOrderBySeqDesc(keyword, pageable)
+                    hiddenOnly -> posts.findByHiddenAtIsNotNullOrderBySeqDesc(pageable)
+                    keyword != null ->
+                        posts.findByTextContainingIgnoreCaseOrAuthorNameContainingIgnoreCaseOrderBySeqDesc(keyword, keyword, pageable)
+                    else -> posts.findAllByOrderBySeqDesc(pageable)
                 }
                 AdminContentPageResponse(
                     content = result.content.map {
@@ -63,10 +67,13 @@ class AdminContentService(
                 )
             }
             "EVENT" -> {
-                val result = if (hiddenOnly) {
-                    events.findByHiddenAtIsNotNullOrderBySeqDesc(pageable)
-                } else {
-                    events.findAllByOrderBySeqDesc(pageable)
+                val result = when {
+                    hiddenOnly && keyword != null ->
+                        events.findByHiddenAtIsNotNullAndTitleContainingIgnoreCaseOrderBySeqDesc(keyword, pageable)
+                    hiddenOnly -> events.findByHiddenAtIsNotNullOrderBySeqDesc(pageable)
+                    keyword != null ->
+                        events.findByTitleContainingIgnoreCaseOrAuthorNameContainingIgnoreCaseOrderBySeqDesc(keyword, keyword, pageable)
+                    else -> events.findAllByOrderBySeqDesc(pageable)
                 }
                 AdminContentPageResponse(
                     content = result.content.map {

@@ -262,6 +262,8 @@ export function fetchAdminContentPage(params: {
   hiddenOnly?: boolean;
   page?: number;
   size?: number;
+  /** 본문·제목/작성자 검색어. */
+  q?: string;
 }): Promise<AdminContentPageResponse> {
   const query = new URLSearchParams({
     type: params.type,
@@ -269,5 +271,6 @@ export function fetchAdminContentPage(params: {
     page: String(params.page ?? 0),
     size: String(params.size ?? 20),
   });
+  if (params.q?.trim()) query.set("q", params.q.trim());
   return apiGet<AdminContentPageResponse>(`/api/admin/content?${query.toString()}`);
 }

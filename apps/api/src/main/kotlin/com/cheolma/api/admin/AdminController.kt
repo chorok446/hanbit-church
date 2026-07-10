@@ -68,7 +68,8 @@ class AdminController(
         @RequestParam(defaultValue = "false") hiddenOnly: Boolean,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
-    ): AdminContentPageResponse = content.listContent(type, hiddenOnly, page, size)
+        @RequestParam(required = false) q: String?,
+    ): AdminContentPageResponse = content.listContent(type, hiddenOnly, page, size, q)
 
     @Operation(summary = "콘텐츠 숨김/복구 (soft hide, 작성자에게 알림)")
     @PatchMapping("/content/{targetType}/{targetId}")
