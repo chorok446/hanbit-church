@@ -18,6 +18,8 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN pnpm --filter web build
 
 FROM base AS runner
+# SSR 날짜 로직(월별 말씀 등)·로그 타임스탬프 — 코드가 KST 고정이어도 로그·미래 코드 안전망.
+ENV TZ=Asia/Seoul
 WORKDIR /app
 
 ENV NODE_ENV=production
