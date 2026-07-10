@@ -168,7 +168,7 @@ export function EventHeaderCard({
       >
         <div className="grid grid-cols-1 md:grid-cols-[400px_1fr]">
           <div className="relative aspect-[4/3] sm:aspect-square md:aspect-auto overflow-hidden">
-            <EventThumb src={c.thumb} alt={`${c.title} 행사 이미지`} className="w-full h-full object-cover" />
+            <EventThumb src={c.thumb} alt={`${c.title} 행사 이미지`} className="w-full h-full object-cover" loading="eager" />
             <div className="absolute inset-0 bg-gradient-to-tr from-[var(--surface-dark)]/40 to-transparent" />
             <div className="absolute top-4 left-4 flex items-center gap-2" style={{ transform: "translateZ(50px)" }}>
               <StatusBadge c={c} />
