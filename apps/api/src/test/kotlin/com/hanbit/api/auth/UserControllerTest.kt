@@ -118,7 +118,8 @@ class UserControllerTest(
             ),
         )
         val activeId = requireNotNull(active.id).toInt()
-        val viewerToken = jwt.issue(active)
+        val admin = users.save(User(email = "sa-$tag@t.com", passwordHash = "x", name = "검색관리자", role = UserRole.ADMIN.name))
+        val viewerToken = jwt.issue(admin)
 
         mvc.get("/api/users/search") {
             param("q", tag)
@@ -134,7 +135,7 @@ class UserControllerTest(
     @Test
     fun `사용자 검색에서 빈 검색어는 빈 결과, 로그인 시 차단 상태를 포함한다`() {
         val tag = UUID.randomUUID().toString().take(8)
-        val viewer = users.save(User(email = "sv-$tag@t.com", passwordHash = "x", name = "탐색자-$tag"))
+        val viewer = users.save(User(email = "sv-$tag@t.com", passwordHash = "x", name = "탐색자-$tag", role = UserRole.ADMIN.name))
         val target = users.save(User(email = "st-$tag@t.com", passwordHash = "x", name = "대상-$tag"))
         val token = jwt.issue(viewer)
 
@@ -160,7 +161,7 @@ class UserControllerTest(
     @Test
     fun `사용자 검색어가 100자를 넘으면 400`() {
         val tag = UUID.randomUUID().toString().take(8)
-        val viewer = users.save(User(email = "sq-$tag@t.com", passwordHash = "x", name = "질의자-$tag"))
+        val viewer = users.save(User(email = "sq-$tag@t.com", passwordHash = "x", name = "질의자-$tag", role = UserRole.ADMIN.name))
         mvc.get("/api/users/search") {
             param("q", "a".repeat(101))
             header("Authorization", "Bearer ${jwt.issue(viewer)}")
@@ -172,5 +173,15 @@ class UserControllerTest(
     fun `사용자 검색은 비로그인이면 401 — 교인 실명 열거 차단`() {
         mvc.get("/api/users/search") { param("q", "김") }
             .andExpect { status { isUnauthorized() } }
+    }
+
+    @Test
+    fun `사용자 검색은 일반 회원이면 403 — 전체 회원 열거는 회원 관리 권한자 전용`() {
+        val tag = UUID.randomUUID().toString().take(8)
+        val member = users.save(User(email = "sm-$tag@t.com", passwordHash = "x", name = "일반-$tag"))
+        mvc.get("/api/users/search") {
+            param("q", "김")
+            header("Authorization", "Bearer ${jwt.issue(member)}")
+        }.andExpect { status { isForbidden() } }
     }
 }

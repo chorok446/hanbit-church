@@ -92,16 +92,20 @@ export function SearchFilters({
   state,
   loading,
   counts = null,
+  canSearchUsers = false,
   onUpdate,
   onReset,
 }: {
   state: SearchUrlState;
   loading: boolean;
   counts?: SearchTabCounts | null;
+  /** 사용자 탭 노출 여부 — 전체 회원 검색은 회원 관리 권한자(관리자) 전용. */
+  canSearchUsers?: boolean;
   onUpdate: (changes: Partial<SearchUrlState>, replace?: boolean) => void;
   onReset: () => void;
 }) {
   const filterChips = buildSearchFilterChips(state, (changes) => onUpdate({ ...changes, page: 0 }));
+  const tabs = canSearchUsers ? TYPE_TABS : TYPE_TABS.filter((tab) => tab.id !== "users");
 
   return (
     <div className="mx-auto mb-8 max-w-3xl space-y-4">
@@ -110,7 +114,7 @@ export function SearchFilters({
         value={state.query}
         onCommit={(query) => onUpdate({ query: query.slice(0, 100), page: 0 }, true)}
         label="통합 검색"
-        placeholder="행사, 게시글, 사용자를 검색해보세요."
+        placeholder={canSearchUsers ? "행사, 게시글, 사용자를 검색해보세요." : "행사, 게시글을 검색해보세요."}
         loading={loading}
         className="rounded-full"
       />
@@ -120,11 +124,11 @@ export function SearchFilters({
           className="flex flex-wrap gap-1 rounded-2xl p-1"
           style={{ background: "rgba(var(--ink-rgb), 0.06)" }}
         >
-          {TYPE_TABS.map((tab) => {
+          {tabs.map((tab) => {
             const active = state.type === tab.id;
             const count = counts
               ? tab.id === "all"
-                ? counts.events + counts.posts + counts.users
+                ? counts.events + counts.posts + (canSearchUsers ? counts.users : 0)
                 : counts[tab.id]
               : null;
             return (
