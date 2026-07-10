@@ -89,6 +89,20 @@ class EventParticipantsCsvExportTest(
     }
 
     @Test
+    fun `수식으로 시작하는 이름은 작은따옴표로 무력화된다 — CSV 인젝션 차단`() {
+        val eventId = saveEvent()
+        val attacker = users.saveAndFlush(
+            User(email = "csv-inj-${UUID.randomUUID()}@test.com", passwordHash = "x", name = "=HYPERLINK(1)"),
+        )
+        participantRepo.saveAndFlush(EventParticipant("cp-${UUID.randomUUID()}", eventId, attacker.id!!))
+
+        val bytes = export(eventId).andExpect { status { isOk() } }.andReturn().response.contentAsByteArray
+        val body = String(bytes.copyOfRange(3, bytes.size), Charsets.UTF_8)
+        assertThat(body).contains("'=HYPERLINK(1)")
+        assertThat(body).doesNotContain(",=HYPERLINK")
+    }
+
+    @Test
     fun `개설자가 아니면 403, 비로그인은 401, 없는 행사는 404`() {
         val eventId = saveEvent()
         export(eventId, bearer = strangerToken).andExpect { status { isForbidden() } }
