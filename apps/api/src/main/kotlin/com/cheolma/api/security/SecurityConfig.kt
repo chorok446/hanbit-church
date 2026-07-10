@@ -55,6 +55,8 @@ class SecurityConfig(
                 it.requestMatchers(HttpMethod.GET, "/api/admin/users").hasAnyRole("ADMIN", "OPERATOR")
                 it.requestMatchers("/api/admin/reports/**").hasAnyRole("ADMIN", "OPERATOR")
                 it.requestMatchers("/api/admin/content/**").hasAnyRole("ADMIN", "OPERATOR")
+                // 교회 일정(수동 등록) 관리: 운영자까지. 공개 조회는 GET /api/calendar (아래 GET permitAll).
+                it.requestMatchers("/api/admin/calendar/**").hasAnyRole("ADMIN", "OPERATOR")
                 // 대시보드 요약·추이: 모든 스태프.
                 it.requestMatchers("/api/admin/summary", "/api/admin/stats")
                     .hasAnyRole("ADMIN", "OPERATOR", "MINISTRY", "NEW_FAMILY", "CONTENT")
