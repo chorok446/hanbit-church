@@ -1,6 +1,6 @@
 "use client";
 
-import { getAdminPermissions } from "@/app/admin/permissions";
+import { getAdminPermissions, isStaffRole, USER_ROLE_LABELS, type UserRole } from "@/app/admin/permissions";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -72,14 +72,14 @@ export function MypageProfileHeader({ profile }: { profile: UserProfile }) {
             >
               {profile.name}
             </h1>
-            {/* TODO(권한: 사역 담당자 역할 도입 시 확장) — 현재는 USER/ADMIN 두 역할만 존재 */}
-            {isAdmin ? (
+            {/* 스태프 역할(관리자·운영자·사역·새가족·콘텐츠)은 역할명 배지로 표시한다. */}
+            {isStaffRole(profile.role) ? (
               <span
                 className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px]"
                 style={{ background: "rgba(246, 243, 234, 0.08)", color: cream }}
               >
                 <ShieldCheck size={12} aria-hidden style={{ color: "var(--accent)" }} />
-                관리자
+                {USER_ROLE_LABELS[profile.role as UserRole] ?? "관리자"}
               </span>
             ) : profile.verified ? (
               <span
@@ -123,7 +123,7 @@ export function MypageProfileHeader({ profile }: { profile: UserProfile }) {
               <PenLine size={13} aria-hidden />
               글쓰기
             </Link>
-            {/* 행사 만들기는 관리자 전용. TODO(권한: 사역 담당자 역할 도입 시 확장) */}
+            {/* 행사 만들기 — canManageEvents(최고 관리자·운영자·사역 담당자). */}
             {isAdmin ? (
               <Link href="/events/new" className={outlineBtn} style={{ borderColor: creamBorder, color: cream }}>
                 <Plus size={13} aria-hidden />
