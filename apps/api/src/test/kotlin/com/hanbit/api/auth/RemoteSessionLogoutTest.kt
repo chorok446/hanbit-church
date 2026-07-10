@@ -119,7 +119,40 @@ class RemoteSessionLogoutTest(
     }
 
     @Test
+    fun `다른 세션 모두 로그아웃은 현재 세션만 남긴다`() {
+        val email = "revoke-all-${UUID.randomUUID()}@test.com"
+        mvc.post("/api/auth/signup") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"email":"$email","password":"Password1!","name":"전체해지"}"""
+        }.andExpect { status { isCreated() } }
+        val b = login(email)
+        val c = login(email)
+        val a = login(email) // 현재 세션
+
+        mvc.delete("/api/auth/sessions") {
+            headers { add("Authorization", "Bearer ${a.access}") }
+        }.andExpect {
+            status { isOk() }
+            // signup 도 자체 세션을 만들므로 b·c + 가입 세션 = 3.
+            jsonPath("$.revokedCount") { value(3) }
+        }
+
+        me(b).andExpect { status { isUnauthorized() } }
+        me(c).andExpect { status { isUnauthorized() } }
+        me(a).andExpect { status { isOk() } }
+
+        // 이미 해지된 세션은 다시 세지 않는다(멱등).
+        mvc.delete("/api/auth/sessions") {
+            headers { add("Authorization", "Bearer ${a.access}") }
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.revokedCount") { value(0) }
+        }
+    }
+
+    @Test
     fun `비로그인 해지 요청은 401`() {
         mvc.delete("/api/auth/sessions/any-sid").andExpect { status { isUnauthorized() } }
+        mvc.delete("/api/auth/sessions").andExpect { status { isUnauthorized() } }
     }
 }

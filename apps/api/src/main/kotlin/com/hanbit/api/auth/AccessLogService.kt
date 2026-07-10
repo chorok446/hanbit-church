@@ -97,6 +97,23 @@ class AccessLogService(
         return SessionRevokeResponse(revoked = true, sessionId = sessionId)
     }
 
+    /**
+     * 현재 세션을 뺀 나머지 세션 전부 원격 로그아웃. 대상은 refresh 수명 안의 접속 기록에 남은
+     * sid(그보다 오래된 세션은 어차피 만료). 이미 해지된 세션은 세지 않는다.
+     */
+    fun revokeOtherSessions(userId: Long, currentSessionId: String?): SessionRevokeAllResponse {
+        val since = Instant.now(clock).minusMillis(refreshTtlMillis)
+        val targets = repo.findDistinctSessionIdsSince(userId, since)
+            .filter { it != currentSessionId }
+            .filterNot { sid ->
+                runCatching { denylist.isDenied(com.hanbit.api.security.sessionDenyKey(sid)) }.getOrDefault(false)
+            }
+        targets.forEach { sid ->
+            denylist.deny(com.hanbit.api.security.sessionDenyKey(sid), refreshTtlMillis / 1000)
+        }
+        return SessionRevokeAllResponse(revokedCount = targets.size)
+    }
+
     @Transactional
     fun deleteForUser(userId: Long) {
         repo.deleteByUserId(userId)

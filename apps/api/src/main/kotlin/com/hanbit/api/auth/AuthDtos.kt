@@ -147,6 +147,8 @@ data class AccessLogResponse(
 
 data class SessionRevokeResponse(val revoked: Boolean, val sessionId: String)
 
+data class SessionRevokeAllResponse(val revokedCount: Int)
+
 data class AccessLogPageResponse(
     val content: List<AccessLogResponse>,
     val page: Int,
