@@ -10,6 +10,7 @@ import { getSessionId, clearSession } from "@/lib/auth";
 import { useAuthedRefresh } from "@/lib/use-authed-refresh";
 import { ReportButton, type ReportButtonHandle } from "@/components/report-button";
 import { AdminModerationButton } from "@/components/admin-moderation-button";
+import { PostPinButton } from "@/components/post-pin-button";
 import { PageShell } from "@/components/page-shell";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { isAdminOnlyCategory, type Post } from "@/data/posts";
@@ -275,6 +276,7 @@ export default function PostDetailClient({ post, linkedEvent }: { post: Post; li
             </div>
           ) : (
             <div className="flex items-center gap-2">
+              <PostPinButton post={p} />
               <AdminModerationButton targetType="POST" targetId={p.id} />
               {/* 교회 공식 소식(공지·주보)은 신고 대상이 아니다 — 메뉴에는 링크 복사만 남는다 */}
               <PostActionsMenu postId={p.id} canReport={!isAdminOnlyCategory(p.category)} />

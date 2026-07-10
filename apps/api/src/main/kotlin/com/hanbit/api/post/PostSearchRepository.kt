@@ -102,7 +102,8 @@ class QuerydslPostSearchRepository(
 
     private fun orderSpecifiers(post: QPost, sort: PostSearchSort, query: String?): Array<OrderSpecifier<*>> =
         when (sort) {
-            PostSearchSort.LATEST -> arrayOf(post.seq.desc(), post.id.asc())
+            // 고정 글(pinnedAt not null)이 먼저 — 고정은 공지·주보에서만 쓰므로 교제 목록엔 영향이 없다.
+            PostSearchSort.LATEST -> arrayOf(post.pinnedAt.desc().nullsLast(), post.seq.desc(), post.id.asc())
             PostSearchSort.POPULAR -> arrayOf(post.likes.desc(), post.seq.desc(), post.id.asc())
             PostSearchSort.DISCUSSED -> arrayOf(post.comments.desc(), post.seq.desc(), post.id.asc())
             PostSearchSort.RELEVANCE -> relevanceOrder(post, query)

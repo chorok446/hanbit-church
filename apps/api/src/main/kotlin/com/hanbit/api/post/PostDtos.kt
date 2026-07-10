@@ -105,6 +105,8 @@ data class PostResponse(
     val anonymous: Boolean = false,
     // 공개 범위(PUBLIC/MEMBERS).
     val visibility: String = PostVisibility.PUBLIC,
+    @field:Schema(description = "공지·주보 상단 고정 여부")
+    val pinned: Boolean = false,
 )
 
 data class PostSearchResponse(
@@ -123,3 +125,6 @@ data class PostPageResponse(
     val totalElements: Long,
     val totalPages: Int,
 )
+
+@Schema(description = "고정 토글 요청")
+data class SetPostPinnedRequest(val pinned: Boolean)

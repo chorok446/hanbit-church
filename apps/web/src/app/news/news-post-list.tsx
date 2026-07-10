@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarHeart, FileText, Megaphone, MessageCircle, Paperclip, type LucideIcon } from "lucide-react";
+import { CalendarHeart, FileText, Megaphone, MessageCircle, Paperclip, type LucideIcon, Pin } from "lucide-react";
 import { apiGet } from "@/lib/api";
 import { FallbackImage } from "@/components/fallback-image";
 import { ListEmptyState } from "@/components/list-empty-state";
@@ -129,6 +129,14 @@ function NewsCard({ post, index }: { post: Post; index: number }) {
               >
                 <CategoryIcon category={post.category} size={11} strokeWidth={2} /> {badge.label}
               </span>
+              {post.pinned ? (
+                <span
+                  className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium"
+                  style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+                >
+                  <Pin size={11} aria-hidden /> 고정
+                </span>
+              ) : null}
               {hasAttachments ? (
                 <span
                   className="flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px]"
