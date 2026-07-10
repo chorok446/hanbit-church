@@ -10,6 +10,12 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
 interface EventRepository : JpaRepository<Event, String> {
+    /** 모집 마감 임박(D-1) 알림 대상 — recruitEnd 는 ISO(yyyy-MM-dd) 문자열이라 동등 비교로 충분. */
+    fun findByStatusAndRecruitEndAndHiddenAtIsNullAndDeletedAtIsNullAndRecruitEndReminderSentAtIsNull(
+        status: String,
+        recruitEnd: String,
+    ): List<Event>
+
     // 관리자 대시보드 — 모집중인데 마감일이 임박(또는 경과)한 행사 수. recruitEnd 는 ISO(yyyy-MM-dd)라 문자열 비교 가능.
     fun countByStatusAndHiddenAtIsNullAndDeletedAtIsNullAndRecruitEndLessThanEqual(status: String, recruitEnd: String): Long
 
