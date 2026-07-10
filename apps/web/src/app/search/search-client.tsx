@@ -29,6 +29,8 @@ import {
   type SearchTabCounts,
 } from "./search-filters";
 import { SearchResults, type ResultState } from "./search-results";
+import { RecentSearches } from "./recent-searches";
+import { recordRecentSearch } from "@/lib/recent-searches";
 
 export default function SearchClient() {
   const router = useRouter();
@@ -113,6 +115,11 @@ export default function SearchClient() {
     (query: string) => updateUrl({ query: query.slice(0, 100), page: 0 }),
     [updateUrl],
   );
+
+  // URL 반영 시점의 순수 사이드이펙트 — 디바운스 중간값은 기록되지 않는다.
+  useEffect(() => {
+    if (urlState.query) recordRecentSearch(urlState.query);
+  }, [urlState.query]);
 
   useEffect(() => {
     if (getSessionId() !== token) return;
@@ -256,6 +263,8 @@ export default function SearchClient() {
           onUpdate={updateUrl}
           onReset={resetFilters}
         />
+
+        {!hasQuery ? <RecentSearches onSelect={runSearch} /> : null}
 
         {isExplore ? (
           <SearchExplore onSearch={runSearch} />
