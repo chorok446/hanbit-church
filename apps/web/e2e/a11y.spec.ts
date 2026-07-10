@@ -24,7 +24,8 @@ async function expectNoSevereViolations(page: Page) {
  * (Lighthouse 수동 측정에서만 잡히던 a11y 회귀를 CI 에서 즉시 잡는다 — 푸터 대비·목록 구조 회귀 전례)
  * 실행: pnpm --filter web e2e a11y.spec.ts
  */
-const PAGES = ["/", "/sermons", "/news", "/events", "/feed", "/login", "/signup", "/about", "/worship", "/welcome", "/giving", "/privacy", "/terms"];
+// 시드 상세(p1 게시글·c1 행사) 포함 — 목록만 검사하면 댓글·상호작용 UI 가 사각이 된다.
+const PAGES = ["/", "/sermons", "/news", "/events", "/feed", "/login", "/signup", "/about", "/worship", "/welcome", "/giving", "/privacy", "/terms", "/posts/p1", "/events/c1"];
 
 for (const path of PAGES) {
   test(`a11y: ${path} 에 serious/critical 위반이 없다`, async ({ page }) => {
@@ -92,3 +93,30 @@ test("다크모드 a11y: 관리자 영역(대시보드·회원 관리)", async (
     await expectNoSevereViolations(page);
   }
 });
+
+// 찬양팀 영역 — 멤버 전용이라 공개 스위트가 못 덮는다. 관리자에게 리더 역할을 부여(멱등)해 순회한다.
+for (const dark of [false, true]) {
+  test(`a11y: 찬양팀 영역 (${dark ? "다크" : "라이트"})`, async ({ page, request }) => {
+    const api = request;
+    const loginRes = await api.post("http://localhost:8080/api/auth/login", {
+      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+    });
+    const { token } = (await loginRes.json()) as { token: string };
+    const meRes = await api.get("http://localhost:8080/api/auth/me", { headers: { Authorization: `Bearer ${token}` } });
+    const { id } = (await meRes.json()) as { id: number };
+    await api.patch(`http://localhost:8080/api/admin/users/${id}/praise`, {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { praiseRole: "LEADER", praiseParts: ["LEADER"] },
+    });
+
+    if (dark) await page.addInitScript(() => localStorage.setItem("theme", "dark"));
+    await login(page, { email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
+    for (const path of ["/praise-team", "/praise-team/schedule", "/praise-team/members"]) {
+      await page.goto(path);
+      await page.waitForLoadState("networkidle");
+      // 404 폴백 위에서 axe 가 통과해버리는 헛검사 방지 — 찬양팀 셸 헤더가 실제로 렌더됐는지 확인.
+      await expect(page.getByText("찬양팀").first()).toBeVisible();
+      await expectNoSevereViolations(page);
+    }
+  });
+}
