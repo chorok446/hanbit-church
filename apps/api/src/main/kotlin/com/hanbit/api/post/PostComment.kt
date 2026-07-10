@@ -5,12 +5,20 @@ import jakarta.persistence.Column
 import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.Table
 import java.time.Instant
 
 /** 게시글 댓글. 오래된 순(seq ASC) 정렬. */
 @Entity
-@Table(name = "post_comments")
+@Table(
+    name = "post_comments",
+    indexes = [
+        Index(name = "idx_post_comments_post_seq", columnList = "post_id, seq"),
+        Index(name = "idx_post_comments_parent_id", columnList = "parent_id"),
+        Index(name = "idx_post_comments_author_user_id", columnList = "author_user_id"),
+    ],
+)
 class PostComment(
     @Id val id: String,
     @Column(name = "post_id") val postId: String,

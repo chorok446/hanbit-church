@@ -18,6 +18,8 @@ import java.time.Instant
             name = "idx_event_comments_event_created",
             columnList = "event_id, created_at",
         ),
+        Index(name = "idx_event_comments_parent_id", columnList = "parent_id"),
+        Index(name = "idx_event_comments_author_user_id", columnList = "author_user_id"),
     ],
 )
 class EventComment(
