@@ -50,7 +50,7 @@ export default function EventListClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { sessionId: token } = useAuthSession();
-  // 행사 개설은 관리자 전용. TODO(권한: 사역 담당자 역할 도입 시 확장)
+  // 행사 개설 — canManageEvents(최고 관리자·운영자·사역 담당자).
   const { profile } = useCurrentUserProfile();
   // 행사 개설 권한(최고 관리자·운영자·사역 담당자).
   const canCreate = getAdminPermissions(profile?.role).canManageEvents;
