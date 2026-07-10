@@ -229,6 +229,11 @@ export type PostPageResponse = {
   totalPages: number;
 };
 
+// 목록 페이지 크기 — 서버 컴포넌트(ISR 선주입)와 클라이언트 목록이 같은 값을 써야 한다.
+// "use client" 모듈에서 export 하면 서버에서 클라이언트 참조 프록시가 되므로 여기(서버 안전)서 정의한다.
+export const SERMON_PAGE_SIZE = 10;
+export const NEWS_PAGE_SIZE = 10;
+
 const MY_POSTS_PAGE_SIZE = 10;
 
 function postsPage(path: string, page: number): Promise<PostPageResponse> {

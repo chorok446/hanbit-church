@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { CHURCH } from "@/data/church";
 import { StaffWriteButton } from "@/components/staff-write-button";
+import { apiGetIsr } from "@/lib/api";
+import { SERMON_PAGE_SIZE, type PostSearchResponse } from "@/data/posts";
 import { SermonList } from "./sermon-list";
 
 export const metadata: Metadata = {
@@ -8,8 +10,15 @@ export const metadata: Metadata = {
   description: `${CHURCH.name} 주일 설교 말씀과 다시듣기`,
 };
 
+// ISR: 첫 페이지 목록을 서버에서 선주입(60초 재검증) — SEO·LCP 개선. API 미가용(CI 빌드)이면
+// null 로 두고 기존 클라이언트 fetch 경로가 그대로 동작한다.
+export const revalidate = 60;
+
 // 설교: 네이비 히어로 밴드 → 크림 본문 밴드(최신 설교 강조 + 필터·검색 + 에디토리얼 목록)
-export default function SermonsPage() {
+export default async function SermonsPage() {
+  const initialSermons = await apiGetIsr<PostSearchResponse>(
+    `/api/posts/search?category=SERMON&sort=latest&page=0&size=${SERMON_PAGE_SIZE}`,
+  );
   return (
     <>
       <section className="relative overflow-hidden px-6 pb-16 pt-40" style={{ background: "var(--surface-dark)" }}>
@@ -43,7 +52,7 @@ export default function SermonsPage() {
 
       <section className="px-6 py-24" style={{ background: "var(--surface)" }}>
         <div className="mx-auto max-w-5xl">
-          <SermonList />
+          <SermonList initialData={initialSermons} />
         </div>
       </section>
     </>

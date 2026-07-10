@@ -10,6 +10,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { SearchField } from "@/components/search-field";
 import { StaggerItem } from "@/components/scroll-reveal";
 import {
+  NEWS_PAGE_SIZE,
   postCategoryBadge,
   postCategoryLabel,
   postTimeLabel,
@@ -17,7 +18,7 @@ import {
   type PostSearchResponse,
 } from "@/data/posts";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = NEWS_PAGE_SIZE;
 
 /** /news 에서 노출하는 교회 공식 소식 카테고리(탭 순서 고정). */
 const NEWS_CATEGORIES = ["NOTICE", "BULLETIN"] as const;
@@ -172,18 +173,24 @@ function NewsCard({ post, index }: { post: Post; index: number }) {
   );
 }
 
-/** 소식(/news) 전용 목록 — 공지·주보 탭(개수), 서버 검색(q), 카드 리스트. */
-export function NewsPostList() {
+/** 소식(/news) 전용 목록 — 공지·주보 탭(개수), 서버 검색(q), 카드 리스트.
+ * initialData: 서버 컴포넌트(ISR)가 선주입한 첫 탭 첫 페이지 — 첫 페인트·크롤러가 빈 목록을 보지 않는다. */
+export function NewsPostList({ initialData = null }: { initialData?: PostSearchResponse | null }) {
   const [category, setCategory] = useState<NewsCategory>(NEWS_CATEGORIES[0]);
   const [page, setPage] = useState(0);
   const [query, setQuery] = useState("");
   const [retryTick, setRetryTick] = useState(0);
-  const [result, setResult] = useState<Result | null>(null);
+  const [result, setResult] = useState<Result | null>(
+    initialData ? { key: `${NEWS_CATEGORIES[0]}:0::0`, status: "success", data: initialData } : null,
+  );
   const [counts, setCounts] = useState<Partial<Record<NewsCategory, number>>>({});
 
   const requestKey = `${category}:${page}:${query}:${retryTick}`;
 
   useEffect(() => {
+    // 현재 요청 key 의 결과(성공·실패 모두)가 이미 있으면 재요청하지 않는다 —
+    // SSR 선주입 데이터의 첫 마운트 중복 요청 방지 + 실패 시 재시도는 retryTick(새 key)으로만.
+    if (result?.key === requestKey) return;
     let cancelled = false;
     const params = new URLSearchParams({
       category,
@@ -202,7 +209,7 @@ export function NewsPostList() {
     return () => {
       cancelled = true;
     };
-  }, [category, page, query, retryTick, requestKey]);
+  }, [category, page, query, retryTick, requestKey, result]);
 
   // 탭 개수 — 카테고리별 size=1 병렬 호출로 totalElements 만 취한다. 실패한 탭은 개수를 숨긴다.
   useEffect(() => {
