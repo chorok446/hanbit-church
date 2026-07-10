@@ -68,6 +68,9 @@ data class UpdateEventRequest(
     val contact: String = "",
 )
 
+@Schema(description = "정원 증원 요청 — 모집중 행사에서 늘리기만 허용")
+data class IncreaseCapacityRequest(val capacity: Int)
+
 @Schema(description = "모집 상태 변경 요청")
 data class UpdateEventStatusRequest(
     @field:Schema(description = "목표 상태", example = "open", allowableValues = ["upcoming", "open", "closed"])

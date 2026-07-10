@@ -533,6 +533,45 @@ class EventService(
         )
     }
 
+    /**
+     * 모집중 정원 증원 — 참여자에게 불리하지 않은 유일한 조건 변경이라 open 에서도 허용한다.
+     * 늘리기만 가능(감원·미정 전환 불가). upcoming 은 일반 수정으로 바꾸면 되므로 open 전용.
+     */
+    @Transactional
+    fun increaseCapacity(userId: Long, eventId: String, requested: Int): EventResponse {
+        val event = repo.findByIdForUpdate(eventId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
+        if (event.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
+        }
+        if (event.authorUserId == null || event.authorUserId != userId) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "not the event owner")
+        }
+        if (event.status != "open") {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "모집중 행사에서만 정원을 늘릴 수 있습니다.")
+        }
+        if (event.capacity <= 0) {
+            badRequestKr("인원 미정 행사는 정원 증원 대상이 아닙니다.")
+        }
+        if (requested <= event.capacity) {
+            badRequestKr("현재 정원(${event.capacity}명)보다 큰 값만 가능합니다.")
+        }
+        if (requested > MAX_CAPACITY) {
+            badRequestKr("정원은 최대 ${MAX_CAPACITY}명까지 가능합니다.")
+        }
+        event.capacity = requested
+        event.updatedAt = Instant.now(clock)
+        return event.toResponse(
+            viewerId = userId,
+            joinedByMe = participants.existsByEventIdAndUserId(eventId, userId),
+            bookmarkedByMe = bookmarkRepo.existsByEventIdAndUserId(eventId, userId),
+            today = LocalDate.now(clock),
+        )
+    }
+
+    private fun badRequestKr(message: String): Nothing =
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, message)
+
     /** 안내 변경 알림 팬아웃 — updateEvent 커밋(행 락 해제) 후 컨트롤러가 호출한다. best-effort. */
     @Transactional
     fun notifyDetailsUpdated(actorUserId: Long, eventId: String, result: EventUpdateResult) {

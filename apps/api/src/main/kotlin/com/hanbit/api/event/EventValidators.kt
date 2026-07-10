@@ -4,7 +4,7 @@ import com.hanbit.api.common.splitRichBodyHtml
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 
-private const val MAX_CAPACITY = 10000
+internal const val MAX_CAPACITY = 10000
 private const val MAX_COMMENT_TEXT_LENGTH = 500
 
 data class NormalizedEventInput(

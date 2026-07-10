@@ -11,6 +11,7 @@ import { clearSession, getSessionId } from "@/lib/auth";
 import { useAuthSession } from "@/lib/use-auth-session";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
+  increaseEventCapacity,
   removeEventParticipant,
   statusMeta,
   type EventParticipantsResponse,
@@ -45,6 +46,8 @@ export default function ParticipantsClient({ id }: { id: string }) {
   const [retry, setRetry] = useState(0);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [capacityInput, setCapacityInput] = useState("");
+  const [savingCapacity, setSavingCapacity] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const confirm = useConfirm();
   const identity = `${id}:${token ?? "anonymous"}:${page}:${retry}`;
@@ -114,6 +117,27 @@ export default function ParticipantsClient({ id }: { id: string }) {
     if (requestInFlightRef.current) return;
     requestInFlightRef.current = true;
     setRetry((current) => current + 1);
+  };
+
+  /** 모집중 정원 증원 — 늘리기만 허용(서버 검증과 짝). 성공 시 목록을 다시 불러온다. */
+  const increaseCapacity = async (current: number) => {
+    const next = Number(capacityInput);
+    if (savingCapacity) return;
+    if (!Number.isInteger(next) || next <= current) {
+      setActionError(`현재 정원(${current}명)보다 큰 정수를 입력해주세요.`);
+      return;
+    }
+    setSavingCapacity(true);
+    setActionError(null);
+    try {
+      await increaseEventCapacity(id, next);
+      setCapacityInput("");
+      refresh();
+    } catch {
+      setActionError("정원 변경에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setSavingCapacity(false);
+    }
   };
 
   /** 명단 CSV 다운로드 — 서버가 목록과 동일한 정보(이름·인증)만 담아 내려준다. */
@@ -245,6 +269,32 @@ export default function ParticipantsClient({ id }: { id: string }) {
                 </div>
                 <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">{data.title}</h1>
                 <p className="mt-2 text-[13px] opacity-60">현재 참여 인원 {data.joined}명 / 정원 {data.capacity}명</p>
+                {data.status === "open" && data.capacity > 0 ? (
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <label htmlFor="capacity-increase" className="text-[12px] opacity-70">
+                      정원 늘리기
+                    </label>
+                    <input
+                      id="capacity-increase"
+                      type="number"
+                      min={data.capacity + 1}
+                      value={capacityInput}
+                      onChange={(e) => setCapacityInput(e.target.value)}
+                      placeholder={`${data.capacity + 5}`}
+                      className="ui-control w-24 rounded-xl px-3 py-2 text-[13px]"
+                      style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void increaseCapacity(data.capacity)}
+                      disabled={savingCapacity || !capacityInput}
+                      className="rounded-xl border px-4 py-2 text-[13px] disabled:opacity-45"
+                      style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+                    >
+                      {savingCapacity ? "변경 중…" : "변경"}
+                    </button>
+                  </div>
+                ) : null}
               </div>
               <div className="flex flex-wrap gap-2 self-start">
                 <button

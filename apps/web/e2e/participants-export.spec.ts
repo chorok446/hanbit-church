@@ -54,3 +54,27 @@ test("행사 개설자는 참가자 명단 CSV 를 내려받는다", async ({ pa
   // 연락처(이메일)는 내보내기에도 없다 — 회원 열거 차단 정책 유지.
   expect(body).not.toContain("@");
 });
+
+test("모집중 행사 정원을 참가자 관리에서 늘릴 수 있다", async ({ page }) => {
+  await signup(page, "capinc");
+  const createRes = await page.request.post(`${API_URL}/api/events`, {
+    data: {
+      title: `정원 증원 행사 ${Date.now()}`,
+      summary: "s",
+      body: "b",
+      recruitStart: dateAfter(-1),
+      recruitEnd: dateAfter(7),
+      runStart: dateAfter(10),
+      runEnd: dateAfter(12),
+      capacity: 10,
+    },
+  });
+  const eventId = ((await createRes.json()) as { id: string }).id;
+  await page.request.put(`${API_URL}/api/events/${eventId}/status`, { data: { status: "open" } });
+
+  await page.goto(`/events/${eventId}/participants`);
+  await expect(page.getByText("정원 10명")).toBeVisible();
+  await page.getByLabel("정원 늘리기").fill("15");
+  await page.getByRole("button", { name: "변경", exact: true }).click();
+  await expect(page.getByText("정원 15명")).toBeVisible();
+});
