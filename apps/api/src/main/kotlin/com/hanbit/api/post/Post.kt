@@ -87,6 +87,9 @@ class Post(
     @JdbcTypeCode(SqlTypes.JSON) @Column(columnDefinition = "json") var attachments: List<PostAttachment>? = null,
     // 조회수. 상세 조회마다 원자적 UPDATE 로 증가(중복 방어는 두지 않는다 — 교회 규모에선 단순함 우선).
     @Column(nullable = false) var views: Long = 0,
+    // 익명 기도제목(PRAYER 전용). true 면 공개 응답에서 작성자를 마스킹한다 — DB 에는 authorUserId 가
+    // 남아 본인 수정/삭제(ownedByMe)와 알림은 그대로 동작한다.
+    @Column(nullable = false) val anonymous: Boolean = false,
 )
 
 /**

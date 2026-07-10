@@ -195,6 +195,8 @@ export type Post = {
   hidden?: boolean;
   /** 작성 시각(ISO). 시드 게시글·이전 응답 캐시는 null/undefined. */
   createdAt?: string | null;
+  /** 익명 기도제목 여부. true 면 author/authorId 가 서버에서 마스킹된 값이다. */
+  anonymous?: boolean;
 };
 
 /**

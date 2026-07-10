@@ -2,6 +2,7 @@ package com.hanbit.api.post
 
 import com.hanbit.api.auth.UserRepository
 import com.hanbit.api.event.EventRepository
+import com.hanbit.api.common.badRequest
 import com.hanbit.api.common.checkPageParams
 import com.hanbit.api.common.ListingLimits.MAX_SEARCH_PAGE_SIZE
 import com.hanbit.api.common.ListingLimits.MAX_SEARCH_QUERY_LENGTH
@@ -151,7 +152,8 @@ class PostService(
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
         }
         validatePageParams(page, size)
-        val result = repo.findByAuthorUserIdAndHiddenAtIsNull(
+        // 익명 기도제목은 공개 프로필에서 제외 — 프로필 경유로 작성자가 드러나면 안 된다.
+        val result = repo.findByAuthorUserIdAndAnonymousFalseAndHiddenAtIsNull(
             authorUserId,
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "seq").and(Sort.by("id"))),
         )
@@ -354,6 +356,10 @@ class PostService(
         // 행사 삭제와 동시에 실행돼도 둘 중 하나만 통과해 orphan eventId 가 남지 않는다.
         val category = normalizeCategory(req.category)
         requireAdminForOfficialCategory(category)
+        // 익명 게시는 기도 카테고리 전용 — 나눔/공식 채널에서 실명 원칙을 유지한다.
+        if (req.anonymous && category != PostCategory.PRAYER) {
+            badRequest("익명 게시는 기도 카테고리에서만 가능합니다.")
+        }
         val attachments = normalizeAttachments(category, req.attachments)
         val fields = normalizeFields(req.text, req.tags, req.images, req.eventId)
         val profileImageUrl = users.findById(author.id).orElse(null)?.profileImageUrl
@@ -373,6 +379,7 @@ class PostService(
                 authorUserId = author.id,
                 createdAt = Instant.now(clock),
                 attachments = attachments,
+                anonymous = req.anonymous,
             ),
         ).toResponse(viewerId = author.id, likedByMe = false, bookmarkedByMe = false)
     }
@@ -410,6 +417,10 @@ class PostService(
         // 공지·주보로 바꾸는 것뿐 아니라 이미 공지·주보인 글의 수정도 관리자만 가능하다.
         if (post.category in PostCategory.ADMIN_ONLY || category in PostCategory.ADMIN_ONLY) {
             requireAdminForOfficialCategory(category.takeIf { it in PostCategory.ADMIN_ONLY } ?: post.category)
+        }
+        // 익명 글은 기도 카테고리를 벗어날 수 없다(익명 플래그는 불변 — 마스킹 원칙 유지).
+        if (post.anonymous && category != PostCategory.PRAYER) {
+            badRequest("익명 게시글은 기도 카테고리에서만 유지할 수 있습니다.")
         }
         val attachments = normalizeAttachments(category, req.attachments)
         val fields = normalizeFields(req.text, req.tags, req.images, req.eventId)
