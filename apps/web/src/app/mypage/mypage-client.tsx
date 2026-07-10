@@ -123,6 +123,7 @@ export default function MyPageClient() {
                   <MypageAccountPanel
                     currentEmail={(displayedProfile ?? profile).email}
                     profileName={profile.name}
+                    twoFactorEnabled={profile.twoFactorEnabled ?? false}
                     onEmailChanged={(email) => setEmailOverride({ userId: profile.id, email })}
                   />
                 </div>
