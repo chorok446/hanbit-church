@@ -6,7 +6,7 @@ import { Heart, MessageCircle } from "lucide-react";
 import { FallbackImage } from "@/components/fallback-image";
 import { ListEmptyState } from "@/components/list-empty-state";
 import { PostPreview } from "@/components/post-text";
-import type { Post } from "@/data/posts";
+import { postTimeLabel, type Post } from "@/data/posts";
 import { fetchUserPostsPage } from "@/data/users";
 import { PaginatedSection } from "@/app/mypage/paginated-section";
 
@@ -46,7 +46,7 @@ function UserPostCard({ post }: { post: Post }) {
             <span className="inline-flex items-center gap-1">
               <MessageCircle size={12} /> {post.comments}
             </span>
-            <span className="ml-auto opacity-70">{post.time}</span>
+            <span className="ml-auto opacity-70">{postTimeLabel(post)}</span>
           </div>
         </div>
       </Link>

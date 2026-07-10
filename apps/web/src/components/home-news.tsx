@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MessageCircle, Paperclip } from "lucide-react";
 import { apiGet } from "@/lib/api";
-import { postCategoryBadge, type Post, type PostSearchResponse } from "@/data/posts";
+import { postCategoryBadge, postTimeLabel, type Post, type PostSearchResponse } from "@/data/posts";
 
 const PREVIEW_SIZE = 3;
 
@@ -70,7 +70,7 @@ function NewsRow({ post, highlighted }: { post: Post; highlighted: boolean }) {
         <div className="mt-0.5 flex items-center gap-1.5 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
           <span className="truncate">{post.author.name}</span>
           <span aria-hidden>·</span>
-          <span className="shrink-0">{post.time}</span>
+          <span className="shrink-0">{postTimeLabel(post)}</span>
           <span className="ml-auto flex shrink-0 items-center gap-1">
             <MessageCircle size={12} aria-hidden /> {post.comments}
           </span>
