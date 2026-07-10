@@ -24,10 +24,10 @@ const items: {
   { href: "/admin/logs", label: "감사 로그", icon: ScrollText, permission: "canViewAuditLog" },
 ];
 
-// 네이비 밴드 위 크림 텍스트. globals.css 에 --on-banner 토큰이 없어 네이비 위에서는 크림(#f6f3ea)만 리터럴로 사용한다.
-const BANNER_CREAM = "#f6f3ea";
-const BANNER_CREAM_MUTED = "rgba(246, 243, 234, 0.7)";
-const BANNER_OUTLINE = "rgba(246, 243, 234, 0.3)";
+// 네이비 밴드 위 크림 텍스트 — 중앙 토큰(globals.css --on-banner).
+const BANNER_CREAM = "var(--on-banner)";
+const BANNER_CREAM_MUTED = "rgba(var(--on-banner-rgb), 0.7)";
+const BANNER_OUTLINE = "rgba(var(--on-banner-rgb), 0.3)";
 
 /**
  * 관리자 상단 네이비 밴드 + 메뉴. 모든 /admin 하위 페이지 상단에 공유로 렌더된다.

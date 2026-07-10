@@ -11,7 +11,7 @@ const QUICK_LINKS = [
 
 /**
  * 소식(/news) 히어로 밴드 — 네이비(surface-dark) + 골드 글로우. (about/worship 밴드 톤)
- * 하단에 핵심 안내 3열 바를 -32px 겹쳐 얹는다. 크림 텍스트는 배너 관례(#f6f3ea).
+ * 하단에 핵심 안내 3열 바를 -32px 겹쳐 얹는다. 크림 텍스트는 배너 관례(var(--on-banner)).
  */
 export function NewsHero() {
   return (
@@ -26,12 +26,12 @@ export function NewsHero() {
           News
         </p>
         <h1
-          className="text-[34px] sm:text-[40px] text-[#f6f3ea]"
+          className="text-[34px] sm:text-[40px] text-[var(--on-banner)]"
           style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
         >
           교회 소식
         </h1>
-        <p className="mt-3.5 max-w-[52ch] text-[15px] leading-[30px]" style={{ color: "rgba(246, 243, 234, 0.78)" }}>
+        <p className="mt-3.5 max-w-[52ch] text-[15px] leading-[30px]" style={{ color: "rgba(var(--on-banner-rgb), 0.78)" }}>
           {CHURCH.name}의 공지사항과 주보를 한곳에서 확인하세요.
         </p>
       </div>

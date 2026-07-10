@@ -185,12 +185,12 @@ export default function FeedClient({ events }: { events: Event[] }) {
             Community
           </p>
           <h1
-            className="text-[32px] text-[#f6f3ea] sm:text-[38px]"
+            className="text-[32px] text-[var(--on-banner)] sm:text-[38px]"
             style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
           >
             성도의 교제
           </h1>
-          <p className="mt-2 text-[14px]" style={{ color: "rgba(246,243,234,0.72)" }}>
+          <p className="mt-2 text-[14px]" style={{ color: "rgba(var(--on-banner-rgb),0.72)" }}>
             함께 나누고, 기도하고, 서로를 격려하는 공간입니다.
           </p>
         </div>
