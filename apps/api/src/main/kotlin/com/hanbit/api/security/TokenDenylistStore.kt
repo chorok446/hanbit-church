@@ -21,6 +21,12 @@ interface TokenDenylistStore {
     fun isDenied(tokenHash: String): Boolean
 }
 
+/**
+ * 세션(sid) 단위 무효화 키. 개별 토큰 해시와 같은 denylist 를 공유하되 접두사로 구분한다 —
+ * 원격 세션 로그아웃 시 그 세션으로 발급된 access·refresh(rotation 포함)가 전부 차단된다.
+ */
+fun sessionDenyKey(sessionId: String): String = "sid:$sessionId"
+
 /** raw JWT → SHA-256 hex. 원본 토큰을 저장/로그하지 않기 위한 단방향 해시. */
 fun hashToken(token: String): String =
     HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(token.toByteArray()))

@@ -145,6 +145,17 @@ class AuthService(
         if (denied) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid refresh token")
         }
+        // 원격 세션 로그아웃 — 무효화된 세션(sid)의 refresh 로는 재발급할 수 없다(fail-closed 동일).
+        val sessionRevoked = claims.sessionId?.let {
+            try {
+                denylist.isDenied(com.hanbit.api.security.sessionDenyKey(it))
+            } catch (_: Exception) {
+                true
+            }
+        } ?: false
+        if (sessionRevoked) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid refresh token")
+        }
         val user = repo.findById(userId).orElse(null)
         if (user == null || user.deletedAt != null) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid refresh token")

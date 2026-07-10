@@ -17,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -104,6 +105,17 @@ class AuthController(
         val tokens = authService.refresh(refreshToken)
         accessLogService.record(tokens.userId, ClientRequestInfo.from(req), tokens.sessionId)
         return res.setAuthCookies(tokens)
+    }
+
+    @Operation(summary = "원격 세션 로그아웃", description = "접속 기록의 다른 세션을 무효화한다. 현재 세션은 400, 남의/모르는 세션은 404.")
+    @SecurityRequirement(name = "bearerAuth")
+    @DeleteMapping("/sessions/{sessionId}")
+    fun revokeSession(
+        @PathVariable sessionId: String,
+        @AuthenticationPrincipal principal: AuthUser?,
+    ): SessionRevokeResponse {
+        val userId = requireUserId(principal)
+        return accessLogService.revokeSession(userId, sessionId, principal?.sessionId)
     }
 
     @Operation(summary = "로그아웃")

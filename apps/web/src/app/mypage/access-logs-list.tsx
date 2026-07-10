@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
+import { toast } from "sonner";
 import { StaggerItem } from "@/components/scroll-reveal";
-import { Monitor, Globe } from "lucide-react";
+import { Monitor, Globe, LogOut, Loader2 } from "lucide-react";
 import { StatePanel } from "@/components/ui/state-panel";
-import { fetchAccessLogsPage, type AccessLogItem } from "@/data/access-logs";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { fetchAccessLogsPage, revokeSession, type AccessLogItem } from "@/data/access-logs";
 import { PaginatedSection } from "./paginated-section";
 
 const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
@@ -34,6 +37,33 @@ export function maskIpForDisplay(ip: string): string {
 }
 
 function AccessLogRow({ item }: { item: AccessLogItem }) {
+  const confirm = useConfirm();
+  const [busy, setBusy] = useState(false);
+  // 성공 후 목록을 다시 불러오지 않고 행 상태만 바꾼다(로그 자체는 그대로 남는 이력이므로).
+  const [revokedLocally, setRevokedLocally] = useState(false);
+  const revoked = item.sessionRevoked || revokedLocally;
+
+  const revoke = async () => {
+    if (!item.sessionId || busy) return;
+    const ok = await confirm({
+      title: "이 세션을 로그아웃할까요?",
+      message: "해당 기기의 로그인이 즉시 해제됩니다. 본인 기기가 아니라면 비밀번호 변경도 권장해요.",
+      confirmLabel: "세션 로그아웃",
+      destructive: true,
+    });
+    if (!ok) return;
+    setBusy(true);
+    try {
+      await revokeSession(item.sessionId);
+      setRevokedLocally(true);
+      toast.success("세션을 로그아웃했습니다.");
+    } catch {
+      toast.error("세션 로그아웃에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <article
       className="rounded-2xl border p-5"
@@ -70,9 +100,30 @@ function AccessLogRow({ item }: { item: AccessLogItem }) {
             {item.location ? ` · ${item.location}` : null}
           </span>
         </div>
-        <time dateTime={item.accessedAt} className="text-[11px] opacity-55">
-          {formatTime(item.accessedAt)}
-        </time>
+        <div className="flex items-center gap-3">
+          <time dateTime={item.accessedAt} className="text-[11px] opacity-55">
+            {formatTime(item.accessedAt)}
+          </time>
+          {revoked ? (
+            <span
+              className="rounded-full px-2.5 py-1 text-[11px]"
+              style={{ background: "var(--chip-bg)", color: "var(--foreground-muted)" }}
+            >
+              로그아웃됨
+            </span>
+          ) : item.sessionRevocable && item.sessionId ? (
+            <button
+              type="button"
+              onClick={() => void revoke()}
+              disabled={busy}
+              className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] disabled:opacity-50"
+              style={{ borderColor: "var(--border)", color: "var(--danger)" }}
+            >
+              {busy ? <Loader2 size={11} className="animate-spin" aria-hidden /> : <LogOut size={11} aria-hidden />}
+              세션 로그아웃
+            </button>
+          ) : null}
+        </div>
       </div>
     </article>
   );

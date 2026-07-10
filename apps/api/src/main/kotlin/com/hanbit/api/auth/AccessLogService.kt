@@ -15,6 +15,8 @@ class AccessLogService(
     private val geoIp: GeoIpService,
     private val writer: AccessLogWriter,
     private val notifications: com.hanbit.api.notification.NotificationService,
+    private val denylist: com.hanbit.api.security.TokenDenylistStore,
+    @param:org.springframework.beans.factory.annotation.Value("\${app.jwt.refresh-ttl-millis}") private val refreshTtlMillis: Long,
     private val clock: Clock,
 ) {
     /**
@@ -73,22 +75,56 @@ class AccessLogService(
         )
     }
 
+    /**
+     * 원격 세션 로그아웃 — 접속 기록에 있는 본인 세션(sid)을 denylist 에 올려 그 세션의
+     * access·refresh(rotation 포함)를 모두 차단한다. TTL 은 refresh 수명(그 뒤엔 어차피 만료).
+     * 현재 세션은 대상이 아니다(일반 로그아웃 사용) — 400. 남의 sid·모르는 sid 는 404.
+     */
+    fun revokeSession(userId: Long, sessionId: String, currentSessionId: String?): SessionRevokeResponse {
+        if (sessionId == currentSessionId) {
+            throw org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.BAD_REQUEST,
+                "현재 세션은 로그아웃 기능을 사용해주세요.",
+            )
+        }
+        if (!repo.existsByUserIdAndSessionId(userId, sessionId)) {
+            throw org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.NOT_FOUND,
+                "session not found",
+            )
+        }
+        denylist.deny(com.hanbit.api.security.sessionDenyKey(sessionId), refreshTtlMillis / 1000)
+        return SessionRevokeResponse(revoked = true, sessionId = sessionId)
+    }
+
     @Transactional
     fun deleteForUser(userId: Long) {
         repo.deleteByUserId(userId)
     }
 
-    private fun UserAccessLog.toResponse(currentSessionId: String?) = AccessLogResponse(
-        id = requireNotNull(id),
-        ipAddress = ipAddress,
-        os = os,
-        browser = browser,
-        // "부산광역시 · 대한민국" 형태의 표시용 위치. 없으면 null.
-        location = listOfNotNull(region, country).takeIf { it.isNotEmpty() }?.joinToString(" · "),
-        accessedAt = accessedAt.toString(),
-        // sid 없는 과거 기록·구버전 토큰은 항상 false — 배지가 잘못 붙는 것보다 낫다.
-        currentSession = sessionId != null && sessionId == currentSessionId,
-    )
+    private fun UserAccessLog.toResponse(currentSessionId: String?): AccessLogResponse {
+        val current = sessionId != null && sessionId == currentSessionId
+        // 원격 로그아웃 대상: sid 가 있고 현재 세션이 아니며 refresh 수명 안(그 뒤엔 어차피 만료).
+        val withinTokenLife = accessedAt.isAfter(Instant.now(clock).minusMillis(refreshTtlMillis))
+        val revocable = sessionId != null && !current && withinTokenLife
+        // 표시용이라 store 장애 시 false 로 둔다(해지 API 는 별도로 fail-closed 검사를 거친다).
+        val revoked = revocable &&
+            runCatching { denylist.isDenied(com.hanbit.api.security.sessionDenyKey(sessionId!!)) }.getOrDefault(false)
+        return AccessLogResponse(
+            id = requireNotNull(id),
+            ipAddress = ipAddress,
+            os = os,
+            browser = browser,
+            // "부산광역시 · 대한민국" 형태의 표시용 위치. 없으면 null.
+            location = listOfNotNull(region, country).takeIf { it.isNotEmpty() }?.joinToString(" · "),
+            accessedAt = accessedAt.toString(),
+            // sid 없는 과거 기록·구버전 토큰은 항상 false — 배지가 잘못 붙는 것보다 낫다.
+            currentSession = current,
+            sessionId = sessionId,
+            sessionRevocable = revocable && !revoked,
+            sessionRevoked = revoked,
+        )
+    }
 
     private fun normalizeIp(ip: String): String = ip.take(45).ifBlank { "unknown" }
 
