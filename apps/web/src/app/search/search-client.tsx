@@ -4,12 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageShell } from "@/components/page-shell";
 import {
-  appendCampaignDateRangeFilters,
-  campaignDateRangeError,
-  EMPTY_CAMPAIGN_DATE_RANGE_FILTERS,
-  readCampaignDateRangeFilters,
-  type CampaignSearchResponse,
-} from "@/data/campaigns";
+  appendEventDateRangeFilters,
+  eventDateRangeError,
+  EMPTY_EVENT_DATE_RANGE_FILTERS,
+  readEventDateRangeFilters,
+  type EventSearchResponse,
+} from "@/data/events";
 import type { PostSearchResponse } from "@/data/posts";
 import { searchUsersPage, type PublicUserPageResponse } from "@/data/users";
 import { ApiError, apiGet } from "@/lib/api";
@@ -43,19 +43,19 @@ export default function SearchClient() {
       query: (searchParams.get("q") ?? "").slice(0, 100),
       type,
       sort: parseSearchSort(searchParams.get("sort"), type),
-      recruitState: type === "campaigns" ? parseSearchRecruitState(searchParams.get("recruitState")) : null,
-      availableOnly: type === "campaigns" && searchParams.get("availableOnly") === "true",
+      recruitState: type === "events" ? parseSearchRecruitState(searchParams.get("recruitState")) : null,
+      availableOnly: type === "events" && searchParams.get("availableOnly") === "true",
       tag: parseSearchTag(searchParams.get("tag"), type),
-      ...(type === "campaigns"
-        ? readCampaignDateRangeFilters(searchParams)
-        : EMPTY_CAMPAIGN_DATE_RANGE_FILTERS),
+      ...(type === "events"
+        ? readEventDateRangeFilters(searchParams)
+        : EMPTY_EVENT_DATE_RANGE_FILTERS),
       page: parsePageParam(searchParams.get("page")),
     };
   }, [searchParams]);
 
   const canonicalHref = buildSearchHref(urlState);
   const currentHref = searchParams.toString() ? `/search?${searchParams.toString()}` : "/search";
-  const dateFilterError = campaignDateRangeError(urlState);
+  const dateFilterError = eventDateRangeError(urlState);
 
   useCanonicalUrl(canonicalHref, currentHref);
 
@@ -67,7 +67,7 @@ export default function SearchClient() {
   const [resultState, setResultState] = useState<ResultState>({
     identity: "",
     status: "idle",
-    campaigns: null,
+    events: null,
     posts: null,
     users: null,
     errorMessage: null,
@@ -75,7 +75,7 @@ export default function SearchClient() {
   const currentState = staleByIdentity(resultState, requestIdentity, {
     identity: requestIdentity,
     status: isExplore ? "idle" : "loading",
-    campaigns: null,
+    events: null,
     posts: null,
     users: null,
     errorMessage: null,
@@ -83,7 +83,7 @@ export default function SearchClient() {
 
   const updateUrl = useCallback((changes: Partial<SearchUrlState>, replace = false) => {
     const merged = { ...urlState, ...changes };
-    const next: SearchUrlState = merged.type === "campaigns"
+    const next: SearchUrlState = merged.type === "events"
       ? merged
       : {
           ...merged,
@@ -91,7 +91,7 @@ export default function SearchClient() {
           recruitState: null,
           availableOnly: false,
           tag: merged.type === "users" ? "" : merged.tag,
-          ...EMPTY_CAMPAIGN_DATE_RANGE_FILTERS,
+          ...EMPTY_EVENT_DATE_RANGE_FILTERS,
         };
     const href = buildSearchHref(next);
     if (replace) router.replace(href, { scroll: false });
@@ -105,7 +105,7 @@ export default function SearchClient() {
     recruitState: null,
     availableOnly: false,
     tag: "",
-    ...EMPTY_CAMPAIGN_DATE_RANGE_FILTERS,
+    ...EMPTY_EVENT_DATE_RANGE_FILTERS,
     page: 0,
   });
 
@@ -124,34 +124,34 @@ export default function SearchClient() {
 
     // 검색어가 있으면 탭 개수(전체/행사·사역/게시글/사용자) 표기를 위해 세 도메인을 모두 조회한다.
     // page 는 활성 탭(또는 전체 탭)에만 적용하고, 나머지는 개수 파악용으로 0페이지만 가져온다.
-    const wantCampaigns = urlState.type === "all" || urlState.type === "campaigns" || !!trimmedQuery;
+    const wantEvents = urlState.type === "all" || urlState.type === "events" || !!trimmedQuery;
     const wantPosts = urlState.type === "all" || urlState.type === "posts" || !!trimmedQuery;
     // 사용자는 이름 검색만 지원 → 검색어가 있을 때만 조회한다.
     // TODO(정책: 사용자 검색 로그인 제한 검토) — 현재는 백엔드 공개 정책(탈퇴·정지 제외한 공개 프로필만 반환)을 따른다.
     const wantUsers = !!trimmedQuery;
 
-    const campaignParams = new URLSearchParams();
-    if (urlState.query) campaignParams.set("q", urlState.query);
-    campaignParams.set("sort", urlState.sort);
-    if (urlState.type === "campaigns" && urlState.recruitState) {
-      campaignParams.set("recruitState", urlState.recruitState);
+    const eventParams = new URLSearchParams();
+    if (urlState.query) eventParams.set("q", urlState.query);
+    eventParams.set("sort", urlState.sort);
+    if (urlState.type === "events" && urlState.recruitState) {
+      eventParams.set("recruitState", urlState.recruitState);
     }
-    if (urlState.type === "campaigns" && urlState.availableOnly) {
-      campaignParams.set("availableOnly", "true");
+    if (urlState.type === "events" && urlState.availableOnly) {
+      eventParams.set("availableOnly", "true");
     }
-    if (urlState.type === "campaigns") {
-      appendCampaignDateRangeFilters(campaignParams, {
+    if (urlState.type === "events") {
+      appendEventDateRangeFilters(eventParams, {
         recruitEndFrom: urlState.recruitEndFrom,
         recruitEndTo: urlState.recruitEndTo,
         runStartFrom: urlState.runStartFrom,
         runStartTo: urlState.runStartTo,
       });
     }
-    campaignParams.set(
+    eventParams.set(
       "page",
-      urlState.type === "all" || urlState.type === "campaigns" ? urlState.page.toString() : "0",
+      urlState.type === "all" || urlState.type === "events" ? urlState.page.toString() : "0",
     );
-    campaignParams.set("size", "6");
+    eventParams.set("size", "6");
 
     const postParams = new URLSearchParams();
     if (urlState.query) postParams.set("q", urlState.query);
@@ -169,10 +169,10 @@ export default function SearchClient() {
     const guard = beginAuthedRequest(generationRef, token);
 
     const load = async () => {
-      const [campaigns, posts, users] = await Promise.all([
-        wantCampaigns
-          ? apiGet<CampaignSearchResponse>(`/api/campaigns/search?${campaignParams.toString()}`)
-          : Promise.resolve<CampaignSearchResponse | null>(null),
+      const [events, posts, users] = await Promise.all([
+        wantEvents
+          ? apiGet<EventSearchResponse>(`/api/events/search?${eventParams.toString()}`)
+          : Promise.resolve<EventSearchResponse | null>(null),
         wantPosts
           ? apiGet<PostSearchResponse>(`/api/posts/search?${postParams.toString()}`)
           : Promise.resolve<PostSearchResponse | null>(null),
@@ -181,7 +181,7 @@ export default function SearchClient() {
           : Promise.resolve<PublicUserPageResponse | null>(null),
       ]);
       if (!guard.isCurrent()) return;
-      setResultState({ identity: requestIdentity, status: "success", campaigns, posts, users, errorMessage: null });
+      setResultState({ identity: requestIdentity, status: "success", events, posts, users, errorMessage: null });
     };
 
     load().catch((error) => {
@@ -193,7 +193,7 @@ export default function SearchClient() {
       setResultState({
         identity: requestIdentity,
         status: "error",
-        campaigns: null,
+        events: null,
         posts: null,
         users: null,
         errorMessage,
@@ -227,7 +227,7 @@ export default function SearchClient() {
   // 검색어가 있고 조회가 끝났을 때만 탭에 개수를 표기한다.
   const tabCounts: SearchTabCounts | null = hasQuery && currentState.status === "success"
     ? {
-        campaigns: currentState.campaigns?.totalElements ?? 0,
+        events: currentState.events?.totalElements ?? 0,
         posts: currentState.posts?.totalElements ?? 0,
         users: currentState.users?.totalElements ?? 0,
       }

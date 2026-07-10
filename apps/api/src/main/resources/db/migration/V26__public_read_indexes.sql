@@ -3,5 +3,5 @@
 CREATE INDEX `idx_posts_hidden_seq` ON `posts` (`hidden_at`, `seq`);
 CREATE INDEX `idx_posts_category_hidden_seq` ON `posts` (`category`, `hidden_at`, `seq`);
 
-CREATE INDEX `idx_campaigns_hidden_seq` ON `campaigns` (`hidden_at`, `seq`);
-CREATE INDEX `idx_campaigns_status_hidden_seq` ON `campaigns` (`status`, `hidden_at`, `seq`);
+CREATE INDEX `idx_events_hidden_seq` ON `events` (`hidden_at`, `seq`);
+CREATE INDEX `idx_events_status_hidden_seq` ON `events` (`status`, `hidden_at`, `seq`);

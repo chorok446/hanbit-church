@@ -61,8 +61,8 @@ Boot 3.5 비교는 merge 직전 commit worktree 에서 동일 절차로 `openapi
 
 ### Page response schema (구조 유지)
 
-`PostPageResponse`, `CampaignPageResponse`, `ReportsPageResponse`, `PostCommentsPageResponse`,
-`CampaignCommentsResponse`, `PostSearchResponse`, `CampaignSearchResponse`, `NotificationsResponse` —
+`PostPageResponse`, `EventPageResponse`, `ReportsPageResponse`, `PostCommentsPageResponse`,
+`EventCommentsResponse`, `PostSearchResponse`, `EventSearchResponse`, `NotificationsResponse` —
 공통 필드 `content`, `page`, `size`, `totalElements`, `totalPages` 및 `required` 배열 **Boot 3.5 와 동일**.
 
 ### 주요 DTO required/optional (Boot 4.1)
@@ -72,13 +72,13 @@ Boot 3.5 비교는 merge 직전 commit worktree 에서 동일 절차로 `openapi
 | `SignupRequest` / `LoginRequest` | email, password, name / email, password | 변경 없음 |
 | `AuthResponse` | token, name, verified | 변경 없음 |
 | `ChangePasswordResponse` | changed | `token`: `type: ["string","null"]` |
-| `CreatePostRequest` / `UpdatePostRequest` | text, images, tags | `campaignId`: union nullable |
-| `PostResponse` | id, author, text, … (campaignId **미포함**) | `campaignId`: union nullable |
+| `CreatePostRequest` / `UpdatePostRequest` | text, images, tags | `eventId`: union nullable |
+| `PostResponse` | id, author, text, … (eventId **미포함**) | `eventId`: union nullable |
 | `PostCommentResponse` | id, text, author, … (updatedAt **미포함**) | `updatedAt`: union nullable |
 | `CreateReportRequest` | targetType, targetId, reason | `detail`: union nullable |
 | `ReportResponse` | id, targetType, … (detail **미포함**) | `detail`: union nullable |
 | `NotificationResponse` | id, type, title, … (readAt/createdAt **미포함**) | `readAt`, `createdAt`: union nullable |
-| `CampaignCommentResponse` | id, text, … (updatedAt **미포함**) | `updatedAt`: union nullable |
+| `EventCommentResponse` | id, text, … (updatedAt **미포함**) | `updatedAt`: union nullable |
 
 Error response 전용 schema 는 OpenAPI components 에 **없음** (기존과 동일, 전역 ProblemDetail 미노출).
 
@@ -105,11 +105,11 @@ Error response 전용 schema 는 OpenAPI components 에 **없음** (기존과 �
 
 | schema.field | Boot 3.5 | Boot 4.1 | Kotlin 원인 |
 | --- | --- | --- | --- |
-| `CreatePostRequest.campaignId` | `type: string` | `type: [string, null]` | `String?` |
-| `UpdatePostRequest.campaignId` | 동일 | union | `String?` |
-| `PostResponse.campaignId` | 동일 | union | `String?` |
+| `CreatePostRequest.eventId` | `type: string` | `type: [string, null]` | `String?` |
+| `UpdatePostRequest.eventId` | 동일 | union | `String?` |
+| `PostResponse.eventId` | 동일 | union | `String?` |
 | `PostCommentResponse.updatedAt` | 동일 | union | `Instant?` |
-| `CampaignCommentResponse.updatedAt` | 동일 | union | `Instant?` |
+| `EventCommentResponse.updatedAt` | 동일 | union | `Instant?` |
 | `ChangePasswordResponse.token` | 동일 | union | `String?` |
 | `NotificationResponse.readAt` | 동일 | union | `Instant?` |
 | `NotificationResponse.createdAt` | 동일 | union | `Instant?` |

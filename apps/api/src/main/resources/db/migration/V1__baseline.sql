@@ -4,28 +4,28 @@
 -- 이후 스키마 변경은 V2__*.sql 부터 추가한다.
 
 
-CREATE TABLE `campaign_comments` (
+CREATE TABLE `event_comments` (
   `id` varchar(255) NOT NULL,
   `name` varchar(255) DEFAULT NULL,
   `profile_image_url` varchar(500) DEFAULT NULL,
   `verified` bit(1) DEFAULT NULL,
   `author_user_id` bigint DEFAULT NULL,
-  `campaign_id` varchar(255) DEFAULT NULL,
+  `event_id` varchar(255) DEFAULT NULL,
   `created_at` datetime(6) DEFAULT NULL,
   `text` text,
   `updated_at` datetime(6) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `idx_campaign_comments_campaign_created` (`campaign_id`,`created_at`)
+  KEY `idx_event_comments_event_created` (`event_id`,`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-CREATE TABLE `campaign_participants` (
+CREATE TABLE `event_participants` (
   `id` varchar(255) NOT NULL,
-  `campaign_id` varchar(255) DEFAULT NULL,
+  `event_id` varchar(255) DEFAULT NULL,
   `user_id` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UKm54u6pnui3u92o38tujhsxco9` (`campaign_id`,`user_id`),
-  KEY `idx_campaign_participants_user_id` (`user_id`)
+  UNIQUE KEY `UKm54u6pnui3u92o38tujhsxco9` (`event_id`,`user_id`),
+  KEY `idx_event_participants_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-CREATE TABLE `campaigns` (
+CREATE TABLE `events` (
   `id` varchar(255) NOT NULL,
   `name` varchar(255) DEFAULT NULL,
   `profile_image_url` varchar(500) DEFAULT NULL,
@@ -45,7 +45,7 @@ CREATE TABLE `campaigns` (
   `thumb` varchar(255) DEFAULT NULL,
   `title` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `idx_campaigns_author_user_id` (`author_user_id`)
+  KEY `idx_events_author_user_id` (`author_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 CREATE TABLE `notifications` (
   `id` varchar(255) NOT NULL,
@@ -96,7 +96,7 @@ CREATE TABLE `posts` (
   `profile_image_url` varchar(500) DEFAULT NULL,
   `verified` bit(1) DEFAULT NULL,
   `author_user_id` bigint DEFAULT NULL,
-  `campaign_id` varchar(255) DEFAULT NULL,
+  `event_id` varchar(255) DEFAULT NULL,
   `comments` int NOT NULL,
   `images` json DEFAULT NULL,
   `likes` int NOT NULL,
@@ -106,7 +106,7 @@ CREATE TABLE `posts` (
   `time_label` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_posts_author_user_id` (`author_user_id`),
-  KEY `idx_posts_campaign_id` (`campaign_id`)
+  KEY `idx_posts_event_id` (`event_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 CREATE TABLE `reports` (
   `id` varchar(255) NOT NULL,

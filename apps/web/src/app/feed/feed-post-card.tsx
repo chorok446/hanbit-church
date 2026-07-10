@@ -237,10 +237,10 @@ export function FeedPostCard({
 
         <div className="p-4 space-y-3">
           <PostPreview text={p.text} className="line-clamp-2" style={{ color: "var(--foreground)", fontSize: 14, lineHeight: 1.6 }} maxLength={320} />
-          {p.tags.length > 0 || p.campaignId ? (
+          {p.tags.length > 0 || p.eventId ? (
             <div className="flex flex-wrap items-center gap-1.5">
               {/* 연결 행사 배지 — PostBoardList(리스트 뷰)와 동일한 pill 스타일 */}
-              {p.campaignId ? (
+              {p.eventId ? (
                 <span
                   className="text-[11px] px-2 py-0.5 rounded-full"
                   style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}

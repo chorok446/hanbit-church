@@ -22,11 +22,11 @@ import { RichBodyImageGrid } from "@/components/rich-body-image-grid";
 import { ShareButton } from "@/components/share-button";
 import { TagLink } from "@/components/tag-link";
 import type { Post } from "@/data/posts";
-import type { Campaign } from "@/data/campaigns";
+import type { Event } from "@/data/events";
 
 export function PostDetailHero({
   post: p,
-  linkedCampaign,
+  linkedEvent,
   idx,
   imageFailed,
   likes,
@@ -41,11 +41,11 @@ export function PostDetailHero({
   onNextImage,
   onLike,
   onBookmark,
-  onOpenCampaign,
+  onOpenEvent,
   onScrollToComments,
 }: {
   post: Post;
-  linkedCampaign: Campaign | null;
+  linkedEvent: Event | null;
   idx: number;
   imageFailed: boolean;
   likes: number;
@@ -60,7 +60,7 @@ export function PostDetailHero({
   onNextImage: () => void;
   onLike: () => void;
   onBookmark: () => void;
-  onOpenCampaign: (id: string) => void;
+  onOpenEvent: (id: string) => void;
   onScrollToComments: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -176,17 +176,17 @@ export function PostDetailHero({
             ))}
           </div>
 
-          {linkedCampaign && (
+          {linkedEvent && (
             <button
               type="button"
-              onClick={() => onOpenCampaign(linkedCampaign.id)}
+              onClick={() => onOpenEvent(linkedEvent.id)}
               className="w-full cursor-pointer rounded-2xl border p-4 text-left transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-20px_rgba(0,0,0,0.35)] motion-reduce:transform-none"
               style={{ background: "var(--accent-soft)", borderColor: "var(--border)" }}
             >
               <div className="flex items-center gap-3.5">
                 <FallbackImage
-                  src={linkedCampaign.thumb}
-                  alt={`${linkedCampaign.title} 행사 이미지`}
+                  src={linkedEvent.thumb}
+                  alt={`${linkedEvent.title} 행사 이미지`}
                   className="h-14 w-14 shrink-0 rounded-xl object-cover"
                 />
                 <div className="min-w-0 flex-1">
@@ -201,13 +201,13 @@ export function PostDetailHero({
                     className="mt-1 truncate text-[15px] leading-snug"
                     style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
                   >
-                    {linkedCampaign.title}
+                    {linkedEvent.title}
                   </div>
-                  {linkedCampaign.runStart ? (
+                  {linkedEvent.runStart ? (
                     <div className="mt-0.5 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
-                      {linkedCampaign.runStart}
-                      {linkedCampaign.runEnd && linkedCampaign.runEnd !== linkedCampaign.runStart
-                        ? ` ~ ${linkedCampaign.runEnd}`
+                      {linkedEvent.runStart}
+                      {linkedEvent.runEnd && linkedEvent.runEnd !== linkedEvent.runStart
+                        ? ` ~ ${linkedEvent.runEnd}`
                         : null}
                     </div>
                   ) : null}

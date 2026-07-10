@@ -11,17 +11,17 @@ import { updateProfile } from "@/data/users";
 export function NotificationSettingsForm({ embedded = false }: { embedded?: boolean }) {
   const { profile } = useCurrentUserProfile();
   const [saving, setSaving] = useState(false);
-  const campaignNotify = profile?.notifyCampaignUpdates ?? true;
+  const eventNotify = profile?.notifyEventUpdates ?? true;
 
   const toggle = async () => {
     if (!profile || saving) return;
-    const next = !campaignNotify;
+    const next = !eventNotify;
     setSaving(true);
     try {
       await updateProfile({
         name: profile.name,
         profileImageUrl: profile.profileImageUrl ?? null,
-        notifyCampaignUpdates: next,
+        notifyEventUpdates: next,
       });
       notifyProfileUpdated();
     } catch {
@@ -55,23 +55,23 @@ export function NotificationSettingsForm({ embedded = false }: { embedded?: bool
         </div>
 
         <div className="flex items-center justify-between py-2.5">
-          <span id="campaign-notify-label" className="text-[13px]" style={{ color: "var(--foreground)" }}>행사 알림</span>
+          <span id="event-notify-label" className="text-[13px]" style={{ color: "var(--foreground)" }}>행사 알림</span>
           <button
             type="button"
             role="switch"
-            aria-labelledby="campaign-notify-label"
-            aria-checked={campaignNotify}
+            aria-labelledby="event-notify-label"
+            aria-checked={eventNotify}
             disabled={!profile || saving}
             onClick={toggle}
             className="w-10 h-5 rounded-full p-0.5 transition-colors disabled:opacity-40"
             style={{
-              background: campaignNotify
+              background: eventNotify
                 ? "var(--accent)"
                 : "rgba(var(--ink-rgb), 0.15)",
             }}
           >
             <motion.div
-              animate={{ x: campaignNotify ? 20 : 0 }}
+              animate={{ x: eventNotify ? 20 : 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 28 }}
               className="w-4 h-4 rounded-full bg-white"
             />

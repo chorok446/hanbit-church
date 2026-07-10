@@ -4,11 +4,11 @@
 ALTER TABLE `posts`
     ADD COLUMN `deleted_at` datetime(6) DEFAULT NULL;
 
-ALTER TABLE `campaigns`
+ALTER TABLE `events`
     ADD COLUMN `deleted_at` datetime(6) DEFAULT NULL;
 
 ALTER TABLE `post_comments`
     ADD COLUMN `deleted_at` datetime(6) DEFAULT NULL;
 
-ALTER TABLE `campaign_comments`
+ALTER TABLE `event_comments`
     ADD COLUMN `deleted_at` datetime(6) DEFAULT NULL;

@@ -5,12 +5,12 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_DATABASE: dasida
-      MYSQL_USER: dasida
-      MYSQL_PASSWORD: dasida-local-password
+      MYSQL_DATABASE: hanbit
+      MYSQL_USER: hanbit
+      MYSQL_PASSWORD: hanbit-local-password
       MYSQL_ROOT_PASSWORD: root-local-password
     volumes:
-      - dasida-mysql-data:/var/lib/mysql
+      - hanbit-mysql-data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
@@ -36,9 +36,9 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: local
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/dasida?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=utf8
-      SPRING_DATASOURCE_USERNAME: dasida
-      SPRING_DATASOURCE_PASSWORD: dasida-local-password
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/hanbit?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=utf8
+      SPRING_DATASOURCE_USERNAME: hanbit
+      SPRING_DATASOURCE_PASSWORD: hanbit-local-password
       JWT_SECRET: dev-local-change-me-please-change-me-32bytes-minimum
       APP_CORS_ALLOWED_ORIGINS: http://localhost:3000
       SPRING_DATA_REDIS_HOST: redis
@@ -68,4 +68,4 @@ services:
       - api
 
 volumes:
-  dasida-mysql-data:
+  hanbit-mysql-data:

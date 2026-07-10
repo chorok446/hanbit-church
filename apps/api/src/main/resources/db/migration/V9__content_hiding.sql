@@ -4,7 +4,7 @@ ALTER TABLE `posts`
     ADD COLUMN `hidden_at` datetime(6) DEFAULT NULL,
     ADD COLUMN `hidden_reason` varchar(500) DEFAULT NULL;
 
-ALTER TABLE `campaigns`
+ALTER TABLE `events`
     ADD COLUMN `hidden_at` datetime(6) DEFAULT NULL,
     ADD COLUMN `hidden_reason` varchar(500) DEFAULT NULL;
 
@@ -12,6 +12,6 @@ ALTER TABLE `post_comments`
     ADD COLUMN `hidden_at` datetime(6) DEFAULT NULL,
     ADD COLUMN `hidden_reason` varchar(500) DEFAULT NULL;
 
-ALTER TABLE `campaign_comments`
+ALTER TABLE `event_comments`
     ADD COLUMN `hidden_at` datetime(6) DEFAULT NULL,
     ADD COLUMN `hidden_reason` varchar(500) DEFAULT NULL;

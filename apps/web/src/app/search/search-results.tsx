@@ -5,19 +5,19 @@ import { ListEmptyState } from "@/components/list-empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { StatePanel } from "@/components/ui/state-panel";
 import { StaggerItem } from "@/components/scroll-reveal";
-import type { CampaignSearchResponse } from "@/data/campaigns";
+import type { EventSearchResponse } from "@/data/events";
 import type { PostSearchResponse } from "@/data/posts";
 import type { PublicUserPageResponse } from "@/data/users";
 import { MenuShortcutCard, RecommendedQueryChips } from "./search-explore";
 import { matchMenuShortcuts } from "./search-menu";
-import { CampaignResultCard, PostResultCard, UserResultCard } from "./search-result-cards";
+import { EventResultCard, PostResultCard, UserResultCard } from "./search-result-cards";
 import type { SearchUrlState } from "./search-filters";
 import { searchHasActiveFilters } from "./search-filters";
 
 type ResultState = {
   identity: string;
   status: "idle" | "loading" | "success" | "error";
-  campaigns: CampaignSearchResponse | null;
+  events: EventSearchResponse | null;
   posts: PostSearchResponse | null;
   users: PublicUserPageResponse | null;
   errorMessage: string | null;
@@ -68,14 +68,14 @@ export function SearchResults({
   const query = urlState.query.trim();
   const highlight = query || undefined;
 
-  const campaignResponse = currentState.campaigns;
+  const eventResponse = currentState.events;
   const postResponse = currentState.posts;
   const userResponse = currentState.users;
-  const totalResults = (campaignResponse?.totalElements ?? 0)
+  const totalResults = (eventResponse?.totalElements ?? 0)
     + (postResponse?.totalElements ?? 0)
     + (userResponse?.totalElements ?? 0);
   const allEmpty = urlState.type === "all"
-    && (campaignResponse === null || campaignResponse.content.length === 0)
+    && (eventResponse === null || eventResponse.content.length === 0)
     && (postResponse === null || postResponse.content.length === 0)
     && (userResponse === null || userResponse.content.length === 0);
 
@@ -92,7 +92,7 @@ export function SearchResults({
                 “{query}” 검색 결과 <strong>{totalResults.toLocaleString()}</strong>개
               </p>
               <p className="mt-0.5 text-[12px] opacity-60" style={{ color: "var(--foreground)" }}>
-                행사·사역 {(campaignResponse?.totalElements ?? 0).toLocaleString()}개
+                행사·사역 {(eventResponse?.totalElements ?? 0).toLocaleString()}개
                 {" · "}게시글 {(postResponse?.totalElements ?? 0).toLocaleString()}개
                 {" · "}사용자 {(userResponse?.totalElements ?? 0).toLocaleString()}명
               </p>
@@ -161,7 +161,7 @@ export function SearchResults({
         </div>
       ) : null}
 
-      {currentState.status === "success" && urlState.type === "campaigns" && campaignResponse?.content.length === 0 ? (
+      {currentState.status === "success" && urlState.type === "events" && eventResponse?.content.length === 0 ? (
         <ListEmptyState
           title={query ? "검색 결과가 없습니다." : "조건에 맞는 행사·사역이 없어요."}
           description={query ? "다른 키워드로 검색해보세요." : "필터를 초기화하거나 조건을 바꿔보세요."}
@@ -212,26 +212,26 @@ export function SearchResults({
 
       {/* 전체 탭 섹션 순서: 행사·사역 → 게시글 → 사용자 → 바로가기. 결과 0 섹션은 렌더하지 않는다. */}
       {currentState.status === "success"
-        && (urlState.type === "all" || urlState.type === "campaigns")
-        && campaignResponse && campaignResponse.content.length > 0 ? (
+        && (urlState.type === "all" || urlState.type === "events")
+        && eventResponse && eventResponse.content.length > 0 ? (
           <section className="mb-12">
             <SectionHeader
               eyebrow="Events & Ministry"
               title="행사·사역"
-              countLabel={`${campaignResponse.totalElements.toLocaleString()}개`}
+              countLabel={`${eventResponse.totalElements.toLocaleString()}개`}
             />
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {campaignResponse.content.slice(0, 6).map((campaign, i) => (
-                <StaggerItem key={campaign.id} index={i}>
-                  <CampaignResultCard campaign={campaign} highlight={highlight} />
+              {eventResponse.content.slice(0, 6).map((event, i) => (
+                <StaggerItem key={event.id} index={i}>
+                  <EventResultCard event={event} highlight={highlight} />
                 </StaggerItem>
               ))}
             </div>
-            {urlState.type === "all" && campaignResponse.totalElements > campaignResponse.content.length ? (
+            {urlState.type === "all" && eventResponse.totalElements > eventResponse.content.length ? (
               <div className="mt-6 text-center">
                 <button
                   type="button"
-                  onClick={() => onUpdate({ type: "campaigns", page: 0 })}
+                  onClick={() => onUpdate({ type: "events", page: 0 })}
                   className="rounded-full border px-5 py-2.5 text-[13px]"
                   style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
                 >
@@ -322,11 +322,11 @@ export function SearchResults({
         </section>
       ) : null}
 
-      {currentState.status === "success" && urlState.type === "campaigns" && campaignResponse ? (
+      {currentState.status === "success" && urlState.type === "events" && eventResponse ? (
         <Pagination
-          page={campaignResponse.page}
-          totalPages={campaignResponse.totalPages}
-          totalElements={campaignResponse.totalElements}
+          page={eventResponse.page}
+          totalPages={eventResponse.totalPages}
+          totalElements={eventResponse.totalElements}
           className="mt-10"
           onPageChange={(page) => onUpdate({ page })}
         />

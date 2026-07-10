@@ -93,13 +93,13 @@
   **(1) Jackson 2 → Jackson 3 (약 99건) — 최대 블로커.**
   - Boot 4.1 은 기본 JSON 매퍼를 **Jackson 3 (`tools.jackson`, 3.1.4)** 로 전환. 자동 구성되는 `ObjectMapper` bean 이 `tools.jackson.databind.ObjectMapper` 가 됨.
   - 테스트가 생성자로 주입하는 **Jackson 2 타입** `com.fasterxml.jackson.databind.ObjectMapper` bean 은 더 이상 등록되지 않아 `NoSuchBeanDefinitionException` → `ParameterResolutionException`.
-  - 영향 클래스: AuthControllerTest(33), CampaignCommentControllerTest(21), ReportControllerTest(10), FailedMutationRollbackPolicyTest(10), NotificationEventTest(9), AccountDeletionTest(4), PaginationContractTest(3), ListOrderingBoundaryTest(3), NotificationFailureSideEffectTest(3), AggregateCountConsistencyTest(2), ReportConcurrencyTest(1), EmailChangeConcurrencyTest(1) 등.
+  - 영향 클래스: AuthControllerTest(33), EventCommentControllerTest(21), ReportControllerTest(10), FailedMutationRollbackPolicyTest(10), NotificationEventTest(9), AccountDeletionTest(4), PaginationContractTest(3), ListOrderingBoundaryTest(3), NotificationFailureSideEffectTest(3), AggregateCountConsistencyTest(2), ReportConcurrencyTest(1), EmailChangeConcurrencyTest(1) 등.
 
   **(2) Kotlin DTO 요청 body 역직렬화 실패 → POST 400 (약 20건) — 런타임 계약 영향.**
   - classpath 의 `jackson-module-kotlin` 은 여전히 **Jackson 2 (2.21.4)** 라, Boot 4 의 Jackson 3 기본 매퍼에는 Kotlin 모듈이 적용되지 않음.
   - Kotlin data class DTO(기본 생성자 없음)를 역직렬화하지 못해 POST 요청이 **400** 으로 거부됨.
   - 증상: `Status expected:<201> but was:<400>`, `<200>/<403> but <400>`.
-  - 영향: PostControllerTest(13), CampaignControllerTest(6) 등. 이 클래스들은 ObjectMapper 를 주입하지 않으므로(대부분 통과), 이 400 은 **실제 직렬화 회귀**다.
+  - 영향: PostControllerTest(13), EventControllerTest(6) 등. 이 클래스들은 ObjectMapper 를 주입하지 않으므로(대부분 통과), 이 400 은 **실제 직렬화 회귀**다.
 
   **(3) `TestRestTemplate` bean 미자동등록 (10건).**
   - Boot 4 에서 `@SpringBootTest(webEnvironment=RANDOM_PORT)` 만으로는 `TestRestTemplate` 이 자동 주입되지 않고 `@AutoConfigureTestRestTemplate` 이 필요.
@@ -126,7 +126,7 @@
 
 **dependency (`apps/api/build.gradle.kts`)**
 - `com.fasterxml.jackson.module:jackson-module-kotlin` → **`tools.jackson.module:jackson-module-kotlin`** (3.1.4, Boot BOM) 추가
-- Hibernate `@JdbcTypeCode(JSON)` 은 내부 **Jackson 2 FormatMapper** 를 사용하므로 **`com.fasterxml.jackson.module:jackson-module-kotlin`(v2) 유지** (제거 시 SeedRunner/CampaignBody 역직렬화 실패)
+- Hibernate `@JdbcTypeCode(JSON)` 은 내부 **Jackson 2 FormatMapper** 를 사용하므로 **`com.fasterxml.jackson.module:jackson-module-kotlin`(v2) 유지** (제거 시 SeedRunner/EventBody 역직렬화 실패)
 
 **테스트 ObjectMapper → JsonMapper (13 파일)**
 - `com.fasterxml.jackson.databind.ObjectMapper` → **`tools.jackson.databind.json.JsonMapper`**
@@ -139,7 +139,7 @@
 
 ### Kotlin DTO 역직렬화 (POST 400) 처리
 - **원인**: Jackson 2 kotlin module 만 classpath 에 있으면 Boot 4 Jackson 3 `JsonMapper` 에 Kotlin module 미적용
-- **조치**: `tools.jackson.module:jackson-module-kotlin` 추가 → PostControllerTest(117), CampaignControllerTest(143) 등 POST mutation 테스트 **전부 통과**
+- **조치**: `tools.jackson.module:jackson-module-kotlin` 추가 → PostControllerTest(117), EventControllerTest(143) 등 POST mutation 테스트 **전부 통과**
 - DTO 필드/validation/request body contract 변경 없음
 
 ### 남은 실패 (10건, Jackson 외 — 후속 작업)
@@ -261,10 +261,10 @@ wildcard `*` 사용 없음. 기존 CORS profile 정책과 일치.
 | 총 path 수 | **40** |
 | auth paths | 5 |
 | posts paths | 13 |
-| campaigns paths | 14 |
+| events paths | 14 |
 | notifications paths | 6 |
 | reports paths | 2 |
-| Page response schemas | `PostPageResponse`, `CampaignPageResponse`, `ReportsPageResponse` 등 — `content`/`page`/`size`/`totalElements`/`totalPages` 필드 유지 |
+| Page response schemas | `PostPageResponse`, `EventPageResponse`, `ReportsPageResponse` 등 — `content`/`page`/`size`/`totalElements`/`totalPages` 필드 유지 |
 | `nullable: true` schema | **0건** — OpenAPI 3.1 / Jackson 3 nullable 표현 변화 가능성, 프론트 codegen 영향은 후속 관찰 |
 
 springdoc 3.x **runtime 문제 없음**.

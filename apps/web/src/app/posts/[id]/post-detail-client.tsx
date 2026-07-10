@@ -13,7 +13,7 @@ import { AdminModerationButton } from "@/components/admin-moderation-button";
 import { PageShell } from "@/components/page-shell";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { isAdminOnlyCategory, type Post } from "@/data/posts";
-import type { Campaign } from "@/data/campaigns";
+import type { Event } from "@/data/events";
 import { PostDetailComments } from "./post-detail-comments";
 import { PostDetailHero } from "./post-detail-hero";
 import { SermonDetail } from "./sermon-detail";
@@ -105,7 +105,7 @@ function PostActionsMenu({ postId, canReport }: { postId: string; canReport: boo
   );
 }
 
-export default function PostDetailClient({ post, linkedCampaign }: { post: Post; linkedCampaign: Campaign | null }) {
+export default function PostDetailClient({ post, linkedEvent }: { post: Post; linkedEvent: Event | null }) {
   const router = useRouter();
   const p = post;
   const [idx, setIdx] = useState(0);
@@ -293,7 +293,7 @@ export default function PostDetailClient({ post, linkedCampaign }: { post: Post;
         ) : (
         <PostDetailHero
           post={p}
-          linkedCampaign={linkedCampaign}
+          linkedEvent={linkedEvent}
           idx={idx}
           imageFailed={imageFailed}
           likes={likes}
@@ -314,7 +314,7 @@ export default function PostDetailClient({ post, linkedCampaign }: { post: Post;
           }}
           onLike={() => void onLike()}
           onBookmark={() => void onBookmark()}
-          onOpenCampaign={(id) => router.push(`/campaigns/${id}`)}
+          onOpenEvent={(id) => router.push(`/events/${id}`)}
           onScrollToComments={() => commentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
         />
         )}

@@ -6,7 +6,7 @@ import { CHURCH, WORSHIP_SERVICES } from "@/data/church";
 const QUICK_LINKS = [
   { href: "/worship", icon: Clock, label: "예배", title: "이번 주 예배", body: WORSHIP_SERVICES[0].time },
   { href: "/welcome", icon: HeartHandshake, label: "새가족", title: "새가족 안내", body: "처음 오신 분을 환영합니다" },
-  { href: "/campaigns", icon: CalendarHeart, label: "행사·사역", title: "행사·사역", body: "진행 중인 행사 바로가기" },
+  { href: "/events", icon: CalendarHeart, label: "행사·사역", title: "행사·사역", body: "진행 중인 행사 바로가기" },
 ] as const;
 
 /**

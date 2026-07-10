@@ -45,7 +45,7 @@ test("행사 댓글을 작성·수정·삭제할 수 있다", async ({ page }) =
   const stamp = Date.now();
   await signup(page, "e2e-camp-comment");
 
-  await page.goto("/campaigns/new");
+  await page.goto("/events/new");
   await page.getByRole("button", { name: /템플릿 적용/ }).first().click();
 
   const fmt = (d: Date) => d.toISOString().slice(0, 10);
@@ -59,10 +59,11 @@ test("행사 댓글을 작성·수정·삭제할 수 있다", async ({ page }) =
   await page.getByLabel("진행 시작일").fill(addDays(8));
   await page.getByLabel("진행 종료일").fill(addDays(14));
   await page.getByRole("button", { name: "행사 등록" }).click();
-  await page.waitForURL("**/campaigns/c-*");
+  await page.waitForURL("**/events/c-*");
 
-  // 상세는 내용/댓글 탭 구조 — 댓글 탭으로 전환
-  await page.getByRole("button", { name: "댓글", exact: true }).click();
+  // 상세는 내용/댓글 탭 구조 — 댓글 탭으로 전환.
+  // 탭 이름은 카운트 로드 후 "댓글 N" 이 되므로 exact 매칭은 타이밍 플레이크가 된다.
+  await page.getByRole("button", { name: /^댓글( \d+)?$/ }).click();
 
   // 작성
   const commentText = `E2E 행사 댓글 ${stamp}`;

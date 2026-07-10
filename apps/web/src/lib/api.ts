@@ -34,7 +34,7 @@ async function parseBody(res: Response): Promise<unknown> {
   }
 }
 
-// 인증은 httpOnly 쿠키(dasida_token)로 전달된다 → 모든 요청에 credentials: "include".
+// 인증은 httpOnly 쿠키(hanbit_token)로 전달된다 → 모든 요청에 credentials: "include".
 // 서버 컴포넌트 fetch 에는 브라우저 쿠키가 없어 자동으로 비로그인 GET 이 된다(공개 GET 만 SSR 에서 호출).
 
 // 401 이어도 refresh 를 시도하지 않는 경로. refresh 자신은 무한 재귀 방지,

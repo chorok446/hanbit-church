@@ -71,14 +71,14 @@ docker compose -f compose.local.yml up --build
 | Web | http://localhost:3000 |
 | API | http://localhost:8080 |
 | Swagger UI | http://localhost:8080/swagger-ui/index.html |
-| MySQL | `localhost:3306` (DB `dasida`, user `dasida`) |
+| MySQL | `localhost:3306` (DB `hanbit`, user `hanbit`) |
 | Redis-compatible store | `localhost:6379` (compose 서비스명 `redis`, 이미지 `valkey/valkey`) |
 
 - API 는 `local` 프로파일로 Valkey(`redis` 호스트)에 연결한다. 캐싱·세션·JWT 정책은 변경하지 않는다.
 - rate limit 버킷 store 로 Valkey 를 사용한다(`app.rate-limit.store=redis`). 정책 상세는 아래 [Rate limit](#rate-limit) 및 [`apps/api/README.md`](apps/api/README.md) 참고.
 - Redis 연결 smoke test(선택): compose 기동 후 `REDIS_SMOKE=true ./gradlew test --tests RedisCompatibleStoreConnectionTest` (`apps/api`)
 
-- 종료: `Ctrl+C` 후 `docker compose -f compose.local.yml down` (DB 데이터는 volume `dasida-mysql-data` 에 보존)
+- 종료: `Ctrl+C` 후 `docker compose -f compose.local.yml down` (DB 데이터는 volume `hanbit-mysql-data` 에 보존)
 - volume까지 삭제: `docker compose -f compose.local.yml down -v`
 - `compose.local.yml` 의 DB/JWT 값은 **로컬 전용 placeholder**이며 운영 secret 이 아니다.
 - Web 컨테이너 SSR 은 compose 내부 `http://api:8080`(`API_INTERNAL_URL`)을, 브라우저는 `http://localhost:8080`(`NEXT_PUBLIC_API_URL`)을 사용한다. web 컨테이너 안에서 `127.0.0.1:8080`은 web 자신을 가리켜 API에 연결되지 않는다.
@@ -91,7 +91,7 @@ docker compose -f compose.local.yml up --build
 |--------|------|
 | `develop` 대상 PR | CI(web/api/e2e) 통과 시 **auto-merge** |
 | `main` 대상 PR | **develop → main 만 허용** (`main PR source gate`). image build 검증. **수동 merge** |
-| `main` push | **CI 성공 후에만** `docker.io/<DOCKERHUB_USERNAME>/dasida-api`, `dasida-web` push (`sha-<shortsha>`, `main` tag) |
+| `main` push | **CI 성공 후에만** `docker.io/<DOCKERHUB_USERNAME>/hanbit-api`, `hanbit-web` push (`sha-<shortsha>`, `main` tag) |
 
 **브랜치 흐름**: 기능 브랜치 → `develop` PR (CI 통과 시 auto-merge) → 릴리스 시 `develop` → `main` PR (수동 merge). `feat/*` 등을 `main` 으로 직접 PR 하면 CI 가 거부한다.
 
@@ -126,7 +126,7 @@ pnpm dev:api        # Spring Boot (http://localhost:8080)
 |------|------|------|
 | `JWT_SECRET` | api | JWT 서명 시크릿(최소 32바이트). prod 에서는 필수 — 미설정 시 기동 실패. |
 | `JWT_TTL_MS` | api | access token 만료(ms). 기본 1800000(30분). 만료 시 refresh 로 재발급. |
-| `JWT_REFRESH_TTL_MS` | api | refresh token 만료(ms). 기본 1209600000(14일). httpOnly 쿠키(`dasida_refresh`, `Path=/api/auth`)로만 전달, rotation 적용. |
+| `JWT_REFRESH_TTL_MS` | api | refresh token 만료(ms). 기본 1209600000(14일). httpOnly 쿠키(`hanbit_refresh`, `Path=/api/auth`)로만 전달, rotation 적용. |
 | `JWT_COOKIE_SECURE` | api | 인증 쿠키 `Secure` 속성. 로컬 http 는 `false`(기본), HTTPS 운영은 `true`. |
 | `DB_URL` / `DB_USER` / `DB_PASSWORD` | api | MySQL 접속 정보. 기본은 docker-compose 값. |
 | `SPRING_DATA_REDIS_HOST` / `SPRING_DATA_REDIS_PORT` | api | Redis-compatible store 접속(compose `local` 프로파일). 기본 `localhost:6379`. |
@@ -202,7 +202,7 @@ liveness/readiness probe 는 현재 사용하지 않으며, 배포 환경이 확
 | `POST /api/auth/login` | 20 / 60초 |
 | `POST /api/auth/signup` | 10 / 60초 |
 | `POST /api/posts/{id}/comments` | 20 / 60초 (댓글 작성 공유 버킷) |
-| `POST /api/campaigns/{id}/comments` | 20 / 60초 (댓글 작성 공유 버킷) |
+| `POST /api/events/{id}/comments` | 20 / 60초 (댓글 작성 공유 버킷) |
 | `POST /api/reports` | 10 / 60초 |
 
 - **초과 응답**: HTTP `429`, `Retry-After` 헤더, Spring 기본 `/error` JSON body

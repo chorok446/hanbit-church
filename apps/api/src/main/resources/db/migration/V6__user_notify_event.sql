@@ -1,0 +1,2 @@
+ALTER TABLE users
+    ADD COLUMN notify_event_updates BOOLEAN NOT NULL DEFAULT TRUE;

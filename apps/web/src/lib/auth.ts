@@ -1,15 +1,15 @@
-// 클라이언트 세션 마커. JWT 는 httpOnly 쿠키(dasida_token)에만 있어 JS 에서 접근할 수 없다.
+// 클라이언트 세션 마커. JWT 는 httpOnly 쿠키(hanbit_token)에만 있어 JS 에서 접근할 수 없다.
 // localStorage 에는 "로그인돼 있음"을 나타내는 무의미한 세션 식별자와 표시 이름만 둔다.
 // 식별자는 요청 staleness 가드(로그인/로그아웃/재로그인 감지)에 쓰이며, 값 자체에 의미는 없다.
-const SESSION_KEY = "dasida.session";
-const NAME_KEY = "dasida.name";
+const SESSION_KEY = "hanbit.session";
+const NAME_KEY = "hanbit.name";
 // 쿠키 전환 이전(JWT 를 localStorage 에 저장하던 시절) 키. 발견 시 정리한다.
-const LEGACY_TOKEN_KEY = "dasida.token";
+const LEGACY_TOKEN_KEY = "hanbit.token";
 
 // 같은 탭에서 세션 변경을 구독자(useAuthSession)에게 알리는 이벤트. storage 이벤트는 다른 탭만 발화하므로 보완용.
-export const AUTH_EVENT = "dasida-auth";
+export const AUTH_EVENT = "hanbit-auth";
 // 프로필 저장 후 useCurrentUserProfile 등이 /api/auth/me 를 다시 불러오도록 알린다.
-export const PROFILE_EVENT = "dasida-profile";
+export const PROFILE_EVENT = "hanbit-profile";
 
 function notify() {
   if (typeof window !== "undefined") window.dispatchEvent(new Event(AUTH_EVENT));

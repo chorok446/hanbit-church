@@ -21,7 +21,7 @@ test("행사 참여 시 개설자에게 알림이 생성되고 읽음·삭제할
   const joinerPage = await joinerContext.newPage();
 
   await signup(ownerPage, "e2e-notif-owner");
-  await ownerPage.goto("/campaigns/new");
+  await ownerPage.goto("/events/new");
   await ownerPage.getByRole("button", { name: /템플릿 적용/ }).first().click();
 
   const today = new Date();
@@ -37,15 +37,15 @@ test("행사 참여 시 개설자에게 알림이 생성되고 읽음·삭제할
   await ownerPage.getByLabel("진행 시작일").fill(addDays(8));
   await ownerPage.getByLabel("진행 종료일").fill(addDays(14));
   await ownerPage.getByRole("button", { name: "행사 등록" }).click();
-  await ownerPage.waitForURL("**/campaigns/c-*");
-  const campaignUrl = ownerPage.url();
+  await ownerPage.waitForURL("**/events/c-*");
+  const eventUrl = ownerPage.url();
 
   // exact: CTA 의 disabled "모집 시작 전입니다" 버튼과 substring 충돌 방지
   await ownerPage.getByRole("button", { name: "모집 시작", exact: true }).click();
   await ownerPage.getByRole("alertdialog").getByRole("button", { name: "확인" }).click();
 
   await signup(joinerPage, "e2e-notif-joiner");
-  await joinerPage.goto(campaignUrl);
+  await joinerPage.goto(eventUrl);
   await joinerPage.getByRole("button", { name: "행사 참여하기" }).click();
   await expect(joinerPage.getByText("참여 완료 · 모집 중인 행사입니다")).toBeVisible();
 
