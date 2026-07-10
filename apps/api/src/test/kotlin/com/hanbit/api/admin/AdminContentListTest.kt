@@ -150,4 +150,37 @@ class AdminContentListTest(
         // 마감 경과 open 1건은 반드시 포함, 여유·closed 는 제외(시드에 다른 open 행사가 있을 수 있어 >= 로 검증).
         org.assertj.core.api.Assertions.assertThat(closingSoon).isGreaterThanOrEqualTo(1)
     }
+
+    @Test
+    fun `q 검색은 본문·작성자(게시글)와 제목(행사)을 거른다`() {
+        savePost("가을 바자회 안내문")
+        savePost("무관한 글", hidden = true)
+        saveEvent("가을 바자회")
+
+        mvc.get("/api/admin/content") {
+            headers { add("Authorization", "Bearer $adminToken") }
+            param("type", "POST"); param("q", "바자회"); param("size", "50")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.content[?(@.title == '가을 바자회 안내문')]") { exists() }
+            jsonPath("$.content[?(@.title == '무관한 글')]") { doesNotExist() }
+        }
+
+        mvc.get("/api/admin/content") {
+            headers { add("Authorization", "Bearer $adminToken") }
+            param("type", "EVENT"); param("q", "바자회"); param("size", "50")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.content[?(@.title == '가을 바자회')]") { exists() }
+        }
+
+        // 숨김만 + 검색 조합.
+        mvc.get("/api/admin/content") {
+            headers { add("Authorization", "Bearer $adminToken") }
+            param("type", "POST"); param("q", "무관한"); param("hiddenOnly", "true"); param("size", "50")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.content[?(@.title == '무관한 글')].hidden") { value(true) }
+        }
+    }
 }
