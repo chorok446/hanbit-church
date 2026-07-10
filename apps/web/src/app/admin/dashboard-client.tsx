@@ -140,9 +140,8 @@ export default function DashboardClient() {
 
   const { summary, pendingApprovals, pendingNewFamily } = state.data;
 
-  // 오늘 처리할 일 — 권한이 있는 항목만 3열로 노출한다(건수 0도 표시해 "처리할 일 없음"을 드러낸다).
-  // 각 항목은 성격에 맞는 틴트를 쓴다: 신고=danger, 승인=gold, 새가족=중립.
-  // TODO(마감 임박 행사: 관리자용 마감 임박 행사 집계 데이터 함수가 생기면 항목 추가)
+  // 오늘 처리할 일 — 권한이 있는 항목만 노출한다(건수 0도 표시해 "처리할 일 없음"을 드러낸다).
+  // 각 항목은 성격에 맞는 틴트를 쓴다: 신고=danger, 승인=gold, 새가족=중립, 마감=gold.
   const todos = [
     {
       key: "reports",
@@ -176,6 +175,17 @@ export default function DashboardClient() {
       permission: "canManageNewFamily" as const,
       tintBg: "var(--chip-bg)",
       numberColor: "var(--heading)",
+    },
+    {
+      key: "closing-soon",
+      href: "/admin/content",
+      icon: Megaphone,
+      label: "마감 임박·경과 행사",
+      count: summary.closingSoonEvents ?? 0,
+      unit: "건",
+      permission: "canManageEvents" as const,
+      tintBg: "var(--accent-soft)",
+      numberColor: "var(--accent-strong)",
     },
   ].filter((todo) => permissions[todo.permission]);
 
