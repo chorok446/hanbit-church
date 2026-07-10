@@ -342,7 +342,7 @@ export default function NotificationsClient() {
               <p className="font-medium">
                 {unreadOnly ? "안 읽은 알림이 없습니다." : "알림이 없습니다."}
               </p>
-              <p className="text-[12px] opacity-60">
+              <p className="text-[12px] opacity-75">
                 {unreadOnly
                   ? "새 알림이 오면 이 목록에 표시됩니다."
                   : "관심 있는 행사에 참여하면 소식을 알림으로 받을 수 있어요."}

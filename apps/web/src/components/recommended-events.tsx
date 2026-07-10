@@ -91,7 +91,7 @@ export function RecommendedEvents({ heading = "지금 모집 중인 행사" }: {
                         style={{ width: `${pct}%`, background: statusMeta[event.status].color }}
                       />
                     </div>
-                    <span className="text-[11px] opacity-60" style={{ color: "var(--foreground)" }}>
+                    <span className="text-[11px] opacity-75" style={{ color: "var(--foreground)" }}>
                       {event.joined}/{event.capacity}명 · {event.daysLeftLabel}
                     </span>
                   </div>

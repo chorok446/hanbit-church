@@ -47,7 +47,7 @@
   --danger-rgb: 179, 64, 47;
   --danger-soft: rgba(var(--danger-rgb), 0.1);
   /* 흰 글자를 얹는 채워진 위험 버튼·배지용 솔리드 채도. */
-  --danger-solid: #d94e3c;
+  --danger-solid: #c73f2d; /* 흰 텍스트와 5.0:1 — 13px 버튼·배지 AA */
   /* 성공(참여 완료 등) 그린. */
   --success: #1f7a4a; /* 크림(--on-success) 텍스트와 4.5:1 이상 — 배지 배경용 */
   --on-success: #f6f3ea;
@@ -100,7 +100,7 @@
   --danger: #f3b4ab;
   --danger-rgb: 243, 180, 171;
   --danger-soft: rgba(var(--danger-rgb), 0.14);
-  --danger-solid: #d0523f;
+  --danger-solid: #c9432f; /* 흰 텍스트와 4.8:1 */
   --success: #5cc493;
   --on-success: #10241a; /* 다크의 밝은 그린 위엔 딥 잉크 — 크림이면 대비 미달 */
   --success-soft: rgba(92, 196, 147, 0.16);
