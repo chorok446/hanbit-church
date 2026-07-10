@@ -25,7 +25,7 @@ export default function SermonsPage() {
                 Sermons
               </p>
               <h1
-                className="text-[34px] sm:text-[40px] text-[#f6f3ea]"
+                className="text-[34px] sm:text-[40px] text-[var(--on-banner)]"
                 style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
               >
                 설교 말씀
@@ -34,7 +34,7 @@ export default function SermonsPage() {
             {/* 스태프(콘텐츠 관리 권한)에게만 보이는 전용 등록 진입점 */}
             <StaffWriteButton href="/sermons/write" label="설교 등록" />
           </div>
-          <p className="mt-3.5 max-w-[52ch] text-[15px] leading-[30px]" style={{ color: "rgba(246, 243, 234, 0.78)" }}>
+          <p className="mt-3.5 max-w-[52ch] text-[15px] leading-[30px]" style={{ color: "rgba(var(--on-banner-rgb), 0.78)" }}>
             주일 말씀의 요약과 다시듣기 영상입니다. 글을 열면 예배 영상과 나눔 질문을 함께
             보실 수 있습니다.
           </p>

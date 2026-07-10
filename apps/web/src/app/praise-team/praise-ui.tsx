@@ -51,11 +51,11 @@ export function SectionLabel({ children }: { children: ReactNode }) {
   );
 }
 
-// 네이비 밴드 위 크림 텍스트는 배너 관례(#f6f3ea / rgba(246,243,234,a)) 리터럴을 쓴다
+// 네이비 밴드 위 크림 텍스트는 중앙 토큰 var(--on-banner) / rgba(var(--on-banner-rgb), a) 를 쓴다
 // (--on-banner 토큰이 없으므로 mypage-profile-header 와 같은 값을 재사용).
-const BAND_CREAM = "#f6f3ea";
-const BAND_CREAM_MUTED = "rgba(246, 243, 234, 0.72)";
-const BAND_CREAM_BORDER = "rgba(246, 243, 234, 0.3)";
+const BAND_CREAM = "var(--on-banner)";
+const BAND_CREAM_MUTED = "rgba(var(--on-banner-rgb), 0.72)";
+const BAND_CREAM_BORDER = "rgba(var(--on-banner-rgb), 0.3)";
 
 /** 밴드 하단 nav pill — 아웃라인(크림 border) 또는 채움(크림 배경 + 네이비 텍스트). */
 export function BandPill({

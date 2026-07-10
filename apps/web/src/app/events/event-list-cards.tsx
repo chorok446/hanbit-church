@@ -19,13 +19,13 @@ import { EventThumb } from "./event-thumb";
  */
 function badgeStyle(lifecycle: EventLifecycle): { background: string; color: string } {
   if (lifecycle.phase === "recruiting") {
-    return { background: "var(--success)", color: "#f6f3ea" };
+    return { background: "var(--success)", color: "var(--on-banner)" };
   }
   if (lifecycle.badge.label === "정원마감") {
     return { background: "var(--danger-solid)", color: "#ffffff" };
   }
   // 모집예정·모집마감·진행중·종료 — 네이비 중립 톤(크림 텍스트).
-  return { background: "rgba(31,42,68,0.82)", color: "#f6f3ea" };
+  return { background: "rgba(31,42,68,0.82)", color: "var(--on-banner)" };
 }
 
 function StatusBadge({ lifecycle }: { lifecycle: EventLifecycle }) {
@@ -157,7 +157,7 @@ export function EventListCard({ event }: { event: Event }) {
             </div>
             <div
               className="absolute bottom-3 left-3 right-3 text-[12px] font-medium"
-              style={{ color: "#f6f3ea", textShadow: "0 1px 6px rgba(0,0,0,0.45)" }}
+              style={{ color: "var(--on-banner)", textShadow: "0 1px 6px rgba(0,0,0,0.45)" }}
             >
               {/* D-day 기준은 eventLifecycle 주석 참고 — 카드·상세 동일 기준 */}
               {lifecycle.dday}

@@ -57,6 +57,10 @@
   --cta-fg: #f6f3ea;
   /* 채워진 위험 버튼 위에 얹는 글자색. */
   --on-danger: #ffffff;
+  /* 네이비 밴드(--banner-bg) 위 크림 텍스트 — 밴드는 테마와 무관하게 항상 네이비라 값이 고정이다.
+     투명도 변형은 rgba(var(--on-banner-rgb), a) 로 쓴다. */
+  --on-banner: #f6f3ea;
+  --on-banner-rgb: 246, 243, 234;
   /* 통계 차트 전용 범주형 팔레트 — 라이트·다크 양쪽에서 4색이 서로 구분되어야 한다. */
   --chart-1: #2f6fed;
   --chart-2: #2f9c68;

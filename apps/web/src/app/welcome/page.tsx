@@ -82,26 +82,26 @@ export default function WelcomePage() {
             Welcome
           </p>
           <h1
-            className="text-[34px] sm:text-[40px] text-[#f6f3ea]"
+            className="text-[34px] sm:text-[40px] text-[var(--on-banner)]"
             style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
           >
             처음 오셨나요?
           </h1>
-          <p className="mt-3.5 max-w-[52ch] text-[15px] leading-[30px]" style={{ color: "rgba(246, 243, 234, 0.78)" }}>
+          <p className="mt-3.5 max-w-[52ch] text-[15px] leading-[30px]" style={{ color: "rgba(var(--on-banner-rgb), 0.78)" }}>
             {CHURCH.name}는 처음 오시는 한 분 한 분을 기쁨으로 환영합니다. 등록은 의무가 아니며,
             원하시는 경우 새가족 안내와 교제를 도와드립니다.
           </p>
           <div className="mt-6 flex flex-wrap gap-2.5">
             <Link
               href="/worship"
-              className="inline-flex min-h-11 items-center rounded-full bg-[#f6f3ea] px-6 py-2.5 text-[14px] font-medium text-[#1f2a44] transition-opacity hover:opacity-90"
+              className="inline-flex min-h-11 items-center rounded-full bg-[var(--on-banner)] px-6 py-2.5 text-[14px] font-medium text-[#1f2a44] transition-opacity hover:opacity-90"
             >
               예배 시간 보기
             </Link>
             <Link
               href="/about"
-              className="inline-flex min-h-11 items-center rounded-full border px-6 py-2.5 text-[14px] font-medium text-[#f6f3ea] transition-colors hover:bg-white/10"
-              style={{ borderColor: "rgba(246, 243, 234, 0.4)" }}
+              className="inline-flex min-h-11 items-center rounded-full border px-6 py-2.5 text-[14px] font-medium text-[var(--on-banner)] transition-colors hover:bg-white/10"
+              style={{ borderColor: "rgba(var(--on-banner-rgb), 0.4)" }}
             >
               오시는 길 보기
             </Link>
@@ -244,32 +244,32 @@ export default function WelcomePage() {
       <section className="px-6 py-24 text-center" style={{ background: "var(--banner-bg)" }}>
         <div className="mx-auto max-w-[640px]">
           <h2
-            className="text-[26px] text-[#f6f3ea] sm:text-[30px]"
+            className="text-[26px] text-[var(--on-banner)] sm:text-[30px]"
             style={{ fontFamily: "var(--font-display)", fontWeight: 600, textWrap: "balance" }}
           >
             처음 방문을 준비하고 계신가요?
           </h2>
-          <p className="mx-auto mt-3.5 text-[14.5px] leading-[27px]" style={{ color: "rgba(246, 243, 234, 0.75)" }}>
+          <p className="mx-auto mt-3.5 text-[14.5px] leading-[27px]" style={{ color: "rgba(var(--on-banner-rgb), 0.75)" }}>
             예배 시간과 오시는 길을 미리 확인해 보세요.
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <Link
               href="/worship"
-              className="inline-flex min-h-12 items-center rounded-full bg-[#f6f3ea] px-8 py-3.5 text-[15px] font-medium text-[#1f2a44] transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
+              className="inline-flex min-h-12 items-center rounded-full bg-[var(--on-banner)] px-8 py-3.5 text-[15px] font-medium text-[#1f2a44] transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
             >
               예배 안내 보기
             </Link>
             <Link
               href="/about"
-              className="inline-flex min-h-12 items-center rounded-full border px-8 py-3.5 text-[15px] font-medium text-[#f6f3ea] transition-colors hover:bg-white/10"
+              className="inline-flex min-h-12 items-center rounded-full border px-8 py-3.5 text-[15px] font-medium text-[var(--on-banner)] transition-colors hover:bg-white/10"
               style={{ borderColor: "rgba(212, 176, 74, 0.6)" }}
             >
               오시는 길 보기
             </Link>
           </div>
-          <p className="mt-7 text-[13px]" style={{ color: "rgba(246, 243, 234, 0.6)" }}>
+          <p className="mt-7 text-[13px]" style={{ color: "rgba(var(--on-banner-rgb), 0.6)" }}>
             홈페이지 소식과 교제에 참여하고 싶으시다면{" "}
-            <Link href="/signup" className="underline underline-offset-4 text-[#f6f3ea]">
+            <Link href="/signup" className="underline underline-offset-4 text-[var(--on-banner)]">
               회원가입
             </Link>
             을 해보세요.
