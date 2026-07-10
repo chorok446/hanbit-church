@@ -33,7 +33,8 @@ test("비밀번호를 변경하면 새 비밀번호로만 로그인된다", asyn
   await section.getByLabel("새 비밀번호 확인").fill(NEW_PASSWORD);
   await section.getByRole("button", { name: "비밀번호 변경" }).click();
   // 성공 시 세션 마커 재발급으로 폼이 리마운트되므로 피드백은 toast 로 노출된다.
-  await expect(page.getByText("비밀번호가 변경되었습니다.")).toBeVisible();
+  // 비밀번호 변경은 BCrypt 2회(현재 확인+새 해시)라 머신 부하 시 5s 를 넘길 수 있다 — 여유 대기.
+  await expect(page.getByText("비밀번호가 변경되었습니다.")).toBeVisible({ timeout: 15_000 });
 
   // 기존 비밀번호는 거부된다
   await logout(page);
