@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, RefreshCw, ShieldCheck, UserMinus, Users } from "lucide-react";
+import { ArrowLeft, Download, RefreshCw, ShieldCheck, UserMinus, Users } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
 import { StatePanel } from "@/components/ui/state-panel";
-import { apiGet, ApiError } from "@/lib/api";
+import { apiFetch, apiGet, ApiError } from "@/lib/api";
 import { clearSession, getSessionId } from "@/lib/auth";
 import { useAuthSession } from "@/lib/use-auth-session";
 import { useConfirm } from "@/components/ui/confirm-dialog";
@@ -44,6 +44,7 @@ export default function ParticipantsClient({ id }: { id: string }) {
   const [page, setPage] = useState(0);
   const [retry, setRetry] = useState(0);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const confirm = useConfirm();
   const identity = `${id}:${token ?? "anonymous"}:${page}:${retry}`;
@@ -113,6 +114,28 @@ export default function ParticipantsClient({ id }: { id: string }) {
     if (requestInFlightRef.current) return;
     requestInFlightRef.current = true;
     setRetry((current) => current + 1);
+  };
+
+  /** 명단 CSV 다운로드 — 서버가 목록과 동일한 정보(이름·인증)만 담아 내려준다. */
+  const exportCsv = async () => {
+    if (exporting) return;
+    setExporting(true);
+    setActionError(null);
+    try {
+      const res = await apiFetch(`/api/events/${id}/participants/export`, { method: "GET" });
+      if (!res.ok) throw new ApiError(res.status, "/participants/export", undefined, undefined);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `participants-${id}.csv`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setActionError("명단을 내려받지 못했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setExporting(false);
+    }
   };
 
   // 개설자 강제 퇴장. 성공 시 현재 page 를 재조회한다(load effect 가 빈 page 면 이전 page 로 이동).
@@ -223,14 +246,25 @@ export default function ParticipantsClient({ id }: { id: string }) {
                 <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">{data.title}</h1>
                 <p className="mt-2 text-[13px] opacity-60">현재 참여 인원 {data.joined}명 / 정원 {data.capacity}명</p>
               </div>
-              <button
-                type="button"
-                onClick={refresh}
-                className="inline-flex items-center justify-center gap-2 self-start rounded-xl px-4 py-2 text-[13px] disabled:opacity-45"
-                style={{ background: "rgba(var(--ink-rgb), 0.08)" }}
-              >
-                <RefreshCw size={14} /> 새로고침
-              </button>
+              <div className="flex flex-wrap gap-2 self-start">
+                <button
+                  type="button"
+                  onClick={() => void exportCsv()}
+                  disabled={exporting}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13px] disabled:opacity-45"
+                  style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+                >
+                  <Download size={14} /> {exporting ? "내려받는 중…" : "CSV 내보내기"}
+                </button>
+                <button
+                  type="button"
+                  onClick={refresh}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13px] disabled:opacity-45"
+                  style={{ background: "rgba(var(--ink-rgb), 0.08)" }}
+                >
+                  <RefreshCw size={14} /> 새로고침
+                </button>
+              </div>
             </div>
           </header>
 
