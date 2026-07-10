@@ -25,6 +25,7 @@ class EventParticipantService(
     private val participants: EventParticipantRepository,
     private val bookmarkRepo: EventBookmarkRepository,
     private val users: UserRepository,
+    private val notificationRepo: com.hanbit.api.notification.NotificationRepository,
     private val notifications: NotificationService,
     private val clock: Clock,
 ) {
@@ -112,6 +113,13 @@ class EventParticipantService(
     @Transactional
     fun notifySeatOpened(actorUserId: Long, eventId: String, eventTitle: String, recipientIds: List<Long>) {
         recipientIds.forEach { recipientId ->
+            // 같은 행사의 자리 알림을 아직 안 읽었으면 또 보내지 않는다(반복 취소·증원 스팸 방지).
+            if (notificationRepo.existsByUserIdAndTypeAndHrefAndReadAtIsNull(
+                    recipientId, NotificationType.EVENT_CAPACITY_INCREASED, "/events/$eventId",
+                )
+            ) {
+                return@forEach
+            }
             notifications.notify(
                 recipientUserId = recipientId,
                 actorUserId = actorUserId,
