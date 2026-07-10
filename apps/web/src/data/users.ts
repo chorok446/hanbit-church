@@ -14,6 +14,8 @@ export type UserProfile = {
   praiseRole?: "LEADER" | "MEMBER" | "GUEST" | null;
   /** 찬양팀 파트(백엔드 PraisePart 문자열 — LEADER/VOCAL/KEYBOARD/…). */
   praiseParts?: string[];
+  /** 2단계 인증(TOTP) 활성 여부. */
+  twoFactorEnabled?: boolean;
 };
 
 export type PublicUser = {
