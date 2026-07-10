@@ -6,7 +6,7 @@ import { ListEmptyState } from "@/components/list-empty-state";
 import { PostPreview } from "@/components/post-text";
 import Link from "next/link";
 import { ExternalLink, EyeOff, Heart, MessageCircle, PenLine } from "lucide-react";
-import { fetchMyPostsPage, type Post } from "@/data/posts";
+import { fetchMyPostsPage, postTimeLabel, type Post } from "@/data/posts";
 import { PaginatedSection } from "./paginated-section";
 
 // 카드 하단 액션 버튼 공통 클래스. 색은 CSS 토큰이 테마를 처리한다.
@@ -52,7 +52,7 @@ function MyPostCard({ post }: { post: Post }) {
           ) : null}
           <div className="flex items-center justify-between gap-3">
             <span className="truncate text-[13px] font-medium">{post.author.name}</span>
-            <span className="shrink-0 text-[11px] opacity-55">{post.time}</span>
+            <span className="shrink-0 text-[11px] opacity-55">{postTimeLabel(post)}</span>
           </div>
           {image ? <PostPreview text={post.text} className="line-clamp-2 text-[13px] leading-6 opacity-80" maxLength={120} /> : null}
           {post.tags.length > 0 ? (

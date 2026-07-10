@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Eye, Heart, MessageCircle, Paperclip } from "lucide-react";
 import { PostPreview } from "@/components/post-text";
-import { isAdminOnlyCategory, postCategoryBadge, type Post } from "@/data/posts";
+import { isAdminOnlyCategory, postCategoryBadge, postTimeLabel, type Post } from "@/data/posts";
 
 /**
  * 전통 게시판 형식의 게시글 목록(행 단위). 공지·주보 등 교회 공식 소식의 기본 뷰이며
@@ -56,7 +56,7 @@ export function PostBoardList({ posts, showCategory = true }: { posts: Post[]; s
               <div className="mt-0.5 flex items-center gap-1.5 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
                 <span className="truncate">{post.author.name}</span>
                 <span aria-hidden>·</span>
-                <span className="shrink-0">{post.time}</span>
+                <span className="shrink-0">{postTimeLabel(post)}</span>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-3 text-[12px]" style={{ color: "var(--foreground-muted)" }}>

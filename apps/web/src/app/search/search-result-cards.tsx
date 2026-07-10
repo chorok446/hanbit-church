@@ -7,7 +7,7 @@ import { Avatar } from "@/components/avatar";
 import { FallbackImage } from "@/components/fallback-image";
 import { ReportButton } from "@/components/report-button";
 import { eventRecruitMeta, type Event } from "@/data/events";
-import { postCategoryBadge, type Post } from "@/data/posts";
+import { postCategoryBadge, postTimeLabel, type Post } from "@/data/posts";
 import type { PublicUser } from "@/data/users";
 import { progressPercent } from "@/lib/progress";
 import { richTextPlainPreview } from "@/lib/rich-text-length";
@@ -121,7 +121,7 @@ export function PostResultCard({ post, highlight }: { post: Post; highlight?: st
           verified={post.author.verified}
           profileImageUrl={post.author.profileImageUrl}
           authorId={post.authorId}
-          time={post.time}
+          time={postTimeLabel(post)}
           timeClassName="text-[11px] opacity-50"
         />
         <span

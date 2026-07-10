@@ -14,7 +14,7 @@ import { FallbackImage } from "@/components/fallback-image";
 import { PostPreview } from "@/components/post-text";
 import { ShareButton } from "@/components/share-button";
 import { TagLink } from "@/components/tag-link";
-import { isAdminOnlyCategory, postCategoryBadge, type Post, type PostComment } from "@/data/posts";
+import { isAdminOnlyCategory, postCategoryBadge, postTimeLabel, type Post, type PostComment } from "@/data/posts";
 
 const MAX_COMMENT_LENGTH = 500;
 
@@ -203,7 +203,7 @@ export function FeedPostCard({
             verified={p.author.verified}
             profileImageUrl={p.author.profileImageUrl}
             authorId={p.authorId}
-            time={p.time}
+            time={postTimeLabel(p)}
             timeClassName="text-[11px] opacity-60"
           />
           {(() => {
