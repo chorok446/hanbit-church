@@ -16,7 +16,7 @@ type SignupResponse =
 
 function Rule({ ok, label }: { ok: boolean; label: string }) {
   return (
-    <div className="flex items-center gap-1.5 text-[12px]" style={{ color: ok ? "var(--accent)" : "rgba(var(--ink-rgb), 0.4)" }}>
+    <div className="flex items-center gap-1.5 text-[12px]" style={{ color: ok ? "var(--accent)" : "rgba(var(--ink-rgb), 0.6)" }}>
       <Check size={14} />
       {label}
     </div>
@@ -64,7 +64,7 @@ export default function SignupPage() {
             <br />
             관리자 승인이 완료되면 로그인하실 수 있어요.
           </p>
-          <p className="text-[13px] leading-6" style={{ color: "rgba(var(--ink-rgb), 0.6)" }}>
+          <p className="text-[13px] leading-6" style={{ color: "rgba(var(--ink-rgb), 0.72)" }}>
             승인 여부는 교회 사무실을 통해 안내드립니다. 문의가 필요하시면 교회로 연락해 주세요.
           </p>
           <Link
@@ -84,7 +84,7 @@ export default function SignupPage() {
       subtitle="Join the journey"
       title="회원가입"
       footer={
-        <p className="text-center text-[14px] mt-4" style={{ color: "rgba(var(--ink-rgb), 0.7)" }}>
+        <p className="text-center text-[14px] mt-4" style={{ color: "rgba(var(--ink-rgb), 0.8)" }}>
           이미 계정이 있으신가요?{" "}
           <Link href="/login" className="underline" style={{ color: "var(--accent)" }}>
             로그인
@@ -127,7 +127,7 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={submitting || !canSubmit}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-40 motion-reduce:transform-none"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-55 motion-reduce:transform-none"
           style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
         >
           {submitting ? "가입 중…" : "회원가입"} <ArrowRight size={16} aria-hidden="true" />
