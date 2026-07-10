@@ -139,4 +139,32 @@ class ManualCalendarControllerTest(
             headers { add("Authorization", "Bearer $adminToken") }
         }.andExpect { status { isNotFound() } }
     }
+
+    @Test
+    fun `ics 피드는 수동 일정과 공개 행사를 담고 특수문자를 이스케이프한다`() {
+        repo.saveAndFlush(
+            ManualCalendarEvent(
+                id = "mc-ics-1",
+                title = "부활절; 새벽, 연합예배",
+                type = "worship",
+                startDate = "2026-09-01",
+                endDate = "2026-09-02",
+                createdBy = "테스트",
+                createdAt = Instant.now(),
+            ),
+        )
+
+        val body = mvc.get("/api/calendar/ics").andExpect {
+            status { isOk() }
+            content { contentTypeCompatibleWith("text/calendar") }
+        }.andReturn().response.contentAsString
+
+        assertThat(body).startsWith("BEGIN:VCALENDAR")
+        assertThat(body).contains("UID:manual-mc-ics-1@hanbit-church")
+        assertThat(body).contains("SUMMARY:부활절\\; 새벽\\, 연합예배")
+        assertThat(body).contains("DTSTART;VALUE=DATE:20260901")
+        // DTEND 는 exclusive — 마지막 날(9/2) 포함을 위해 9/3.
+        assertThat(body).contains("DTEND;VALUE=DATE:20260903")
+        assertThat(body.trimEnd()).endsWith("END:VCALENDAR")
+    }
 }
