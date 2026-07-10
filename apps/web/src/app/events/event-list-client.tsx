@@ -46,7 +46,12 @@ type SearchState = {
   errorMessage: string | null;
 };
 
-export default function EventListClient() {
+export default function EventListClient({
+  initialResponse = null,
+}: {
+  /** 서버 컴포넌트(ISR)가 선주입한 기본 뷰(필터 없음·최신순·0페이지) 결과. */
+  initialResponse?: EventSearchResponse | null;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { sessionId: token } = useAuthSession();
@@ -74,12 +79,12 @@ export default function EventListClient() {
 
   useCanonicalUrl(canonicalHref, currentHref);
   const requestIdentity = JSON.stringify([token, urlState, retryTick]);
-  const [searchState, setSearchState] = useState<SearchState>({
-    identity: "",
-    status: "loading",
-    response: null,
-    errorMessage: null,
-  });
+  // SSR 선주입 시드 — 첫 렌더의 requestIdentity(비로그인·기본 URL)와 일치할 때만 유효하다.
+  // URL 에 필터가 있거나 로그인 세션이 잡히면 identity 가 달라져 자연히 재조회된다.
+  const [searchState, setSearchState] = useState<SearchState>(() =>
+    initialResponse !== null && token === null
+      ? { identity: requestIdentity, status: "success", response: initialResponse, errorMessage: null }
+      : { identity: "", status: "loading", response: null, errorMessage: null });
   const currentState = staleByIdentity(searchState, requestIdentity, {
     identity: requestIdentity,
     status: "loading",
@@ -103,6 +108,8 @@ export default function EventListClient() {
     if (getSessionId() !== token) return;
     // 캘린더 보기는 EventCalendarView 가 전체 목록(/api/events)을 따로 불러온다.
     if (urlState.view === "calendar") return;
+    // 현재 identity 의 성공 결과(SSR 선주입 포함)가 이미 있으면 재요청하지 않는다.
+    if (searchState.identity === requestIdentity && searchState.status === "success") return;
 
     const params = new URLSearchParams();
     if (urlState.query) params.set("q", urlState.query);
@@ -138,6 +145,8 @@ export default function EventListClient() {
     return guard.cancel;
   }, [
     requestIdentity,
+    searchState.identity,
+    searchState.status,
     token,
     dateFilterError,
     urlState.availableOnly,
