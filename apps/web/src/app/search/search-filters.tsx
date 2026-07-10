@@ -11,7 +11,7 @@ import {
 } from "@/data/events";
 
 export type SearchType = "all" | "events" | "posts" | "users";
-export type SearchSort = "latest" | "popular" | "deadline";
+export type SearchSort = "latest" | "popular" | "deadline" | "relevance";
 
 export type SearchUrlState = EventDateRangeFilters & {
   query: string;
@@ -149,7 +149,6 @@ export function SearchFilters({
           })}
         </div>
         {state.type !== "users" ? (
-          // TODO(관련도 정렬: 백엔드 점수 필요) — 검색어가 있어도 기본 최신순을 유지한다.
           <label className="flex items-center gap-2 self-end text-[13px] sm:self-auto">
             <span className="sr-only">검색 결과 정렬</span>
             <select
@@ -159,6 +158,8 @@ export function SearchFilters({
               style={{ color: "var(--foreground)", background: "var(--card)", borderColor: "var(--border)" }}
             >
               <option value="latest">최신순</option>
+              {/* 관련순 — 검색어 위치 기반 백엔드 정렬(sort=relevance). 검색어가 없으면 최신순과 같다. */}
+              <option value="relevance">관련순</option>
               <option value="popular">인기순</option>
               {state.type === "events" ? <option value="deadline">마감임박순</option> : null}
             </select>
@@ -218,6 +219,7 @@ export function parseSearchType(value: string | null): SearchType {
 export function parseSearchSort(value: string | null, type: SearchType): SearchSort {
   if (type === "users") return "latest";
   if (value === "popular") return "popular";
+  if (value === "relevance") return "relevance";
   if (value === "deadline" && type === "events") return "deadline";
   return "latest";
 }
