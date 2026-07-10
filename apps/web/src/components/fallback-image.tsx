@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { Image as ImageIcon } from "lucide-react";
 import { uploadThumbUrl } from "@/lib/upload-thumb";
+import { CARD_IMAGE_SIZES, unsplashSrcSet } from "@/lib/unsplash-srcset";
 
 type FallbackImageProps = {
   src: string;
@@ -15,6 +16,8 @@ type FallbackImageProps = {
   thumbnail?: boolean;
   /** 첫 화면(above the fold) 이미지만 "eager". 기본은 lazy — 목록·그리드가 대부분이라 대역폭을 아낀다. */
   loading?: "eager" | "lazy";
+  /** srcSet 이 적용되는 unsplash 소스의 표시 폭 힌트. 기본은 카드 그리드 기준. */
+  sizes?: string;
 };
 
 export function FallbackImage({
@@ -25,6 +28,7 @@ export function FallbackImage({
   decorative = false,
   thumbnail = false,
   loading = "lazy",
+  sizes = CARD_IMAGE_SIZES,
 }: FallbackImageProps) {
   const [failed, setFailed] = useState(false);
   const [thumbFailed, setThumbFailed] = useState(false);
@@ -56,9 +60,13 @@ export function FallbackImage({
     );
   }
 
+  // unsplash 시드 이미지는 폭 변형 srcSet 으로 모바일에서 과대 다운로드를 막는다(실사진 교체 전까지).
+  const srcSet = unsplashSrcSet(currentSrc);
   return (
     <img
       src={currentSrc}
+      srcSet={srcSet}
+      sizes={srcSet ? sizes : undefined}
       alt={alt}
       className={className}
       loading={loading}

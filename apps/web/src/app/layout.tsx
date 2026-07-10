@@ -46,6 +46,10 @@ export default function RootLayout({
       className={`h-full antialiased ${serif.variable} ${sans.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        {/* 시드 이미지 CDN 사전 연결 — LCP 이미지의 DNS+TLS 왕복을 앞당긴다(실사진 교체 전까지). */}
+        <link rel="preconnect" href="https://images.unsplash.com" />
+      </head>
       <body className="min-h-full">
         <ThemeProvider>
           <AppFrame>{children}</AppFrame>
