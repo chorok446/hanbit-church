@@ -197,6 +197,8 @@ export type Post = {
   createdAt?: string | null;
   /** 익명 기도제목 여부. true 면 author/authorId 가 서버에서 마스킹된 값이다. */
   anonymous?: boolean;
+  /** 공개 범위. MEMBERS = 로그인 교인만 열람(기도 전용). 이전 응답 호환을 위해 optional. */
+  visibility?: "PUBLIC" | "MEMBERS";
 };
 
 /**

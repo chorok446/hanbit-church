@@ -22,6 +22,7 @@ fun Post.toResponse(
     hidden = hiddenAt != null,
     createdAt = createdAt,
     anonymous = anonymous,
+    visibility = visibility,
 )
 
 fun PostComment.toResponse(viewerId: Long?, replies: List<PostCommentResponse> = emptyList()) = PostCommentResponse(

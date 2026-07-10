@@ -157,6 +157,7 @@ export function PostDetailHero({
             style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}
           >
             {postCategoryLabel(p.category)}
+            {p.visibility === "MEMBERS" ? <span title="로그인한 교우만 볼 수 있는 글"> · 교인만 공개</span> : null}
           </span>
 
           {(() => {

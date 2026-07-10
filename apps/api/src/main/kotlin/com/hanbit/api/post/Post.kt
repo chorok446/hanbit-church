@@ -20,6 +20,14 @@ class Author(
 )
 
 /** 게시글 카테고리. 소식(공지·주보)/설교 목록 필터의 기준이 된다. */
+/** 게시글 공개 범위. MEMBERS 는 기도(PRAYER) 전용 — 로그인한(승인제 통과) 교인만 열람한다. */
+object PostVisibility {
+    const val PUBLIC = "PUBLIC"
+    const val MEMBERS = "MEMBERS"
+
+    val ALL = setOf(PUBLIC, MEMBERS)
+}
+
 object PostCategory {
     const val NOTICE = "NOTICE" // 공지
     const val BULLETIN = "BULLETIN" // 주보
@@ -90,6 +98,8 @@ class Post(
     // 익명 기도제목(PRAYER 전용). true 면 공개 응답에서 작성자를 마스킹한다 — DB 에는 authorUserId 가
     // 남아 본인 수정/삭제(ownedByMe)와 알림은 그대로 동작한다.
     @Column(nullable = false) val anonymous: Boolean = false,
+    // 공개 범위(PostVisibility). MEMBERS = 로그인(승인 교인)만 열람 — PRAYER 전용.
+    @Column(nullable = false, length = 20) var visibility: String = PostVisibility.PUBLIC,
 )
 
 /**
