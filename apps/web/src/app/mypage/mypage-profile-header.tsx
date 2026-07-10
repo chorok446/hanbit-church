@@ -33,11 +33,11 @@ export function MypageProfileHeader({ profile }: { profile: UserProfile }) {
     };
   }, []);
 
-  // 네이비 밴드 위 크림 텍스트는 배너 관례(#f6f3ea / rgba(246,243,234,a)) 리터럴을 쓴다.
-  const cream = "#f6f3ea";
-  const creamMuted = "rgba(246, 243, 234, 0.72)";
-  const creamFaint = "rgba(246, 243, 234, 0.55)";
-  const creamBorder = "rgba(246, 243, 234, 0.3)";
+  // 네이비 밴드 위 크림 텍스트는 중앙 토큰 var(--on-banner) / rgba(var(--on-banner-rgb), a) 를 쓴다.
+  const cream = "var(--on-banner)";
+  const creamMuted = "rgba(var(--on-banner-rgb), 0.72)";
+  const creamFaint = "rgba(var(--on-banner-rgb), 0.55)";
+  const creamBorder = "rgba(var(--on-banner-rgb), 0.3)";
   const outlineBtn =
     "inline-flex items-center justify-center gap-1.5 rounded-full border px-4 py-2 text-[12px] font-medium transition-colors hover:bg-white/10";
 
@@ -47,7 +47,7 @@ export function MypageProfileHeader({ profile }: { profile: UserProfile }) {
         {/* 아바타 원 — 네이비 밴드 위에서 보이도록 밝은 크림 링을 두른다. */}
         <div
           className="shrink-0 rounded-full p-1"
-          style={{ background: "rgba(246, 243, 234, 0.08)" }}
+          style={{ background: "rgba(var(--on-banner-rgb), 0.08)" }}
         >
           <Avatar
             name={profile.name}
@@ -76,7 +76,7 @@ export function MypageProfileHeader({ profile }: { profile: UserProfile }) {
             {isStaffRole(profile.role) ? (
               <span
                 className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px]"
-                style={{ background: "rgba(246, 243, 234, 0.08)", color: cream }}
+                style={{ background: "rgba(var(--on-banner-rgb), 0.08)", color: cream }}
               >
                 <ShieldCheck size={12} aria-hidden style={{ color: "var(--accent)" }} />
                 {USER_ROLE_LABELS[profile.role as UserRole] ?? "관리자"}
@@ -84,7 +84,7 @@ export function MypageProfileHeader({ profile }: { profile: UserProfile }) {
             ) : profile.verified ? (
               <span
                 className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px]"
-                style={{ background: "rgba(246, 243, 234, 0.08)", color: cream }}
+                style={{ background: "rgba(var(--on-banner-rgb), 0.08)", color: cream }}
               >
                 <CheckCircle2 size={12} aria-hidden style={{ color: "var(--accent)" }} />
                 후기 작성자
@@ -92,7 +92,7 @@ export function MypageProfileHeader({ profile }: { profile: UserProfile }) {
             ) : (
               <span
                 className="rounded-full px-2.5 py-1 text-[11px]"
-                style={{ background: "rgba(246, 243, 234, 0.08)", color: creamMuted }}
+                style={{ background: "rgba(var(--on-banner-rgb), 0.08)", color: creamMuted }}
               >
                 일반 사용자
               </span>

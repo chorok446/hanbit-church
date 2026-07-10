@@ -6,7 +6,7 @@ import { uploadThumbUrl } from "@/lib/upload-thumb";
 
 /**
  * 행사 썸네일. 이미지가 없거나 로드에 실패하면 네이비(--banner-bg)·골드(--accent)
- * placeholder 로 대체한다(sermon-thumb 관례 — 크림 #f6f3ea 텍스트).
+ * placeholder 로 대체한다(sermon-thumb 관례 — 크림 var(--on-banner) 텍스트).
  * TODO(교회 확인: 실제 행사 사진 교체) — 시드 unsplash 이미지가 행사 맥락과 안 맞는 것들이 있어
  * 백엔드 시드 교체 전까지는 placeholder 와 alt 안정화로 대응한다.
  */
@@ -42,7 +42,7 @@ export function EventThumb({
       >
         <span style={{ color: "var(--accent)", fontSize: 20, lineHeight: 1 }} aria-hidden>✝</span>
         <span
-          className="text-[12.5px] tracking-[0.24em] text-[#f6f3ea]"
+          className="text-[12.5px] tracking-[0.24em] text-[var(--on-banner)]"
           style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
         >
           행사·사역

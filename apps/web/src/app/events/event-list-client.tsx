@@ -175,11 +175,11 @@ export default function EventListClient() {
             </p>
             <h1
               className="text-[34px] sm:text-[42px]"
-              style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "#f6f3ea", lineHeight: 1.15 }}
+              style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--on-banner)", lineHeight: 1.15 }}
             >
               행사·사역
             </h1>
-            <p className="mt-3 max-w-xl text-[14px]" style={{ color: "rgba(246,243,234,0.72)" }}>
+            <p className="mt-3 max-w-xl text-[14px]" style={{ color: "rgba(var(--on-banner-rgb),0.72)" }}>
               함께 예배하고, 섬기고, 교제하는 자리에 초대합니다. 모집 중인 행사와 사역을 확인하고 참여 신청을 해보세요.
             </p>
           </div>
@@ -188,7 +188,7 @@ export default function EventListClient() {
               type="button"
               onClick={() => router.push("/events/new")}
               className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-5 py-2.5 text-[13px] font-medium transition-transform hover:-translate-y-0.5"
-              style={{ background: "#f6f3ea", color: "var(--banner-bg)" }}
+              style={{ background: "var(--on-banner)", color: "var(--banner-bg)" }}
             >
               <Plus size={15} aria-hidden /> 행사 개설
             </button>

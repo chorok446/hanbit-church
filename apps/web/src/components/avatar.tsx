@@ -33,7 +33,7 @@ function DefaultAvatar({ name, size }: { name: string; size: number }) {
     >
       <span
         className="select-none"
-        style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: Math.round(size * 0.44), color: "#f6f3ea", lineHeight: 1 }}
+        style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: Math.round(size * 0.44), color: "var(--on-banner)", lineHeight: 1 }}
       >
         {initial}
       </span>

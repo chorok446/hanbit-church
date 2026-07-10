@@ -53,7 +53,7 @@ export function HomeVisit() {
               중앙에 --on-banner(또는 --cta-fg-rgb) 토큰이 생기면 rgba(var(--on-banner), a) 로 교체할 것. */}
           <p
             className="mx-auto mt-3 max-w-[32ch] text-[14px] leading-7"
-            style={{ textWrap: "balance", color: "rgba(246, 243, 234, 0.75)" }}
+            style={{ textWrap: "balance", color: "rgba(var(--on-banner-rgb), 0.75)" }}
           >
             예배 시간, 오시는 길, 새가족 안내를 한 번에 확인해보세요.
           </p>
@@ -64,11 +64,11 @@ export function HomeVisit() {
           >
             새가족 안내 보기
           </Link>
-          <div className="mt-4 flex items-center gap-4 text-[13px]" style={{ color: "rgba(246, 243, 234, 0.7)" }}>
+          <div className="mt-4 flex items-center gap-4 text-[13px]" style={{ color: "rgba(var(--on-banner-rgb), 0.7)" }}>
             <Link href="/worship" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
               예배안내
             </Link>
-            <span aria-hidden className="h-3 w-px" style={{ background: "rgba(246, 243, 234, 0.25)" }} />
+            <span aria-hidden className="h-3 w-px" style={{ background: "rgba(var(--on-banner-rgb), 0.25)" }} />
             <Link href="/about" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
               오시는 길
             </Link>
