@@ -285,14 +285,14 @@ export function deleteEventProof(eventId: string, proofId: string): Promise<void
 }
 
 export const statusMeta: Record<EventStatus, { label: string; color: string; fg: string }> = {
-  open: { label: "모집중", color: "var(--success)", fg: "var(--on-banner)" },
+  open: { label: "모집중", color: "var(--success)", fg: "var(--on-success)" },
   upcoming: { label: "모집예정", color: "rgba(31,42,68,0.82)", fg: "var(--on-banner)" },
   closed: { label: "모집마감", color: "rgba(31,42,68,0.6)", fg: "var(--on-banner)" },
 };
 
 const recruitStateMeta: Record<EventRecruitState, { label: string; color: string; fg: string }> = {
   before_recruit: { label: "모집예정", color: "rgba(31,42,68,0.82)", fg: "var(--on-banner)" },
-  recruiting: { label: "모집중", color: "var(--success)", fg: "var(--on-banner)" },
+  recruiting: { label: "모집중", color: "var(--success)", fg: "var(--on-success)" },
   ended: { label: "모집종료", color: "rgba(31,42,68,0.6)", fg: "var(--on-banner)" },
   closed: { label: "모집마감", color: "rgba(31,42,68,0.6)", fg: "var(--on-banner)" },
 };
@@ -325,7 +325,7 @@ export type EventLifecycle = {
 
 const EVENT_PHASE_BADGES: Record<EventPhase, { label: string; color: string; fg: string }> = {
   before_recruit: { label: "모집예정", color: "rgba(31,42,68,0.82)", fg: "var(--on-banner)" },
-  recruiting: { label: "모집중", color: "var(--success)", fg: "var(--on-banner)" },
+  recruiting: { label: "모집중", color: "var(--success)", fg: "var(--on-success)" },
   recruit_closed: { label: "모집마감", color: "rgba(31,42,68,0.6)", fg: "var(--on-banner)" },
   running: { label: "진행중", color: "rgba(31,42,68,0.82)", fg: "var(--on-banner)" },
   ended: { label: "종료", color: "rgba(31,42,68,0.45)", fg: "var(--on-banner)" },
