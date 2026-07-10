@@ -1908,6 +1908,58 @@ class EventControllerTest(
     }
 
     @Test
+    fun `정원마감 행사에서 참여 취소가 나면 미참여 북마커에게 자리 알림이 간다`() {
+        // 정원 1, 사용자 1 참여 = 마감. 사용자 2 는 북마크만.
+        val id = saveEvent(status = "open", capacity = 1, joined = 1, authorUserId = 9)
+        participantRepo.saveAndFlush(EventParticipant("cp-${java.util.UUID.randomUUID()}", id, 1))
+        bookmarkRepo.saveAndFlush(EventBookmark("eb-${java.util.UUID.randomUUID()}", id, 2))
+
+        mvc.delete("/api/events/$id/join") {
+            headers { add("Authorization", "Bearer $token") }
+        }.andExpect { status { isOk() } }
+
+        val notices = notificationRepo.findAll().filter {
+            it.type == com.hanbit.api.notification.NotificationType.EVENT_CAPACITY_INCREASED && it.href == "/events/$id"
+        }
+        assertThat(notices.map { it.userId }).containsExactly(2L)
+    }
+
+    @Test
+    fun `여유 있던 행사의 참여 취소는 자리 알림이 없다`() {
+        val id = saveEvent(status = "open", capacity = 10, joined = 1, authorUserId = 9)
+        participantRepo.saveAndFlush(EventParticipant("cp-${java.util.UUID.randomUUID()}", id, 1))
+        bookmarkRepo.saveAndFlush(EventBookmark("eb-${java.util.UUID.randomUUID()}", id, 2))
+
+        mvc.delete("/api/events/$id/join") {
+            headers { add("Authorization", "Bearer $token") }
+        }.andExpect { status { isOk() } }
+
+        val notices = notificationRepo.findAll().filter {
+            it.type == com.hanbit.api.notification.NotificationType.EVENT_CAPACITY_INCREASED && it.href == "/events/$id"
+        }
+        assertThat(notices).isEmpty()
+    }
+
+    @Test
+    fun `강제 퇴장으로 자리가 나도 북마커에게 자리 알림이 간다 - 퇴장자는 제외`() {
+        val id = saveEvent(status = "open", capacity = 1, joined = 1, authorUserId = 1)
+        val pid = "cp-${java.util.UUID.randomUUID()}"
+        participantRepo.saveAndFlush(EventParticipant(pid, id, 9))
+        // 퇴장 대상(9)도 북마크했지만 자리 알림은 받지 않는다. 사용자 2 는 수신.
+        bookmarkRepo.saveAndFlush(EventBookmark("eb-${java.util.UUID.randomUUID()}", id, 9))
+        bookmarkRepo.saveAndFlush(EventBookmark("eb-${java.util.UUID.randomUUID()}", id, 2))
+
+        mvc.delete("/api/events/$id/participants/$pid") {
+            headers { add("Authorization", "Bearer $token") }
+        }.andExpect { status { isOk() } }
+
+        val notices = notificationRepo.findAll().filter {
+            it.type == com.hanbit.api.notification.NotificationType.EVENT_CAPACITY_INCREASED && it.href == "/events/$id"
+        }
+        assertThat(notices.map { it.userId }).containsExactly(2L)
+    }
+
+    @Test
     fun `인원 미정 행사는 정원 증원 대상이 아니다`() {
         val id = saveEvent(status = "open", capacity = 0, authorUserId = 1)
         increaseCapacity(id, 20).andExpect { status { isBadRequest() } }

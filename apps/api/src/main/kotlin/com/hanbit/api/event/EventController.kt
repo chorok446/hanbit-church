@@ -151,7 +151,11 @@ class EventController(
         @PathVariable id: String,
         @PathVariable participantId: String,
         @AuthenticationPrincipal user: AuthUser,
-    ): EventParticipantRemovalResponse = participantService.removeParticipant(user.id, id, participantId)
+    ): EventParticipantRemovalResponse {
+        val result = participantService.removeParticipant(user.id, id, participantId)
+        participantService.notifySeatOpened(user.id, id, result.eventTitle, result.seatNoticeRecipientIds)
+        return result.response
+    }
 
     @Operation(summary = "행사 참여")
     @SecurityRequirement(name = "bearerAuth")
@@ -174,8 +178,11 @@ class EventController(
     @Operation(summary = "행사 참여 취소")
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{id}/join")
-    fun leave(@PathVariable id: String, @AuthenticationPrincipal user: AuthUser): EventResponse =
-        participantService.leaveEvent(user.id, id)
+    fun leave(@PathVariable id: String, @AuthenticationPrincipal user: AuthUser): EventResponse {
+        val result = participantService.leaveEvent(user.id, id)
+        participantService.notifySeatOpened(user.id, id, result.eventTitle, result.seatNoticeRecipientIds)
+        return result.response
+    }
 
     @Operation(summary = "모집 상태 변경")
     @SecurityRequirement(name = "bearerAuth")

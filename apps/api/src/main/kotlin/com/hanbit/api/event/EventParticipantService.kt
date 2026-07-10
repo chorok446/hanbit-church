@@ -98,29 +98,71 @@ class EventParticipantService(
      * - participant 가 있는데 open 이 아니면 409(마감 후 취소 불가, 비정상 upcoming participant 도 동일).
      * joined 는 0 미만으로 내려가지 않는다. 개설자가 직접 참여한 경우도 동일하게 처리한다.
      */
+    /** 자리 알림 수신자 — 정원마감이었던 행사에서 자리가 났을 때, 미참여 북마커(이탈자·개설자 제외). */
+    private fun seatNoticeRecipients(event: Event, excludeUserIds: Set<Long>): List<Long> {
+        val participantIds = participants.findByEventId(event.id).map { it.userId }.toSet()
+        val bookmarkerIds = bookmarkRepo.findByEventId(event.id)
+            .map { it.userId }
+            .filter { it !in participantIds && it !in excludeUserIds && it != event.authorUserId }
+            .distinct()
+        return users.findAllById(bookmarkerIds).filter { it.notifyEventUpdates }.mapNotNull { it.id }
+    }
+
+    /** 자리 알림 팬아웃 — leave/강제 퇴장 커밋(행 락 해제) 후 컨트롤러가 호출한다. best-effort. */
     @Transactional
-    fun leaveEvent(userId: Long, eventId: String): EventResponse {
+    fun notifySeatOpened(actorUserId: Long, eventId: String, eventTitle: String, recipientIds: List<Long>) {
+        recipientIds.forEach { recipientId ->
+            notifications.notify(
+                recipientUserId = recipientId,
+                actorUserId = actorUserId,
+                type = NotificationType.EVENT_CAPACITY_INCREASED,
+                title = "자리가 생겼어요",
+                body = "$eventTitle 행사에 자리가 생겼어요. 지금 참여할 수 있어요.",
+                href = "/events/$eventId",
+            )
+        }
+    }
+
+    data class LeaveResult(val response: EventResponse, val seatNoticeRecipientIds: List<Long>, val eventTitle: String)
+
+    data class RemovalResult(
+        val response: EventParticipantRemovalResponse,
+        val seatNoticeRecipientIds: List<Long>,
+        val eventTitle: String,
+    )
+
+    @Transactional
+    fun leaveEvent(userId: Long, eventId: String): LeaveResult {
         val today = LocalDate.now(clock)
         val event = repo.findByIdForUpdate(eventId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
         val participant = participants.findByEventIdAndUserId(eventId, userId)
-            ?: return event.toResponse(
-                viewerId = userId,
-                joinedByMe = false,
-                bookmarkedByMe = bookmarkRepo.existsByEventIdAndUserId(eventId, userId),
-                today = today,
+            ?: return LeaveResult(
+                response = event.toResponse(
+                    viewerId = userId,
+                    joinedByMe = false,
+                    bookmarkedByMe = bookmarkRepo.existsByEventIdAndUserId(eventId, userId),
+                    today = today,
+                ),
+                seatNoticeRecipientIds = emptyList(),
+                eventTitle = event.title,
             )
         if (event.status != "open") {
             throw ResponseStatusException(HttpStatus.CONFLICT, "event is not open")
         }
+        val wasFull = event.capacity > 0 && event.joined >= event.capacity
         participants.delete(participant)
         event.joined = maxOf(0, event.joined - 1)
         repo.save(event)
-        return event.toResponse(
-            viewerId = userId,
-            joinedByMe = false,
-            bookmarkedByMe = bookmarkRepo.existsByEventIdAndUserId(eventId, userId),
-            today = today,
+        return LeaveResult(
+            response = event.toResponse(
+                viewerId = userId,
+                joinedByMe = false,
+                bookmarkedByMe = bookmarkRepo.existsByEventIdAndUserId(eventId, userId),
+                today = today,
+            ),
+            seatNoticeRecipientIds = if (wasFull) seatNoticeRecipients(event, setOf(userId)) else emptyList(),
+            eventTitle = event.title,
         )
     }
 
@@ -230,7 +272,7 @@ class EventParticipantService(
      * - 행사 없음 404, 비개설자/레거시(authorUserId=null) 403, open 아니면 409, participant 없음 404.
      */
     @Transactional
-    fun removeParticipant(ownerUserId: Long, eventId: String, participantId: String): EventParticipantRemovalResponse {
+    fun removeParticipant(ownerUserId: Long, eventId: String, participantId: String): RemovalResult {
         val event = repo.findByIdForUpdate(eventId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
         if (event.authorUserId == null || event.authorUserId != ownerUserId) {
@@ -243,6 +285,7 @@ class EventParticipantService(
         val participant = participants.findByIdAndEventId(participantId, eventId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "participant $participantId not found")
 
+        val wasFull = event.capacity > 0 && event.joined >= event.capacity
         participants.delete(participant)
         event.joined = maxOf(0, event.joined - 1)
         repo.save(event)
@@ -254,11 +297,16 @@ class EventParticipantService(
             body = event.title,
             href = "/events/$eventId",
         )
-        return EventParticipantRemovalResponse(
-            eventId = eventId,
-            participantId = participantId,
-            removed = true,
-            joined = event.joined,
+        return RemovalResult(
+            response = EventParticipantRemovalResponse(
+                eventId = eventId,
+                participantId = participantId,
+                removed = true,
+                joined = event.joined,
+            ),
+            // 제거된 사용자는 자리 알림 대상이 아니다(방금 빠진 본인).
+            seatNoticeRecipientIds = if (wasFull) seatNoticeRecipients(event, setOf(participant.userId)) else emptyList(),
+            eventTitle = event.title,
         )
     }
 
