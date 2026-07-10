@@ -15,12 +15,15 @@ export function EventThumb({
   alt,
   className = "",
   thumbnail = false,
+  loading = "lazy",
 }: {
   src: string;
   alt: string;
   className?: string;
   /** 목록 화면용. 업로드 이미지면 썸네일(`.thumb.jpg`)을 먼저 시도하고 없으면 원본으로 fallback 한다. */
   thumbnail?: boolean;
+  /** 첫 화면(상세 헤더 등) 이미지만 "eager". 기본 lazy. */
+  loading?: "eager" | "lazy";
 }) {
   const [failed, setFailed] = useState(false);
   const [thumbFailed, setThumbFailed] = useState(false);
@@ -54,6 +57,8 @@ export function EventThumb({
       src={useThumb ? thumbSrc : trimmed}
       alt={alt}
       className={className}
+      loading={loading}
+      decoding="async"
       onError={() => (useThumb ? setThumbFailed(true) : setFailed(true))}
     />
   );

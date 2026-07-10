@@ -7,9 +7,19 @@ export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const site = getSiteUrl();
-  const staticRoutes: MetadataRoute.Sitemap = ["/", "/feed", "/events", "/search"].map(
-    (path) => ({ url: `${site}${path}` }),
-  );
+  const staticRoutes: MetadataRoute.Sitemap = [
+    "/",
+    "/about",
+    "/worship",
+    "/welcome",
+    "/sermons",
+    "/news",
+    "/feed",
+    "/events",
+    "/giving",
+    "/privacy",
+    "/search",
+  ].map((path) => ({ url: `${site}${path}` }));
 
   // API 장애 시에도 sitemap 자체는 응답한다(정적 경로만 노출).
   let contentRoutes: MetadataRoute.Sitemap = [];
