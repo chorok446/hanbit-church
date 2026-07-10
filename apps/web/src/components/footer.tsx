@@ -136,7 +136,7 @@ export function Footer() {
           </div>
         )}
       </div>
-      <p className="mx-auto mt-10 max-w-7xl border-t border-white/10 pt-6 text-[11px] tracking-[0.25em] uppercase opacity-60">
+      <p className="mx-auto mt-10 max-w-7xl border-t border-white/10 pt-6 text-[11px] tracking-[0.25em] uppercase opacity-80">
         © 2026 {CHURCH.nameEn}
       </p>
     </footer>
