@@ -10,12 +10,12 @@ export function FirstVisitSection() {
             First Visit
           </p>
           <h2
-            className="mt-2 text-[28px] text-[#f6f3ea] sm:text-[30px]"
+            className="mt-2 text-[28px] text-[var(--on-banner)] sm:text-[30px]"
             style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
           >
             처음 오셨나요?
           </h2>
-          <p className="mt-4 max-w-[56ch] text-[14.5px] leading-[29px]" style={{ color: "rgba(246, 243, 234, 0.75)" }}>
+          <p className="mt-4 max-w-[56ch] text-[14.5px] leading-[29px]" style={{ color: "rgba(var(--on-banner-rgb), 0.75)" }}>
             예배 시작 10분 전까지 오시면 여유 있게 자리에 앉으실 수 있습니다. 본당 입구에서 안내
             위원이 좌석과 주보를 안내해 드리며, 예배 후에는 새가족 안내를 통해 교회를 더 알아가실 수
             있습니다.
@@ -24,14 +24,14 @@ export function FirstVisitSection() {
         <div className="flex flex-col gap-3">
           <Link
             href="/welcome"
-            className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full bg-[#f6f3ea] px-8 py-3 text-[14px] font-medium text-[#1f2a44] transition-opacity hover:opacity-90"
+            className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full bg-[var(--on-banner)] px-8 py-3 text-[14px] font-medium text-[#1f2a44] transition-opacity hover:opacity-90"
           >
             새가족 안내 보기
           </Link>
           <Link
             href="/about"
-            className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full border px-8 py-3 text-[14px] font-medium text-[#f6f3ea] transition-colors hover:bg-white/10"
-            style={{ borderColor: "rgba(246, 243, 234, 0.35)" }}
+            className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full border px-8 py-3 text-[14px] font-medium text-[var(--on-banner)] transition-colors hover:bg-white/10"
+            style={{ borderColor: "rgba(var(--on-banner-rgb), 0.35)" }}
           >
             오시는 길 보기
           </Link>

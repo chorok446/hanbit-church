@@ -77,14 +77,14 @@ export function SermonDetail({
               style={{ background: "var(--banner-bg)", aspectRatio: "16 / 9" }}
             >
               <span aria-hidden style={{ color: "var(--accent)", fontSize: 22, lineHeight: 1 }}>✝</span>
-              <p className="text-[16px] text-[#f6f3ea]" style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>
+              <p className="text-[16px] text-[var(--on-banner)]" style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>
                 설교 영상 준비 중입니다.
               </p>
-              <p className="text-[13px] text-[#f6f3ea] opacity-70">잠시 후 다시 확인해 주세요.</p>
+              <p className="text-[13px] text-[var(--on-banner)] opacity-70">잠시 후 다시 확인해 주세요.</p>
               <Link
                 href="/sermons"
-                className="mt-2 inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[12.5px] text-[#f6f3ea] transition-colors hover:bg-white/10"
-                style={{ borderColor: "rgba(246, 243, 234, 0.35)" }}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[12.5px] text-[var(--on-banner)] transition-colors hover:bg-white/10"
+                style={{ borderColor: "rgba(var(--on-banner-rgb), 0.35)" }}
               >
                 <ArrowLeft size={12} aria-hidden /> 설교 목록으로 돌아가기
               </Link>

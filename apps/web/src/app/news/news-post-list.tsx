@@ -92,9 +92,9 @@ function NewsThumb({ post }: { post: Post }) {
       style={{ background: "var(--banner-bg)" }}
       aria-hidden
     >
-      <CategoryIcon category={post.category} size={20} strokeWidth={1.75} className="text-[#f6f3ea]" />
+      <CategoryIcon category={post.category} size={20} strokeWidth={1.75} className="text-[var(--on-banner)]" />
       <span
-        className="text-[11.5px] tracking-[0.22em] text-[#f6f3ea]"
+        className="text-[11.5px] tracking-[0.22em] text-[var(--on-banner)]"
         style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
       >
         {badge.label}

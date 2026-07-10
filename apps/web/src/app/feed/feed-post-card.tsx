@@ -20,7 +20,7 @@ const MAX_COMMENT_LENGTH = 500;
 
 /**
  * 이미지가 없는 글의 갤러리 placeholder 문구 — sermon-thumb 의 네이비(--banner-bg)+골드 관례를 따른다.
- * --banner-bg 는 양 테마 모두 네이비라 크림(#f6f3ea) 텍스트를 그대로 쓴다.
+ * --banner-bg 는 양 테마 모두 네이비라 크림(var(--on-banner)) 텍스트를 그대로 쓴다.
  */
 const GALLERY_PLACEHOLDERS: Record<string, { emoji: string; label: string }> = {
   SHARING: { emoji: "🌱", label: "함께 나누는 이야기" },
@@ -37,7 +37,7 @@ function GalleryPlaceholder({ category }: { category: string }) {
     >
       <span style={{ fontSize: 22, lineHeight: 1 }}>{meta.emoji}</span>
       <span
-        className="text-[13px] tracking-[0.14em] text-[#f6f3ea]"
+        className="text-[13px] tracking-[0.14em] text-[var(--on-banner)]"
         style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
       >
         {meta.label}
