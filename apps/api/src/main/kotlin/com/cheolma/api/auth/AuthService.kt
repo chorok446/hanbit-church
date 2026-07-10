@@ -117,11 +117,12 @@ class AuthService(
      */
     @Transactional(readOnly = true)
     fun refresh(refreshToken: String): IssuedTokens {
-        val userId = try {
+        val claims = try {
             jwt.parseRefresh(refreshToken)
         } catch (_: Exception) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid refresh token")
         }
+        val userId = claims.userId
         // store 장애로 확인 불가면 fail-closed(denylist 정책과 동일): 무효화됐을 수 있는 refresh 를 통과시키지 않는다.
         val denied = try {
             denylist.isDenied(hashToken(refreshToken))
@@ -140,7 +141,8 @@ class AuthService(
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid refresh token")
         }
         denylist.deny(hashToken(refreshToken), jwt.remainingTtlSeconds(refreshToken))
-        return issueTokens(user)
+        // rotation 시 세션 id 유지 — 접속 기록 "현재 세션" 표시가 refresh 후에도 이어진다.
+        return issueTokens(user, claims.sessionId ?: newSessionId())
     }
 
     /**
@@ -160,12 +162,15 @@ class AuthService(
         return LogoutResponse(loggedOut = true)
     }
 
-    private fun issueTokens(user: User): IssuedTokens =
+    private fun issueTokens(user: User, sessionId: String = newSessionId()): IssuedTokens =
         IssuedTokens(
-            user.toAuthResponse(jwt.issue(user)),
-            jwt.issueRefresh(user),
+            user.toAuthResponse(jwt.issue(user, sessionId)),
+            jwt.issueRefresh(user, sessionId),
             requireNotNull(user.id),
+            sessionId,
         )
+
+    private fun newSessionId(): String = java.util.UUID.randomUUID().toString()
 
     @Transactional(readOnly = true)
     fun getMe(userId: Long): UserProfileResponse = repo.findActiveOrThrow(userId).toProfile()

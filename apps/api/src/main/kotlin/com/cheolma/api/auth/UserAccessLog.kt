@@ -25,4 +25,6 @@ class UserAccessLog(
     // IP 기반 대략적 위치(best-effort). 조회 실패 시 null.
     @Column(length = 64) val country: String? = null,
     @Column(length = 64) val region: String? = null,
+    // 로그인 세션 식별자(JWT sid). "현재 세션" 표시용 — V30 이전 기록은 null.
+    @Column(name = "session_id", length = 36) val sessionId: String? = null,
 )
