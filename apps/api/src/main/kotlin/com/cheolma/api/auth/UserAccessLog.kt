@@ -12,7 +12,11 @@ import java.time.Instant
 @Entity
 @Table(
     name = "user_access_logs",
-    indexes = [Index(name = "idx_user_access_logs_user_accessed", columnList = "user_id,accessed_at")],
+    indexes = [
+        Index(name = "idx_user_access_logs_user_accessed", columnList = "user_id,accessed_at"),
+        // 보존 기간 삭제(deleteByAccessedAtBefore)용 — 복합 인덱스는 user_id 선행이라 못 탄다.
+        Index(name = "idx_user_access_logs_accessed_at", columnList = "accessed_at"),
+    ],
 )
 class UserAccessLog(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: Long? = null,
