@@ -22,6 +22,8 @@ ENV NEXT_OUTPUT_STANDALONE=1
 RUN pnpm --filter web build
 
 FROM base AS runner
+# SSR 날짜 로직·로그 타임스탬프 — 코드가 KST 고정이어도 로그·미래 코드 안전망.
+ENV TZ=Asia/Seoul
 WORKDIR /app
 
 ENV NODE_ENV=production
