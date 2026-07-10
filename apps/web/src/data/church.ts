@@ -19,6 +19,23 @@ export const CHURCH_LINKS = {
   kakao: process.env.NEXT_PUBLIC_CHURCH_KAKAO ?? "",
 } as const;
 
+export type ChurchStaff = {
+  /** 직분 (담임목사·부목사·전도사 등) */
+  role: string;
+  /** 표시 이름. 빈 값이면 직분만 표시한다. */
+  name: string;
+  /** 담당 사역 한 줄 소개 (선택) */
+  note?: string;
+};
+
+// TODO(교회 확인): 실제 교역자·섬기는 분들 명단으로 교체. 담임목사 이름은 env(CHURCH.pastor)를 따른다.
+export const CHURCH_STAFF: ChurchStaff[] = [
+  { role: "담임목사", name: CHURCH.pastor, note: "말씀과 목양 전반을 섬깁니다." },
+  { role: "교육 담당", name: "", note: "주일학교·다음세대 교육을 섬깁니다." },
+  { role: "찬양 담당", name: "", note: "예배 찬양과 찬양팀을 섬깁니다." },
+  { role: "사무 간사", name: "", note: "교회 행정과 새가족 안내를 돕습니다." },
+];
+
 /** 헌금 계좌 안내(/giving). env 미설정(빈 값)이면 계좌 대신 교회 사무실 문의 안내로 대체된다. */
 export const CHURCH_GIVING = {
   bank: process.env.NEXT_PUBLIC_CHURCH_BANK ?? "",

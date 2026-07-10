@@ -33,7 +33,7 @@ export default function MyPageClient() {
   const [emailOverride, setEmailOverride] = useState<{ userId: number; email: string } | null>(null);
   const [savedEventPage, setSavedEventPage] = useState(0);
 
-  // TODO(권한: 사역 담당자 역할 도입 시 확장) — 개설 행사 탭은 현재 관리자 전용
+  // 개설 행사 탭 — 행사 개설 권한(최고 관리자·운영자·사역 담당자)과 동일 기준.
   const isAdmin = getAdminPermissions(profile?.role).canManageEvents;
   const requestedTab = parseMypageTab(searchParams.get("tab"));
   const tab = requestedTab === "created" && !isAdmin ? DEFAULT_MYPAGE_TAB : requestedTab;
