@@ -124,6 +124,11 @@ class AdminReportService(
         pendingReports = reports.countByStatus(ReportStatus.PENDING.name),
         totalReports = reports.count(),
         suspendedUsers = users.countBySuspendedUntilAfter(Instant.now(clock)),
+        // 모집중 & 마감일 D-3 이내(이미 지난 것 포함) — 개설자가 마감을 눌러야 하는 행사.
+        closingSoonEvents = events.countByStatusAndHiddenAtIsNullAndDeletedAtIsNullAndRecruitEndLessThanEqual(
+            "open",
+            java.time.LocalDate.now(clock).plusDays(CLOSING_SOON_DAYS).toString(),
+        ),
     )
 
     /** 처리 결과를 신고자에게 알린다. 신고자가 탈퇴했으면 생략. */
@@ -246,6 +251,7 @@ class AdminReportService(
         }
 
     private companion object {
+        const val CLOSING_SOON_DAYS = 3L
         const val TARGET_TYPE_REPORT = "REPORT"
         const val MAX_PAGE_SIZE = 100
         const val MAX_NOTE_LENGTH = 500
