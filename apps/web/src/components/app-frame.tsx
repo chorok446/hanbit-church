@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { useTheme } from "@/lib/theme-context";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { OfflineBanner } from "@/components/offline-banner";
 import { Footer } from "@/components/footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { RealtimeUpdates } from "@/components/realtime-updates";
@@ -23,6 +24,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
         >
           본문 바로가기
         </a>
+        <OfflineBanner />
         <SiteHeader />
         <ThemeToggle />
         <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
