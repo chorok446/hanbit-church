@@ -1881,6 +1881,33 @@ class EventControllerTest(
     }
 
     @Test
+    fun `정원마감 행사 증원 시 미참여 북마커에게 자리 알림이 간다`() {
+        // 정원 2, 참여 2 = 정원마감. 사용자 2 는 북마크만(수신), 사용자 9 는 참여+북마크(제외).
+        val id = saveEvent(status = "open", capacity = 2, joined = 2, authorUserId = 1)
+        participantRepo.saveAndFlush(EventParticipant("cp-${java.util.UUID.randomUUID()}", id, 9))
+        bookmarkRepo.saveAndFlush(EventBookmark("eb-${java.util.UUID.randomUUID()}", id, 2))
+        bookmarkRepo.saveAndFlush(EventBookmark("eb-${java.util.UUID.randomUUID()}", id, 9))
+
+        increaseCapacity(id, 5).andExpect { status { isOk() } }
+
+        val notices = notificationRepo.findAll().filter {
+            it.type == com.hanbit.api.notification.NotificationType.EVENT_CAPACITY_INCREASED && it.href == "/events/$id"
+        }
+        assertThat(notices.map { it.userId }).containsExactly(2L)
+    }
+
+    @Test
+    fun `정원 여유가 있던 행사 증원은 자리 알림을 만들지 않는다`() {
+        val id = saveEvent(status = "open", capacity = 10, joined = 3, authorUserId = 1)
+        bookmarkRepo.saveAndFlush(EventBookmark("eb-${java.util.UUID.randomUUID()}", id, 2))
+        increaseCapacity(id, 20).andExpect { status { isOk() } }
+        val notices = notificationRepo.findAll().filter {
+            it.type == com.hanbit.api.notification.NotificationType.EVENT_CAPACITY_INCREASED && it.href == "/events/$id"
+        }
+        assertThat(notices).isEmpty()
+    }
+
+    @Test
     fun `인원 미정 행사는 정원 증원 대상이 아니다`() {
         val id = saveEvent(status = "open", capacity = 0, authorUserId = 1)
         increaseCapacity(id, 20).andExpect { status { isBadRequest() } }

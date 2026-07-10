@@ -127,6 +127,7 @@ export function notificationTypeLabel(type: string): string {
   if (type === "EVENT_STATUS_CHANGED") return "행사 상태";
   if (type === "EVENT_RECRUIT_ENDING") return "신청 마감 임박";
   if (type === "EVENT_DETAILS_UPDATED") return "행사 안내 변경";
+  if (type === "EVENT_CAPACITY_INCREASED") return "자리 알림";
   if (type === "REPORT_RESOLVED") return "신고 처리";
   if (type === "CONTENT_HIDDEN") return "콘텐츠 숨김";
   if (type === "CONTENT_RESTORED") return "숨김 해제";

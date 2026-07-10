@@ -538,7 +538,7 @@ class EventService(
      * 늘리기만 가능(감원·미정 전환 불가). upcoming 은 일반 수정으로 바꾸면 되므로 open 전용.
      */
     @Transactional
-    fun increaseCapacity(userId: Long, eventId: String, requested: Int): EventResponse {
+    fun increaseCapacity(userId: Long, eventId: String, requested: Int): EventUpdateResult {
         val event = repo.findByIdForUpdate(eventId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
         if (event.deletedAt != null) {
@@ -559,14 +559,47 @@ class EventService(
         if (requested > MAX_CAPACITY) {
             badRequestKr("정원은 최대 ${MAX_CAPACITY}명까지 가능합니다.")
         }
+        // 증원 전 정원마감이었으면, 참여 못 하고 북마크만 해 둔 사람에게 자리 알림을 보낸다.
+        val wasFull = event.joined >= event.capacity
         event.capacity = requested
         event.updatedAt = Instant.now(clock)
-        return event.toResponse(
-            viewerId = userId,
-            joinedByMe = participants.existsByEventIdAndUserId(eventId, userId),
-            bookmarkedByMe = bookmarkRepo.existsByEventIdAndUserId(eventId, userId),
-            today = LocalDate.now(clock),
+
+        val notifyIds = if (wasFull) {
+            val participantIds = participants.findByEventId(eventId).map { it.userId }.toSet()
+            val bookmarkerIds = bookmarkRepo.findByEventId(eventId)
+                .map { it.userId }
+                .filter { it != userId && it !in participantIds }
+                .distinct()
+            users.findAllById(bookmarkerIds).filter { it.notifyEventUpdates }.mapNotNull { it.id }
+        } else {
+            emptyList()
+        }
+
+        return EventUpdateResult(
+            response = event.toResponse(
+                viewerId = userId,
+                joinedByMe = participants.existsByEventIdAndUserId(eventId, userId),
+                bookmarkedByMe = bookmarkRepo.existsByEventIdAndUserId(eventId, userId),
+                today = LocalDate.now(clock),
+            ),
+            notifyRecipientIds = notifyIds,
+            eventTitle = event.title,
         )
+    }
+
+    /** 자리 알림 팬아웃 — increaseCapacity 커밋(행 락 해제) 후 컨트롤러가 호출한다. best-effort. */
+    @Transactional
+    fun notifyCapacityIncreased(actorUserId: Long, eventId: String, result: EventUpdateResult) {
+        result.notifyRecipientIds.forEach { recipientId ->
+            notifications.notify(
+                recipientUserId = recipientId,
+                actorUserId = actorUserId,
+                type = com.hanbit.api.notification.NotificationType.EVENT_CAPACITY_INCREASED,
+                title = "자리가 생겼어요",
+                body = "${result.eventTitle} 행사의 정원이 늘어났어요. 지금 참여할 수 있어요.",
+                href = "/events/$eventId",
+            )
+        }
     }
 
     private fun badRequestKr(message: String): Nothing =
