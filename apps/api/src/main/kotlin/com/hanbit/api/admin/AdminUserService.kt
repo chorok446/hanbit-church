@@ -251,6 +251,31 @@ class AdminUserService(
         return AdminPasswordResetResponse(userId = userId, tempPassword = tempPassword)
     }
 
+    /**
+     * 2FA(TOTP) 해제 — 인증앱 분실 복구 경로. 분실 상태에선 로그인 자체가 불가해 본인 해제
+     * (비밀번호 재확인) API 를 쓸 수 없다. 오프라인 본인 확인 후 관리자가 푼다.
+     * 비밀번호 초기화와 같은 정책: 관리자 계정은 대상 불가(400), 이미 꺼져 있으면 무음 멱등.
+     */
+    @Transactional
+    fun resetTwoFactor(adminUserId: Long, userId: Long): AdminUserResponse {
+        val user = users.findById(userId).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
+        }
+        if (user.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
+        }
+        if (user.isAdmin) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "cannot reset an admin account's two-factor")
+        }
+        val now = Instant.now(clock)
+        if (user.totpEnabled) {
+            user.totpSecret = null
+            user.totpEnabledAt = null
+            actionLogs.record(adminUserId, AdminActionType.TWO_FACTOR_RESET, TARGET_TYPE_USER, userId.toString())
+        }
+        return user.toAdminResponse(now)
+    }
+
     /** 혼동 문자(0/O, 1/l/I)를 뺀 영대소문자·숫자 12자리. SecureRandom 기반. */
     private fun generateTempPassword(): String =
         (1..TEMP_PASSWORD_LENGTH)
@@ -280,6 +305,7 @@ class AdminUserService(
         createdAt = createdAt?.toString(),
         postCount = posts.countByAuthorUserId(requireNotNull(id)),
         eventCount = events.countByAuthorUserId(requireNotNull(id)),
+        twoFactorEnabled = totpEnabled,
         pendingApproval = isPendingApproval,
         praiseRole = praiseRole,
         praiseParts = praiseParts.orEmpty(),

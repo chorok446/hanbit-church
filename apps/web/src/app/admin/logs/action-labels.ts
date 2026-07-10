@@ -13,6 +13,7 @@ export const ACTION_LABELS: Record<AdminActionType, string> = {
   USER_REJECTED: "가입 거절",
   PRAISE_ROLE_CHANGED: "찬양팀 역할 변경",
   PASSWORD_RESET: "비밀번호 초기화",
+  TWO_FACTOR_RESET: "2단계 인증 해제",
 };
 
 /** 제재 성격의 조치는 경고색, 되돌리는 조치는 보통색으로 구분한다. */

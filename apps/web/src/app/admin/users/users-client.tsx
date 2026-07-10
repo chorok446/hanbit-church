@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, Copy, KeyRound, Loader2, Music, Search, ShieldBan, ShieldCheck, BadgeCheck, UserCog, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, KeyRound, Loader2, Music, Search, ShieldBan, ShieldCheck, ShieldOff, BadgeCheck, UserCog, X } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
 import { StatePanel } from "@/components/ui/state-panel";
 import { useConfirm } from "@/components/ui/confirm-dialog";
@@ -14,6 +14,7 @@ import { USER_ROLE_LABELS } from "@/app/admin/permissions";
 import {
   fetchAdminUsers,
   resetAdminUserPassword,
+  resetAdminUserTwoFactor,
   setAdminUserRole,
   setAdminUserSuspension,
   setPraiseRole,
@@ -291,6 +292,27 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
     }
   };
 
+  const resetTwoFactor = async () => {
+    if (busy) return;
+    const ok = await confirm({
+      title: `${user.name}님의 2단계 인증을 해제할까요?`,
+      message: "인증앱을 분실해 로그인하지 못하는 경우의 복구용입니다. 오프라인으로 본인 확인 후 진행해주세요.",
+      confirmLabel: "2FA 해제",
+      destructive: true,
+    });
+    if (!ok) return;
+    setBusy(true);
+    try {
+      const updated = await resetAdminUserTwoFactor(user.id);
+      onUpdated(updated);
+      toast.success(`${user.name}님의 2단계 인증을 해제했습니다.`);
+    } catch (e) {
+      toast.error(e instanceof ApiError ? apiErrorMessage(e, "2FA 해제에 실패했습니다.") : "2FA 해제에 실패했습니다.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const copyTempPassword = async () => {
     if (!tempPassword) return;
     try {
@@ -385,6 +407,18 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
                 ))}
               </select>
             </label>
+          )}
+          {actionable && user.twoFactorEnabled && (
+            <button
+              type="button"
+              onClick={resetTwoFactor}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] disabled:opacity-50"
+              style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+            >
+              {busy ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <ShieldOff size={14} aria-hidden />}
+              2FA 해제
+            </button>
           )}
           {actionable && (
             <button

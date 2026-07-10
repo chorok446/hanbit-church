@@ -110,6 +110,8 @@ data class AdminUserResponse(
     val createdAt: String?,
     val postCount: Long,
     val eventCount: Long,
+    @field:Schema(description = "2단계 인증(TOTP) 활성 여부 — 기기 분실 잠금 해제 대상 판단용")
+    val twoFactorEnabled: Boolean = false,
     @field:Schema(description = "가입 승인 대기 여부")
     val pendingApproval: Boolean = false,
     @field:Schema(description = "찬양팀 역할(LEADER/MEMBER/GUEST). null = 찬양팀 아님")

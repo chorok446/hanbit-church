@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -179,6 +180,13 @@ class AdminController(
         @PathVariable id: Long,
         @AuthenticationPrincipal admin: AuthUser,
     ): AdminPasswordResetResponse = userService.resetPassword(admin.id, id)
+
+    @Operation(summary = "2FA(TOTP) 해제 — 인증앱 분실 복구. 관리자 계정 대상 불가, 멱등")
+    @DeleteMapping("/users/{id}/two-factor")
+    fun resetUserTwoFactor(
+        @PathVariable id: Long,
+        @AuthenticationPrincipal admin: AuthUser,
+    ): AdminUserResponse = userService.resetTwoFactor(admin.id, id)
 
     @Operation(summary = "회원 정지/해제 (로그인·기존 토큰·refresh 즉시 차단)")
     @PatchMapping("/users/{id}/suspension")

@@ -1,4 +1,4 @@
-import { apiGet, apiPatch, apiPost } from "@/lib/api";
+import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api";
 import type { ReportReason, ReportStatus, ReportTargetType } from "@/data/reports";
 
 export type AdminSummary = {
@@ -110,6 +110,8 @@ export type AdminUserItem = {
   createdAt: string | null;
   postCount: number;
   eventCount: number;
+  /** 2단계 인증(TOTP) 활성 여부 — 기기 분실 잠금 해제 대상 판단용. */
+  twoFactorEnabled?: boolean;
   /** 가입 승인 대기 여부(승인제). */
   pendingApproval: boolean;
   /** 찬양팀 역할(LEADER/MEMBER/GUEST) — null 이면 미지정. */
@@ -180,6 +182,11 @@ export function resetAdminUserPassword(userId: number): Promise<AdminPasswordRes
   return apiPost<AdminPasswordResetResponse>(`/api/admin/users/${userId}/password-reset`, {});
 }
 
+/** 2FA(TOTP) 해제 — 인증앱 분실 복구. 관리자 계정 대상 불가(400), 멱등. ADMIN 전용. */
+export function resetAdminUserTwoFactor(userId: number): Promise<AdminUserItem> {
+  return apiDelete<AdminUserItem>(`/api/admin/users/${userId}/two-factor`);
+}
+
 /** 회원 정지(suspendedUntil 미래 시각) 또는 해제(null). 로그인·기존 토큰이 즉시 차단된다. */
 export function setAdminUserSuspension(
   userId: number,
@@ -198,6 +205,7 @@ export type AdminActionType =
   | "ROLE_CHANGED"
   | "USER_APPROVED"
   | "PASSWORD_RESET"
+  | "TWO_FACTOR_RESET"
   | "USER_REJECTED"
   | "PRAISE_ROLE_CHANGED";
 

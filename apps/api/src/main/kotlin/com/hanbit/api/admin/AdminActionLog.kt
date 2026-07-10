@@ -45,6 +45,7 @@ enum class AdminActionType {
     USER_REJECTED,
     PRAISE_ROLE_CHANGED,
     PASSWORD_RESET,
+    TWO_FACTOR_RESET,
 }
 
 interface AdminActionLogRepository : JpaRepository<AdminActionLog, Long> {
