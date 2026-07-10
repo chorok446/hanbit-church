@@ -233,3 +233,39 @@ export function setAdminContentVisibility(
     body,
   );
 }
+
+/** 콘텐츠 관리 목록 항목(게시글·행사 공통). */
+export type AdminContentItem = {
+  targetType: "POST" | "EVENT";
+  id: string;
+  title: string;
+  category: string | null;
+  authorName: string;
+  hidden: boolean;
+  hiddenReason: string | null;
+  deleted: boolean;
+};
+
+export type AdminContentPageResponse = {
+  content: AdminContentItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+};
+
+/** 관리자 콘텐츠 목록 — 숨김 포함, hiddenOnly 로 숨김만. */
+export function fetchAdminContentPage(params: {
+  type: "POST" | "EVENT";
+  hiddenOnly?: boolean;
+  page?: number;
+  size?: number;
+}): Promise<AdminContentPageResponse> {
+  const query = new URLSearchParams({
+    type: params.type,
+    hiddenOnly: String(params.hiddenOnly ?? false),
+    page: String(params.page ?? 0),
+    size: String(params.size ?? 20),
+  });
+  return apiGet<AdminContentPageResponse>(`/api/admin/content?${query.toString()}`);
+}
