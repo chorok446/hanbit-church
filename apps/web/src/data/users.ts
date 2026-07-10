@@ -8,6 +8,8 @@ export type UserProfile = {
   verified: boolean;
   profileImageUrl?: string | null;
   notifyEventUpdates?: boolean;
+  notifyComments?: boolean;
+  notifyLikes?: boolean;
   /** 백엔드 UserRole 과 1:1 — 스태프 역할 정의는 app/admin/permissions.ts 참조. */
   role?: "USER" | "ADMIN" | "OPERATOR" | "MINISTRY" | "NEW_FAMILY" | "CONTENT";
   /** 찬양팀 역할 — null·미지정이면 찬양팀 소속이 아니다. 라벨은 data/praise-team.ts 참조. */
@@ -61,6 +63,8 @@ export type UpdateProfileRequest = {
   name: string;
   profileImageUrl: string | null;
   notifyEventUpdates?: boolean;
+  notifyComments?: boolean;
+  notifyLikes?: boolean;
 };
 
 export type UpdateProfileResponse = {

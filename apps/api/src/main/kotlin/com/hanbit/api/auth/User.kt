@@ -19,6 +19,9 @@ class User(
     val verified: Boolean = false,
     @Column(name = "profile_image_url", length = 500) var profileImageUrl: String? = null,
     @Column(name = "notify_event_updates", nullable = false) var notifyEventUpdates: Boolean = true,
+    // 알림 유형별 수신 설정. 보안(새 기기 로그인)·운영(숨김/신고 처리) 알림은 설정과 무관하게 전달된다.
+    @Column(name = "notify_comments", nullable = false) var notifyComments: Boolean = true,
+    @Column(name = "notify_likes", nullable = false) var notifyLikes: Boolean = true,
     @Column(name = "deleted_at") @JsonIgnore var deletedAt: Instant? = null,
     // Report.targetType 과 같은 패턴: enum name 을 String 컬럼에 저장(UserRole 참조).
     @Column(nullable = false, length = 20) var role: String = UserRole.USER.name,

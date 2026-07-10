@@ -31,6 +31,8 @@ class AccountService(
         user.name = normalizeName(req.name)
         user.profileImageUrl = normalizeProfileImageUrl(req.profileImageUrl)
         user.notifyEventUpdates = req.notifyEventUpdates
+        user.notifyComments = req.notifyComments
+        user.notifyLikes = req.notifyLikes
         // 기존 작성물의 author snapshot 도 최신 이름·이미지로 맞춘다.
         authorSnapshot.syncProfile(userId, user.name, user.profileImageUrl)
         return UpdateProfileResponse(token = jwt.issue(user, sessionId), profile = user.toProfile())

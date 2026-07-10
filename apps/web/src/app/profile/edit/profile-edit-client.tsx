@@ -111,7 +111,14 @@ function ProfileEditForm({ profile }: { profile: UserProfile }) {
     setError("");
     try {
       const response = await updateProfile(
-        { name: validation.name, profileImageUrl: validation.profileImageUrl, notifyEventUpdates: profile?.notifyEventUpdates ?? true },
+        {
+          name: validation.name,
+          profileImageUrl: validation.profileImageUrl,
+          // 요청 DTO 기본값이 true 라, 빠뜨린 알림 설정은 저장 시 켜짐으로 초기화된다 — 전부 전달한다.
+          notifyEventUpdates: profile?.notifyEventUpdates ?? true,
+          notifyComments: profile?.notifyComments ?? true,
+          notifyLikes: profile?.notifyLikes ?? true,
+        },
       );
       if (getSessionId() !== requestToken) return;
       setSession(response.profile.name);

@@ -89,20 +89,27 @@ test("확인 문구와 비밀번호를 입력해 탈퇴하면 계정이 삭제�
   await expect(page.getByText("이메일 또는 비밀번호가 올바르지 않습니다.")).toBeVisible();
 });
 
-test("계정 탭 알림 설정에서 행사 알림을 끄면 새로고침해도 유지된다", async ({ page }) => {
+test("계정 탭 알림 설정에서 유형별 알림을 끄면 새로고침해도 유지된다", async ({ page }) => {
   await signup(page, "e2e-notify");
 
   await page.goto("/mypage?tab=account");
   const section = page.getByRole("region", { name: "알림 설정" });
-  const toggle = section.getByRole("switch");
-  await expect(toggle).toHaveAttribute("aria-checked", "true");
+  const eventToggle = section.getByRole("switch", { name: "행사 알림" });
+  const commentToggle = section.getByRole("switch", { name: "댓글 알림" });
+  const likeToggle = section.getByRole("switch", { name: "좋아요 알림" });
+  await expect(eventToggle).toHaveAttribute("aria-checked", "true");
+  await expect(commentToggle).toHaveAttribute("aria-checked", "true");
+  await expect(likeToggle).toHaveAttribute("aria-checked", "true");
 
-  await toggle.click();
-  await expect(toggle).toHaveAttribute("aria-checked", "false");
+  await eventToggle.click();
+  await expect(eventToggle).toHaveAttribute("aria-checked", "false");
+  await commentToggle.click();
+  await expect(commentToggle).toHaveAttribute("aria-checked", "false");
 
   await page.reload();
-  await expect(page.getByRole("region", { name: "알림 설정" }).getByRole("switch")).toHaveAttribute(
-    "aria-checked",
-    "false",
-  );
+  const reloaded = page.getByRole("region", { name: "알림 설정" });
+  await expect(reloaded.getByRole("switch", { name: "행사 알림" })).toHaveAttribute("aria-checked", "false");
+  await expect(reloaded.getByRole("switch", { name: "댓글 알림" })).toHaveAttribute("aria-checked", "false");
+  // 끄지 않은 유형은 켜진 채 유지된다 — 저장 시 다른 설정이 초기화되지 않는다.
+  await expect(reloaded.getByRole("switch", { name: "좋아요 알림" })).toHaveAttribute("aria-checked", "true");
 });

@@ -8,20 +8,32 @@ import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
 import { notifyProfileUpdated } from "@/lib/auth";
 import { updateProfile } from "@/data/users";
 
+type PreferenceKey = "notifyEventUpdates" | "notifyComments" | "notifyLikes";
+
+const PREFERENCES: { key: PreferenceKey; label: string; description: string }[] = [
+  { key: "notifyEventUpdates", label: "행사 알림", description: "참여한 행사·사역의 상태 변경, 모집 마감 임박" },
+  { key: "notifyComments", label: "댓글 알림", description: "내 글의 댓글, 내 댓글의 답글, 멘션" },
+  { key: "notifyLikes", label: "좋아요 알림", description: "내 글에 눌린 좋아요" },
+];
+
 export function NotificationSettingsForm({ embedded = false }: { embedded?: boolean }) {
   const { profile } = useCurrentUserProfile();
   const [saving, setSaving] = useState(false);
-  const eventNotify = profile?.notifyEventUpdates ?? true;
 
-  const toggle = async () => {
+  const current = (key: PreferenceKey) => profile?.[key] ?? true;
+
+  const toggle = async (key: PreferenceKey) => {
     if (!profile || saving) return;
-    const next = !eventNotify;
     setSaving(true);
     try {
+      // 요청 DTO 기본값이 true 라, 빠뜨린 설정은 저장 시 켜짐으로 초기화된다 — 전부 전달한다.
       await updateProfile({
         name: profile.name,
         profileImageUrl: profile.profileImageUrl ?? null,
-        notifyEventUpdates: next,
+        notifyEventUpdates: current("notifyEventUpdates"),
+        notifyComments: current("notifyComments"),
+        notifyLikes: current("notifyLikes"),
+        [key]: !current(key),
       });
       notifyProfileUpdated();
     } catch {
@@ -49,33 +61,45 @@ export function NotificationSettingsForm({ embedded = false }: { embedded?: bool
               알림 설정
             </h2>
             <p className="mt-0.5 text-[12px] opacity-60" style={{ color: "var(--foreground)" }}>
-              행사 관련 알림 수신 여부를 설정합니다.
+              유형별 알림 수신 여부를 설정합니다. 보안·운영 안내는 항상 전달됩니다.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between py-2.5">
-          <span id="event-notify-label" className="text-[13px]" style={{ color: "var(--foreground)" }}>행사 알림</span>
-          <button
-            type="button"
-            role="switch"
-            aria-labelledby="event-notify-label"
-            aria-checked={eventNotify}
-            disabled={!profile || saving}
-            onClick={toggle}
-            className="w-10 h-5 rounded-full p-0.5 transition-colors disabled:opacity-40"
-            style={{
-              background: eventNotify
-                ? "var(--accent)"
-                : "rgba(var(--ink-rgb), 0.15)",
-            }}
-          >
-            <motion.div
-              animate={{ x: eventNotify ? 20 : 0 }}
-              transition={{ type: "spring", stiffness: 400, damping: 28 }}
-              className="w-4 h-4 rounded-full bg-white"
-            />
-          </button>
+        <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+          {PREFERENCES.map(({ key, label, description }) => {
+            const enabled = current(key);
+            return (
+              <div key={key} className="flex items-center justify-between gap-4 py-3">
+                <div className="min-w-0">
+                  <span id={`${key}-label`} className="block text-[13px]" style={{ color: "var(--foreground)" }}>
+                    {label}
+                  </span>
+                  <span className="mt-0.5 block text-[11px] opacity-55" style={{ color: "var(--foreground)" }}>
+                    {description}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-labelledby={`${key}-label`}
+                  aria-checked={enabled}
+                  disabled={!profile || saving}
+                  onClick={() => void toggle(key)}
+                  className="h-5 w-10 shrink-0 rounded-full p-0.5 transition-colors disabled:opacity-40"
+                  style={{
+                    background: enabled ? "var(--accent)" : "rgba(var(--ink-rgb), 0.15)",
+                  }}
+                >
+                  <motion.div
+                    animate={{ x: enabled ? 20 : 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                    className="h-4 w-4 rounded-full bg-white"
+                  />
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
