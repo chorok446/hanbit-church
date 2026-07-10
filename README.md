@@ -89,6 +89,16 @@ docker compose -f compose.local.yml up --build
 - `compose.local.yml` 의 DB/JWT 값은 **로컬 전용 placeholder**이며 운영 secret 이 아니다.
 - Web 컨테이너 SSR 은 compose 내부 `http://api:8080`(`API_INTERNAL_URL`)을, 브라우저는 `http://localhost:8080`(`NEXT_PUBLIC_API_URL`)을 사용한다. web 컨테이너 안에서 `127.0.0.1:8080`은 web 자신을 가리켜 API에 연결되지 않는다.
 
+### DB 백업/복구
+
+```bash
+scripts/db-backup.sh            # backups/hanbit-<시각>.sql.gz 생성 (무중단, --single-transaction)
+scripts/db-restore.sh backups/hanbit-20260711-000000.sql.gz          # 기본 DB(hanbit)에 복구
+scripts/db-restore.sh backups/hanbit-20260711-000000.sql.gz 다른DB   # 다른 DB 로 복구(검증용)
+```
+
+복구는 기존 데이터를 덮어쓰므로 대상 DB 이름을 프롬프트에 다시 입력해야 진행된다. 컨테이너 이름·계정은 `DB_CONTAINER`/`DB_USER`/`DB_PASSWORD` env 로 바꿀 수 있다.
+
 ### Production container images (Docker Hub)
 
 로컬 개발은 `compose.local.yml` + `apps/*/Dockerfile` 을 그대로 사용한다. **운영 배포용 image** 는 `Dockerfile.prod` 로 빌드한다 — main PR 검증은 [`image-verify.yml`](.github/workflows/image-verify.yml), main push 배포 push 는 [`cd.yml`](.github/workflows/cd.yml). (기존 GHCR 계획에서 **Docker Hub**로 전환.)
