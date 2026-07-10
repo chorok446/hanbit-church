@@ -287,6 +287,13 @@ class EventService(
     }
 
     /** 상태 변경 결과 + 락 해제 후 보낼 알림 정보. recipients 가 비면 알림 없음(멱등 재요청 등). */
+    /** 행사 수정 결과 — 커밋 후 안내 변경 알림 팬아웃용(모집중 수정에서만 수신자가 채워진다). */
+    data class EventUpdateResult(
+        val response: EventResponse,
+        val notifyRecipientIds: List<Long>,
+        val eventTitle: String,
+    )
+
     data class StatusChangeResult(
         val response: EventResponse,
         val notifyRecipientIds: List<Long>,
@@ -454,7 +461,7 @@ class EventService(
 
     /** 모집 시작 전 행사 수정. 상태 변경과 같은 row lock 을 가장 먼저 잡아 요청을 직렬화한다. */
     @Transactional
-    fun updateEvent(userId: Long, eventId: String, req: UpdateEventRequest): EventResponse {
+    fun updateEvent(userId: Long, eventId: String, req: UpdateEventRequest): EventUpdateResult {
         val event = repo.findByIdForUpdate(eventId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "event $eventId not found")
         if (event.deletedAt != null) {
@@ -463,8 +470,10 @@ class EventService(
         if (event.authorUserId == null || event.authorUserId != userId) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "not the event owner")
         }
-        if (event.status != "upcoming") {
-            throw ResponseStatusException(HttpStatus.CONFLICT, "only upcoming events can be updated")
+        // upcoming: 전체 수정. open(모집중): 참여 판단에 영향 없는 안내 정보만 — 제목·기간·정원은 잠근다
+        // (참여자가 신청한 조건을 바꾸지 않기 위해). closed: 수정 불가.
+        if (event.status == "closed") {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "closed events cannot be updated")
         }
 
         val input = normalizeEventInput(
@@ -472,6 +481,19 @@ class EventService(
             req.recruitStart, req.recruitEnd, req.runStart, req.runEnd, req.capacity,
             req.place, req.audience, req.fee, req.supplies, req.contact,
         )
+        // 모집중 잠금 검사 — 필드 대입 전에 해야 원본과 비교된다.
+        if (event.status == "open") {
+            val lockedChanged = input.title != event.title ||
+                input.recruitStart != event.recruitStart || input.recruitEnd != event.recruitEnd ||
+                input.runStart != event.runStart || input.runEnd != event.runEnd ||
+                input.capacity != event.capacity
+            if (lockedChanged) {
+                throw ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "모집중에는 제목·모집/진행 기간·정원을 변경할 수 없습니다. 안내 정보만 수정할 수 있어요.",
+                )
+            }
+        }
         event.title = input.title
         event.summary = input.summary
         event.thumb = input.thumb
@@ -488,12 +510,42 @@ class EventService(
         event.contact = input.contact
         event.updatedAt = Instant.now(clock)
 
-        return event.toResponse(
-            viewerId = userId,
-            joinedByMe = participants.existsByEventIdAndUserId(eventId, userId),
-            bookmarkedByMe = bookmarkRepo.existsByEventIdAndUserId(eventId, userId),
-            today = LocalDate.now(clock),
+        // 모집중 안내 수정은 이미 신청한 참여자에게 알린다(상태 팬아웃과 동일하게 수신자만 락 안에서 확정).
+        val notifyIds = if (event.status == "open") {
+            val recipientIds = participants.findByEventId(eventId)
+                .map { it.userId }
+                .filter { it != userId }
+                .distinct()
+            users.findAllById(recipientIds).filter { it.notifyEventUpdates }.mapNotNull { it.id }
+        } else {
+            emptyList()
+        }
+
+        return EventUpdateResult(
+            response = event.toResponse(
+                viewerId = userId,
+                joinedByMe = participants.existsByEventIdAndUserId(eventId, userId),
+                bookmarkedByMe = bookmarkRepo.existsByEventIdAndUserId(eventId, userId),
+                today = LocalDate.now(clock),
+            ),
+            notifyRecipientIds = notifyIds,
+            eventTitle = event.title,
         )
+    }
+
+    /** 안내 변경 알림 팬아웃 — updateEvent 커밋(행 락 해제) 후 컨트롤러가 호출한다. best-effort. */
+    @Transactional
+    fun notifyDetailsUpdated(actorUserId: Long, eventId: String, result: EventUpdateResult) {
+        result.notifyRecipientIds.forEach { recipientId ->
+            notifications.notify(
+                recipientUserId = recipientId,
+                actorUserId = actorUserId,
+                type = com.hanbit.api.notification.NotificationType.EVENT_DETAILS_UPDATED,
+                title = "행사 안내가 수정되었습니다",
+                body = result.eventTitle,
+                href = "/events/$eventId",
+            )
+        }
     }
 
     @Transactional

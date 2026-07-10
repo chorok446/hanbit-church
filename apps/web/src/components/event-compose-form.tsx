@@ -22,6 +22,8 @@ type EventComposeFormProps = {
   showDraftSaved?: boolean;
   disabled?: boolean;
   titleInputId?: string;
+  /** 모집중 수정 — 제목·기간·정원 입력을 잠근다(백엔드 409 와 짝). */
+  lockRecruitFields?: boolean;
 };
 
 export function EventComposeForm({
@@ -31,6 +33,8 @@ export function EventComposeForm({
   onFieldErrorClear,
   showDraftSaved = false,
   disabled = false,
+  // 모집중 수정 모드 — 참여 조건(제목·기간·정원)은 잠그고 안내 정보만 편집을 허용한다.
+  lockRecruitFields = false,
   titleInputId = "event-title",
 }: EventComposeFormProps) {
   const summaryInputId = useId();
@@ -69,7 +73,7 @@ export function EventComposeForm({
           }}
           placeholder="예) 한강공원 플로깅 데이"
           required
-          disabled={disabled}
+          disabled={disabled || lockRecruitFields}
           aria-invalid={Boolean(fieldErrors.title)}
           aria-describedby={fieldErrors.title ? titleErrorId : undefined}
           className="ui-control w-full placeholder:opacity-50"
@@ -116,6 +120,11 @@ export function EventComposeForm({
         onThumbChange={(thumb) => patch({ thumb })}
       />
 
+      {lockRecruitFields ? (
+        <p className="rounded-xl border px-4 py-3 text-[12.5px]" style={{ borderColor: "var(--border)", background: "var(--card)", color: "var(--foreground-muted)" }}>
+          모집중에는 제목·모집/진행 기간·정원을 변경할 수 없어요. 안내 정보를 수정하면 참여자에게 알림이 갑니다.
+        </p>
+      ) : null}
       <EventComposeSchedule
         recruitStart={values.recruitStart}
         recruitEnd={values.recruitEnd}
@@ -123,7 +132,7 @@ export function EventComposeForm({
         runEnd={values.runEnd}
         capacity={values.capacity}
         fieldErrors={fieldErrors}
-        disabled={disabled}
+        disabled={disabled || lockRecruitFields}
         onFieldErrorClear={onFieldErrorClear}
         onChange={(partial) => patch(partial)}
       />
