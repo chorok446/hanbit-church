@@ -237,7 +237,7 @@ export default function EventListClient() {
           ) : null}
         </div>
 
-        {urlState.view === "calendar" ? <EventCalendarView /> : (
+        {urlState.view === "calendar" ? <EventCalendarView urlState={urlState} /> : (
         <>
         <EventListFilters
           state={urlState}
