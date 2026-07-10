@@ -486,6 +486,7 @@ class EventService(
         event.fee = input.fee
         event.supplies = input.supplies
         event.contact = input.contact
+        event.updatedAt = Instant.now(clock)
 
         return event.toResponse(
             viewerId = userId,

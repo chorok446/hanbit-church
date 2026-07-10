@@ -60,6 +60,8 @@ class Event(
     @Column(length = 200) var fee: String? = null,
     @Column(length = 500) var supplies: String? = null,
     @Column(length = 200) var contact: String? = null,
+    // 내용 수정 시각 — '수정됨' 표시용(게시글 V43 과 대칭). 상태 전환·숨김은 건드리지 않는다.
+    @Column(name = "updated_at") var updatedAt: java.time.Instant? = null,
 )
 
 /**

@@ -20,6 +20,7 @@ fun Event.toResponse(
         recruitable = recruitment.recruitable, recruitState = recruitment.state.value,
         author = author, body = body, joinedByMe = joinedByMe, bookmarkedByMe = bookmarkedByMe,
         ownedByMe = authorUserId != null && authorUserId == viewerId,
+    edited = updatedAt != null,
         hidden = hiddenAt != null,
         place = place, audience = audience, fee = fee, supplies = supplies, contact = contact,
     )

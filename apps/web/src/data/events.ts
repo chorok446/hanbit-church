@@ -109,6 +109,8 @@ export type Event = {
   joinedByMe: boolean;
   bookmarkedByMe: boolean;
   ownedByMe: boolean;
+  /** 내용 수정 여부 — 상세에서 '수정됨' 표시(게시글과 대칭). */
+  edited?: boolean;
   /** 관리자 숨김 여부. 개설자 본인 경로(mine/상세)에서만 true 로 내려온다. */
   hidden?: boolean;
   // 실무 안내(전부 선택). 값이 없으면 상세 정보 패널·행사 내용 탭에서 해당 행을 숨긴다.
