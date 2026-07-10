@@ -21,7 +21,7 @@ test("행사·사역 탭과 정렬이 URL에 반영된다", async ({ page }) => 
   await page.goto("/search");
 
   await page.getByRole("button", { name: "행사·사역", exact: true }).click();
-  await page.waitForURL(/type=campaigns/);
+  await page.waitForURL(/type=events/);
 
   await page.locator("select").first().selectOption("popular");
   await page.waitForURL(/sort=popular/);

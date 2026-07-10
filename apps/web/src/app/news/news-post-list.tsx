@@ -135,7 +135,7 @@ function NewsCard({ post, index }: { post: Post; index: number }) {
                   <Paperclip size={11} aria-hidden style={{ color: "var(--accent)" }} /> 첨부
                 </span>
               ) : null}
-              {post.campaignId ? (
+              {post.eventId ? (
                 <span
                   className="flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px]"
                   style={{ borderColor: "var(--border)", color: "var(--foreground-muted)" }}

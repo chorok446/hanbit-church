@@ -18,7 +18,7 @@ export function GreetingSection() {
         <span aria-hidden className="mx-auto mt-5 block h-px w-12" style={{ background: "var(--accent)" }} />
         <p
           className="mx-auto mt-9 max-w-[26ch] text-[24px] leading-[1.7]"
-          style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)", textWrap: "balance" }}
+          style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)", textWrap: "balance", wordBreak: "keep-all" }}
         >
           하나님의 사랑 안에서, 이곳을 찾아주신 여러분을 기쁨으로 환영합니다.
         </p>

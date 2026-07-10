@@ -6,11 +6,11 @@ describe("uploadThumbUrl", () => {
     expect(uploadThumbUrl("http://localhost:8080/uploads/abc-123.jpg")).toBe(
       "http://localhost:8080/uploads/abc-123.thumb.jpg",
     );
-    expect(uploadThumbUrl("https://api.dasida.com/uploads/a.png")).toBe(
-      "https://api.dasida.com/uploads/a.thumb.jpg",
+    expect(uploadThumbUrl("https://api.cheolma.com/uploads/a.png")).toBe(
+      "https://api.cheolma.com/uploads/a.thumb.jpg",
     );
-    expect(uploadThumbUrl("https://api.dasida.com/uploads/a.webp")).toBe(
-      "https://api.dasida.com/uploads/a.thumb.jpg",
+    expect(uploadThumbUrl("https://api.cheolma.com/uploads/a.webp")).toBe(
+      "https://api.cheolma.com/uploads/a.thumb.jpg",
     );
   });
 

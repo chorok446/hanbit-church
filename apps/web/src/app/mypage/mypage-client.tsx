@@ -10,7 +10,7 @@ import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
 import { ActivitySummary } from "./activity-summary";
 import { MyPostsGrid } from "./my-posts-grid";
 import { SavedTabPanel } from "./saved-tab-panel";
-import { UserCampaignsList } from "./joined-campaigns-list";
+import { UserEventsList } from "./joined-events-list";
 import { ReportsList } from "./reports-list";
 import { AccessLogsList } from "./access-logs-list";
 import { MypageAccountPanel } from "./mypage-account-panel";
@@ -31,7 +31,7 @@ export default function MyPageClient() {
   const searchParams = useSearchParams();
   const { profile, loading, error, isLoggedIn, retry } = useCurrentUserProfile();
   const [emailOverride, setEmailOverride] = useState<{ userId: number; email: string } | null>(null);
-  const [savedCampaignPage, setSavedCampaignPage] = useState(0);
+  const [savedEventPage, setSavedEventPage] = useState(0);
 
   // TODO(권한: 사역 담당자 역할 도입 시 확장) — 개설 행사 탭은 현재 관리자 전용
   const isAdmin = getAdminPermissions(profile?.role).canManageEvents;
@@ -53,7 +53,7 @@ export default function MyPageClient() {
   );
 
   const onSelectTab = useCallback((nextTab: MypageTab) => {
-    if (nextTab !== "saved") setSavedCampaignPage(0);
+    if (nextTab !== "saved") setSavedEventPage(0);
     navigate(nextTab, 0);
   }, [navigate]);
   const onPageChange = useCallback((nextPage: number) => navigate(tab, nextPage), [navigate, tab]);
@@ -98,14 +98,14 @@ export default function MyPageClient() {
                   <MyPostsGrid page={page} onPageChange={onPageChange} />
                 </div>
               ) : null}
-              {tab === "campaigns" ? (
-                <div role="tabpanel" id="mypage-panel-campaigns" aria-labelledby="mypage-tab-campaigns">
-                  <UserCampaignsList mode="joined" page={page} onPageChange={onPageChange} />
+              {tab === "events" ? (
+                <div role="tabpanel" id="mypage-panel-events" aria-labelledby="mypage-tab-events">
+                  <UserEventsList mode="joined" page={page} onPageChange={onPageChange} />
                 </div>
               ) : null}
               {tab === "created" && isAdmin ? (
                 <div role="tabpanel" id="mypage-panel-created" aria-labelledby="mypage-tab-created">
-                  <UserCampaignsList mode="created" page={page} onPageChange={onPageChange} />
+                  <UserEventsList mode="created" page={page} onPageChange={onPageChange} />
                 </div>
               ) : null}
               {tab === "saved" ? (
@@ -113,8 +113,8 @@ export default function MyPageClient() {
                   <SavedTabPanel
                     page={page}
                     onPageChange={onPageChange}
-                    campaignPage={savedCampaignPage}
-                    onCampaignPageChange={setSavedCampaignPage}
+                    eventPage={savedEventPage}
+                    onEventPageChange={setSavedEventPage}
                   />
                 </div>
               ) : null}

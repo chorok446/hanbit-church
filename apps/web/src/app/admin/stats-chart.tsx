@@ -21,7 +21,7 @@ const RANGE_OPTIONS = [7, 30, 90] as const;
 const SERIES = [
   { key: "signups", label: "가입", color: "var(--chart-1)" },
   { key: "posts", label: "게시글", color: "var(--chart-2)" },
-  { key: "campaigns", label: "행사", color: "var(--chart-3)" },
+  { key: "events", label: "행사", color: "var(--chart-3)" },
   { key: "reports", label: "신고", color: "var(--chart-4)" },
 ] as const;
 
@@ -108,7 +108,7 @@ export function StatsChartSection() {
             다시 시도
           </button>
         </p>
-      ) : result.daily.every((day) => day.signups + day.posts + day.campaigns + day.reports === 0) ? (
+      ) : result.daily.every((day) => day.signups + day.posts + day.events + day.reports === 0) ? (
         // 전 구간 합계가 0이면 빈 차트 대신 안내 문구를 보여준다.
         <p className="py-10 text-center text-[13px]" style={{ color: "var(--foreground-muted)" }}>
           아직 충분한 활동 데이터가 없습니다. 활동이 쌓이면 추이가 표시됩니다.

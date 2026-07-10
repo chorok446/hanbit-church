@@ -35,7 +35,7 @@ const EMPTY_VALUES: PostComposeValues = {
   text: "",
   images: [],
   tags: [],
-  campaign: "",
+  event: "",
 };
 
 function composeHasContent(values: PostComposeValues): boolean {
@@ -43,7 +43,7 @@ function composeHasContent(values: PostComposeValues): boolean {
     values.text.trim().length > 0 ||
     values.images.length > 0 ||
     values.tags.length > 0 ||
-    values.campaign.trim().length > 0
+    values.event.trim().length > 0
   );
 }
 
@@ -55,7 +55,7 @@ export default function PostCreateClient() {
   const [values, setValues] = useState<PostComposeValues>(EMPTY_VALUES);
   const [category, setCategory] = useState<PostCategory>("SHARING");
   const [attachments, setAttachments] = useState<PostAttachment[]>([]);
-  const [campaigns, setCampaigns] = useState<{ id: string; title: string }[]>([]);
+  const [events, setEvents] = useState<{ id: string; title: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<PostComposeField, string>>>({});
 
@@ -87,7 +87,7 @@ export default function PostCreateClient() {
         text: draft.text,
         images: draft.images,
         tags: draft.tags,
-        campaign: draft.campaign,
+        event: draft.event,
       });
       if (draft.category && POST_CATEGORIES.some((item) => item.value === draft.category)) {
         setCategory(draft.category as PostCategory);
@@ -96,9 +96,9 @@ export default function PostCreateClient() {
   );
 
   useEffect(() => {
-    apiGet<{ id: string; title: string }[]>("/api/campaigns")
-      .then(setCampaigns)
-      .catch(() => setCampaigns([]));
+    apiGet<{ id: string; title: string }[]>("/api/events")
+      .then(setEvents)
+      .catch(() => setEvents([]));
   }, []);
 
   useEffect(() => {
@@ -313,7 +313,7 @@ export default function PostCreateClient() {
             <PostComposeForm
               values={values}
               onChange={setValues}
-              campaigns={campaigns}
+              events={events}
               fieldErrors={fieldErrors}
               onFieldErrorClear={clearFieldError}
               showDraftSaved={draftSaved}

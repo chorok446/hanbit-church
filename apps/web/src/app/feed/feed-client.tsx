@@ -23,7 +23,7 @@ import { SkeletonCards } from "@/components/ui/skeleton-cards";
 import { Pagination } from "@/components/ui/pagination";
 import { StatePanel } from "@/components/ui/state-panel";
 import { POST_CATEGORIES, type PostCategory, type PostSearchResponse } from "@/data/posts";
-import type { Campaign } from "@/data/campaigns";
+import type { Event } from "@/data/events";
 import { useCanonicalUrl, parsePageParam, buildFeedHref, type FeedUrlState } from "@/lib/use-url-query";
 
 type UrlState = FeedUrlState;
@@ -54,7 +54,7 @@ function neutralizeInteractions(response: PostSearchResponse): PostSearchRespons
   };
 }
 
-export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
+export default function FeedClient({ events }: { events: Event[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { sessionId: token } = useAuthSession();
@@ -74,7 +74,7 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
     const category = searchParams.get("category");
     return {
       query: searchParams.get("q") ?? "",
-      campaignOnly: searchParams.get("campaignOnly") === "true",
+      eventOnly: searchParams.get("eventOnly") === "true",
       // 교제는 성도 커뮤니티 공간 — 공지·주보·설교는 소식/설교 페이지 몫이라 나눔·기도만 다룬다.
       category: FEED_CATEGORIES.some((item) => item.value === category)
         ? (category as PostCategory)
@@ -129,14 +129,14 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
   const searchPath = useMemo(() => {
     const params = new URLSearchParams();
     if (urlState.query) params.set("q", urlState.query);
-    if (urlState.campaignOnly) params.set("campaignOnly", "true");
+    if (urlState.eventOnly) params.set("eventOnly", "true");
     // 전체 = 나눔+기도(콤마 다중 카테고리) — 공지·주보·설교는 교제에 올라오지 않는다.
     params.set("category", urlState.category ?? FEED_ALL_CATEGORIES);
     params.set("sort", urlState.sort);
     params.set("page", urlState.page.toString());
     params.set("size", "10");
     return `/api/posts/search?${params.toString()}`;
-  }, [urlState.campaignOnly, urlState.category, urlState.page, urlState.query, urlState.sort]);
+  }, [urlState.eventOnly, urlState.category, urlState.page, urlState.query, urlState.sort]);
 
   useEffect(() => {
     const requestToken = token;
@@ -274,9 +274,9 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
             loading={refreshing}
             onSearch={commitSearch}
             onSort={(sort) => updateUrl({ sort, page: 0 })}
-            onCampaignOnly={(campaignOnly) => updateUrl({ campaignOnly, page: 0 })}
+            onEventOnly={(eventOnly) => updateUrl({ eventOnly, page: 0 })}
             onPatch={(changes) => updateUrl(changes)}
-            onResetAll={() => updateUrl({ query: "", campaignOnly: false, category: null, sort: "latest", page: 0 })}
+            onResetAll={() => updateUrl({ query: "", eventOnly: false, category: null, sort: "latest", page: 0 })}
           />
 
           <div className="-mt-2 mb-6 flex flex-wrap gap-2" role="group" aria-label="카테고리 필터">
@@ -347,7 +347,7 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
                 feedHasActiveFilters(urlState) ? (
                   <button
                     type="button"
-                    onClick={() => updateUrl({ query: "", campaignOnly: false, category: null, sort: "latest", page: 0 })}
+                    onClick={() => updateUrl({ query: "", eventOnly: false, category: null, sort: "latest", page: 0 })}
                     className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]"
                   >
                     전체 게시글 보기
@@ -397,13 +397,13 @@ export default function FeedClient({ campaigns }: { campaigns: Campaign[] }) {
 
           {/* lg 미만에서는 aside 가 숨겨지므로 진행 중 행사를 목록 아래에서 보여준다. */}
           <div className="mt-10 lg:hidden">
-            <FeedSideHot campaigns={campaigns} />
+            <FeedSideHot events={events} />
           </div>
         </main>
 
         <aside className="hidden lg:block">
           <div className="sticky top-24 flex flex-col gap-5">
-            <FeedSideHot campaigns={campaigns} />
+            <FeedSideHot events={events} />
           </div>
         </aside>
       </div>

@@ -32,7 +32,7 @@ jobs:
             file: apps/web/Dockerfile.prod
             build-args: NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://ci-build-placeholder.invalid' }}
     env:
-      DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME || 'dasida-ci-placeholder' }}
+      DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME || 'cheolma-ci-placeholder' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -41,7 +41,7 @@ jobs:
       - id: meta
         uses: docker/metadata-action@v6
         with:
-          images: docker.io/${{ env.DOCKERHUB_USERNAME }}/dasida-${{ matrix.app }}
+          images: docker.io/${{ env.DOCKERHUB_USERNAME }}/cheolma-${{ matrix.app }}
           tags: type=sha,prefix=sha-,format=short
 
       - uses: docker/build-push-action@v7

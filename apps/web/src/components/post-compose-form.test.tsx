@@ -40,13 +40,13 @@ const baseValues: PostComposeValues = {
   text: "업사이클 기록",
   images: [],
   tags: [],
-  campaign: "",
+  event: "",
 };
 
 describe("PostComposeForm", () => {
   it("이미지 URL을 추가하고 제거한다", () => {
     const onChange = vi.fn();
-    const { rerender } = render(<PostComposeForm values={baseValues} onChange={onChange} campaigns={[]} />);
+    const { rerender } = render(<PostComposeForm values={baseValues} onChange={onChange} events={[]} />);
 
     fireEvent.change(screen.getByPlaceholderText("https://example.com/image.jpg"), {
       target: { value: "https://example.com/a.jpg" },
@@ -59,7 +59,7 @@ describe("PostComposeForm", () => {
     });
 
     const valuesWithImage = { ...baseValues, images: ["https://example.com/a.jpg"] };
-    rerender(<PostComposeForm values={valuesWithImage} onChange={onChange} campaigns={[]} />);
+    rerender(<PostComposeForm values={valuesWithImage} onChange={onChange} events={[]} />);
     fireEvent.click(screen.getByRole("button", { name: "이미지 URL 제거: https://example.com/a.jpg" }));
 
     expect(onChange).toHaveBeenLastCalledWith({
@@ -70,7 +70,7 @@ describe("PostComposeForm", () => {
 
   it("http(s)가 아닌 이미지 URL은 추가하지 않는다", () => {
     const onChange = vi.fn();
-    render(<PostComposeForm values={baseValues} onChange={onChange} campaigns={[]} />);
+    render(<PostComposeForm values={baseValues} onChange={onChange} events={[]} />);
 
     fireEvent.change(screen.getByPlaceholderText("https://example.com/image.jpg"), {
       target: { value: "ftp://example.com/a.jpg" },

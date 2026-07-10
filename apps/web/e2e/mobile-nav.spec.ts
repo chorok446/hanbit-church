@@ -10,6 +10,6 @@ test("모바일 하단 탭으로 교제와 행사에 이동할 수 있다", asyn
   await expect(page).toHaveURL(/\/feed/);
 
   await page.getByRole("navigation", { name: "주요 메뉴" }).getByRole("link", { name: "행사", exact: true }).click();
-  await page.waitForURL("**/campaigns");
-  await expect(page).toHaveURL(/\/campaigns/);
+  await page.waitForURL("**/events");
+  await expect(page).toHaveURL(/\/events/);
 });

@@ -4,7 +4,7 @@ import type { ReportReason, ReportStatus, ReportTargetType } from "@/data/report
 export type AdminSummary = {
   users: number;
   posts: number;
-  campaigns: number;
+  events: number;
   pendingReports: number;
   totalReports: number;
   suspendedUsers: number;
@@ -51,7 +51,7 @@ export type AdminDailyStat = {
   date: string;
   signups: number;
   posts: number;
-  campaigns: number;
+  events: number;
   reports: number;
 };
 
@@ -105,7 +105,7 @@ export type AdminUserItem = {
   /** 가입 시각(ISO-8601). 가입일 기록 도입 이전 회원은 null. */
   createdAt: string | null;
   postCount: number;
-  campaignCount: number;
+  eventCount: number;
   /** 가입 승인 대기 여부(승인제). */
   pendingApproval: boolean;
   /** 찬양팀 역할(LEADER/MEMBER/GUEST) — null 이면 미지정. */
@@ -192,7 +192,7 @@ export type AdminActionType =
 export type AdminActionLogItem = {
   id: number;
   action: AdminActionType;
-  /** REPORT/USER 또는 콘텐츠 타입(POST, POST_COMMENT, CAMPAIGN, CAMPAIGN_COMMENT) */
+  /** REPORT/USER 또는 콘텐츠 타입(POST, POST_COMMENT, EVENT, EVENT_COMMENT) */
   targetType: string;
   targetId: string;
   /** 처리 메모/숨김 사유/정지 기간·사유 */

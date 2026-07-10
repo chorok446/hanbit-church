@@ -18,7 +18,7 @@
 
 services:
   api:
-    image: ${DOCKERHUB_USERNAME}/dasida-api:${DASIDA_IMAGE_TAG}
+    image: ${DOCKERHUB_USERNAME}/cheolma-api:${CHEOLMA_IMAGE_TAG}
     restart: unless-stopped
     ports:
       - "127.0.0.1:8080:8080"
@@ -45,7 +45,7 @@ services:
       start_period: 90s
 
   web:
-    image: ${DOCKERHUB_USERNAME}/dasida-web:${DASIDA_IMAGE_TAG}
+    image: ${DOCKERHUB_USERNAME}/cheolma-web:${CHEOLMA_IMAGE_TAG}
     restart: unless-stopped
     ports:
       - "127.0.0.1:3000:3000"

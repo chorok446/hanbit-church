@@ -6,7 +6,7 @@ import { getAdminPermissions } from "@/app/admin/permissions";
 
 /**
  * 소식·설교 목록 헤더의 스태프 전용 작성 버튼. 콘텐츠 관리 권한(canManageContent)이
- * 없으면 아무것도 렌더하지 않는다. 스타일은 행사 만들기 버튼(campaign-list-client)과 동일.
+ * 없으면 아무것도 렌더하지 않는다. 스타일은 행사 만들기 버튼(event-list-client)과 동일.
  */
 export function StaffWriteButton({ href, label }: { href: string; label: string }) {
   const { profile } = useCurrentUserProfile();

@@ -10,7 +10,7 @@ test("행사 썸네일을 파일로 업로드해 등록할 수 있다", async ({
   await signup(page, "e2e-camp-thumb");
   const title = `썸네일업로드 ${Date.now()}`;
 
-  await page.goto("/campaigns/new");
+  await page.goto("/events/new");
   await page.getByLabel("제목").fill(title);
   await page.getByLabel("모집 시작일").fill(dateAfter(0));
   await page.getByLabel("모집 종료일").fill(dateAfter(7));
@@ -22,7 +22,7 @@ test("행사 썸네일을 파일로 업로드해 등록할 수 있다", async ({
   await expect(page.getByLabel("추가된 썸네일 목록")).toBeVisible({ timeout: 15_000 });
 
   await page.getByRole("button", { name: "행사 등록" }).click();
-  await page.waitForURL("**/campaigns/c-*");
+  await page.waitForURL("**/events/c-*");
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
 });
 
@@ -72,7 +72,7 @@ test("리치 에디터 굵게·미리보기가 동작한다", async ({ page }) =
 });
 
 test("시드 행사 상세에 본문 이미지 그리드가 보인다", async ({ page }) => {
-  await page.goto("/campaigns/c1");
+  await page.goto("/events/c1");
   await expect(page.getByRole("heading", { name: "여름 청년 수련회" })).toBeVisible();
   await expect(page.getByAltText("행사 상세 이미지 1")).toBeVisible();
 });

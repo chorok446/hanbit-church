@@ -18,7 +18,7 @@ import {
   type PostComposeValues,
 } from "@/data/posts";
 
-const EMPTY_VALUES: PostComposeValues = { text: "", images: [], tags: [], campaign: "" };
+const EMPTY_VALUES: PostComposeValues = { text: "", images: [], tags: [], event: "" };
 
 /** /news/write 에서 고를 수 있는 공식 소식 카테고리(뉴스 탭 순서와 동일). */
 const WRITE_CATEGORIES: PostCategory[] = ["NOTICE", "BULLETIN"];
@@ -34,14 +34,14 @@ export function NewsWriteClient() {
   const [values, setValues] = useState<PostComposeValues>(EMPTY_VALUES);
   const [category, setCategory] = useState<PostCategory>("NOTICE");
   const [attachments, setAttachments] = useState<PostAttachment[]>([]);
-  const [campaigns, setCampaigns] = useState<{ id: string; title: string }[]>([]);
+  const [events, setEvents] = useState<{ id: string; title: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<PostComposeField, string>>>({});
 
   useEffect(() => {
-    apiGet<{ id: string; title: string }[]>("/api/campaigns")
-      .then(setCampaigns)
-      .catch(() => setCampaigns([]));
+    apiGet<{ id: string; title: string }[]>("/api/events")
+      .then(setEvents)
+      .catch(() => setEvents([]));
   }, []);
 
   const clearFieldError = (field: PostComposeField) => {
@@ -152,11 +152,11 @@ export function NewsWriteClient() {
             <PostComposeForm
               values={values}
               onChange={setValues}
-              campaigns={campaigns}
+              events={events}
               fieldErrors={fieldErrors}
               onFieldErrorClear={clearFieldError}
               textInputId="news-write-text"
-              campaignInputId="news-write-campaign"
+              eventInputId="news-write-event"
             />
 
             <div className="flex flex-col gap-3 pt-2 sm:flex-row">

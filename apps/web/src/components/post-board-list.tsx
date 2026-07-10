@@ -44,7 +44,7 @@ export function PostBoardList({ posts, showCategory = true }: { posts: Post[]; s
                   <Paperclip size={13} aria-label="첨부파일 있음" className="shrink-0" style={{ color: "var(--accent)" }} />
                 ) : null}
                 {/* 연결 행사 배지 — FeedPostCard(갤러리 뷰)와 동일한 pill 스타일 */}
-                {post.campaignId ? (
+                {post.eventId ? (
                   <span
                     className="shrink-0 rounded-full px-2 py-0.5 text-[11px]"
                     style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}

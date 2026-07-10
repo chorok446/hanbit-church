@@ -125,7 +125,7 @@ export function MypageProfileHeader({ profile }: { profile: UserProfile }) {
             </Link>
             {/* 행사 만들기는 관리자 전용. TODO(권한: 사역 담당자 역할 도입 시 확장) */}
             {isAdmin ? (
-              <Link href="/campaigns/new" className={outlineBtn} style={{ borderColor: creamBorder, color: cream }}>
+              <Link href="/events/new" className={outlineBtn} style={{ borderColor: creamBorder, color: cream }}>
                 <Plus size={13} aria-hidden />
                 행사 만들기
               </Link>

@@ -7,7 +7,7 @@ import { Home, LayoutList, Flag, User } from "lucide-react";
 const tabs = [
   { label: "홈", href: "/", icon: Home, match: (path: string) => path === "/" },
   { label: "교제", href: "/feed", icon: LayoutList, match: (path: string) => path.startsWith("/feed") || path.startsWith("/posts") },
-  { label: "행사", href: "/campaigns", icon: Flag, match: (path: string) => path.startsWith("/campaigns") },
+  { label: "행사", href: "/events", icon: Flag, match: (path: string) => path.startsWith("/events") },
   { label: "마이", href: "/mypage", icon: User, match: (path: string) => path.startsWith("/mypage") || path.startsWith("/profile") },
 ];
 

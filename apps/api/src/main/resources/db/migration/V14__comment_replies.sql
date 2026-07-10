@@ -3,6 +3,6 @@ ALTER TABLE `post_comments`
     ADD COLUMN `parent_id` varchar(255) DEFAULT NULL,
     ADD KEY `idx_post_comments_parent_id` (`parent_id`);
 
-ALTER TABLE `campaign_comments`
+ALTER TABLE `event_comments`
     ADD COLUMN `parent_id` varchar(255) DEFAULT NULL,
-    ADD KEY `idx_campaign_comments_parent_id` (`parent_id`);
+    ADD KEY `idx_event_comments_parent_id` (`parent_id`);

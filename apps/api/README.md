@@ -1,6 +1,6 @@
-# Dasida API
+# 철마제일교회 API
 
-다시,다(Dasida) 백엔드 API 서버 (Kotlin + Spring Boot 4.1).
+철마제일교회 홈페이지 백엔드 API 서버 (Kotlin + Spring Boot 4.1). 다시,다(Dasida) 플랫폼에서 포크했다.
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.4.0-7F52FF?logo=kotlin&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F?logo=springboot&logoColor=white)
@@ -66,14 +66,13 @@ API 명세는 `springdoc-openapi` 로 코드에서 자동 생성된다. Controll
 
 ### 로그아웃과 토큰 무효화(denylist)
 
-stateless JWT 라 **refresh token 은 없고** access token 하나만 사용한다. 로그아웃은 서버가 해당 access token 을 만료 전까지 denylist 에 올려 재사용을 차단한다.
+토큰은 access(`cheolma_token`) + refresh(`cheolma_refresh`, `Path=/api/auth`) 두 개의 **httpOnly 쿠키**로 전달된다(`Authorization: Bearer` 도 허용). refresh 는 `typ=refresh` claim 으로 access 와 구분하며, `POST /api/auth/refresh` 호출 시 **rotation**(새 access + 새 refresh 발급) 된다. 로그아웃은 서버가 해당 access token 을 만료 전까지 denylist 에 올려 재사용을 차단한다.
 
-- **`POST /api/auth/logout`** (bearerAuth): 현재 `Authorization: Bearer <access token>` 을 denylist 에 등록한다.
+- **`POST /api/auth/logout`** (bearerAuth): 현재 access token 을 denylist 에 등록하고 두 쿠키를 만료시킨다.
   - 성공: `200 { "loggedOut": true }`
   - 토큰 없음 / 깨진 토큰 / 이미 로그아웃(denylisted)된 토큰: `401`
   - 로그아웃 후 **같은 access token** 으로 인증 API 호출 시 `401`
-- **refresh token 은 없다.** 토큰 재발급은 재로그인으로 한다(`updateProfile`/`changePassword`/`changeEmail` 은 응답에 새 토큰을 함께 반환).
-- 프론트엔드는 `localStorage` 토큰 삭제와 함께 이 `logout` API 를 호출할 수 있다(프론트 코드는 이 문서 범위 밖).
+- 프론트엔드는 JWT 를 직접 저장하지 않는다 — `localStorage` 에는 세션 마커만 두고, 401 시 `/api/auth/refresh` 로 재발급을 시도한다(`apps/web/src/lib/auth.ts`).
 
 **denylist 동작(요약)**:
 
@@ -110,8 +109,8 @@ APP_CORS_ALLOWED_ORIGINS=https://app.example.com,https://www.example.com
 |----------|----------------|------------------------------------------------|
 | `POST /api/auth/login` | 20 / 60초 | `rate-limit:auth:login:ip:{clientIp}` |
 | `POST /api/auth/signup` | 10 / 60초 | `rate-limit:auth:signup:ip:{clientIp}` |
-| `POST /api/posts/{id}/comments` | 20 / 60초 (게시글·캠페인 댓글 작성 공유 버킷) | `rate-limit:comment:create:ip:{clientIp}` |
-| `POST /api/campaigns/{id}/comments` | 20 / 60초 (게시글·캠페인 댓글 작성 공유 버킷) | `rate-limit:comment:create:ip:{clientIp}` |
+| `POST /api/posts/{id}/comments` | 20 / 60초 (게시글·행사 댓글 작성 공유 버킷) | `rate-limit:comment:create:ip:{clientIp}` |
+| `POST /api/events/{id}/comments` | 20 / 60초 (게시글·행사 댓글 작성 공유 버킷) | `rate-limit:comment:create:ip:{clientIp}` |
 | `POST /api/reports` | 10 / 60초 | `rate-limit:report:create:ip:{clientIp}` |
 
 - **기준**: 클라이언트 IP. `X-Forwarded-For` 가 있으면 첫 hop 을 사용하고, 없으면 `remoteAddr` 를 사용한다.

@@ -322,7 +322,7 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
         )}
         <span className="ml-auto text-[12px]" style={{ color: "var(--foreground-muted)" }}>
           {user.createdAt && `가입 ${new Date(user.createdAt).toLocaleDateString("ko-KR")} · `}
-          게시글 {user.postCount} · 행사 {user.campaignCount}
+          게시글 {user.postCount} · 행사 {user.eventCount}
         </span>
       </div>
 

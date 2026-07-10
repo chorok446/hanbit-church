@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, TrendingUp, Users } from "lucide-react";
 import { FallbackImage } from "@/components/fallback-image";
-import { statusMeta, type Campaign } from "@/data/campaigns";
+import { statusMeta, type Event } from "@/data/events";
 import { progressPercent } from "@/lib/progress";
 
 const cardStyle = {
@@ -12,7 +12,7 @@ const cardStyle = {
 };
 
 /** 교제 페이지 옆의 "진행 중인 행사" 패널. 카드 전체가 행사 상세로 연결된다. */
-export function FeedSideHot({ campaigns }: { campaigns: Campaign[] }) {
+export function FeedSideHot({ events }: { events: Event[] }) {
   return (
     <div className="rounded-2xl border p-5" style={cardStyle}>
       <div className="flex items-center gap-2 mb-4">
@@ -21,18 +21,18 @@ export function FeedSideHot({ campaigns }: { campaigns: Campaign[] }) {
           진행 중인 행사
         </h3>
       </div>
-      {campaigns.length === 0 ? (
+      {events.length === 0 ? (
         <p className="py-4 text-center text-[13px]" style={{ color: "var(--foreground-muted)" }}>
           진행 중인 행사가 없습니다.
         </p>
       ) : (
         <ul className="space-y-2.5">
-          {campaigns.map((c) => {
+          {events.map((c) => {
             const pct = progressPercent(c.joined, c.capacity);
             return (
               <li key={c.id}>
                 <Link
-                  href={`/campaigns/${c.id}`}
+                  href={`/events/${c.id}`}
                   className="block rounded-xl border p-3 transition-colors hover:bg-[rgba(var(--ink-rgb),0.04)]"
                   style={{ borderColor: "var(--border)" }}
                 >

@@ -63,8 +63,8 @@ jobs:
           file: ${{ matrix.file }}
           push: true
           tags: |
-            docker.io/${{ env.DOCKERHUB_USERNAME }}/dasida-${{ matrix.app }}:${{ steps.tag.outputs.sha }}
-            docker.io/${{ env.DOCKERHUB_USERNAME }}/dasida-${{ matrix.app }}:main
+            docker.io/${{ env.DOCKERHUB_USERNAME }}/cheolma-${{ matrix.app }}:${{ steps.tag.outputs.sha }}
+            docker.io/${{ env.DOCKERHUB_USERNAME }}/cheolma-${{ matrix.app }}:main
           build-args: ${{ matrix.build-args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -1,23 +1,23 @@
 "use client";
 
 import { ActiveFilterChips, type FilterChip } from "@/components/active-filter-chips";
-import { CampaignDateRangeFilterControls } from "@/components/campaign-date-range-filters";
+import { EventDateRangeFilterControls } from "@/components/event-date-range-filters";
 import { SearchField } from "@/components/search-field";
 import {
-  EMPTY_CAMPAIGN_DATE_RANGE_FILTERS,
-  appendCampaignDateRangeFilters,
-  type CampaignDateRangeFilters,
-  type CampaignRecruitState,
-} from "@/data/campaigns";
+  EMPTY_EVENT_DATE_RANGE_FILTERS,
+  appendEventDateRangeFilters,
+  type EventDateRangeFilters,
+  type EventRecruitState,
+} from "@/data/events";
 
-export type SearchType = "all" | "campaigns" | "posts" | "users";
+export type SearchType = "all" | "events" | "posts" | "users";
 export type SearchSort = "latest" | "popular" | "deadline";
 
-export type SearchUrlState = CampaignDateRangeFilters & {
+export type SearchUrlState = EventDateRangeFilters & {
   query: string;
   type: SearchType;
   sort: SearchSort;
-  recruitState: CampaignRecruitState | null;
+  recruitState: EventRecruitState | null;
   availableOnly: boolean;
   // 게시글 태그 필터(예: "#청바지업사이클"). posts/all 타입에서만 유효.
   tag: string;
@@ -26,19 +26,19 @@ export type SearchUrlState = CampaignDateRangeFilters & {
 
 const TYPE_TABS: { id: SearchType; label: string }[] = [
   { id: "all", label: "전체" },
-  { id: "campaigns", label: "행사·사역" },
+  { id: "events", label: "행사·사역" },
   { id: "posts", label: "게시글" },
   { id: "users", label: "사용자" },
 ];
 
 /** 검색어가 있을 때 탭에 표기하는 도메인별 결과 개수(totalElements). */
 export type SearchTabCounts = {
-  campaigns: number;
+  events: number;
   posts: number;
   users: number;
 };
 
-const RECRUIT_LABELS: Record<CampaignRecruitState, string> = {
+const RECRUIT_LABELS: Record<EventRecruitState, string> = {
   before_recruit: "모집 예정",
   recruiting: "모집 중",
   ended: "모집 종료",
@@ -77,7 +77,7 @@ export function buildSearchFilterChips(
   if (state.tag) {
     chips.push({ id: "tag", label: `태그: ${state.tag}`, onRemove: () => onPatch({ tag: "" }) });
   }
-  if (state.type === "campaigns") {
+  if (state.type === "events") {
     if (state.recruitState) {
       chips.push({ id: "rs", label: `모집: ${RECRUIT_LABELS[state.recruitState]}`, onRemove: () => onPatch({ recruitState: null }) });
     }
@@ -124,7 +124,7 @@ export function SearchFilters({
             const active = state.type === tab.id;
             const count = counts
               ? tab.id === "all"
-                ? counts.campaigns + counts.posts + counts.users
+                ? counts.events + counts.posts + counts.users
                 : counts[tab.id]
               : null;
             return (
@@ -160,12 +160,12 @@ export function SearchFilters({
             >
               <option value="latest">최신순</option>
               <option value="popular">인기순</option>
-              {state.type === "campaigns" ? <option value="deadline">마감임박순</option> : null}
+              {state.type === "events" ? <option value="deadline">마감임박순</option> : null}
             </select>
           </label>
         ) : null}
       </div>
-      {state.type === "campaigns" ? (
+      {state.type === "events" ? (
         <>
           <div className="flex flex-wrap items-center gap-3">
             <label className="flex min-w-0 flex-1 items-center gap-2 text-[13px] sm:flex-none">
@@ -173,7 +173,7 @@ export function SearchFilters({
               <select
                 value={state.recruitState ?? ""}
                 onChange={(event) => onUpdate({
-                  recruitState: event.target.value ? event.target.value as CampaignRecruitState : null,
+                  recruitState: event.target.value ? event.target.value as EventRecruitState : null,
                   page: 0,
                 })}
                 className="min-w-0 rounded-full border px-4 py-2.5 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
@@ -199,10 +199,10 @@ export function SearchFilters({
               참여 가능
             </label>
           </div>
-          <CampaignDateRangeFilterControls
+          <EventDateRangeFilterControls
             value={state}
             onChange={(field, value) => onUpdate({ [field]: value, page: 0 })}
-            onClear={() => onUpdate({ ...EMPTY_CAMPAIGN_DATE_RANGE_FILTERS, page: 0 })}
+            onClear={() => onUpdate({ ...EMPTY_EVENT_DATE_RANGE_FILTERS, page: 0 })}
           />
         </>
       ) : null}
@@ -212,17 +212,17 @@ export function SearchFilters({
 }
 
 export function parseSearchType(value: string | null): SearchType {
-  return value === "campaigns" || value === "posts" || value === "users" ? value : "all";
+  return value === "events" || value === "posts" || value === "users" ? value : "all";
 }
 
 export function parseSearchSort(value: string | null, type: SearchType): SearchSort {
   if (type === "users") return "latest";
   if (value === "popular") return "popular";
-  if (value === "deadline" && type === "campaigns") return "deadline";
+  if (value === "deadline" && type === "events") return "deadline";
   return "latest";
 }
 
-export function parseSearchRecruitState(value: string | null): CampaignRecruitState | null {
+export function parseSearchRecruitState(value: string | null): EventRecruitState | null {
   return value === "before_recruit" || value === "recruiting" || value === "ended" || value === "closed"
     ? value
     : null;
@@ -239,10 +239,10 @@ export function buildSearchHref(state: SearchUrlState): string {
   params.set("type", state.type);
   params.set("sort", state.sort);
   if ((state.type === "all" || state.type === "posts") && state.tag) params.set("tag", state.tag);
-  if (state.type === "campaigns") {
+  if (state.type === "events") {
     if (state.recruitState) params.set("recruitState", state.recruitState);
     if (state.availableOnly) params.set("availableOnly", "true");
-    appendCampaignDateRangeFilters(params, {
+    appendEventDateRangeFilters(params, {
       recruitEndFrom: state.recruitEndFrom,
       recruitEndTo: state.recruitEndTo,
       runStartFrom: state.runStartFrom,

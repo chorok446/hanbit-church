@@ -51,7 +51,7 @@ describe("useAuthSession", () => {
     });
     expect(result.current.isLoggedIn).toBe(false);
     expect(result.current.name).toBeNull();
-    expect(localStorage.getItem("dasida.session")).toBeNull();
+    expect(localStorage.getItem("cheolma.session")).toBeNull();
     expect(apiPost).toHaveBeenCalledWith("/api/auth/logout", {});
   });
 });

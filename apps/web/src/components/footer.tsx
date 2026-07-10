@@ -8,7 +8,7 @@ const QUICK_LINKS = [
   { href: "/sermons", label: "설교" },
   { href: "/news", label: "소식" },
   { href: "/feed", label: "교제" },
-  { href: "/campaigns", label: "행사·사역" },
+  { href: "/events", label: "행사·사역" },
 ];
 
 /* 브랜드 아이콘 — 설치된 lucide-react 버전에는 브랜드 아이콘이 없어 인라인 SVG 로 그린다(선 스타일은 lucide 규격). */

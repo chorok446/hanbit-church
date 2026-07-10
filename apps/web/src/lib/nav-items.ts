@@ -6,5 +6,5 @@ export const MAIN_NAV_ITEMS = [
   { label: "설교", href: "/sermons" },
   { label: "소식", href: "/news" },
   { label: "교제", href: "/feed" },
-  { label: "행사·사역", href: "/campaigns" },
+  { label: "행사·사역", href: "/events" },
 ] as const;
