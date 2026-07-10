@@ -643,6 +643,7 @@ class EventControllerTest(
         updateEvent(id).andExpect {
             status { isOk() }
             jsonPath("$.title") { value("수정 행사") }
+            jsonPath("$.edited") { value(true) }
             jsonPath("$.summary") { value("수정 요약") }
             jsonPath("$.thumb") { value("https://x/updated.png") }
             jsonPath("$.recruitStart") { value("2026-09-01") }
@@ -654,6 +655,7 @@ class EventControllerTest(
         }
 
         val saved = eventRepo.findById(id).get()
+        assertThat(saved.updatedAt).isNotNull()
         assertThat(saved.title).isEqualTo("수정 행사")
         assertThat(saved.summary).isEqualTo("수정 요약")
         assertThat(saved.body.paragraphs).containsExactly("수정 본문")

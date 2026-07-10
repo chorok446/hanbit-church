@@ -228,6 +228,7 @@ export function EventHeaderCard({
 
             <p className="text-[14px]" style={{ color: "var(--foreground-muted)" }}>
               {c.summary}
+              {c.edited ? <span className="opacity-70"> · 수정됨</span> : null}
             </p>
 
             <div className="grid grid-cols-1 gap-x-6 gap-y-3 text-[13px] sm:grid-cols-2" style={{ color: "var(--foreground)" }}>

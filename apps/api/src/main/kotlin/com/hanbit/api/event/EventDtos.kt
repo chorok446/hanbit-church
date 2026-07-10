@@ -122,6 +122,8 @@ data class EventResponse(
     val joinedByMe: Boolean,
     val bookmarkedByMe: Boolean,
     val ownedByMe: Boolean,
+    @field:Schema(description = "내용 수정 여부 — '수정됨' 표시용")
+    val edited: Boolean = false,
     // 관리자 숨김 여부. 숨김 콘텐츠는 개설자 본인 경로(mine/상세)에서만 응답에 실린다.
     val hidden: Boolean = false,
     // 실무 안내(전부 선택). null 이면 프론트 상세에서 해당 행을 숨긴다.
