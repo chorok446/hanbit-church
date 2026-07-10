@@ -19,6 +19,8 @@ data class CreatePostRequest(
     val attachments: List<PostAttachment> = emptyList(),
     @field:Schema(description = "익명 게시(기도 카테고리 전용). 공개 응답에서 작성자가 마스킹된다.")
     val anonymous: Boolean = false,
+    @field:Schema(description = "예약 게시 시각(ISO-8601, 공지·주보 전용, 미래). 지정 시 도래 전까지 비공개.")
+    val publishAt: String? = null,
     @field:Schema(description = "공개 범위(PUBLIC/MEMBERS). MEMBERS 는 기도 카테고리 전용 — 로그인 교인만 열람.")
     val visibility: String? = null,
 )
@@ -107,6 +109,8 @@ data class PostResponse(
     val visibility: String = PostVisibility.PUBLIC,
     @field:Schema(description = "공지·주보 상단 고정 여부")
     val pinned: Boolean = false,
+    @field:Schema(description = "예약 게시 시각 — 예약 글 작성자·관리자 확인용")
+    val publishAt: String? = null,
 )
 
 data class PostSearchResponse(

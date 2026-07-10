@@ -373,8 +373,10 @@ class PostService(
         }
         val visibility = normalizeVisibility(req.visibility, category)
         val attachments = normalizeAttachments(category, req.attachments)
+        val publishAt = normalizePublishAt(req.publishAt, category)
         val fields = normalizeFields(req.text, req.tags, req.images, req.eventId)
         val profileImageUrl = users.findById(author.id).orElse(null)?.profileImageUrl
+        val now = Instant.now(clock)
         return repo.save(
             Post(
                 id = "p-${UUID.randomUUID()}",
@@ -389,12 +391,34 @@ class PostService(
                 category = category,
                 seq = System.currentTimeMillis(),
                 authorUserId = author.id,
-                createdAt = Instant.now(clock),
+                createdAt = now,
                 attachments = attachments,
                 anonymous = req.anonymous,
                 visibility = visibility,
+                publishAt = publishAt,
+                // 예약 글은 도래 전까지 기존 숨김 경로(공개 목록·검색·상세 제외)를 그대로 탄다.
+                // 운영 숨김과는 hiddenReason 마커로 구분 — ScheduledPublishJob 이 이 마커만 공개 전환한다.
+                hiddenAt = if (publishAt != null) now else null,
+                hiddenReason = if (publishAt != null) SCHEDULED_HIDDEN_REASON else null,
             ),
         ).toResponse(viewerId = author.id, likedByMe = false, bookmarkedByMe = false)
+    }
+
+    /** 예약 게시 시각 정규화 — 공지·주보 전용, ISO-8601 미래 시각만. 미지정이면 즉시 게시(null). */
+    private fun normalizePublishAt(raw: String?, category: String): Instant? {
+        val value = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        if (category !in PostCategory.ADMIN_ONLY) {
+            badRequest("예약 게시는 공지·주보에서만 가능합니다.")
+        }
+        val parsed = try {
+            Instant.parse(value)
+        } catch (_: java.time.format.DateTimeParseException) {
+            badRequest("예약 게시 시각은 ISO-8601 형식이어야 합니다.")
+        }
+        if (!parsed.isAfter(Instant.now(clock))) {
+            badRequest("예약 게시 시각은 미래여야 합니다.")
+        }
+        return parsed
     }
 
     /** 공개 범위 정규화. 미지정=PUBLIC, MEMBERS 는 기도 전용, 그 외 값은 400. */

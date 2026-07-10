@@ -12,6 +12,12 @@ import org.springframework.data.repository.query.Param
 interface PostRepository : JpaRepository<Post, String> {
     fun findAllByIdInOrderBySeqDesc(ids: Collection<String>): List<Post>
 
+    /** 예약 게시 잡 — 도래한 예약 글(운영 숨김 아님, 마커 일치)만 집는다. */
+    fun findByPublishAtLessThanEqualAndHiddenAtIsNotNullAndHiddenReason(
+        publishAt: java.time.Instant,
+        hiddenReason: String,
+    ): List<Post>
+
     // 관리자 콘텐츠 관리 목록 — 숨김 포함 전체 / 숨김만 (+ 본문/작성자 검색).
     fun findAllByOrderBySeqDesc(pageable: Pageable): Page<Post>
     fun findByHiddenAtIsNotNullOrderBySeqDesc(pageable: Pageable): Page<Post>
