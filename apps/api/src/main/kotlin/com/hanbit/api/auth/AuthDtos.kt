@@ -30,7 +30,7 @@ data class SignupPendingResponse(val pendingApproval: Boolean = true, val name: 
  * 토큰 발급 내부 결과. refreshToken 은 응답 body 에 노출하지 않고 httpOnly 쿠키로만 전달한다
  * (JS 접근 차단 — body 에 실으면 localStorage 저장 유혹이 생겨 쿠키 전환 의미가 없어진다).
  */
-data class IssuedTokens(val response: AuthResponse, val refreshToken: String, val userId: Long)
+data class IssuedTokens(val response: AuthResponse, val refreshToken: String, val userId: Long, val sessionId: String)
 
 @Schema(description = "내 프로필")
 data class UserProfileResponse(
@@ -119,6 +119,8 @@ data class AccessLogResponse(
     @field:Schema(description = "IP 기반 대략적 위치(지역 · 국가). 조회 실패 시 null.")
     val location: String? = null,
     val accessedAt: String,
+    @field:Schema(description = "이 기록이 현재 요청 세션(같은 로그인)에서 만들어졌는지")
+    val currentSession: Boolean = false,
 )
 
 data class AccessLogPageResponse(
