@@ -1,13 +1,13 @@
 import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { apiGetOrNull } from "@/lib/api";
+import { apiGetOrNullWithCookies } from "@/lib/api-server";
 import type { Post } from "@/data/posts";
 import type { Event } from "@/data/events";
 import PostDetailClient from "./post-detail-client";
 
 // generateMetadata 와 페이지 본문이 같은 요청 안에서 fetch 를 공유하도록 dedupe.
-const getPost = cache((id: string) => apiGetOrNull<Post>(`/api/posts/${id}`));
+const getPost = cache((id: string) => apiGetOrNullWithCookies<Post>(`/api/posts/${id}`));
 
 function postTitle(post: Post): string {
   const firstLine = post.text.split("\n")[0].trim();
@@ -36,7 +36,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
   const post = await getPost(id);
   if (!post) notFound();
   const linkedEvent = post.eventId
-    ? await apiGetOrNull<Event>(`/api/events/${post.eventId}`)
+    ? await apiGetOrNullWithCookies<Event>(`/api/events/${post.eventId}`)
     : null;
   return <PostDetailClient post={post} linkedEvent={linkedEvent} />;
 }
