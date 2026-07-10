@@ -142,17 +142,16 @@ export function PostComposeForm({
     onFieldErrorClear?.("images");
   };
 
-  const addUploadedImage = (url: string) => {
-    const normalized = Array.from(new Set([...values.images, url]));
-    if (normalized.length > POST_MAX_IMAGES) {
-      toast.error(`이미지는 최대 ${POST_MAX_IMAGES}개까지 가능합니다.`);
-      return;
-    }
+  const addUploadedImages = (urls: string[]) => {
+    const normalized = Array.from(new Set([...values.images, ...urls]));
     if (normalized.length === values.images.length) {
       toast.error("이미 추가된 이미지입니다.");
       return;
     }
-    patch({ images: normalized });
+    if (normalized.length > POST_MAX_IMAGES) {
+      toast.error(`이미지는 최대 ${POST_MAX_IMAGES}개까지 가능합니다.`);
+    }
+    patch({ images: normalized.slice(0, POST_MAX_IMAGES) });
     onFieldErrorClear?.("images");
   };
 
@@ -239,7 +238,8 @@ export function PostComposeForm({
           </button>
           <ImageFileUploadButton
             disabled={values.images.length >= POST_MAX_IMAGES}
-            onUploaded={addUploadedImage}
+            maxFiles={Math.max(1, POST_MAX_IMAGES - values.images.length)}
+            onUploadedMany={addUploadedImages}
           />
         </div>
         {(fieldErrors.images || imageInputError) ? (
