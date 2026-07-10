@@ -8,6 +8,8 @@ enum class RateLimitRule(val keySegment: String) {
     COMMENT_CREATE("comment:create:ip"),
     REPORT_CREATE("report:create:ip"),
     MEDIA_UPLOAD("media:upload:ip"),
+    /** 좋아요·북마크·참여·차단 토글 — 가볍지만 알림을 만들 수 있어 봇 스팸을 막는다. */
+    INTERACTION_TOGGLE("interaction:toggle:ip"),
     ;
 
     fun bucketKey(clientIp: String): String = "rate-limit:$keySegment:$clientIp"
