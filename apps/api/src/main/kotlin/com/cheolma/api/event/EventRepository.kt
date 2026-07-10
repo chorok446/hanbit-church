@@ -10,6 +10,10 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
 interface EventRepository : JpaRepository<Event, String> {
+    // 관리자 콘텐츠 관리 목록 — 숨김 포함 전체 / 숨김만.
+    fun findAllByOrderBySeqDesc(pageable: Pageable): Page<Event>
+    fun findByHiddenAtIsNotNullOrderBySeqDesc(pageable: Pageable): Page<Event>
+
     /** 정원 동시성 방어용 write lock 조회. join 트랜잭션에서 가장 먼저 호출해 행사별로 직렬화. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select c from Event c where c.id = :id")
