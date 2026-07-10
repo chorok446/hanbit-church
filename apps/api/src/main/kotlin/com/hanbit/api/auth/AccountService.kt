@@ -54,7 +54,11 @@ class AccountService(
         user.passwordHash = encoder.encode(req.newPassword)!!
         // 관리자 초기화로 발급된 임시 비밀번호를 새 비밀번호로 교체했으므로 강제 변경 안내를 해제한다.
         user.passwordResetRequired = false
-        return ChangePasswordResponse(changed = true, token = jwt.issue(user, sessionId))
+        // 표준 보안 관행: 비밀번호 변경 시 현재 세션만 남기고 전부 로그아웃 — 탈취범이 이미
+        // 로그인해 있어도 새 비밀번호 적용과 동시에 끊긴다. 실패해도 변경 자체는 성공 처리(best-effort).
+        val revokedSessions = runCatching { accessLogs.revokeOtherSessions(userId, sessionId).revokedCount }
+            .getOrDefault(0)
+        return ChangePasswordResponse(changed = true, token = jwt.issue(user, sessionId), revokedSessions = revokedSessions)
     }
 
     @Transactional

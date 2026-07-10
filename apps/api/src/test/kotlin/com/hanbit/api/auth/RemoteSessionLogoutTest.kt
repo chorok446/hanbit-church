@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
+import org.springframework.test.web.servlet.put
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.json.JsonMapper
 import java.util.UUID
@@ -148,6 +149,31 @@ class RemoteSessionLogoutTest(
             status { isOk() }
             jsonPath("$.revokedCount") { value(0) }
         }
+    }
+
+    @Test
+    fun `비밀번호를 변경하면 현재 세션만 남고 다른 세션이 로그아웃된다`() {
+        val email = "pwchange-${UUID.randomUUID()}@test.com"
+        mvc.post("/api/auth/signup") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"email":"$email","password":"Password1!","name":"변경자"}"""
+        }.andExpect { status { isCreated() } }
+        val other = login(email)
+        val current = login(email)
+        me(other).andExpect { status { isOk() } }
+
+        mvc.put("/api/auth/password") {
+            headers { add("Authorization", "Bearer ${current.access}") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"currentPassword":"Password1!","newPassword":"NewPassword2!"}"""
+        }.andExpect {
+            status { isOk() }
+            // 가입 세션 + other 세션 = 2 (current 는 제외).
+            jsonPath("$.revokedSessions") { value(2) }
+        }
+
+        me(other).andExpect { status { isUnauthorized() } }
+        me(current).andExpect { status { isOk() } }
     }
 
     @Test

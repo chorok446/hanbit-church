@@ -102,7 +102,12 @@ data class ChangePasswordRequest(
     val newPassword: String,
 )
 
-data class ChangePasswordResponse(val changed: Boolean, val token: String?)
+data class ChangePasswordResponse(
+    val changed: Boolean,
+    val token: String?,
+    @field:Schema(description = "함께 로그아웃된 다른 세션 수 — 비밀번호 변경 시 현재 세션 외 전부 무효화")
+    val revokedSessions: Int = 0,
+)
 
 @Schema(description = "이메일 변경 요청")
 data class ChangeEmailRequest(
