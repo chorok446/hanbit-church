@@ -139,7 +139,7 @@ export function NewFamilyRegisterForm() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="nf-visit" className="mb-1.5 block text-[12px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
-            방문 예정 예배 <span className="normal-case tracking-normal opacity-70">(선택)</span>
+            방문 예정 예배 <span className="normal-case tracking-normal">(선택)</span>
           </label>
           <select
             id="nf-visit"
@@ -160,7 +160,7 @@ export function NewFamilyRegisterForm() {
 
         <div>
           <label htmlFor="nf-companion" className="mb-1.5 block text-[12px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
-            함께 오시는 분 <span className="normal-case tracking-normal opacity-70">(선택)</span>
+            함께 오시는 분 <span className="normal-case tracking-normal">(선택)</span>
           </label>
           <select
             id="nf-companion"
@@ -182,7 +182,7 @@ export function NewFamilyRegisterForm() {
 
       <div>
         <label htmlFor="nf-note" className="mb-1.5 block text-[12px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
-          남기고 싶은 말 <span className="normal-case tracking-normal opacity-70">(선택)</span>
+          남기고 싶은 말 <span className="normal-case tracking-normal">(선택)</span>
         </label>
         <textarea
           id="nf-note"
