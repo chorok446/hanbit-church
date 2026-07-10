@@ -85,10 +85,12 @@ async function approveUser(email: string): Promise<void> {
  */
 export async function signup(page: Page, prefix = "e2e"): Promise<Account> {
   const stamp = Date.now();
+  // 닉네임에 ms 타임스탬프 전체 + 난수를 쓴다 — 예전 % 100000(5자리)은 실행 간 충돌해
+  // 닉네임 검색 스펙이 strict mode 위반(동명 사용자 2명)으로 깨졌다. 로컬 DB 는 볼륨에 누적된다.
   const account: Account = {
     email: `${prefix}-${stamp}@example.com`,
     password: "Passw0rd!",
-    nickname: `이투이${stamp % 100000}`,
+    nickname: `이투이${stamp}${Math.floor(Math.random() * 1000)}`,
   };
 
   await page.goto("/signup");
