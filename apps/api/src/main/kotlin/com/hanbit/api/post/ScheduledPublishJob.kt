@@ -15,6 +15,7 @@ import java.time.Instant
 @Component
 class ScheduledPublishJob(
     private val posts: PostRepository,
+    private val notifications: com.hanbit.api.notification.NotificationService,
     private val clock: Clock,
 ) {
     private val log = LoggerFactory.getLogger(ScheduledPublishJob::class.java)
@@ -30,6 +31,17 @@ class ScheduledPublishJob(
                 post.hiddenReason = null
                 // 게시 시각 기준으로 최신 정렬 상단에 오도록 정렬 키를 갱신한다(작성 시점이 아니라 게시 시점).
                 post.seq = now.toEpochMilli()
+                // 작성자에게 발행 확인 알림 — 주일 아침 예약이 실제로 나갔는지 확인하는 용도.
+                // notifyUser 는 이 잡의 트랜잭션에 참여하고 WS push 는 커밋 후에만 나간다.
+                post.authorUserId?.let { authorId ->
+                    notifications.notifyUser(
+                        recipientUserId = authorId,
+                        type = com.hanbit.api.notification.NotificationType.SCHEDULED_POST_PUBLISHED,
+                        title = "예약한 글이 게시되었습니다",
+                        body = post.text.replace(Regex("<[^>]*>"), " ").trim().take(80).ifBlank { "예약 게시" },
+                        href = "/posts/${post.id}",
+                    )
+                }
             }
             if (due.isNotEmpty()) log.info("scheduled posts published (count={})", due.size)
         } catch (ex: Exception) {

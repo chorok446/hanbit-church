@@ -34,6 +34,7 @@ object NotificationType {
 
     // 보안 — 이전 접속 기록에 없는 (IP, 브라우저) 조합으로 로그인했을 때(AccessLogService.record).
     const val NEW_DEVICE_LOGIN = "NEW_DEVICE_LOGIN"
+    const val SCHEDULED_POST_PUBLISHED = "SCHEDULED_POST_PUBLISHED"
 }
 
 /**
