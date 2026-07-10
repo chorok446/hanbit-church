@@ -33,6 +33,62 @@ class AdminContentService(
     private val actionLogs: AdminActionLogService,
     private val clock: Clock,
 ) {
+    /** 관리자 콘텐츠 목록 — 게시글/행사, 숨김 포함(hiddenOnly 로 숨김만). 최신순. */
+    @Transactional(readOnly = true)
+    fun listContent(typeRaw: String, hiddenOnly: Boolean, page: Int, size: Int): AdminContentPageResponse {
+        com.hanbit.api.common.checkPageParams(page, size, MAX_LIST_PAGE_SIZE)
+        val pageable = org.springframework.data.domain.PageRequest.of(page, size)
+        return when (typeRaw.trim().uppercase()) {
+            "POST" -> {
+                val result = if (hiddenOnly) {
+                    posts.findByHiddenAtIsNotNullOrderBySeqDesc(pageable)
+                } else {
+                    posts.findAllByOrderBySeqDesc(pageable)
+                }
+                AdminContentPageResponse(
+                    content = result.content.map {
+                        AdminContentItemResponse(
+                            targetType = ReportTargetType.POST.name,
+                            id = it.id,
+                            title = it.text.take(TITLE_PREVIEW_LENGTH).ifBlank { "(본문 없음)" },
+                            category = it.category,
+                            authorName = it.author.name,
+                            hidden = it.hiddenAt != null,
+                            hiddenReason = it.hiddenReason,
+                            deleted = it.deletedAt != null,
+                        )
+                    },
+                    page = result.number, size = result.size,
+                    totalElements = result.totalElements, totalPages = result.totalPages,
+                )
+            }
+            "EVENT" -> {
+                val result = if (hiddenOnly) {
+                    events.findByHiddenAtIsNotNullOrderBySeqDesc(pageable)
+                } else {
+                    events.findAllByOrderBySeqDesc(pageable)
+                }
+                AdminContentPageResponse(
+                    content = result.content.map {
+                        AdminContentItemResponse(
+                            targetType = ReportTargetType.EVENT.name,
+                            id = it.id,
+                            title = it.title,
+                            category = it.status,
+                            authorName = it.author.name,
+                            hidden = it.hiddenAt != null,
+                            hiddenReason = it.hiddenReason,
+                            deleted = it.deletedAt != null,
+                        )
+                    },
+                    page = result.number, size = result.size,
+                    totalElements = result.totalElements, totalPages = result.totalPages,
+                )
+            }
+            else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "type must be POST or EVENT")
+        }
+    }
+
     @Transactional
     fun setVisibility(
         adminUserId: Long,
@@ -191,6 +247,8 @@ class AdminContentService(
     private fun notFound() = ResponseStatusException(HttpStatus.NOT_FOUND, "content not found")
 
     private companion object {
+        const val MAX_LIST_PAGE_SIZE = 50
+        const val TITLE_PREVIEW_LENGTH = 80
         const val MAX_REASON_LENGTH = 500
     }
 }

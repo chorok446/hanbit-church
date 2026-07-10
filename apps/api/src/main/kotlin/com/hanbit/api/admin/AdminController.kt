@@ -61,6 +61,15 @@ class AdminController(
         @AuthenticationPrincipal admin: AuthUser,
     ): AdminReportResponse = service.resolveReport(admin.id, id, request)
 
+    @Operation(summary = "콘텐츠 관리 목록 (게시글/행사, 숨김 포함, 최신순)")
+    @GetMapping("/content")
+    fun contentList(
+        @RequestParam(defaultValue = "POST") type: String,
+        @RequestParam(defaultValue = "false") hiddenOnly: Boolean,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
+    ): AdminContentPageResponse = content.listContent(type, hiddenOnly, page, size)
+
     @Operation(summary = "콘텐츠 숨김/복구 (soft hide, 작성자에게 알림)")
     @PatchMapping("/content/{targetType}/{targetId}")
     fun setContentVisibility(
