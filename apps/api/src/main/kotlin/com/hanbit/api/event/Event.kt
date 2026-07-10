@@ -52,6 +52,8 @@ class Event(
     // 개설자 삭제(soft delete). 값이 있으면 개설자 본인·관리자 복구 경로에서도 404 로 취급한다.
     // 삭제 시 hiddenAt 도 함께 세팅해 공개 노출 제외를 재사용한다.
     @Column(name = "deleted_at") @JsonIgnore var deletedAt: java.time.Instant? = null,
+    // 모집 마감 임박(D-1) 알림 발송 시각 — EventReminderJob 의 멱등성 마커. null = 미발송.
+    @Column(name = "recruit_end_reminder_sent_at") @JsonIgnore var recruitEndReminderSentAt: java.time.Instant? = null,
     // 실무 안내(전부 선택). null/blank 면 프론트 상세에서 해당 행을 숨긴다 — "추후 안내" 자리표시 없음.
     @Column(length = 200) var place: String? = null,
     @Column(length = 200) var audience: String? = null,

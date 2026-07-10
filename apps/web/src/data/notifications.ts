@@ -125,6 +125,7 @@ export function notificationTypeLabel(type: string): string {
   if (type === "EVENT_PROOF_CREATED") return "행사 참여 후기";
   if (type === "POST_LIKED") return "게시글 좋아요";
   if (type === "EVENT_STATUS_CHANGED") return "행사 상태";
+  if (type === "EVENT_RECRUIT_ENDING") return "신청 마감 임박";
   if (type === "REPORT_RESOLVED") return "신고 처리";
   if (type === "CONTENT_HIDDEN") return "콘텐츠 숨김";
   if (type === "CONTENT_RESTORED") return "숨김 해제";

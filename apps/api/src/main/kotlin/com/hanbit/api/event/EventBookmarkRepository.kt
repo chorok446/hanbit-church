@@ -9,6 +9,9 @@ interface EventBookmarkRepository : JpaRepository<EventBookmark, String> {
     fun existsByEventIdAndUserId(eventId: String, userId: Long): Boolean
     fun findByEventIdAndUserId(eventId: String, userId: Long): EventBookmark?
     fun findByUserId(userId: Long): List<EventBookmark>
+
+    /** 마감 임박 알림 수신자 조회용 — 행사를 저장한 사용자 전체. */
+    fun findByEventId(eventId: String): List<EventBookmark>
     fun findByUserId(userId: Long, pageable: Pageable): Page<EventBookmark>
     fun findByUserIdAndEventIdIn(userId: Long, eventIds: Collection<String>): List<EventBookmark>
     fun countByEventId(eventId: String): Long
