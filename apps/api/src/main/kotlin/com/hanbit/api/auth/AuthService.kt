@@ -68,8 +68,14 @@ class AuthService(
         return SignupResult(user, if (user.isPendingApproval) null else issueTokens(user))
     }
 
+    /** 로그인 1단계 결과 — 일반 사용자는 토큰, 2FA 사용자는 챌린지. */
+    sealed interface LoginOutcome {
+        data class Success(val tokens: IssuedTokens) : LoginOutcome
+        data class TwoFactorRequired(val challengeToken: String) : LoginOutcome
+    }
+
     @Transactional(readOnly = true)
-    fun login(req: LoginRequest): IssuedTokens {
+    fun login(req: LoginRequest): LoginOutcome {
         val emailKey = req.email.trim().lowercase()
         // IP 한도(AuthRateLimitFilter)와 별개로 계정당 시도를 제한한다 — 분산 IP 로 단일 계정을 노리는 추측 차단.
         // 존재하지 않는 email 도 동일하게 계수해 계정 존재 여부가 새지 않도록 한다.
@@ -86,8 +92,15 @@ class AuthService(
         // 비밀번호 검증 후에만 정지·승인 대기 여부를 알린다(자격 증명 없이 상태가 새지 않도록).
         requireNotSuspended(user)
         requireApproved(user)
-        return issueTokens(user)
+        if (user.totpEnabled) {
+            // 2FA 사용자 — 토큰 대신 5분짜리 챌린지를 돌려준다. 코드 확인은 TwoFactorService.verifyLogin.
+            return LoginOutcome.TwoFactorRequired(jwt.issueTwoFactorChallenge(user))
+        }
+        return LoginOutcome.Success(issueTokens(user))
     }
+
+    /** 2FA 검증 통과 후 토큰 발급(TwoFactorService 전용) — 새 세션 id 로 발급된다. */
+    fun issueTokensFor(user: User): IssuedTokens = issueTokens(user)
 
     /** 승인 대기 계정 로그인 차단. 메시지는 프론트가 그대로 노출한다(403, SuspendedAccountException 과 같은 경로). */
     private fun requireApproved(user: User) {
