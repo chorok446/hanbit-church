@@ -29,6 +29,7 @@ class ScheduledPublishTest(
     @param:Autowired private val users: UserRepository,
     @param:Autowired private val posts: PostRepository,
     @param:Autowired private val job: ScheduledPublishJob,
+    @param:Autowired private val notificationRepo: com.hanbit.api.notification.NotificationRepository,
 ) {
     private val adminToken = jwt.issue(
         User(id = 4, email = "test-user-4@hanbit.local", passwordHash = "x", name = "관리자"),
@@ -95,6 +96,13 @@ class ScheduledPublishTest(
         job.publishDue()
 
         val published = posts.findById(id).orElseThrow()
+        // 작성자(관리자, id=4)에게 발행 확인 알림이 생성된다.
+        val notices = notificationRepo.findAll().filter {
+            it.type == com.hanbit.api.notification.NotificationType.SCHEDULED_POST_PUBLISHED && it.href == "/posts/$id"
+        }
+        org.assertj.core.api.Assertions.assertThat(notices).hasSize(1)
+        org.assertj.core.api.Assertions.assertThat(notices[0].userId).isEqualTo(4L)
+
         assertThat(published.hiddenAt).isNull()
         assertThat(published.hiddenReason).isNull()
         assertThat(published.seq).isGreaterThan(oldSeq - 1)
