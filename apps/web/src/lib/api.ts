@@ -84,6 +84,21 @@ export async function apiGet<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/**
+ * 서버 컴포넌트 전용 ISR 캐시 GET(공개 데이터만 — 쿠키 없이 호출된다).
+ * 어떤 실패(네트워크·비 2xx)든 null 을 반환한다 — API 없이 도는 빌드(CI)가 깨지지 않고,
+ * 호출부는 null 이면 클라이언트 fetch 경로로 폴백한다.
+ */
+export async function apiGetIsr<T>(path: string, revalidateSeconds = 60): Promise<T | null> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}${path}`, { next: { revalidate: revalidateSeconds } });
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
 /** 404 등 not-found는 null, 그 외 오류는 ApiError. */
 export async function apiGetOrNull<T>(path: string): Promise<T | null> {
   const res = await apiFetch(path);

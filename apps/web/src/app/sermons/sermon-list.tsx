@@ -15,9 +15,9 @@ import {
   type SermonInfo,
   type SermonServiceType,
 } from "@/data/sermons";
-import type { Post, PostSearchResponse } from "@/data/posts";
+import { SERMON_PAGE_SIZE, type Post, type PostSearchResponse } from "@/data/posts";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = SERMON_PAGE_SIZE;
 
 type Result = { key: string; status: "success" | "error"; data: PostSearchResponse | null };
 
@@ -164,11 +164,14 @@ function SermonCard({ entry, index }: { entry: SermonEntry; index: number }) {
   );
 }
 
-/** 설교 목록 — 최신 설교 강조 + 예배 구분 필터 칩 + 검색. /sermons 전용. */
-export function SermonList() {
+/** 설교 목록 — 최신 설교 강조 + 예배 구분 필터 칩 + 검색. /sermons 전용.
+ * initialData: 서버 컴포넌트(ISR)가 선주입한 첫 페이지 — 첫 페인트·크롤러가 빈 목록을 보지 않는다. */
+export function SermonList({ initialData = null }: { initialData?: PostSearchResponse | null }) {
   const [page, setPage] = useState(0);
   const [retryTick, setRetryTick] = useState(0);
-  const [result, setResult] = useState<Result | null>(null);
+  const [result, setResult] = useState<Result | null>(
+    initialData ? { key: "0::0", status: "success", data: initialData } : null,
+  );
   const [filter, setFilter] = useState<SermonServiceType | "ALL">("ALL");
   const [query, setQuery] = useState("");
 
@@ -176,6 +179,9 @@ export function SermonList() {
   const requestKey = `${page}:${trimmedQuery}:${retryTick}`;
 
   useEffect(() => {
+    // 현재 요청 key 의 결과(성공·실패 모두)가 이미 있으면 재요청하지 않는다 —
+    // SSR 선주입 데이터의 첫 마운트 중복 요청 방지 + 실패 시 재시도는 retryTick(새 key)으로만.
+    if (result?.key === requestKey) return;
     let cancelled = false;
     const params = new URLSearchParams({
       category: "SERMON",
@@ -194,7 +200,7 @@ export function SermonList() {
     return () => {
       cancelled = true;
     };
-  }, [page, trimmedQuery, retryTick, requestKey]);
+  }, [page, trimmedQuery, retryTick, requestKey, result]);
 
   const loading = result === null || result.key !== requestKey;
 
