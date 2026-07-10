@@ -106,6 +106,7 @@ class PostService(
             "latest" -> PostSearchSort.LATEST
             "popular" -> PostSearchSort.POPULAR
             "discussed" -> PostSearchSort.DISCUSSED
+            "relevance" -> PostSearchSort.RELEVANCE
             else -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid post sort")
         }
 

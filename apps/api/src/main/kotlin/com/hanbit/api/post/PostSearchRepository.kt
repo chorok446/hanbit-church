@@ -13,6 +13,9 @@ enum class PostSearchSort {
     LATEST,
     POPULAR,
     DISCUSSED,
+
+    /** 관련순 — 검색어가 본문에서 더 앞에 등장할수록 상위. 검색어가 없으면 LATEST 와 동일. */
+    RELEVANCE,
 }
 
 data class PostSearchCondition(
@@ -75,7 +78,7 @@ class QuerydslPostSearchRepository(
         val content = queryFactory
             .selectFrom(post)
             .where(predicates)
-            .orderBy(*orderSpecifiers(post, condition.sort))
+            .orderBy(*orderSpecifiers(post, condition.sort, condition.query))
             .offset(condition.page.toLong() * condition.size)
             .limit(condition.size.toLong())
             .fetch()
@@ -89,10 +92,34 @@ class QuerydslPostSearchRepository(
         return PostSearchResult(content = content, totalElements = totalElements)
     }
 
-    private fun orderSpecifiers(post: QPost, sort: PostSearchSort): Array<OrderSpecifier<*>> =
+    private fun orderSpecifiers(post: QPost, sort: PostSearchSort, query: String?): Array<OrderSpecifier<*>> =
         when (sort) {
             PostSearchSort.LATEST -> arrayOf(post.seq.desc(), post.id.asc())
             PostSearchSort.POPULAR -> arrayOf(post.likes.desc(), post.seq.desc(), post.id.asc())
             PostSearchSort.DISCUSSED -> arrayOf(post.comments.desc(), post.seq.desc(), post.id.asc())
+            PostSearchSort.RELEVANCE -> relevanceOrder(post, query)
         }
+
+    /**
+     * 관련순: locate(검색어, 본문) 가 작을수록(앞에 등장) 상위. 본문에 없고 작성자 이름으로만
+     * 걸린 결과는 맨 뒤(NO_TEXT_MATCH_RANK). 동률은 최신순. locate 는 JPQL 표준 함수라 H2·MySQL 공용.
+     */
+    private fun relevanceOrder(post: QPost, query: String?): Array<OrderSpecifier<*>> {
+        val keyword = query?.trim()?.lowercase()
+        if (keyword.isNullOrEmpty()) return arrayOf(post.seq.desc(), post.id.asc())
+        val position = Expressions.numberTemplate(
+            Int::class.javaObjectType,
+            "locate({0}, lower({1}))",
+            keyword,
+            post.text,
+        )
+        val rank = Expressions.cases()
+            .`when`(position.eq(0)).then(NO_TEXT_MATCH_RANK)
+            .otherwise(position)
+        return arrayOf(rank.asc(), post.seq.desc(), post.id.asc())
+    }
+
+    private companion object {
+        const val NO_TEXT_MATCH_RANK = 1_000_000
+    }
 }

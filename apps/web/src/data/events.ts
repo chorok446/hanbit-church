@@ -5,7 +5,7 @@ import { richTextPlainLength } from "@/lib/rich-text-length";
 import type { CommentPageLocationResponse } from "@/data/comments";
 
 export type EventStatus = "open" | "upcoming" | "closed";
-export type EventSearchSort = "latest" | "popular" | "deadline";
+export type EventSearchSort = "latest" | "popular" | "deadline" | "relevance";
 export type EventRecruitState = "before_recruit" | "recruiting" | "ended" | "closed";
 
 export type EventDateRangeFilters = {
