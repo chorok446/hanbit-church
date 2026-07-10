@@ -11,7 +11,7 @@ import { updateProfile } from "@/data/users";
 type PreferenceKey = "notifyEventUpdates" | "notifyComments" | "notifyLikes";
 
 const PREFERENCES: { key: PreferenceKey; label: string; description: string }[] = [
-  { key: "notifyEventUpdates", label: "행사 알림", description: "참여한 행사·사역의 상태 변경, 모집 마감 임박" },
+  { key: "notifyEventUpdates", label: "행사 알림", description: "참여·북마크한 행사의 모집 상태·안내 변경, 마감 임박, 자리 알림" },
   { key: "notifyComments", label: "댓글 알림", description: "내 글의 댓글, 내 댓글의 답글, 멘션" },
   { key: "notifyLikes", label: "좋아요 알림", description: "내 글에 눌린 좋아요" },
 ];
