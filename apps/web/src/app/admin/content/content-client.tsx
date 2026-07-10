@@ -9,6 +9,7 @@ import { StatePanel } from "@/components/ui/state-panel";
 import {
   fetchAdminContentPage,
   setAdminContentVisibility,
+  setAdminContentVisibilityBulk,
   type AdminContentItem,
   type AdminContentPageResponse,
 } from "@/data/admin";
@@ -34,8 +35,15 @@ export default function AdminContentClient() {
   const [hidingId, setHidingId] = useState<string | null>(null);
   const [hideReason, setHideReason] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  // 일괄 작업 선택(현재 페이지 한정). requestKey 를 함께 저장해 탭·페이지·검색이 바뀌면
+  // 자동으로 빈 선택이 된다(effect 초기화 대신 렌더 시점 identity 비교).
+  const [selection, setSelection] = useState<{ key: string; ids: Set<string> }>({ key: "", ids: new Set() });
+  const [bulkReason, setBulkReason] = useState("");
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   const requestKey = `${type}:${hiddenOnly}:${appliedQ}:${page}:${retryTick}`;
+  const selected = selection.key === requestKey ? selection.ids : new Set<string>();
+  const setSelected = (ids: Set<string>) => setSelection({ key: requestKey, ids });
 
   useEffect(() => {
     let cancelled = false;
@@ -63,6 +71,39 @@ export default function AdminContentClient() {
       toast.error("처리에 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setSavingId(null);
+    }
+  };
+
+  const toggleSelected = (id: string) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelected(next);
+  };
+
+  const applyBulk = async (hidden: boolean) => {
+    if (bulkSaving || selected.size === 0) return;
+    const items = (result?.data?.content ?? [])
+      .filter((item) => selected.has(item.id))
+      .map((item) => ({ targetType: item.targetType, targetId: item.id }));
+    if (items.length === 0) return;
+    setBulkSaving(true);
+    try {
+      const res = await setAdminContentVisibilityBulk(items, {
+        hidden,
+        reason: hidden ? bulkReason.trim() || undefined : undefined,
+      });
+      toast.success(
+        `${res.processed}건을 ${hidden ? "숨김" : "복구"} 처리했습니다.` +
+          (res.missing.length > 0 ? ` (${res.missing.length}건은 찾지 못해 건너뜀)` : ""),
+      );
+      setSelected(new Set());
+      setBulkReason("");
+      setRetryTick((t) => t + 1);
+    } catch {
+      toast.error("일괄 처리에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setBulkSaving(false);
     }
   };
 
@@ -163,6 +204,54 @@ export default function AdminContentClient() {
         </StatePanel>
       ) : (
         <>
+          <div
+            className="flex flex-wrap items-center gap-3 rounded-2xl border px-4 py-3"
+            style={{ background: "var(--card)", borderColor: "var(--border)" }}
+          >
+            <label className="flex items-center gap-2 text-[13px]" style={{ color: "var(--foreground)" }}>
+              <input
+                type="checkbox"
+                aria-label="현재 페이지 전체 선택"
+                checked={selected.size > 0 && selected.size === result.data.content.length}
+                onChange={(e) =>
+                  setSelected(e.target.checked ? new Set(result.data!.content.map((i) => i.id)) : new Set())
+                }
+              />
+              전체 선택
+            </label>
+            <span className="text-[12px]" style={{ color: "var(--foreground-muted)" }}>
+              {selected.size}건 선택됨
+            </span>
+            <input
+              value={bulkReason}
+              onChange={(e) => setBulkReason(e.target.value)}
+              maxLength={500}
+              placeholder="일괄 숨김 사유 (선택)"
+              aria-label="일괄 숨김 사유"
+              className="ui-control min-w-40 flex-1 placeholder:opacity-50"
+              style={controlStyle}
+            />
+            <button
+              type="button"
+              onClick={() => void applyBulk(true)}
+              disabled={bulkSaving || selected.size === 0}
+              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] disabled:opacity-45"
+              style={{ background: "var(--danger-solid)", color: "var(--on-danger)" }}
+            >
+              {bulkSaving ? <Loader2 size={13} className="animate-spin" aria-hidden /> : <EyeOff size={13} aria-hidden />}
+              선택 숨김
+            </button>
+            <button
+              type="button"
+              onClick={() => void applyBulk(false)}
+              disabled={bulkSaving || selected.size === 0}
+              className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] disabled:opacity-45"
+              style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+            >
+              <Eye size={13} aria-hidden />
+              선택 복구
+            </button>
+          </div>
           <ul className="space-y-3">
             {result.data.content.map((item) => {
               const href = item.targetType === "POST" ? `/posts/${item.id}` : `/events/${item.id}`;
@@ -177,6 +266,14 @@ export default function AdminContentClient() {
                   style={{ background: "var(--card)", borderColor: "var(--border)" }}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <input
+                        type="checkbox"
+                        aria-label={`${item.title} 선택`}
+                        checked={selected.has(item.id)}
+                        onChange={() => toggleSelected(item.id)}
+                        className="mt-1"
+                      />
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span
@@ -209,6 +306,7 @@ export default function AdminContentClient() {
                         {item.authorName}
                         {item.hidden && item.hiddenReason ? ` · 숨김 사유: ${item.hiddenReason}` : ""}
                       </p>
+                    </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <Link

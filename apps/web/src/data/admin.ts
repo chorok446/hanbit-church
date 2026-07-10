@@ -232,6 +232,22 @@ export function fetchAdminLogs(params: {
   return apiGet<AdminActionLogsPageResponse>(`/api/admin/logs?${query.toString()}`);
 }
 
+export type BulkContentItem = { targetType: ReportTargetType; targetId: string };
+export type ContentVisibilityBulkResponse = {
+  requested: number;
+  processed: number;
+  missing: BulkContentItem[];
+  hidden: boolean;
+};
+
+/** 콘텐츠 일괄 숨김/복구(최대 50건). 404 항목은 건너뛰고 missing 으로 보고된다. */
+export function setAdminContentVisibilityBulk(
+  items: BulkContentItem[],
+  body: { hidden: boolean; reason?: string },
+): Promise<ContentVisibilityBulkResponse> {
+  return apiPatch<ContentVisibilityBulkResponse>("/api/admin/content/bulk", { items, ...body });
+}
+
 /** 콘텐츠 숨김(soft hide)/복구. 작성자에게 알림이 발송된다. */
 export function setAdminContentVisibility(
   targetType: ReportTargetType,

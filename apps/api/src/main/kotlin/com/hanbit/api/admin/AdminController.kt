@@ -81,6 +81,52 @@ class AdminController(
         @AuthenticationPrincipal admin: AuthUser,
     ): ContentVisibilityResponse = content.setVisibility(admin.id, targetType, targetId, request)
 
+    /**
+     * 일괄 숨김/복구. 항목별로 기존 setVisibility(프록시 경유)를 호출해 트랜잭션·감사 로그·작성자
+     * 알림이 단건과 동일하게 적용된다 — 일부 실패(404)는 건너뛰고 missing 으로 보고(부분 성공).
+     */
+    @Operation(summary = "콘텐츠 일괄 숨김/복구 (최대 50건, 404 는 건너뛰고 보고)")
+    @PatchMapping("/content/bulk")
+    fun setContentVisibilityBulk(
+        @RequestBody request: SetContentVisibilityBulkRequest,
+        @AuthenticationPrincipal admin: AuthUser,
+    ): ContentVisibilityBulkResponse {
+        if (request.items.isEmpty()) {
+            throw org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.BAD_REQUEST,
+                "items must not be empty",
+            )
+        }
+        if (request.items.size > MAX_BULK_ITEMS) {
+            throw org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.BAD_REQUEST,
+                "items must not exceed $MAX_BULK_ITEMS",
+            )
+        }
+        val missing = mutableListOf<BulkContentItem>()
+        var processed = 0
+        request.items.forEach { item ->
+            try {
+                content.setVisibility(
+                    admin.id,
+                    item.targetType,
+                    item.targetId,
+                    SetContentVisibilityRequest(hidden = request.hidden, reason = request.reason),
+                )
+                processed++
+            } catch (e: org.springframework.web.server.ResponseStatusException) {
+                // 삭제 경합 등으로 사라진 대상만 건너뛴다. 그 외(잘못된 타입 등)는 요청 오류로 그대로 전파.
+                if (e.statusCode == org.springframework.http.HttpStatus.NOT_FOUND) missing += item else throw e
+            }
+        }
+        return ContentVisibilityBulkResponse(
+            requested = request.items.size,
+            processed = processed,
+            missing = missing,
+            hidden = request.hidden,
+        )
+    }
+
     @Operation(summary = "회원 목록 조회 (이메일/이름 검색, 정지 중 필터, 최신 가입 순)")
     @GetMapping("/users")
     fun adminUsers(
@@ -164,4 +210,9 @@ class AdminController(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
     ): AdminActionLogsPageResponse = actionLogs.getLogs(action, page, size)
+
+    private companion object {
+        /** 일괄 숨김/복구 요청당 최대 항목 수 — 페이지 크기(20)보다 넉넉한 상한. */
+        const val MAX_BULK_ITEMS = 50
+    }
 }
