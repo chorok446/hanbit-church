@@ -19,7 +19,7 @@ import { EventThumb } from "./event-thumb";
  */
 function badgeStyle(lifecycle: EventLifecycle): { background: string; color: string } {
   if (lifecycle.phase === "recruiting") {
-    return { background: "var(--success)", color: "var(--on-banner)" };
+    return { background: "var(--success)", color: "var(--on-success)" };
   }
   if (lifecycle.badge.label === "정원마감") {
     return { background: "var(--danger-solid)", color: "#ffffff" };
