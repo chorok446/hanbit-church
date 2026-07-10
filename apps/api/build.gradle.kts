@@ -50,6 +50,11 @@ dependencies {
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
 	// 리치 본문 HTML 서버측 정화(저장 시점). 프론트 DOMPurify 와 이중 방어.
 	implementation("org.jsoup:jsoup:1.22.2")
+	// Sentry 에러 추적. SENTRY_DSN 미설정(기본)이면 SDK 비활성 — 로컬/CI 무영향.
+	// sentry-spring-boot-4 는 Boot 4(Spring 7) 전용 모듈(starter-jakarta 는 Boot 3 용).
+	implementation(platform("io.sentry:sentry-bom:8.48.0"))
+	implementation("io.sentry:sentry-spring-boot-4")
+	implementation("io.sentry:sentry-logback")
 	runtimeOnly("com.mysql:mysql-connector-j")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	// [spike] Boot 4 에서 test slice(@AutoConfigureMockMvc/MockMvc)가 기술별 모듈로 분리됨.

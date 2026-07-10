@@ -11,6 +11,7 @@
     "e2e": "node scripts/e2e.mjs"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.64.0",
     "@tiptap/extension-image": "^3.27.3",
     "@tiptap/extension-link": "^3.27.3",
     "@tiptap/extension-placeholder": "^3.27.3",
