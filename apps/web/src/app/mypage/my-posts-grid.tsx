@@ -5,13 +5,20 @@ import { FallbackImage } from "@/components/fallback-image";
 import { ListEmptyState } from "@/components/list-empty-state";
 import { PostPreview } from "@/components/post-text";
 import Link from "next/link";
-import { ExternalLink, EyeOff, Heart, MessageCircle, PenLine } from "lucide-react";
+import { ExternalLink, EyeOff, Heart, MessageCircle, PenLine, Clock } from "lucide-react";
 import { fetchMyPostsPage, postTimeLabel, type Post } from "@/data/posts";
 import { PaginatedSection } from "./paginated-section";
 
 // 카드 하단 액션 버튼 공통 클래스. 색은 CSS 토큰이 테마를 처리한다.
 const cardActionClass =
   "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] transition-colors border-[rgba(var(--ink-rgb),0.12)] bg-[color:var(--glass-strong)] text-[color:var(--heading)] hover:bg-[color:var(--chip-bg)]";
+
+const scheduledFormatter = new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" });
+
+function scheduledLabel(publishAt: string): string {
+  const date = new Date(publishAt);
+  return Number.isNaN(date.getTime()) ? publishAt : scheduledFormatter.format(date);
+}
 
 function MyPostCard({ post }: { post: Post }) {
   const image = post.images[0];
@@ -42,7 +49,15 @@ function MyPostCard({ post }: { post: Post }) {
         )}
 
         <div className="space-y-3 p-4" style={{ color: "var(--foreground)" }}>
-          {post.hidden ? (
+          {post.hidden && post.publishAt ? (
+            // 예약 게시 대기 — 운영 숨김과 같은 hidden 플래그지만 publishAt 이 있으면 예약 상태다(도래하면 잡이 1분 내 공개).
+            <p
+              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px]"
+              style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}
+            >
+              <Clock size={12} aria-hidden /> 예약 게시 대기 · {scheduledLabel(post.publishAt)}
+            </p>
+          ) : post.hidden ? (
             <p
               className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px]"
               style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
