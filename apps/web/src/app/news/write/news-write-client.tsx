@@ -36,6 +36,8 @@ export function NewsWriteClient() {
   const [attachments, setAttachments] = useState<PostAttachment[]>([]);
   const [events, setEvents] = useState<{ id: string; title: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  // 예약 게시(선택) — datetime-local 값. 비어 있으면 즉시 게시.
+  const [publishAt, setPublishAt] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<PostComposeField, string>>>({});
 
   useEffect(() => {
@@ -74,10 +76,23 @@ export function NewsWriteClient() {
     setSubmitting(true);
     setFieldErrors({});
 
+    if (publishAt && new Date(publishAt).getTime() <= Date.now()) {
+      toast.error("예약 게시 시각은 미래여야 합니다.");
+      submittingRef.current = false;
+      setSubmitting(false);
+      return;
+    }
+
     try {
-      await apiPost("/api/posts", { ...validation.payload, category, attachments });
+      await apiPost("/api/posts", {
+        ...validation.payload,
+        category,
+        attachments,
+        // datetime-local(로컬 시간대) → ISO-8601 UTC. 빈 값이면 보내지 않는다(즉시 게시).
+        publishAt: publishAt ? new Date(publishAt).toISOString() : undefined,
+      });
       if (getSessionId() !== requestToken) return;
-      toast.success("소식이 등록되었습니다.");
+      toast.success(publishAt ? "예약되었습니다. 지정한 시각에 게시됩니다." : "소식이 등록되었습니다.");
       router.push("/news");
     } catch (error) {
       if (getSessionId() !== requestToken) return;
@@ -148,6 +163,28 @@ export function NewsWriteClient() {
             </div>
 
             <PostAttachmentsEditor attachments={attachments} onChange={setAttachments} disabled={submitting} />
+
+            <div>
+              <label
+                htmlFor="news-write-publish-at"
+                className="mb-2 block text-[12px] tracking-[0.2em] uppercase"
+                style={{ color: "var(--foreground-muted)" }}
+              >
+                예약 게시 <span className="normal-case tracking-normal opacity-70">(선택)</span>
+              </label>
+              <input
+                id="news-write-publish-at"
+                type="datetime-local"
+                value={publishAt}
+                onChange={(e) => setPublishAt(e.target.value)}
+                disabled={submitting}
+                className="ui-control rounded-xl px-3 py-2.5 text-[13px]"
+                style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+              />
+              <p className="mt-1.5 text-[12px] opacity-60" style={{ color: "var(--foreground)" }}>
+                비워두면 즉시 게시됩니다. 예약한 글은 지정 시각까지 소식 목록에 보이지 않아요.
+              </p>
+            </div>
 
             <PostComposeForm
               values={values}

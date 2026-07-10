@@ -31,6 +31,9 @@ object PostVisibility {
 /** countByAuthorUserIdsAndAnonymousFalse JPQL constructor projection 용. */
 data class AuthorPostCount(val authorUserId: Long, val count: Long)
 
+/** 예약 게시 대기 상태를 나타내는 hiddenReason 마커 — 운영 숨김과 구분해 게시 잡이 이 값만 공개 전환한다. */
+const val SCHEDULED_HIDDEN_REASON = "예약 게시 대기"
+
 object PostCategory {
     const val NOTICE = "NOTICE" // 공지
     const val BULLETIN = "BULLETIN" // 주보
@@ -105,6 +108,8 @@ class Post(
     @Column(nullable = false, length = 20) var visibility: String = PostVisibility.PUBLIC,
     // 공지·주보 상단 고정 시각. null = 고정 아님. 스태프만 토글(PostService.setPinned).
     @Column(name = "pinned_at") var pinnedAt: java.time.Instant? = null,
+    // 예약 게시 시각(공지·주보 전용). 예약 중에는 hiddenAt 도 세팅돼 공개에서 제외된다.
+    @Column(name = "publish_at") var publishAt: java.time.Instant? = null,
 )
 
 /**
