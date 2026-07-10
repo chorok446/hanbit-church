@@ -18,6 +18,8 @@ test("시드 게시글 상세를 열 수 있다", async ({ page }) => {
   // p1 은 공지(NOTICE) 시드 — 카테고리별 돌아가기 버튼은 소식으로 향한다.
   await expect(page.getByRole("button", { name: "소식으로 돌아가기" })).toBeVisible();
   await expect(page.getByText("여름 청년 수련회 사전 모임").first()).toBeVisible();
+  // 구조화 데이터(JSON-LD) 회귀 가드
+  await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(1);
 });
 
 test("시드 행사 상세를 열 수 있다", async ({ page }) => {
@@ -25,6 +27,8 @@ test("시드 행사 상세를 열 수 있다", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "여름 청년 수련회" })).toBeVisible();
   await expect(page.getByRole("button", { name: "행사 목록" })).toBeVisible();
+  // 구조화 데이터(JSON-LD) 회귀 가드
+  await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(1);
 });
 
 test("행사 목록 URL이 canonical 형태로 정규화된다", async ({ page }) => {
