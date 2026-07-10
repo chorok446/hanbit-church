@@ -111,7 +111,7 @@ for (const dark of [false, true]) {
 
     if (dark) await page.addInitScript(() => localStorage.setItem("theme", "dark"));
     await login(page, { email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
-    for (const path of ["/praise-team", "/praise-team/schedule", "/praise-team/members"]) {
+    for (const path of ["/praise-team", "/praise-team/schedule", "/praise-team/setlists", "/praise-team/members"]) {
       await page.goto(path);
       await page.waitForLoadState("networkidle");
       // 404 폴백 위에서 axe 가 통과해버리는 헛검사 방지 — 찬양팀 셸 헤더가 실제로 렌더됐는지 확인.
