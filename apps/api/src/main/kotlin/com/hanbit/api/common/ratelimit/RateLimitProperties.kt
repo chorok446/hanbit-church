@@ -26,6 +26,8 @@ data class ContentWriteRateLimitRules(
     val report: RateLimitRuleConfig = RateLimitRuleConfig(limit = 10, windowSeconds = 60),
     /** 업로드는 파일당 최대 5MB 디스크 쓰기라 댓글보다 보수적으로 제한한다. */
     val media: RateLimitRuleConfig = RateLimitRuleConfig(limit = 10, windowSeconds = 60),
+    /** 좋아요·북마크·참여·차단 토글 — 가볍지만 알림을 만들 수 있어 봇 스팸을 막는다. */
+    val interaction: RateLimitRuleConfig = RateLimitRuleConfig(limit = 60, windowSeconds = 60),
 )
 
 data class RateLimitRuleConfig(

@@ -16,7 +16,18 @@ class ContentWriteRateLimitFilter(
         if (path == "/api/new-family") return RateLimitRule.REPORT_CREATE
         if (path == "/api/media" || path == "/api/media/document") return RateLimitRule.MEDIA_UPLOAD
         if (isCommentCreatePath(path)) return RateLimitRule.COMMENT_CREATE
+        if (isInteractionPath(path)) return RateLimitRule.INTERACTION_TOGGLE
         return null
+    }
+
+    /** 좋아요·북마크·참여·차단 토글 POST. 알림을 만들 수 있는 가벼운 상호작용을 하나의 한도로 묶는다.
+     * (조회수는 상세 GET 에서 집계하는 구조라 별도 규칙이 필요 없다. 팔로우는 이 포크에서 제거됨.) */
+    private fun isInteractionPath(path: String): Boolean {
+        val segments = path.split("/").filter { it.isNotEmpty() }
+        return segments.size == 4 && segments[0] == "api" && (
+            (segments[1] in setOf("posts", "events") && segments[3] in setOf("like", "bookmark", "join")) ||
+                (segments[1] == "users" && segments[3] == "block")
+            )
     }
 
     private fun isCommentCreatePath(path: String): Boolean {
