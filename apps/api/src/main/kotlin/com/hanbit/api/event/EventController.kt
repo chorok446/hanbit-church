@@ -214,7 +214,11 @@ class EventController(
         @PathVariable id: String,
         @RequestBody req: IncreaseCapacityRequest,
         @AuthenticationPrincipal user: AuthUser,
-    ): EventResponse = eventService.increaseCapacity(user.id, id, req.capacity)
+    ): EventResponse {
+        val result = eventService.increaseCapacity(user.id, id, req.capacity)
+        eventService.notifyCapacityIncreased(user.id, id, result)
+        return result.response
+    }
 
     @Operation(summary = "행사 삭제")
     @SecurityRequirement(name = "bearerAuth")
