@@ -51,16 +51,30 @@ class UserControllerTest(
             ),
         )
 
-        mvc.get("/api/users/$userId")
+        val viewerToken = jwt.issue(user)
+
+        mvc.get("/api/users/$userId") {
+            header("Authorization", "Bearer $viewerToken")
+        }
             .andExpect { status { isOk() } }
             .andExpect { jsonPath("$.name", Matchers.`is`("공개유저")) }
             .andExpect { jsonPath("$.postCount", Matchers.`is`(1)) }
             .andExpect { jsonPath("$.email") { doesNotExist() } }
 
-        mvc.get("/api/users/$userId/posts")
+        mvc.get("/api/users/$userId/posts") {
+            header("Authorization", "Bearer $viewerToken")
+        }
             .andExpect { status { isOk() } }
             .andExpect { jsonPath("$.content.length()", Matchers.`is`(1)) }
             .andExpect { jsonPath("$.content[0].authorId", Matchers.`is`(userId.toInt())) }
+    }
+
+    @Test
+    fun `프로필과 프로필 글 목록은 비로그인이면 401 — 교인 전용`() {
+        val user = users.save(User(email = "an-${UUID.randomUUID()}@t.com", passwordHash = "x", name = "익명확인"))
+        val userId = requireNotNull(user.id)
+        mvc.get("/api/users/$userId").andExpect { status { isUnauthorized() } }
+        mvc.get("/api/users/$userId/posts").andExpect { status { isUnauthorized() } }
     }
 
     @Test
@@ -99,7 +113,10 @@ class UserControllerTest(
 
     @Test
     fun `없는 사용자는 404`() {
-        mvc.get("/api/users/999999999")
+        val viewer = users.save(User(email = "nf-${UUID.randomUUID()}@t.com", passwordHash = "x", name = "조회자"))
+        mvc.get("/api/users/999999999") {
+            header("Authorization", "Bearer ${jwt.issue(viewer)}")
+        }
             .andExpect { status { isNotFound() } }
     }
 
