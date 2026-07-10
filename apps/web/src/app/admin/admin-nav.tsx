@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Flag, Users, UserCheck, ScrollText, HeartHandshake } from "lucide-react";
+import { LayoutDashboard, Flag, Users, UserCheck, ScrollText, HeartHandshake, CalendarDays } from "lucide-react";
 import { useAdminProfile } from "./admin-guard";
 import { getAdminPermissions, type AdminPermissions } from "./permissions";
 
@@ -21,6 +21,7 @@ const items: {
   { href: "/admin/users", label: "회원 관리", icon: Users, permission: "canManageUsers" },
   { href: "/admin/approvals", label: "가입 승인", icon: UserCheck, permission: "canApproveSignups" },
   { href: "/admin/new-family", label: "새가족", icon: HeartHandshake, permission: "canManageNewFamily" },
+  { href: "/admin/calendar", label: "교회 일정", icon: CalendarDays, permission: "canManageCalendar" },
   { href: "/admin/logs", label: "감사 로그", icon: ScrollText, permission: "canViewAuditLog" },
 ];
 

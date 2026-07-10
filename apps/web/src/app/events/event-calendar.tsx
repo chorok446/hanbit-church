@@ -14,6 +14,7 @@ import {
   eventTypeDotColor,
   eventTypeLabel,
   eventTypeStyle,
+  fetchManualCalendarEvents,
   formatDateLabel,
   getEventsForMonth,
   getEventsForWeek,
@@ -113,6 +114,8 @@ export function EventCalendarView() {
   // 찬양팀 일정 — 서버가 요청자별로 범위를 좁혀 준다(비로그인 PUBLIC / 로그인 CHURCH+PUBLIC /
   // 찬양팀 멤버 전체). 실패해도 캘린더 본체는 그려지도록 빈 배열 fallback.
   const [praiseSchedules, setPraiseSchedules] = useState<PraiseSchedule[]>([]);
+  // 관리자 수동 등록 일정(절기·심방 등) — 실패해도 빈 배열 fallback.
+  const [manualEvents, setManualEvents] = useState<CalendarEvent[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -130,6 +133,13 @@ export function EventCalendarView() {
       .catch(() => {
         if (!cancelled) setPraiseSchedules([]);
       });
+    fetchManualCalendarEvents()
+      .then((items) => {
+        if (!cancelled) setManualEvents(items);
+      })
+      .catch(() => {
+        if (!cancelled) setManualEvents([]);
+      });
     return () => {
       cancelled = true;
     };
@@ -137,11 +147,12 @@ export function EventCalendarView() {
 
   const events = fetchState.events;
   const praiseEvents = useMemo(() => mapPraiseScheduleToCalendarEvents(praiseSchedules), [praiseSchedules]);
+  const extraEvents = useMemo(() => [...praiseEvents, ...manualEvents], [praiseEvents, manualEvents]);
 
   const monthEvents = useMemo(() => {
     const byDate = getEventsForMonth(events, cursor.year, cursor.month, {
       includeDaily: showDaily,
-      extraEvents: praiseEvents,
+      extraEvents,
     });
     if (typeFilter === "all") return byDate;
     const filtered = new Map<string, CalendarEvent[]>();
@@ -150,15 +161,15 @@ export function EventCalendarView() {
       if (kept.length > 0) filtered.set(key, kept);
     }
     return filtered;
-  }, [events, cursor.year, cursor.month, showDaily, typeFilter, praiseEvents]);
+  }, [events, cursor.year, cursor.month, showDaily, typeFilter, extraEvents]);
 
   const weekDays = useMemo(() => {
-    const days = getEventsForWeek(events, today, praiseEvents);
+    const days = getEventsForWeek(events, today, extraEvents);
     if (typeFilter === "all") return days;
     return days
       .map(({ dateKey, events }) => ({ dateKey, events: events.filter((event) => matchesFilter(event.type, typeFilter)) }))
       .filter(({ events }) => events.length > 0);
-  }, [events, today, typeFilter, praiseEvents]);
+  }, [events, today, typeFilter, extraEvents]);
 
   const monthHasEvents = monthEvents.size > 0;
   const selectedEvents = selectedDate ? monthEvents.get(selectedDate) ?? [] : [];

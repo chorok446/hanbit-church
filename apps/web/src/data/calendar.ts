@@ -1,6 +1,7 @@
 // 교회 일정 캘린더 데이터 계층.
 // 소스는 두 곳: 예배 시간표(church.ts WORSHIP_SERVICES 반복 일정)와 행사·사역(백엔드 Event).
 // D-day·상태 라벨은 eventLifecycle() 단일 기준을 재사용한다(카드·상세·캘린더 동일 기준).
+import { apiGet } from "@/lib/api";
 import { eventLifecycle, isIsoDate, type Event } from "@/data/events";
 import { WORSHIP_SERVICES, type WorshipService } from "@/data/church";
 
@@ -38,16 +39,51 @@ export type CalendarEvent = {
   status?: string;
 };
 
-// TODO(관리자 일정: 백엔드 모델·CRUD 필요)
-// 관리자가 직접 등록하는 수동 일정(절기 행사·심방·새가족 환영회 등)을 위한 타입.
-// 아직 백엔드 엔티티·API 가 없어 프론트 타입만 예약해 둔다.
-// 도입 시: /api/admin/calendar CRUD + 공개 GET /api/calendar 를 추가하고,
-// fetchManualCalendarEvents() 결과를 collectCalendarEvents() 에 합류시키면 된다.
+// 관리자가 직접 등록하는 수동 일정(절기 행사·심방·새가족 환영회 등).
+// 백엔드 ManualCalendarEvent(/api/calendar 공개 조회, /api/admin/calendar CRUD)와 1:1 대응.
 export type ManualCalendarEvent = Omit<CalendarEvent, "source" | "sourceId" | "isRecurring"> & {
   source: "manual";
   /** 작성 관리자 표시명 (감사 로그용). */
   createdBy?: string;
 };
+
+/** 백엔드 ManualCalendarEventResponse. */
+export type ManualCalendarEventResponse = {
+  id: string;
+  title: string;
+  type: string;
+  startDate: string;
+  endDate: string | null;
+  startTime: string | null;
+  location: string | null;
+  createdBy: string;
+  createdAt: string;
+};
+
+/** 수동 일정에서 고를 수 있는 타입 — 백엔드 MANUAL_CALENDAR_TYPES 와 동일하게 유지. */
+export const MANUAL_CALENDAR_TYPES = ["worship", "event", "new-family", "service", "prayer", "etc"] as const;
+
+export function mapManualToCalendarEvent(item: ManualCalendarEventResponse): CalendarEvent {
+  return {
+    id: `manual-${item.id}`,
+    title: item.title,
+    type: (MANUAL_CALENDAR_TYPES as readonly string[]).includes(item.type)
+      ? (item.type as CalendarEventType)
+      : "etc",
+    startDate: item.startDate,
+    endDate: item.endDate ?? undefined,
+    startTime: item.startTime ?? undefined,
+    location: item.location ?? undefined,
+    source: "manual",
+    sourceId: item.id,
+  };
+}
+
+/** 공개 수동 일정 전체 조회(소량 전제). 실패는 호출부에서 빈 배열 fallback 할 것. */
+export async function fetchManualCalendarEvents(): Promise<CalendarEvent[]> {
+  const items = await apiGet<ManualCalendarEventResponse[]>("/api/calendar");
+  return items.map(mapManualToCalendarEvent);
+}
 
 // ─── 날짜 유틸 (교회 일정은 브라우저 로컬 기준 — 외부 라이브러리 없이 Date 계산) ───
 
@@ -148,7 +184,7 @@ export function mapWorshipToCalendarEvents(year: number, monthIndex: number): Ca
 
 // ─── 대한민국 공휴일 (연도별 정적 테이블) ───
 // TODO(공휴일: 이후 연도 추가 또는 API 연동)
-// 음력 기반(설날·석가탄신일·추석)은 연도별 확정 날짜를 하드코딩한다. 2028년 이후는 아래 표에
+// 음력 기반(설날·석가탄신일·추석)은 연도별 확정 날짜를 하드코딩한다. 2029년 이후는 아래 표에
 // 연도를 추가하거나 공공데이터포털 특일 정보 API 연동으로 대체한다. 임시공휴일은 포함하지 않는다.
 
 type HolidayDef = { date: string; name: string };
@@ -214,6 +250,23 @@ const KOREAN_HOLIDAYS: Record<number, HolidayDef[]> = {
     { date: "2027-10-09", name: "한글날" },
     { date: "2027-10-11", name: "대체공휴일(한글날)" },
     { date: "2027-12-25", name: "성탄절" },
+  ],
+  2028: [
+    { date: "2028-01-01", name: "신정" },
+    { date: "2028-01-26", name: "설날 연휴" },
+    { date: "2028-01-27", name: "설날" },
+    { date: "2028-01-28", name: "설날 연휴" },
+    { date: "2028-03-01", name: "삼일절" },
+    { date: "2028-05-02", name: "석가탄신일" },
+    { date: "2028-05-05", name: "어린이날" },
+    { date: "2028-06-06", name: "현충일" },
+    { date: "2028-08-15", name: "광복절" },
+    { date: "2028-10-02", name: "추석 연휴" },
+    { date: "2028-10-03", name: "추석·개천절" },
+    { date: "2028-10-04", name: "추석 연휴" },
+    { date: "2028-10-05", name: "대체공휴일(개천절)" },
+    { date: "2028-10-09", name: "한글날" },
+    { date: "2028-12-25", name: "성탄절" },
   ],
 };
 
