@@ -64,7 +64,7 @@ class RedisRateLimitBucketStore(
             end
             return {count, redis.call('TTL', KEYS[1])}
             """.trimIndent(),
-            List::class.java as Class<List<*>>,
+            List::class.java,
         )
     }
 }
