@@ -54,8 +54,8 @@ class CalendarIcsService(
             }
 
         lines += "END:VCALENDAR"
-        // RFC 5545 는 CRLF 를 요구한다.
-        return lines.joinToString("\r\n", postfix = "\r\n")
+        // RFC 5545 는 CRLF 를 요구하고, 75 옥텟 초과 라인은 접어야 한다.
+        return lines.joinToString("\r\n", postfix = "\r\n") { fold(it) }
     }
 
     /**
@@ -86,7 +86,7 @@ class CalendarIcsService(
             location = event.place,
         )
         lines += "END:VCALENDAR"
-        return lines.joinToString("\r\n", postfix = "\r\n")
+        return lines.joinToString("\r\n", postfix = "\r\n") { fold(it) }
     }
 
     private fun vevent(
@@ -120,4 +120,28 @@ class CalendarIcsService(
         .replace(";", "\\;")
         .replace(",", "\\,")
         .replace("\n", "\\n")
+
+    /**
+     * RFC 5545 3.1 라인 폴딩 — 한 콘텐츠 라인이 75 옥텟(UTF-8)을 넘으면
+     * CRLF + 선행 공백으로 접는다. 이어지는 물리 라인은 선행 공백 1옥텟을 포함해 75 옥텟 이하.
+     * 코드포인트 단위로 세어 멀티바이트 문자(한글 3바이트·이모지 등)를 쪼개지 않는다.
+     */
+    private fun fold(line: String): String {
+        val out = StringBuilder()
+        var octets = 0
+        var i = 0
+        while (i < line.length) {
+            val cp = line.codePointAt(i)
+            val s = String(Character.toChars(cp))
+            val w = s.toByteArray(Charsets.UTF_8).size
+            if (octets + w > 75) {
+                out.append("\r\n ")
+                octets = 1 // 선행 공백
+            }
+            out.append(s)
+            octets += w
+            i += Character.charCount(cp)
+        }
+        return out.toString()
+    }
 }
