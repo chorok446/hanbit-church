@@ -220,7 +220,7 @@ export function SiteHeader() {
             <>
               <Link
                 href="/login"
-                className="whitespace-nowrap rounded-full px-2 py-1.5 text-[13px] transition-colors hover:bg-white/10 sm:px-3"
+                className="whitespace-nowrap rounded-full px-2 py-1.5 text-[13px] transition-colors hover:bg-[rgba(var(--ink-rgb),0.07)] sm:px-3"
                 style={{ color: "rgba(var(--ink-rgb), 0.8)" }}
               >
                 로그인
