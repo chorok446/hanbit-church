@@ -189,7 +189,7 @@ export default function EventEditClient({ id }: { id: string }) {
     return (
       <PageState>
         <p>행사를 찾을 수 없습니다.</p>
-        <button type="button" onClick={() => router.push("/events")} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
+        <button type="button" onClick={() => router.push("/events")} className="rounded-xl cta-solid px-4 py-2 text-[13px]">
           행사 목록
         </button>
       </PageState>
@@ -199,7 +199,7 @@ export default function EventEditClient({ id }: { id: string }) {
     return (
       <PageState>
         <p>행사 수정 권한이 없습니다.</p>
-        <button type="button" onClick={() => router.push(`/events/${id}`)} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
+        <button type="button" onClick={() => router.push(`/events/${id}`)} className="rounded-xl cta-solid px-4 py-2 text-[13px]">
           행사로 돌아가기
         </button>
       </PageState>
@@ -209,7 +209,7 @@ export default function EventEditClient({ id }: { id: string }) {
     return (
       <PageState>
         <p>모집이 마감된 행사는 수정할 수 없습니다.</p>
-        <button type="button" onClick={() => router.push(`/events/${id}`)} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
+        <button type="button" onClick={() => router.push(`/events/${id}`)} className="rounded-xl cta-solid px-4 py-2 text-[13px]">
           행사로 돌아가기
         </button>
       </PageState>
@@ -219,7 +219,7 @@ export default function EventEditClient({ id }: { id: string }) {
     return (
       <PageState>
         <p>행사를 불러오지 못했습니다.</p>
-        <button type="button" onClick={() => setRetry((current) => current + 1)} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
+        <button type="button" onClick={() => setRetry((current) => current + 1)} className="rounded-xl cta-solid px-4 py-2 text-[13px]">
           다시 시도
         </button>
       </PageState>

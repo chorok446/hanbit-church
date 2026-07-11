@@ -243,8 +243,7 @@ export default function AdminCalendarClient() {
           onClick={() => void submit()}
           disabled={saving}
           aria-busy={saving}
-          className="mt-5 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[13.5px] font-medium disabled:opacity-40"
-          style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+          className="cta-solid mt-5 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-[13.5px] font-medium disabled:opacity-40"
         >
           {saving ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <CalendarDays size={14} aria-hidden />}
           {editingId ? "수정 저장" : "일정 등록"}

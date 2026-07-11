@@ -131,8 +131,7 @@ export function SearchResults({
           <button
             type="button"
             onClick={onRetry}
-            className="rounded-full px-5 py-2 text-[13px]"
-            style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+            className="cta-solid rounded-full px-5 py-2 text-[13px]"
           >
             다시 시도
           </button>
@@ -149,8 +148,7 @@ export function SearchResults({
                 <button
                   type="button"
                   onClick={onReset}
-                  className="rounded-full px-5 py-2 text-[13px] font-medium"
-                  style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+                  className="cta-solid rounded-full px-5 py-2 text-[13px] font-medium"
                 >
                   필터 초기화
                 </button>
@@ -169,8 +167,7 @@ export function SearchResults({
             <button
               type="button"
               onClick={onReset}
-              className="rounded-full px-5 py-2 text-[13px] font-medium"
-              style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+              className="cta-solid rounded-full px-5 py-2 text-[13px] font-medium"
             >
               전체 행사·사역 보기
             </button>
@@ -209,8 +206,7 @@ export function SearchResults({
             <button
               type="button"
               onClick={onReset}
-              className="rounded-full px-5 py-2 text-[13px] font-medium"
-              style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+              className="cta-solid rounded-full px-5 py-2 text-[13px] font-medium"
             >
               전체 게시글 보기
             </button>

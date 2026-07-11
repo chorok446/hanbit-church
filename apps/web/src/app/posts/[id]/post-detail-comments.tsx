@@ -243,7 +243,7 @@ export function PostDetailComments({
                 <button
                   type="submit"
                   disabled={savingCommentId === c.id || !editText.trim()}
-                  className="rounded-full bg-[var(--cta-bg)] px-3 py-1.5 text-[12px] text-[var(--cta-fg)] disabled:opacity-40"
+                  className="rounded-full cta-solid px-3 py-1.5 text-[12px] disabled:opacity-40"
                 >
                   {savingCommentId === c.id ? "저장 중…" : "저장"}
                 </button>
@@ -313,8 +313,7 @@ export function PostDetailComments({
               onClick={() => void comments.submit()}
               disabled={submitting || visibleCommentsLoading || !!listError || !composeText.trim()}
               aria-label="댓글 등록"
-              className="w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-40"
-              style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+              className="cta-solid w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-40"
             >
               <Send size={14} />
             </button>
@@ -327,7 +326,7 @@ export function PostDetailComments({
             <button
               type="button"
               onClick={() => router.push("/login")}
-              className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]"
+              className="rounded-full cta-solid px-5 py-2 text-[13px]"
             >
               로그인하기
             </button>
@@ -392,8 +391,7 @@ export function PostDetailComments({
                         onClick={() => void submitReply(c.id)}
                         disabled={submittingReply || !replyText.trim()}
                         aria-label="답글 등록"
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
-                        style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+                        className="cta-solid flex h-8 w-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
                       >
                         <Send size={13} />
                       </button>

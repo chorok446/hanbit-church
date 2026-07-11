@@ -192,7 +192,7 @@ export default function PostEditPage() {
   if (load.kind === "notfound") {
     return centerNote(
       "게시글을 찾을 수 없습니다.",
-      <button onClick={() => router.push("/feed")} className="rounded-xl px-4 py-2 text-[13px]" style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}>
+      <button onClick={() => router.push("/feed")} className="cta-solid rounded-xl px-4 py-2 text-[13px]">
         피드로
       </button>,
     );
@@ -200,7 +200,7 @@ export default function PostEditPage() {
   if (load.kind === "forbidden") {
     return centerNote(
       "이 게시글을 수정할 권한이 없습니다.",
-      <button onClick={() => router.push(`/posts/${id}`)} className="rounded-xl px-4 py-2 text-[13px]" style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}>
+      <button onClick={() => router.push(`/posts/${id}`)} className="cta-solid rounded-xl px-4 py-2 text-[13px]">
         게시글로
       </button>,
     );
@@ -213,8 +213,7 @@ export default function PostEditPage() {
           setLoad({ kind: "loading" });
           setRetry((count) => count + 1);
         }}
-        className="rounded-xl px-4 py-2 text-[13px]"
-        style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+        className="cta-solid rounded-xl px-4 py-2 text-[13px]"
       >
         다시 시도
       </button>,

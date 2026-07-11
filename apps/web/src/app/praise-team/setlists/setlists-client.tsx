@@ -69,8 +69,7 @@ export function SetlistsClient() {
           <div className="mb-6 flex justify-end">
             <Link
               href="/praise-team/setlists/new"
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-[13px] font-medium text-[var(--cta-fg)]"
-              style={{ background: "var(--cta-bg)" }}
+              className="cta-solid inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-[13px] font-medium"
             >
               <PlusCircle size={14} aria-hidden />새 콘티 작성
             </Link>

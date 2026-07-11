@@ -175,7 +175,7 @@ export function ChangePasswordForm({ profileName, embedded = false }: { profileN
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--cta-bg)] px-6 py-3 text-[13px] font-medium text-[var(--cta-fg)] disabled:cursor-wait disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl cta-solid px-6 py-3 text-[13px] font-medium disabled:cursor-wait disabled:opacity-50"
             >
               {submitting ? <Loader2 size={14} className="animate-spin" /> : null}
               {submitting ? "변경 중…" : "비밀번호 변경"}

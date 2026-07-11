@@ -100,7 +100,7 @@ export function EventCTABar({
           <button
             type="button"
             onClick={onLogin}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--cta-bg)] px-6 py-3 text-[14px] font-medium text-[var(--cta-fg)] sm:w-auto"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full cta-solid px-6 py-3 text-[14px] font-medium sm:w-auto"
           >
             <LogIn size={16} aria-hidden />
             로그인 후 참여하기
@@ -117,8 +117,8 @@ export function EventCTABar({
           disabled={disabled || pending}
           aria-busy={action === "join"}
           aria-label={action === "join" ? "행사 참여 처리 중" : "행사 참여하기"}
-          className="inline-flex w-full items-center justify-center gap-2 py-5 rounded-2xl font-medium hover:-translate-y-0.5 transition-transform shadow-[0_30px_60px_-20px_var(--accent-soft)] disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ background: "var(--cta-bg)", color: "var(--cta-fg)", fontSize: 17 }}
+          className="cta-solid inline-flex w-full items-center justify-center gap-2 py-5 rounded-2xl font-medium hover:-translate-y-0.5 transition-transform shadow-[0_30px_60px_-20px_var(--accent-soft)] disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ fontSize: 17 }}
         >
           {action === "join" ? <Loader2 size={18} className="animate-spin" aria-hidden /> : null}
           {action === "join" ? "참여 처리 중…" : "행사 참여하기"}

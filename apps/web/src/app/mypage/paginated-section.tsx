@@ -139,7 +139,7 @@ export function PaginatedSection<T>({
     return (
       <StatePanel>
         <p>{errorLabel}</p>
-        <button type="button" onClick={reload} className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]">
+        <button type="button" onClick={reload} className="rounded-full cta-solid px-5 py-2 text-[13px]">
           다시 시도
         </button>
       </StatePanel>

@@ -49,8 +49,7 @@ function LoginRequired({ userId }: { userId: string }) {
         </p>
         <Link
           href={`/login?next=/users/${userId}`}
-          className="mt-6 inline-flex items-center justify-center rounded-full px-6 py-3 text-[14px] font-medium"
-          style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+          className="cta-solid mt-6 inline-flex items-center justify-center rounded-full px-6 py-3 text-[14px] font-medium"
         >
           로그인
         </Link>

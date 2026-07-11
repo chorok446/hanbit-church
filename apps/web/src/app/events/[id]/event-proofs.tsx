@@ -353,7 +353,7 @@ export function EventProofs({ event }: { event: Event }) {
         {status === "error" ? (
           <StatePanel compact role="alert">
             <p style={{ color: "var(--foreground-muted)" }}>참여 후기를 불러오지 못했습니다.</p>
-            <button type="button" onClick={reload} className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]">
+            <button type="button" onClick={reload} className="rounded-full cta-solid px-5 py-2 text-[13px]">
               다시 시도
             </button>
           </StatePanel>

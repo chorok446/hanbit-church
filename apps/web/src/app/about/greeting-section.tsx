@@ -36,8 +36,7 @@ export function GreetingSection() {
         <div className="mt-9 flex flex-wrap justify-center gap-3">
           <Link
             href="/worship"
-            className="rounded-full px-6 py-2.5 text-[13.5px] font-medium transition-opacity hover:opacity-90"
-            style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+            className="cta-solid rounded-full px-6 py-2.5 text-[13.5px] font-medium transition-opacity hover:opacity-90"
           >
             예배안내 보기
           </Link>

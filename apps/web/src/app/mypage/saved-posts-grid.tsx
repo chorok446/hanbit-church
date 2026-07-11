@@ -130,7 +130,7 @@ export function SavedPostsGrid({ page, onPageChange }: { page: number; onPageCha
           action={
             <Link
               href="/feed"
-              className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]"
+              className="rounded-full cta-solid px-5 py-2 text-[13px] font-medium"
             >
               교제 둘러보기
             </Link>

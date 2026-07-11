@@ -46,8 +46,7 @@ export function ChurchHero() {
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/worship"
-            className="rounded-full px-8 py-3.5 text-[15px] font-medium transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
-            style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+            className="cta-solid rounded-full px-8 py-3.5 text-[15px] font-medium transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
           >
             예배 안내
           </Link>

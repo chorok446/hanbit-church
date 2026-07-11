@@ -609,8 +609,7 @@ function MyAttendanceCard({
           type="button"
           onClick={() => void save()}
           disabled={saving}
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-6 text-[13px] font-medium text-[var(--cta-fg)] disabled:opacity-60"
-          style={{ background: "var(--cta-bg)" }}
+          className="cta-solid inline-flex min-h-11 items-center gap-1.5 rounded-full px-6 text-[13px] font-medium disabled:opacity-60"
         >
           <ClipboardCheck size={14} aria-hidden />
           {saving ? "저장 중…" : "저장"}

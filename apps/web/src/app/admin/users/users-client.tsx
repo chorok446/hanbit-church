@@ -629,8 +629,7 @@ function PraiseTeamEditor({ user, onUpdated }: { user: AdminUserItem; onUpdated:
               type="button"
               onClick={save}
               disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-medium text-[var(--cta-fg)] disabled:opacity-50"
-              style={{ background: "var(--cta-bg)" }}
+              className="cta-solid inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-medium disabled:opacity-50"
             >
               {busy && <Loader2 size={14} className="animate-spin" aria-hidden />}
               찬양팀 설정 저장

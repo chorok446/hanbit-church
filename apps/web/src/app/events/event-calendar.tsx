@@ -295,8 +295,7 @@ export function EventCalendarView({ urlState }: { urlState?: EventListUrlState }
               setFetchState((prev) => ({ status: "loading", events: prev.events }));
               setRetryTick((tick) => tick + 1);
             }}
-            className="rounded-full px-4 py-1.5 text-[12px] font-medium"
-            style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+            className="cta-solid rounded-full px-4 py-1.5 text-[12px] font-medium"
           >
             다시 시도
           </button>

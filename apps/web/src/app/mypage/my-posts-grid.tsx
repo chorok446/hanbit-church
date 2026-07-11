@@ -126,7 +126,7 @@ export function MyPostsGrid({ page, onPageChange }: { page: number; onPageChange
           action={
             <Link
               href="/posts/new"
-              className="inline-flex items-center gap-1.5 rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]"
+              className="inline-flex items-center gap-1.5 rounded-full cta-solid px-5 py-2 text-[13px] font-medium"
             >
               <PenLine size={14} aria-hidden /> 글 작성하기
             </Link>
