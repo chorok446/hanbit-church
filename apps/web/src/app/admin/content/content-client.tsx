@@ -366,7 +366,7 @@ export default function AdminContentClient() {
                         disabled={savingId !== null}
                         aria-busy={savingId === item.id}
                         className="rounded-full px-4 py-2 text-[13px] disabled:opacity-50"
-                        style={{ background: "var(--danger)", color: "#fff" }}
+                        style={{ background: "var(--danger-solid)", color: "var(--on-danger)" }}
                       >
                         숨김 확정
                       </button>

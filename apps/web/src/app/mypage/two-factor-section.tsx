@@ -217,7 +217,7 @@ export function TwoFactorSection({ initialEnabled }: { initialEnabled: boolean }
             onClick={() => void disable()}
             disabled={busy || !password}
             className="rounded-full px-5 py-2.5 text-[13px] font-medium disabled:opacity-40"
-            style={{ background: "var(--danger)", color: "#fff" }}
+            style={{ background: "var(--danger-solid)", color: "var(--on-danger)" }}
           >
             해제 확정
           </button>
