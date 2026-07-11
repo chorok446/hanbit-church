@@ -192,6 +192,25 @@ body {
   filter: brightness(0.98);
 }
 
+/* 위험 액션(삭제·숨김·해제 확정 등) 버튼 — 채워진 danger-solid + 흰 글자,
+   cta-solid 와 동일한 lift hover 로 버튼 패밀리를 통일한다. */
+.cta-danger {
+  background: var(--danger-solid);
+  color: var(--on-danger);
+  transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+}
+
+.cta-danger:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.35);
+}
+
+.cta-danger:active:not(:disabled) {
+  transform: translateY(0);
+  filter: brightness(0.97);
+}
+
 /* 보조(아웃라인) 액션 버튼·링크 공통 표면 — 카드 바탕 + 테두리 + 본문색.
    primary(cta-solid)와 달리 lift 없이 은은한 테두리·바탕 tint 로만 hover 를 표시한다.
    ⚠ 이 색 조합은 select·입력·비활성 탭에도 쓰이므로, 실제 보조 버튼/링크에만 붙인다. */
@@ -217,7 +236,8 @@ body {
     transition-duration: 0.01ms !important;
   }
   /* CTA hover 의 lift(transform)는 모션 축소 시 제거한다. */
-  .cta-solid:hover:not(:disabled) {
+  .cta-solid:hover:not(:disabled),
+  .cta-danger:hover:not(:disabled) {
     transform: none;
   }
 }
