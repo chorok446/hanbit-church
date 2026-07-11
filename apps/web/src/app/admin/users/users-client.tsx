@@ -474,8 +474,7 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
                 type="button"
                 onClick={suspend}
                 disabled={busy}
-                className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] disabled:opacity-50"
-                style={{ background: "var(--danger-solid)", color: "var(--on-danger)" }}
+                className="cta-danger inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] disabled:opacity-50"
               >
                 {busy ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <ShieldBan size={14} aria-hidden />}
                 정지

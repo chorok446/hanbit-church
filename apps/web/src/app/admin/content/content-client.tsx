@@ -235,8 +235,7 @@ export default function AdminContentClient() {
               type="button"
               onClick={() => void applyBulk(true)}
               disabled={bulkSaving || selected.size === 0}
-              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] disabled:opacity-45"
-              style={{ background: "var(--danger-solid)", color: "var(--on-danger)" }}
+              className="cta-danger inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] disabled:opacity-45"
             >
               {bulkSaving ? <Loader2 size={13} className="animate-spin" aria-hidden /> : <EyeOff size={13} aria-hidden />}
               선택 숨김
@@ -365,8 +364,7 @@ export default function AdminContentClient() {
                         onClick={() => void applyVisibility(item, true, hideReason)}
                         disabled={savingId !== null}
                         aria-busy={savingId === item.id}
-                        className="rounded-full px-4 py-2 text-[13px] disabled:opacity-50"
-                        style={{ background: "var(--danger-solid)", color: "var(--on-danger)" }}
+                        className="cta-danger rounded-full px-4 py-2 text-[13px] disabled:opacity-50"
                       >
                         숨김 확정
                       </button>
