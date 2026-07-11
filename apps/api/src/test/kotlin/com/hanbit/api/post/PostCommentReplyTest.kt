@@ -159,6 +159,44 @@ class PostCommentReplyTest(
     }
 
     @Test
+    fun `삭제된 최상위 댓글은 딥링크 페이지 위치 계산에서 제외된다`() {
+        // 페이지 위치 count 는 목록과 같은 필터(hiddenAt is null)를 써야 정렬이 어긋나지 않는다.
+        // soft delete 는 hiddenAt 도 세팅하므로, 삭제된 앞선 댓글은 대상의 page 를 밀지 않아야 한다.
+        val postId = savePost()
+        val targetId = idOf(createComment(postId, "대상 댓글").andReturn().response.contentAsString)
+        val targetSeq = comments.findById(targetId).orElseThrow().seq
+        // 대상보다 최신(더 큰 seq)인 최상위 댓글 2개 — newest 정렬에서 대상보다 앞에 온다.
+        val newerIds = (0 until 2).map { index ->
+            comments.saveAndFlush(
+                PostComment(
+                    id = "pc-${UUID.randomUUID()}",
+                    postId = postId,
+                    author = Author("답글러", false),
+                    text = "이후 댓글 $index",
+                    time = "방금 전",
+                    seq = targetSeq + 1000 + index,
+                    authorUserId = 2,
+                ),
+            ).id
+        }
+
+        // 삭제 전: 앞선 최상위 댓글 2개 → size 2 기준 page 1.
+        mvc.get("/api/posts/$postId/comments/$targetId/page") { param("size", "2") }
+            .andExpect { status { isOk() } }
+            .andExpect { jsonPath("$.page", Matchers.`is`(1)) }
+
+        // 앞선 댓글 하나를 soft delete(작성자 본인 = user 2).
+        mvc.delete("/api/posts/$postId/comments/${newerIds[0]}") {
+            headers { add("Authorization", "Bearer $replierToken") }
+        }.andExpect { status { isNoContent() } }
+
+        // 삭제 후: 남은 앞선 댓글 1개 → page 0. 삭제 댓글이 count 에서 빠졌음을 증명한다.
+        mvc.get("/api/posts/$postId/comments/$targetId/page") { param("size", "2") }
+            .andExpect { status { isOk() } }
+            .andExpect { jsonPath("$.page", Matchers.`is`(0)) }
+    }
+
+    @Test
     fun `존재하지 않거나 다른 게시글의 부모로는 답글을 달 수 없다`() {
         val postId = savePost()
         val otherPostId = savePost()
