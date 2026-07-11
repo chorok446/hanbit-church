@@ -231,4 +231,6 @@ data class AdminPasswordResetResponse(
     val userId: Long,
     @field:Schema(description = "한 번만 표시되는 임시 비밀번호. 서버는 해시만 저장한다")
     val tempPassword: String,
+    @field:Schema(description = "함께 해지된 대상 사용자의 기존 세션 수")
+    val revokedSessions: Int = 0,
 )
