@@ -80,7 +80,7 @@ class UserProfileService(
             name = user.name,
             verified = user.verified,
             profileImageUrl = user.profileImageUrl,
-            postCount = posts.countByAuthorUserIdAndAnonymousFalse(id), // 익명 기도제목 제외(공개 수치)
+            postCount = posts.countByAuthorUserIdAndAnonymousFalseAndHiddenAtIsNull(id), // 익명 기도·숨김 제외(공개 수치)
             blockedByMe = viewerId?.let { userBlocks.isBlockedBy(it, id) },
         )
     }

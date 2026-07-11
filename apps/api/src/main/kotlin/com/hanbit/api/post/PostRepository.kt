@@ -57,13 +57,16 @@ interface PostRepository : JpaRepository<Post, String> {
         visibility: String,
         pageable: Pageable,
     ): Page<Post>
-    fun countByAuthorUserIdAndAnonymousFalse(authorUserId: Long): Long
+    // 공개 프로필 게시글 수 — 익명 기도제목뿐 아니라 숨김(운영 차단) 글도 제외한다(공개 read 경로 규칙).
+    fun countByAuthorUserIdAndAnonymousFalseAndHiddenAtIsNull(authorUserId: Long): Long
 
-    /** 사용자 목록 매핑용 bulk 집계 — 사용자별 공개 게시글 수(익명 기도 제외). 사용자당 count N+1 방지. */
+    /** 사용자 목록 매핑용 bulk 집계 — 사용자별 공개 게시글 수(익명 기도·숨김 제외). 사용자당 count N+1 방지. */
     @Query(
         """
         select new com.hanbit.api.post.AuthorPostCount(p.authorUserId, count(p))
-        from Post p where p.authorUserId in :userIds and p.anonymous = false group by p.authorUserId
+        from Post p
+        where p.authorUserId in :userIds and p.anonymous = false and p.hiddenAt is null
+        group by p.authorUserId
         """,
     )
     fun countByAuthorUserIdsAndAnonymousFalse(@Param("userIds") userIds: Collection<Long>): List<AuthorPostCount>
