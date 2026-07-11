@@ -175,7 +175,7 @@ export function setPraiseRole(
   return apiPatch<AdminUserItem>(`/api/admin/users/${userId}/praise`, body);
 }
 
-export type AdminPasswordResetResponse = { userId: number; tempPassword: string };
+export type AdminPasswordResetResponse = { userId: number; tempPassword: string; revokedSessions?: number };
 
 /** 비밀번호 초기화 — 임시 비밀번호는 이 응답에서만 노출된다(서버는 해시만 저장). ADMIN 전용. */
 export function resetAdminUserPassword(userId: number): Promise<AdminPasswordResetResponse> {

@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.put
 import org.springframework.transaction.annotation.Transactional
@@ -97,6 +98,28 @@ class AdminPasswordResetTest(
             status { isOk() }
             jsonPath("$.passwordChangeRequired") { value(false) }
         }
+    }
+
+    @Test
+    fun `초기화하면 대상의 기존 세션이 전부 해지된다 - 공격자 세션 차단`() {
+        val (userId, email) = signupUser()
+        // 대상 사용자의 활성 세션(공격자 세션 시나리오).
+        val session = mvc.post("/api/auth/login") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"email":"$email","password":"Password1!"}"""
+        }.andExpect { status { isOk() } }.andReturn().response
+        val access = requireNotNull(session.getCookie(com.hanbit.api.security.AuthCookies.NAME)).value
+        mvc.get("/api/auth/me") { headers { add("Authorization", "Bearer $access") } }
+            .andExpect { status { isOk() } }
+
+        reset(userId).andExpect {
+            status { isOk() }
+            jsonPath("$.revokedSessions") { value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)) }
+        }
+
+        // 기존 세션의 access 토큰이 즉시 차단된다(sid denylist).
+        mvc.get("/api/auth/me") { headers { add("Authorization", "Bearer $access") } }
+            .andExpect { status { isUnauthorized() } }
     }
 
     @Test

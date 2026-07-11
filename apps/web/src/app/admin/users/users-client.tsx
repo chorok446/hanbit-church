@@ -285,6 +285,9 @@ function UserRow({ user, onUpdated }: { user: AdminUserItem; onUpdated: (updated
     try {
       const result = await resetAdminUserPassword(user.id);
       setTempPassword(result.tempPassword);
+      if (result.revokedSessions && result.revokedSessions > 0) {
+        toast.success(`기존 세션 ${result.revokedSessions}개를 함께 로그아웃했습니다.`);
+      }
     } catch (e) {
       toast.error(e instanceof ApiError ? apiErrorMessage(e, "비밀번호 초기화에 실패했습니다.") : "비밀번호 초기화에 실패했습니다.");
     } finally {

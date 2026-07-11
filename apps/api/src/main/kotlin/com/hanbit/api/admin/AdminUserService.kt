@@ -29,6 +29,7 @@ class AdminUserService(
     private val events: EventRepository,
     private val actionLogs: AdminActionLogService,
     private val encoder: PasswordEncoder,
+    private val accessLogs: com.hanbit.api.auth.AccessLogService,
     private val clock: Clock,
 ) {
     @Transactional(readOnly = true)
@@ -246,9 +247,14 @@ class AdminUserService(
         val tempPassword = generateTempPassword()
         user.passwordHash = encoder.encode(tempPassword)!!
         user.passwordResetRequired = true
+        // 자격 증명이 교체됐으므로 대상의 기존 세션을 전부 해지한다 — 본인 비밀번호 변경(#87)과 동일
+        // 정책이며, 탈취 대응으로 초기화하는 시나리오에서 공격자 세션이 살아남지 않게 한다.
+        // currentSessionId=null: 대상 본인이 요청자가 아니므로 예외 없이 전부 끊는다. best-effort.
+        val revoked = runCatching { accessLogs.revokeOtherSessions(userId, currentSessionId = null).revokedCount }
+            .getOrDefault(0)
         // detail 에 임시 비밀번호를 남기지 않는다 — 감사 로그는 누가/누구를 만 기록한다.
         actionLogs.record(adminUserId, AdminActionType.PASSWORD_RESET, TARGET_TYPE_USER, userId.toString())
-        return AdminPasswordResetResponse(userId = userId, tempPassword = tempPassword)
+        return AdminPasswordResetResponse(userId = userId, tempPassword = tempPassword, revokedSessions = revoked)
     }
 
     /**
