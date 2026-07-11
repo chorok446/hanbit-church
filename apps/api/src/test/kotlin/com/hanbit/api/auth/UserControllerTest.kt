@@ -70,6 +70,42 @@ class UserControllerTest(
     }
 
     @Test
+    fun `숨김(운영 차단) 글은 공개 프로필 게시글 수에서 제외된다`() {
+        val user = users.save(User(email = "hd-${UUID.randomUUID()}@t.com", passwordHash = "x", name = "숨김유저", verified = true))
+        val userId = requireNotNull(user.id)
+        fun makePost(text: String) = Post(
+            id = "hp-${UUID.randomUUID()}",
+            author = Author("숨김유저", true),
+            time = "방금",
+            text = text,
+            tags = emptyList(),
+            images = emptyList(),
+            likes = 0,
+            comments = 0,
+            authorUserId = userId,
+        )
+        posts.save(makePost("공개 글"))
+        posts.save(makePost("숨겨질 글").apply { hiddenAt = java.time.Instant.now(); hiddenReason = "운영 차단" })
+
+        val token = jwt.issue(user)
+        // 단건 프로필 경로 — postCount 는 숨김 글을 제외한 1
+        mvc.get("/api/users/$userId") {
+            header("Authorization", "Bearer $token")
+        }
+            .andExpect { status { isOk() } }
+            .andExpect { jsonPath("$.postCount", Matchers.`is`(1)) }
+
+        // 목록 매핑(bulk) 경로 — 검색에서도 동일하게 숨김 제외
+        val admin = users.save(User(email = "ha-${UUID.randomUUID()}@t.com", passwordHash = "x", name = "숨김검색관리자", role = UserRole.ADMIN.name))
+        mvc.get("/api/users/search") {
+            param("q", "숨김유저")
+            header("Authorization", "Bearer ${jwt.issue(admin)}")
+        }
+            .andExpect { status { isOk() } }
+            .andExpect { jsonPath("$.content[?(@.id == $userId)].postCount", Matchers.hasItem(1)) }
+    }
+
+    @Test
     fun `프로필과 프로필 글 목록은 비로그인이면 401 — 교인 전용`() {
         val user = users.save(User(email = "an-${UUID.randomUUID()}@t.com", passwordHash = "x", name = "익명확인"))
         val userId = requireNotNull(user.id)
