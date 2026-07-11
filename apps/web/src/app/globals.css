@@ -147,6 +147,12 @@ body {
   cursor: not-allowed;
 }
 
+/* 브라우저·Tailwind v4 preflight 기본은 <button> 커서가 화살표라 클릭 가능함이 드러나지 않는다.
+   활성 버튼·역할버튼·summary 에 포인터 커서를 부여한다(비활성은 위 not-allowed 유지). */
+:where(button, [role="button"], summary):not(:disabled) {
+  cursor: pointer;
+}
+
 .ui-control {
   width: 100%;
   border-width: 1px;
