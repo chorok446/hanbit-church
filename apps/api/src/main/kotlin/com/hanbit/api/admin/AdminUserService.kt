@@ -32,6 +32,8 @@ class AdminUserService(
     private val accessLogs: com.hanbit.api.auth.AccessLogService,
     private val clock: Clock,
 ) {
+    private val log = org.slf4j.LoggerFactory.getLogger(AdminUserService::class.java)
+
     @Transactional(readOnly = true)
     fun getUsers(q: String?, suspendedOnly: Boolean, page: Int, size: Int): AdminUsersPageResponse {
         checkPageParams(page, size, MAX_PAGE_SIZE)
@@ -250,8 +252,13 @@ class AdminUserService(
         // 자격 증명이 교체됐으므로 대상의 기존 세션을 전부 해지한다 — 본인 비밀번호 변경(#87)과 동일
         // 정책이며, 탈취 대응으로 초기화하는 시나리오에서 공격자 세션이 살아남지 않게 한다.
         // currentSessionId=null: 대상 본인이 요청자가 아니므로 예외 없이 전부 끊는다. best-effort.
+        // 실패해도 초기화 자체는 진행하되, 조용히 삼키지 않고 경고 로그를 남긴다 — 부분 해지(공격자
+        // 세션 잔존 가능)가 "해지 0건"과 구분되지 않으면 운영이 인지하지 못한다.
         val revoked = runCatching { accessLogs.revokeOtherSessions(userId, currentSessionId = null).revokedCount }
-            .getOrDefault(0)
+            .getOrElse { e ->
+                log.warn("관리자 비밀번호 초기화: 대상 {} 세션 해지 실패 — best-effort 로 진행", userId, e)
+                0
+            }
         // detail 에 임시 비밀번호를 남기지 않는다 — 감사 로그는 누가/누구를 만 기록한다.
         actionLogs.record(adminUserId, AdminActionType.PASSWORD_RESET, TARGET_TYPE_USER, userId.toString())
         return AdminPasswordResetResponse(userId = userId, tempPassword = tempPassword, revokedSessions = revoked)
