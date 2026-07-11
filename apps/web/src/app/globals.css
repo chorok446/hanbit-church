@@ -183,18 +183,13 @@ body {
 .cta-solid:hover:not(:disabled) {
   filter: brightness(1.08);
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px -14px rgba(var(--ink-rgb), 0.5);
+  /* 그림자는 테마와 무관하게 어두워야 한다 — var(--ink-rgb) 는 다크에서 크림이라 글로우가 된다. */
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.35);
 }
 
 .cta-solid:active:not(:disabled) {
   transform: translateY(0);
   filter: brightness(0.98);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cta-solid:hover:not(:disabled) {
-    transform: none;
-  }
 }
 
 /* 보조(아웃라인) 액션 버튼·링크 공통 표면 — 카드 바탕 + 테두리 + 본문색.
@@ -220,6 +215,10 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  /* CTA hover 의 lift(transform)는 모션 축소 시 제거한다. */
+  .cta-solid:hover:not(:disabled) {
+    transform: none;
   }
 }
 
