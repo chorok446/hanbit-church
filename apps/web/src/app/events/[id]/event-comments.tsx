@@ -177,7 +177,7 @@ export function EventComments({
         {comments.status === "error" ? (
           <StatePanel compact role="alert">
             <p style={{ color: "var(--foreground-muted)" }}>{comments.listError}</p>
-            <button type="button" onClick={reload} className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]">
+            <button type="button" onClick={reload} className="rounded-full cta-solid px-5 py-2 text-[13px]">
               다시 시도
             </button>
           </StatePanel>
@@ -256,8 +256,7 @@ export function EventComments({
                       onClick={() => void submitReply(comment.id)}
                       disabled={submittingReply || !replyText.trim()}
                       aria-label="답글 등록"
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
-                      style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+                      className="cta-solid flex h-8 w-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
                     >
                       {submittingReply ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
                     </button>

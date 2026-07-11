@@ -210,7 +210,7 @@ export default function ParticipantsClient({ id }: { id: string }) {
     return (
       <StateShell>
         <p>참가자 목록을 볼 권한이 없습니다.</p>
-        <button type="button" onClick={() => router.push(`/events/${id}`)} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
+        <button type="button" onClick={() => router.push(`/events/${id}`)} className="rounded-xl cta-solid px-4 py-2 text-[13px]">
           행사로 돌아가기
         </button>
       </StateShell>
@@ -220,7 +220,7 @@ export default function ParticipantsClient({ id }: { id: string }) {
     return (
       <StateShell>
         <p>행사를 찾을 수 없습니다.</p>
-        <button type="button" onClick={() => router.push("/events")} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
+        <button type="button" onClick={() => router.push("/events")} className="rounded-xl cta-solid px-4 py-2 text-[13px]">
           행사 목록
         </button>
       </StateShell>
@@ -230,7 +230,7 @@ export default function ParticipantsClient({ id }: { id: string }) {
     return (
       <StateShell>
         <p>참가자 목록을 불러오지 못했습니다.</p>
-        <button type="button" onClick={refresh} className="rounded-xl bg-[var(--cta-bg)] px-4 py-2 text-[13px] text-[var(--cta-fg)]">
+        <button type="button" onClick={refresh} className="rounded-xl cta-solid px-4 py-2 text-[13px]">
           다시 시도
         </button>
       </StateShell>
@@ -301,8 +301,7 @@ export default function ParticipantsClient({ id }: { id: string }) {
                   type="button"
                   onClick={() => void exportCsv()}
                   disabled={exporting}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13px] disabled:opacity-45"
-                  style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+                  className="cta-solid inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13px] disabled:opacity-45"
                 >
                   <Download size={14} /> {exporting ? "내려받는 중…" : "CSV 내보내기"}
                 </button>

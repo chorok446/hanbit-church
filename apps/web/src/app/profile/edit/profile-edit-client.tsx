@@ -270,7 +270,7 @@ function ProfileEditForm({ profile }: { profile: UserProfile }) {
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--cta-bg)] px-8 py-3 text-[13px] font-medium text-[var(--cta-fg)] transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl cta-solid px-8 py-3 text-[13px] font-medium disabled:cursor-wait disabled:opacity-50"
             >
               {submitting ? (
                 <>
@@ -304,14 +304,14 @@ export default function ProfileEditClient() {
           <StatePanel className="mx-auto min-h-72 max-w-2xl">
             <LogIn size={30} className="text-[var(--accent)]" />
             <p>프로필을 수정하려면 로그인이 필요합니다.</p>
-            <Link href="/login" className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]">
+            <Link href="/login" className="rounded-full cta-solid px-5 py-2 text-[13px]">
               로그인 페이지로 이동
             </Link>
           </StatePanel>
         ) : error || !profile ? (
           <StatePanel className="mx-auto min-h-72 max-w-2xl" role="alert">
             <p>{error || "사용자 정보를 불러오지 못했습니다."}</p>
-            <button type="button" onClick={retry} className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]">
+            <button type="button" onClick={retry} className="rounded-full cta-solid px-5 py-2 text-[13px]">
               다시 시도
             </button>
           </StatePanel>

@@ -135,8 +135,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={submitting || otpCode.length !== 6}
-            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-55 motion-reduce:transform-none"
-            style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+            className="cta-solid mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-55 motion-reduce:transform-none"
           >
             {submitting ? "확인 중…" : "인증하고 로그인"} <ArrowRight size={16} aria-hidden="true" />
           </button>
@@ -202,8 +201,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={submitting || !email.trim() || !password}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-55 motion-reduce:transform-none"
-          style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+          className="cta-solid mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-55 motion-reduce:transform-none"
         >
           {submitting ? "로그인 중…" : "로그인"} <ArrowRight size={16} aria-hidden="true" />
         </button>

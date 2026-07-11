@@ -12,6 +12,8 @@
   --footer-bg: #1f2a44;
   /* 딥네이비 배너(새가족 환영 등). 다크에서는 본문보다 한 단계 밝은 네이비로 띄운다. */
   --banner-bg: #1f2a44;
+  /* 배너 네이비의 한 단계 밝은 짝 — 썸네일 폴백 등 네이비 그라디언트의 끝 색으로 쓴다. */
+  --banner-bg-soft: #44557a;
   --banner-border: transparent;
   --accent: #c9a227;
   /* 액센트 계열 보조 텍스트(태그·eyebrow)·주요 버튼 배경. 라이트는 딥네이비, 다크는 골드. */
@@ -79,6 +81,7 @@
   --surface-deep: #16203a;
   --footer-bg: #0f1729;
   --banner-bg: #26365c;
+  --banner-bg-soft: #4a5c85;
   --banner-border: rgba(255, 255, 255, 0.1);
   --surface-rgb: 22, 32, 58;
   --glass: rgba(255, 255, 255, 0.05);
@@ -161,6 +164,31 @@ body {
 
 .ui-control:disabled {
   opacity: 0.5;
+}
+
+/* 주요 액션(CTA) 버튼·링크 공통 표면 — 색은 --cta-bg/--cta-fg 토큰,
+   hover/active 어포던스를 한곳에 모은다. 각 호출부는 cta-solid 클래스만 붙인다. */
+.cta-solid {
+  background: var(--cta-bg);
+  color: var(--cta-fg);
+  transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+}
+
+.cta-solid:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -14px rgba(var(--ink-rgb), 0.5);
+}
+
+.cta-solid:active:not(:disabled) {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-solid:hover:not(:disabled) {
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

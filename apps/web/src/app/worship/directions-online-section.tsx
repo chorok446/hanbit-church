@@ -68,8 +68,7 @@ export function DirectionsOnlineSection() {
                 href={youtube}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full px-7 py-3 text-[14px] font-medium transition-opacity hover:opacity-90"
-                style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+                className="cta-solid mt-6 inline-flex min-h-11 items-center justify-center rounded-full px-7 py-3 text-[14px] font-medium transition-opacity hover:opacity-90"
               >
                 온라인 예배 바로가기
               </a>

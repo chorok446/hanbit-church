@@ -252,8 +252,7 @@ export function ScheduleClient() {
             <button
               type="button"
               onClick={openNew}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-[13px] font-medium text-[var(--cta-fg)]"
-              style={{ background: "var(--cta-bg)" }}
+              className="cta-solid inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-[13px] font-medium"
             >
               <PlusCircle size={14} aria-hidden />
               일정 추가
@@ -394,8 +393,7 @@ export function ScheduleClient() {
                 type="button"
                 onClick={() => void save()}
                 disabled={saving}
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-6 text-[13px] font-medium text-[var(--cta-fg)] disabled:opacity-60"
-                style={{ background: "var(--cta-bg)" }}
+                className="cta-solid inline-flex min-h-11 items-center gap-1.5 rounded-full px-6 text-[13px] font-medium disabled:opacity-60"
               >
                 <Save size={14} aria-hidden />
                 {saving ? "저장 중…" : "저장"}

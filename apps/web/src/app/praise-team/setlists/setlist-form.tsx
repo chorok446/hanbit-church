@@ -853,8 +853,7 @@ export function SetlistForm({
           type="button"
           onClick={() => void save()}
           disabled={saving}
-          className="inline-flex min-h-12 items-center gap-1.5 rounded-full px-7 text-[14px] font-medium text-[var(--cta-fg)] disabled:opacity-60"
-          style={{ background: "var(--cta-bg)" }}
+          className="cta-solid inline-flex min-h-12 items-center gap-1.5 rounded-full px-7 text-[14px] font-medium disabled:opacity-60"
         >
           <Save size={15} aria-hidden />
           {saving ? "저장 중…" : initial ? "콘티 수정 저장" : "콘티 등록"}

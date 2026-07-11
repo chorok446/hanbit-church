@@ -143,8 +143,7 @@ export function EventComposeThumb({
           type="button"
           onClick={addThumbUrl}
           disabled={disabled || Boolean(thumb.trim())}
-          className="inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-medium disabled:opacity-40"
-          style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+          className="cta-solid inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-medium disabled:opacity-40"
           aria-label="썸네일 URL 추가"
         >
           <Plus size={14} aria-hidden />

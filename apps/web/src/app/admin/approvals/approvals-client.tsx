@@ -148,8 +148,7 @@ export default function ApprovalsClient() {
                   onClick={() => void onApprove(user)}
                   disabled={savingId !== null}
                   aria-busy={savingId === user.id}
-                  className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] disabled:opacity-50"
-                  style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+                  className="cta-solid inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] disabled:opacity-50"
                 >
                   {savingId === user.id ? <Loader2 size={13} className="animate-spin" aria-hidden /> : <Check size={13} aria-hidden />}
                   승인

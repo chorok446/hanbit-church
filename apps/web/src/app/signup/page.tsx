@@ -74,8 +74,7 @@ export default function SignupPage() {
           </p>
           <Link
             href="/"
-            className="inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-medium"
-            style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+            className="cta-solid inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-medium"
           >
             홈으로 <ArrowRight size={16} aria-hidden="true" />
           </Link>
@@ -168,8 +167,7 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={submitting || !canSubmit}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-55 motion-reduce:transform-none"
-          style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+          className="cta-solid mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-55 motion-reduce:transform-none"
         >
           {submitting ? "가입 중…" : "회원가입"} <ArrowRight size={16} aria-hidden="true" />
         </button>

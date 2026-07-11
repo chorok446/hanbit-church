@@ -227,8 +227,7 @@ export function SiteHeader() {
               </Link>
               <Link
                 href="/signup"
-                className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-[13px] font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none sm:px-3"
-                style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+                className="cta-solid whitespace-nowrap rounded-full px-2.5 py-1.5 text-[13px] font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none sm:px-3"
               >
                 회원가입
               </Link>

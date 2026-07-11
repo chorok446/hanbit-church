@@ -54,7 +54,7 @@ export function SavedTabPanel({
       <ListEmptyState
         title="아직 저장한 글이나 행사가 없어요."
         action={
-          <Link href="/feed" className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]">
+          <Link href="/feed" className="rounded-full cta-solid px-5 py-2 text-[13px] font-medium">
             교제 둘러보기
           </Link>
         }

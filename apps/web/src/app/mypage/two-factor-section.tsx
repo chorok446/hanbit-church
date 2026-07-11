@@ -133,8 +133,8 @@ export function TwoFactorSection({ initialEnabled }: { initialEnabled: boolean }
             type="button"
             onClick={() => void startSetup()}
             disabled={busy}
-            className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] disabled:opacity-50"
-            style={{ borderColor: "var(--cta-bg)", color: "var(--cta-fg)", background: "var(--cta-bg)" }}
+            className="cta-solid inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] disabled:opacity-50"
+            style={{ borderColor: "var(--cta-bg)" }}
           >
             {busy ? <Loader2 size={13} className="animate-spin" aria-hidden /> : <ShieldCheck size={13} aria-hidden />}
             2단계 인증 켜기
@@ -180,8 +180,7 @@ export function TwoFactorSection({ initialEnabled }: { initialEnabled: boolean }
               type="button"
               onClick={() => void enable()}
               disabled={busy || code.length !== 6}
-              className="rounded-full px-5 py-2.5 text-[13px] font-medium disabled:opacity-40"
-              style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+              className="cta-solid rounded-full px-5 py-2.5 text-[13px] font-medium disabled:opacity-40"
             >
               활성화
             </button>

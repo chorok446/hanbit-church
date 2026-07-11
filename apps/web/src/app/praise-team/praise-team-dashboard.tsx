@@ -181,8 +181,7 @@ export function PraiseTeamDashboard() {
                 <div className="mt-5 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap">
                   <Link
                     href={`/praise-team/setlists/${setlist.id}`}
-                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-5 text-[13px] font-medium text-[var(--cta-fg)]"
-                    style={{ background: "var(--cta-bg)" }}
+                    className="cta-solid inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-5 text-[13px] font-medium"
                   >
                     <ListMusic size={14} aria-hidden />
                     콘티 보기
@@ -259,8 +258,7 @@ export function PraiseTeamDashboard() {
               {isLeader ? (
                 <Link
                   href="/praise-team/setlists/new"
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-[13px] font-medium text-[var(--cta-fg)]"
-                  style={{ background: "var(--cta-bg)" }}
+                  className="cta-solid inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-[13px] font-medium"
                 >
                   <PlusCircle size={14} aria-hidden />첫 콘티 작성하기
                 </Link>

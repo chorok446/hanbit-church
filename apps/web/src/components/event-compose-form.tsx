@@ -284,8 +284,7 @@ export function EventComposeSubmitButton({
       onClick={onClick}
       disabled={disabled || submitting}
       aria-busy={submitting}
-      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl py-3 font-medium disabled:opacity-40"
-      style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+      className="cta-solid inline-flex flex-1 items-center justify-center gap-2 rounded-xl py-3 font-medium disabled:opacity-40"
     >
       {submitting ? <Loader2 size={14} className="animate-spin" aria-hidden /> : null}
       {submitting ? pendingLabel : idleLabel}

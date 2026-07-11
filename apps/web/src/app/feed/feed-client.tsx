@@ -311,7 +311,7 @@ export default function FeedClient({ events }: { events: Event[] }) {
               <button
                 type="button"
                 onClick={() => setRetryTick((tick) => tick + 1)}
-                className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] text-[var(--cta-fg)]"
+                className="rounded-full cta-solid px-5 py-2 text-[13px]"
               >
                 다시 시도
               </button>
@@ -348,7 +348,7 @@ export default function FeedClient({ events }: { events: Event[] }) {
                   <button
                     type="button"
                     onClick={() => updateUrl({ query: "", eventOnly: false, category: null, sort: "latest", page: 0 })}
-                    className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]"
+                    className="rounded-full cta-solid px-5 py-2 text-[13px] font-medium"
                   >
                     전체 게시글 보기
                   </button>
@@ -356,7 +356,7 @@ export default function FeedClient({ events }: { events: Event[] }) {
                   <button
                     type="button"
                     onClick={goToNewPost}
-                    className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]"
+                    className="rounded-full cta-solid px-5 py-2 text-[13px] font-medium"
                   >
                     새 글 작성
                   </button>

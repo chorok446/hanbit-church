@@ -232,7 +232,7 @@ export function UserEventsList({
           <ListEmptyState
             title={meta.emptyTitle}
             action={
-              <Link href={meta.ctaHref} className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]">
+              <Link href={meta.ctaHref} className="rounded-full cta-solid px-5 py-2 text-[13px] font-medium">
                 {meta.ctaLabel}
               </Link>
             }

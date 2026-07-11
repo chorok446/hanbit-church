@@ -143,7 +143,7 @@ export function SavedEventsGrid({ page, onPageChange }: { page: number; onPageCh
         <ListEmptyState
           title="아직 저장한 행사가 없어요."
           action={
-            <Link href="/events" className="rounded-full bg-[var(--cta-bg)] px-5 py-2 text-[13px] font-medium text-[var(--cta-fg)]">
+            <Link href="/events" className="rounded-full cta-solid px-5 py-2 text-[13px] font-medium">
               행사 둘러보기
             </Link>
           }

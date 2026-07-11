@@ -25,21 +25,21 @@ type SermonEntry = { post: Post; info: SermonInfo };
 
 const CTA_PILL = "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-medium";
 const OUTLINE_PILL = "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] font-medium";
-const ctaStyle = { background: "var(--cta-bg)", color: "var(--cta-fg)" } as const;
 const outlineStyle = { background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" } as const;
 
-/** [영상 보기] — 유튜브가 있으면 새 탭, 없으면 상세로. */
-function WatchButton({ entry, className = CTA_PILL, style = ctaStyle }: { entry: SermonEntry; className?: string; style?: React.CSSProperties }) {
+/** [영상 보기] — 유튜브가 있으면 새 탭, 없으면 상세로. 색·hover 는 cta-solid 로 중앙화. */
+function WatchButton({ entry, className = CTA_PILL }: { entry: SermonEntry; className?: string }) {
   const { info, post } = entry;
+  const cls = `${className} cta-solid`;
   if (info.youtubeId) {
     return (
-      <a href={youTubeWatchUrl(info.youtubeId)} target="_blank" rel="noopener noreferrer" className={className} style={style}>
+      <a href={youTubeWatchUrl(info.youtubeId)} target="_blank" rel="noopener noreferrer" className={cls}>
         <Play size={13} aria-hidden /> 영상 보기
       </a>
     );
   }
   return (
-    <Link href={`/posts/${post.id}`} className={className} style={style}>
+    <Link href={`/posts/${post.id}`} className={cls}>
       <Play size={13} aria-hidden /> 영상 보기
     </Link>
   );
@@ -146,7 +146,6 @@ function SermonCard({ entry, index }: { entry: SermonEntry; index: number }) {
             <WatchButton
               entry={entry}
               className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-medium"
-              style={ctaStyle}
             />
             <Link
               href={detail}

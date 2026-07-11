@@ -241,8 +241,7 @@ export function NewFamilyRegisterForm() {
         type="submit"
         disabled={submitting}
         aria-busy={submitting}
-        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full py-3.5 text-[15px] font-medium disabled:opacity-50"
-        style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+        className="cta-solid inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full py-3.5 text-[15px] font-medium disabled:opacity-50"
       >
         {submitting ? <Loader2 size={15} className="animate-spin" aria-hidden /> : null}
         {submitting ? "접수 중…" : "등록 신청하기"}

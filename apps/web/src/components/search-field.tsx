@@ -84,8 +84,7 @@ export function SearchField({
         disabled={loading}
         aria-busy={loading}
         aria-label="검색"
-        className="flex h-9 shrink-0 items-center justify-center rounded-full px-3 text-[12px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--surface-dark)]"
-        style={{ background: "var(--cta-bg)", color: "var(--cta-fg)" }}
+        className="cta-solid flex h-9 shrink-0 items-center justify-center rounded-full px-3 text-[12px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--surface-dark)]"
       >
         {loading ? <Loader2 size={14} className="animate-spin" aria-hidden /> : "검색"}
       </button>
