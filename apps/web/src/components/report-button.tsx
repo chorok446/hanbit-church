@@ -223,7 +223,7 @@ export function ReportButton({
               disabled={submitting || !reason}
               aria-busy={submitting}
               aria-label={submitting ? "신고 접수 중" : "신고하기"}
-              className="inline-flex items-center gap-2 rounded-full bg-[var(--danger-solid)] px-5 py-2.5 text-[13px] text-white transition-colors hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--danger-rgb),0.6)] disabled:cursor-not-allowed disabled:opacity-45"
+              className="cta-danger inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--danger-rgb),0.6)] disabled:cursor-not-allowed disabled:opacity-45"
             >
               {submitting ? <Loader2 size={14} className="animate-spin" /> : <Flag size={14} />}
               {submitting ? "접수 중…" : "신고하기"}
