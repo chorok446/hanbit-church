@@ -94,7 +94,7 @@ export default function WelcomePage() {
           <div className="mt-6 flex flex-wrap gap-2.5">
             <Link
               href="/worship"
-              className="inline-flex min-h-11 items-center rounded-full bg-[var(--on-banner)] px-6 py-2.5 text-[14px] font-medium text-[#1f2a44] transition-opacity hover:opacity-90"
+              className="inline-flex min-h-11 items-center rounded-full bg-[var(--on-banner)] px-6 py-2.5 text-[14px] font-medium text-[var(--banner-bg)] transition-opacity hover:opacity-90"
             >
               예배 시간 보기
             </Link>
@@ -255,7 +255,7 @@ export default function WelcomePage() {
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <Link
               href="/worship"
-              className="inline-flex min-h-12 items-center rounded-full bg-[var(--on-banner)] px-8 py-3.5 text-[15px] font-medium text-[#1f2a44] transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
+              className="inline-flex min-h-12 items-center rounded-full bg-[var(--on-banner)] px-8 py-3.5 text-[15px] font-medium text-[var(--banner-bg)] transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
             >
               예배 안내 보기
             </Link>

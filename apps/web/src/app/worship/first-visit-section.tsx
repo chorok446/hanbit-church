@@ -24,7 +24,7 @@ export function FirstVisitSection() {
         <div className="flex flex-col gap-3">
           <Link
             href="/welcome"
-            className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full bg-[var(--on-banner)] px-8 py-3 text-[14px] font-medium text-[#1f2a44] transition-opacity hover:opacity-90"
+            className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full bg-[var(--on-banner)] px-8 py-3 text-[14px] font-medium text-[var(--banner-bg)] transition-opacity hover:opacity-90"
           >
             새가족 안내 보기
           </Link>

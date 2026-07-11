@@ -19,7 +19,7 @@ export function VisitCtaSection() {
         <div className="mt-7 flex flex-wrap justify-center gap-3">
           <Link
             href="/worship"
-            className="rounded-full bg-[var(--on-banner)] px-7 py-3 text-[14px] font-medium text-[#1f2a44] transition-opacity hover:opacity-90"
+            className="rounded-full bg-[var(--on-banner)] px-7 py-3 text-[14px] font-medium text-[var(--banner-bg)] transition-opacity hover:opacity-90"
           >
             예배안내 보기
           </Link>
