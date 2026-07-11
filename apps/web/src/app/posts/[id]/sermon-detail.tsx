@@ -121,7 +121,7 @@ export function SermonDetail({
           </div>
 
           <div className="mt-auto flex flex-wrap items-center gap-2 border-t pt-4" style={{ borderColor: "var(--border)" }}>
-            <button type="button" onClick={() => void sharePage({ title: info.title })} className={pillClass} style={pillStyle}>
+            <button type="button" onClick={() => void sharePage({ title: info.title })} className={`${pillClass} cta-outline`}>
               <Share2 size={13} aria-hidden /> 공유하기
             </button>
             <button
@@ -139,7 +139,7 @@ export function SermonDetail({
               <Bookmark size={13} aria-hidden fill={bookmarked ? "currentColor" : "transparent"} /> 북마크
             </button>
             {watchUrl ? (
-              <a href={watchUrl} target="_blank" rel="noopener noreferrer" className={pillClass} style={pillStyle}>
+              <a href={watchUrl} target="_blank" rel="noopener noreferrer" className={`${pillClass} cta-outline`}>
                 <ExternalLink size={13} aria-hidden /> YouTube에서 보기
               </a>
             ) : null}

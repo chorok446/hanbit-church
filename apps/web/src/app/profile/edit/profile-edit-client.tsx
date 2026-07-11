@@ -262,8 +262,7 @@ function ProfileEditForm({ profile }: { profile: UserProfile }) {
           <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
             <Link
               href="/mypage"
-              className="rounded-xl border px-6 py-3 text-center text-[13px]"
-              style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+              className="rounded-xl border px-6 py-3 text-center text-[13px] cta-outline"
             >
               취소
             </Link>

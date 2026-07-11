@@ -90,8 +90,7 @@ export function PostAttachmentsEditor({
         type="button"
         onClick={pick}
         disabled={disabled || uploading || attachments.length >= POST_MAX_ATTACHMENTS}
-        className="flex items-center gap-2 rounded-xl border px-3.5 py-2 text-[13px] transition-opacity hover:opacity-80 disabled:opacity-40"
-        style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+        className="flex items-center gap-2 rounded-xl border px-3.5 py-2 text-[13px] transition-opacity hover:opacity-80 disabled:opacity-40 cta-outline"
       >
         {uploading ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <FileText size={14} aria-hidden />}
         {uploading ? "업로드 중…" : "파일 첨부"}

@@ -191,6 +191,21 @@ body {
   }
 }
 
+/* 보조(아웃라인) 액션 버튼·링크 공통 표면 — 카드 바탕 + 테두리 + 본문색.
+   primary(cta-solid)와 달리 lift 없이 은은한 테두리·바탕 tint 로만 hover 를 표시한다.
+   ⚠ 이 색 조합은 select·입력·비활성 탭에도 쓰이므로, 실제 보조 버튼/링크에만 붙인다. */
+.cta-outline {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--foreground);
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.cta-outline:hover:not(:disabled) {
+  border-color: rgba(var(--ink-rgb), 0.28);
+  background: rgba(var(--ink-rgb), 0.03);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
