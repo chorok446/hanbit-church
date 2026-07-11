@@ -72,7 +72,7 @@ export function SearchField({
         <button
           type="button"
           onClick={() => commitNow("")}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-black/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-[rgba(var(--ink-rgb),0.07)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
           aria-label="검색어 지우기"
         >
           <X size={16} className="opacity-60" aria-hidden />
