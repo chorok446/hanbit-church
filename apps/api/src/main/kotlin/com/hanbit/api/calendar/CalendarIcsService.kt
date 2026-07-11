@@ -132,13 +132,18 @@ class CalendarIcsService(
         var i = 0
         while (i < line.length) {
             val cp = line.codePointAt(i)
-            val s = String(Character.toChars(cp))
-            val w = s.toByteArray(Charsets.UTF_8).size
+            // 코드포인트 값으로 UTF-8 바이트 폭을 바로 구한다(문자당 String/ByteArray 할당 회피).
+            val w = when {
+                cp <= 0x7F -> 1
+                cp <= 0x7FF -> 2
+                cp <= 0xFFFF -> 3
+                else -> 4
+            }
             if (octets + w > 75) {
                 out.append("\r\n ")
                 octets = 1 // 선행 공백
             }
-            out.append(s)
+            out.appendCodePoint(cp)
             octets += w
             i += Character.charCount(cp)
         }
