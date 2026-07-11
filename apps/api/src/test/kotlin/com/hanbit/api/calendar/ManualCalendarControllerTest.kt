@@ -170,6 +170,37 @@ class ManualCalendarControllerTest(
     }
 
     @Test
+    fun `ics 롱라인은 RFC 5545 75옥텟 폴딩으로 접힌다`() {
+        // 한글은 UTF-8 3바이트/자 — 30자대 제목이면 SUMMARY 라인이 90옥텟을 넘어 폴딩이 필요하다.
+        val longTitle = "한빛교회 창립 오십주년 기념 연합감사예배 및 전교인 헌신예배 대잔치 안내"
+        repo.saveAndFlush(
+            ManualCalendarEvent(
+                id = "mc-fold-1",
+                title = longTitle,
+                type = "worship",
+                startDate = "2026-10-01",
+                endDate = null,
+                createdBy = "테스트",
+                createdAt = Instant.now(),
+            ),
+        )
+
+        val body = mvc.get("/api/calendar/ics").andExpect { status { isOk() } }
+            .andReturn().response.contentAsString
+
+        // 모든 물리 라인이 75 옥텟(UTF-8) 이하여야 한다(구조 라인·폴딩된 이어짐 라인 포함).
+        body.split("\r\n").forEach { line ->
+            assertThat(line.toByteArray(Charsets.UTF_8).size)
+                .withFailMessage("라인이 75옥텟을 초과: %s", line)
+                .isLessThanOrEqualTo(75)
+        }
+        // 접힌 이어짐 라인은 CRLF + 선행 공백으로 시작한다.
+        assertThat(body).contains("\r\n ")
+        // 폴딩 마커(CRLF+SPACE)를 제거하면 원래 SUMMARY 가 복원된다(한글 제목엔 이스케이프 대상 특수문자 없음).
+        assertThat(body.replace("\r\n ", "")).contains("SUMMARY:$longTitle")
+    }
+
+    @Test
     fun `단건 행사 ics 는 다운로드 헤더와 VEVENT 를 담고 숨김 행사는 404`() {
         fun saveEvent(id: String, hiddenAt: Instant? = null) = eventsRepo.saveAndFlush(
             com.hanbit.api.event.Event(
