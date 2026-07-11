@@ -18,8 +18,7 @@ export function PostAttachments({ attachments }: { attachments?: PostAttachment[
             href={item.url}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-2 rounded-xl border px-3 py-2.5 text-[13px] transition-opacity hover:opacity-80"
-            style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+            className="flex items-center gap-2 rounded-xl border px-3 py-2.5 text-[13px] transition-opacity hover:opacity-80 cta-outline"
           >
             <FileText size={15} aria-hidden style={{ color: "var(--accent)" }} />
             <span className="min-w-0 flex-1 truncate">{item.name || "첨부파일"}</span>

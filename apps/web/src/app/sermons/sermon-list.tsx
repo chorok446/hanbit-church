@@ -24,8 +24,7 @@ type Result = { key: string; status: "success" | "error"; data: PostSearchRespon
 type SermonEntry = { post: Post; info: SermonInfo };
 
 const CTA_PILL = "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-medium";
-const OUTLINE_PILL = "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] font-medium";
-const outlineStyle = { background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" } as const;
+const OUTLINE_PILL = "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] font-medium cta-outline";
 
 /** [영상 보기] — 유튜브가 있으면 새 탭, 없으면 상세로. 색·hover 는 cta-solid 로 중앙화. */
 function WatchButton({ entry, className = CTA_PILL }: { entry: SermonEntry; className?: string }) {
@@ -85,10 +84,10 @@ function FeaturedSermon({ entry }: { entry: SermonEntry }) {
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <WatchButton entry={entry} />
-            <Link href={`${detail}#summary`} className={OUTLINE_PILL} style={outlineStyle}>
+            <Link href={`${detail}#summary`} className={OUTLINE_PILL}>
               말씀 요약
             </Link>
-            <Link href={`${detail}#questions`} className={OUTLINE_PILL} style={outlineStyle}>
+            <Link href={`${detail}#questions`} className={OUTLINE_PILL}>
               나눔 질문
             </Link>
           </div>
@@ -149,8 +148,7 @@ function SermonCard({ entry, index }: { entry: SermonEntry; index: number }) {
             />
             <Link
               href={detail}
-              className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12.5px] font-medium"
-              style={outlineStyle}
+              className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12.5px] font-medium cta-outline"
             >
               자세히 보기
             </Link>

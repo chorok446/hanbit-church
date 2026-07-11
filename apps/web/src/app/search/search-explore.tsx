@@ -15,8 +15,7 @@ export function RecommendedQueryChips({ onSearch }: { onSearch: (query: string) 
           key={keyword}
           type="button"
           onClick={() => onSearch(keyword)}
-          className="rounded-full border px-4 py-2 text-[13px] transition-colors hover:border-[var(--accent)]"
-          style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+          className="rounded-full border px-4 py-2 text-[13px] transition-colors hover:border-[var(--accent)] cta-outline"
         >
           <span aria-hidden style={{ color: "var(--accent-strong)" }}>#</span> {keyword}
         </button>
