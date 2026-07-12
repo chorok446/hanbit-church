@@ -8,8 +8,8 @@ import { WORSHIP_SERVICES, type WorshipService } from "@/data/church";
 export type CalendarEventType =
   | "worship" // 예배
   | "event" // 행사·사역
-  | "new-family" // 새가족 (데이터 소스 미도입 — 수동 일정용 예약)
-  | "service" // 봉사 (데이터 소스 미도입 — 수동 일정용 예약)
+  | "new-family" // 새가족 (자동 생성 소스 없음 — 관리자 수동 일정에서만 등록)
+  | "service" // 봉사 (자동 생성 소스 없음 — 관리자 수동 일정에서만 등록)
   | "prayer" // 기도회 (새벽 기도회 등 매일 반복)
   | "praise" // 찬양팀 일정 (백엔드 praise_schedules — visibility 로 노출 범위 제어)
   | "deadline" // 행사 신청 마감
