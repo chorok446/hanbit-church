@@ -9,6 +9,19 @@ describe("FallbackImage", () => {
     expect(img).toHaveProperty("src", "https://example.com/a.jpg");
   });
 
+  it("빈/공백 src 는 <img> 대신 폴백 요소로 렌더한다(빈 src 재요청 방지)", () => {
+    const { rerender } = render(<FallbackImage src="" alt="행사 이미지" />);
+    // <img> 를 만들지 않는다 — src="" 는 브라우저가 현재 페이지를 재다운로드하게 만든다.
+    expect(document.querySelector("img")).toBeNull();
+    expect(screen.queryByRole("img", { name: "행사 이미지" })).toBeTruthy();
+
+    rerender(<FallbackImage src="   " alt="행사 이미지" />);
+    expect(document.querySelector("img")).toBeNull();
+
+    rerender(<FallbackImage src="   " alt="행사 이미지" thumbnail />);
+    expect(document.querySelector("img")).toBeNull();
+  });
+
   it("로드 실패 시 같은 이름의 대체 요소로 전환된다", () => {
     render(<FallbackImage src="https://example.com/broken.jpg" alt="행사 이미지" />);
     fireEvent.error(screen.getByRole("img"));
