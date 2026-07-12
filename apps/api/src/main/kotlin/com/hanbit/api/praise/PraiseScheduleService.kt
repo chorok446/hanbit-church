@@ -36,7 +36,7 @@ class PraiseScheduleService(
     fun getSchedules(requesterId: Long, includePast: Boolean): List<PraiseScheduleResponse> {
         access.requireMember(requesterId)
         val rows = if (includePast) {
-            schedules.findAll().sortedBy { it.startAt }
+            schedules.findAllByOrderByStartAtAsc()
         } else {
             schedules.findByStartAtGreaterThanEqualOrderByStartAtAsc(startOfToday())
         }
