@@ -458,6 +458,36 @@ class PraiseControllerTest(
     }
 
     @Test
+    fun `includePast 는 과거 일정까지 startAt 오름차순으로 돌려준다`() {
+        // 과거·미래 각각 하나. 실제 clock 기준 확실한 과거 시각을 쓴다.
+        mvc.post("/api/praise/schedules") {
+            headers { add("Authorization", "Bearer $leaderToken") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"title":"지난 리허설","startAt":"2020-01-01T00:00:00Z","visibility":"PRIVATE"}"""
+        }.andExpect { status { isCreated() } }
+        createSchedule("PRIVATE", title = "다가오는 리허설")
+
+        // 기본(includePast=false): 과거 제외.
+        mvc.get("/api/praise/schedules") {
+            headers { add("Authorization", "Bearer $memberToken") }
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$[?(@.title == '지난 리허설')]") { doesNotExist() }
+            jsonPath("$[?(@.title == '다가오는 리허설')]") { exists() }
+        }
+
+        // includePast=true: 과거 포함 + startAt 오름차순(과거가 먼저).
+        mvc.get("/api/praise/schedules") {
+            headers { add("Authorization", "Bearer $memberToken") }
+            param("includePast", "true")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$[0].title") { value("지난 리허설") }
+            jsonPath("$[1].title") { value("다가오는 리허설") }
+        }
+    }
+
+    @Test
     fun `일정 검증 — 종료가 시작보다 빠르면 400`() {
         mvc.post("/api/praise/schedules") {
             headers { add("Authorization", "Bearer $leaderToken") }

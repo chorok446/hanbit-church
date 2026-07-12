@@ -13,6 +13,8 @@ interface PraiseAssignmentRepository : JpaRepository<PraiseAssignment, String> {
 }
 
 interface PraiseScheduleRepository : JpaRepository<PraiseSchedule, String> {
+    // 전체(과거 포함) 일정을 DB 정렬로 가져온다 — idx_praise_schedules_start_at 를 탄다.
+    fun findAllByOrderByStartAtAsc(): List<PraiseSchedule>
     fun findByStartAtGreaterThanEqualOrderByStartAtAsc(from: Instant): List<PraiseSchedule>
     fun findByVisibilityInAndStartAtGreaterThanEqualOrderByStartAtAsc(
         visibilities: Collection<String>,
