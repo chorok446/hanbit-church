@@ -82,5 +82,7 @@ export const rolePermissions: Record<UserRole, AdminPermissions> = {
 
 /** 프로필 role 문자열에서 권한을 얻는다(로딩 중·비로그인·모르는 값은 권한 없음). */
 export function getAdminPermissions(role: string | null | undefined): AdminPermissions {
-  return rolePermissions[(role as UserRole) in rolePermissions ? (role as UserRole) : "USER"];
+  // own property 만 인정한다 — `in` 은 프로토타입 체인("toString" 등)까지 잡아 상속 함수를 반환해 버린다.
+  const known = role != null && Object.prototype.hasOwnProperty.call(rolePermissions, role);
+  return known ? rolePermissions[role as UserRole] : rolePermissions.USER;
 }
