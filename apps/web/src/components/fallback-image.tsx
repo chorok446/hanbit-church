@@ -33,11 +33,14 @@ export function FallbackImage({
   const [failed, setFailed] = useState(false);
   const [thumbFailed, setThumbFailed] = useState(false);
 
+  // 빈/공백 src 는 <img src=""> 로 렌더하면 브라우저가 현재 페이지를 재요청한다(React 경고).
+  // 처음부터 폴백 UI 로 처리한다 — Avatar 의 showDefault 와 동일한 방어.
+  const hasSrc = typeof src === "string" && src.trim().length > 0;
   const thumbSrc = thumbnail ? uploadThumbUrl(src) : src;
   const useThumb = thumbnail && !thumbFailed && thumbSrc !== src;
   const currentSrc = useThumb ? thumbSrc : src;
 
-  if (failed) {
+  if (failed || !hasSrc) {
     const label = errorText ?? alt;
     return (
       <div
