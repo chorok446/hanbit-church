@@ -59,5 +59,3 @@ export const childrenPhotos = [
   u("photo-1503676260728-1c00da094a0b"), // 4 교재와 사과(교사 준비)
   u("photo-1560785496-3c9d27877182"), // 5 열심히 공부하는 아이
 ];
-
-export const pickPhoto = (pool: string[], i: number) => pool[i % pool.length];

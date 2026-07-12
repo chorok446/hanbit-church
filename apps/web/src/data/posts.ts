@@ -181,8 +181,6 @@ export type Post = {
   likes: number;
   comments: number;
   eventId?: string;
-  // TODO(백엔드: posts.visibility/anonymous 필드·접근 제어 도입 시 활성화) — 도입되면
-  // 리스트/갤러리/상세에 공개 범위·익명 배지를 노출한다. 지금은 스키마가 없어 표시하지 않는다.
   category: PostCategory;
   /** 공지·주보 첨부파일(PDF 등). 이전 응답 캐시 호환을 위해 optional. */
   attachments?: PostAttachment[];
