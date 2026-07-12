@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import {
   CalendarDays,
+  History,
   ListMusic,
   Loader2,
   MapPin,
@@ -121,10 +122,12 @@ export function ScheduleClient() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   // 폼의 "연결할 콘티" 드롭다운 후보 — 리더가 폼을 열 때 한 번 불러온다.
   const [setlistOptions, setSetlistOptions] = useState<PraiseSetlistSummary[] | null>(null);
+  // 기본은 다가오는 일정만. 켜면 지난 일정까지(오름차순) — 서버가 includePast 로 처리.
+  const [includePast, setIncludePast] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    fetchPraiseSchedules()
+    fetchPraiseSchedules(includePast)
       .then((schedules) => {
         if (!cancelled) setResult({ key: retryTick, error: null, schedules });
       })
@@ -142,7 +145,13 @@ export function ScheduleClient() {
     return () => {
       cancelled = true;
     };
-  }, [retryTick]);
+  }, [retryTick, includePast]);
+
+  // 지난 일정 포함 토글 — retryTick 을 올려 로딩 상태를 거쳐 다시 불러온다.
+  const togglePast = () => {
+    setIncludePast((v) => !v);
+    setRetryTick((t) => t + 1);
+  };
 
   // 리더가 폼을 열면 콘티 목록을 준비한다(연결 드롭다운용). 실패해도 폼은 쓸 수 있다.
   useEffect(() => {
@@ -247,16 +256,32 @@ export function ScheduleClient() {
       />
       <PageShell orb="right" paddingClassName="px-6 pb-24 pt-10">
         <div className="mx-auto max-w-[896px]">
-        {isLeader && editing === null ? (
-          <div className="flex justify-end">
+        {editing === null ? (
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <button
               type="button"
-              onClick={openNew}
-              className="cta-solid inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-[13px] font-medium"
+              onClick={togglePast}
+              aria-pressed={includePast}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border px-4 text-[13px] font-medium"
+              style={
+                includePast
+                  ? { background: "var(--accent-soft)", borderColor: "var(--accent-strong)", color: "var(--accent-strong)" }
+                  : { background: "var(--panel)", borderColor: "var(--border)", color: "var(--foreground-muted)" }
+              }
             >
-              <PlusCircle size={14} aria-hidden />
-              일정 추가
+              <History size={14} aria-hidden />
+              지난 일정 포함
             </button>
+            {isLeader ? (
+              <button
+                type="button"
+                onClick={openNew}
+                className="cta-solid inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-[13px] font-medium"
+              >
+                <PlusCircle size={14} aria-hidden />
+                일정 추가
+              </button>
+            ) : null}
           </div>
         ) : null}
 
@@ -430,7 +455,10 @@ export function ScheduleClient() {
             </StatePanel>
           ) : schedules.length === 0 ? (
             <StatePanel compact>
-              <p>다가오는 일정이 없습니다.{isLeader ? " “일정 추가”로 등록해 주세요." : ""}</p>
+              <p>
+                {includePast ? "등록된 일정이 없습니다." : "다가오는 일정이 없습니다."}
+                {isLeader ? " “일정 추가”로 등록해 주세요." : ""}
+              </p>
             </StatePanel>
           ) : (
             <ul className="space-y-3">
