@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **응답 언어: 항상 한국어로 답변한다.** (사용자 지시 — 코드/식별자/커밋 메시지 컨벤션은 그대로 두되, 설명·요약·질문 등 사용자에게 보이는 산문은 한국어로.)
+
 ## Project
 
 **한빛교회 홈페이지** — 다시다(dasida) 커뮤니티 플랫폼을 포크해 교회 홈페이지로 리스킨한 프로젝트. pnpm + Gradle monorepo. upstream 리모트가 원본(dasida)을 가리키며, 필요한 개선만 체리픽한다.

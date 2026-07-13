@@ -37,3 +37,10 @@ uploads/
 # Playwright MCP 브라우저 세션 산출물(스크린샷·스냅샷)
 .playwright-mcp/
 backups/
+
+# 로컬 AI 툴링(스킬/플러그인) 설치 산출물 — 교회 레포에 커밋하지 않는다
+.agents/
+.codex/
+.github/hooks/
+.github/skills/
+skills-lock.json
