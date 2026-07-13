@@ -226,6 +226,19 @@ body {
   background: rgba(var(--ink-rgb), 0.03);
 }
 
+/* 링크형 카드 표면 — 은은한 base 그림자 + hover lift/그림자 심화를 한곳에 모은다.
+   클릭 가능한 카드(홈 퀵정보·교제·행사 등)에만 붙이고, 정적 정보 카드에는 쓰지 않는다(거짓 어포던스 방지).
+   그림자는 --ink-rgb 채널이라 다크에선 은은한 글로우로 뒤집힌다. */
+.card-lift {
+  box-shadow: 0 12px 32px rgba(var(--ink-rgb), 0.08);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 44px rgba(var(--ink-rgb), 0.16);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -235,9 +248,10 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  /* CTA hover 의 lift(transform)는 모션 축소 시 제거한다. */
+  /* CTA·카드 hover 의 lift(transform)는 모션 축소 시 제거한다. */
   .cta-solid:hover:not(:disabled),
-  .cta-danger:hover:not(:disabled) {
+  .cta-danger:hover:not(:disabled),
+  .card-lift:hover {
     transform: none;
   }
 }

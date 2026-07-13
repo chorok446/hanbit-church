@@ -24,7 +24,7 @@ export function HomeQuickInfo() {
           <li key={href} className="h-full">
             <Link
               href={href}
-              className="flex h-full min-h-11 flex-col gap-2 rounded-2xl border p-5 shadow-[0_12px_32px_rgba(var(--ink-rgb),0.08)] transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_20px_44px_rgba(var(--ink-rgb),0.16)] motion-reduce:transform-none"
+              className="card-lift flex h-full min-h-11 flex-col gap-2 rounded-2xl border p-5"
               style={{ background: "var(--card)", borderColor: "var(--border)" }}
             >
               <p
