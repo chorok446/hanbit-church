@@ -27,7 +27,7 @@ export function EventResultCard({ event, highlight }: { event: Event; highlight?
       />
       <Link
         href={`/events/${event.id}`}
-        className="group block overflow-hidden rounded-2xl border transition-transform hover:-translate-y-1"
+        className="card-lift group block overflow-hidden rounded-2xl border"
         style={{
           background: "var(--card)",
           borderColor: "var(--border)",
@@ -84,7 +84,7 @@ export function UserResultCard({ user, highlight }: { user: PublicUser; highligh
   return (
     <Link
       href={`/users/${user.id}`}
-      className="flex items-center gap-3 rounded-2xl border p-4 transition-transform hover:-translate-y-0.5"
+      className="card-lift flex items-center gap-3 rounded-2xl border p-4"
       style={{ background: "var(--card)", borderColor: "var(--border)" }}
     >
       <Avatar name={user.name} verified={user.verified} src={user.profileImageUrl ?? undefined} size={44} />
@@ -107,7 +107,7 @@ export function PostResultCard({ post, highlight }: { post: Post; highlight?: st
 
   return (
     <article
-      className="group overflow-hidden rounded-2xl border transition-transform hover:-translate-y-1"
+      className="card-lift group overflow-hidden rounded-2xl border"
       style={{
         background: "var(--card)",
         borderColor: "var(--border)",
