@@ -37,7 +37,7 @@ export function HomeCommunity() {
             <Link
               key={href}
               href={href}
-              className="group rounded-3xl border p-8 transition-transform hover:-translate-y-1 motion-reduce:transform-none"
+              className="card-lift group rounded-3xl border p-8"
               style={{ background: "var(--card)", borderColor: "var(--border)" }}
             >
               <Icon size={22} aria-hidden style={{ color: "var(--accent)" }} />

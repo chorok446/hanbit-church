@@ -9,6 +9,7 @@ import { HomeIdentity } from "@/components/home-identity";
 import { HomePhotos } from "@/components/home-photos";
 import { HomeNews } from "@/components/home-news";
 import { HomeCommunity } from "@/components/home-community";
+import { ScrollReveal } from "@/components/scroll-reveal";
 
 // ISR: 최신 소식(공지·주보)을 서버에서 선주입(60초 재검증) — 홈 LCP·SEO.
 // API 미가용(CI 빌드)이면 null 로 두고 기존 클라이언트 fetch 경로가 동작한다.
@@ -25,15 +26,17 @@ export default async function Home() {
     : [...(notices?.content ?? []), ...(bulletins?.content ?? [])].slice(0, HOME_NEWS_PREVIEW_SIZE);
   return (
     <>
+      {/* Hero·퀵정보는 폴드 위(퀵정보는 -mt-10 로 히어로와 겹침)라 리빌 제외 — 페이지 전환 fade 로 충분.
+          그 아래 내러티브 섹션만 스크롤 진입 시 은은하게 fade+rise 한다(reduced-motion 자동 무효). */}
       <ChurchHero />
       <HomeQuickInfo />
-      <WorshipSummary />
-      <HomeWeeklySchedule />
-      <HomeVisit />
-      <HomeIdentity />
-      <HomePhotos />
-      <HomeNews initialPosts={initialNews} />
-      <HomeCommunity />
+      <ScrollReveal><WorshipSummary /></ScrollReveal>
+      <ScrollReveal><HomeWeeklySchedule /></ScrollReveal>
+      <ScrollReveal><HomeVisit /></ScrollReveal>
+      <ScrollReveal><HomeIdentity /></ScrollReveal>
+      <ScrollReveal><HomePhotos /></ScrollReveal>
+      <ScrollReveal><HomeNews initialPosts={initialNews} /></ScrollReveal>
+      <ScrollReveal><HomeCommunity /></ScrollReveal>
     </>
   );
 }
