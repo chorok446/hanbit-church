@@ -218,7 +218,7 @@ export default function DashboardClient() {
                 key={key}
                 href={href}
                 aria-label={`${label} ${count.toLocaleString()}${unit} 확인하기`}
-                className="group flex flex-col gap-3 rounded-3xl border p-5 transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
+                className="card-lift group flex flex-col gap-3 rounded-3xl border p-5"
                 style={{ background: tintBg, borderColor: "var(--border)", color: "var(--foreground)" }}
               >
                 <span className="inline-flex items-center gap-2 text-[13px] font-medium">
@@ -256,7 +256,7 @@ export default function DashboardClient() {
             key={label}
             href={href}
             aria-label={`${label} ${value.toLocaleString()}${unit} — ${destination}(으)로 이동`}
-            className="group rounded-3xl border p-5 transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
+            className="card-lift group rounded-3xl border p-5"
             style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
           >
             <Icon size={18} aria-hidden style={{ color: "var(--accent-secondary)" }} />
@@ -423,7 +423,7 @@ function QueueCard({
   return (
     <Link
       href={href}
-      className="group flex flex-col gap-4 rounded-3xl border p-6 transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
+      className="card-lift group flex flex-col gap-4 rounded-3xl border p-6"
       style={{
         background: "var(--card)",
         borderColor: danger ? "var(--danger-soft)" : "var(--border)",
