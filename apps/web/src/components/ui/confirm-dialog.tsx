@@ -77,7 +77,7 @@ function ConfirmDialogUI({ state, onClose }: { state: OpenState; onClose: (resul
       role="alertdialog"
       aria-labelledby="confirm-dialog-title"
       aria-describedby="confirm-dialog-desc"
-      className="w-[calc(100%-2rem)] max-w-sm rounded-2xl border p-6 shadow-xl backdrop:bg-black/45"
+      className="dialog-pop w-[calc(100%-2rem)] max-w-sm rounded-2xl border p-6 shadow-xl backdrop:bg-black/45"
       style={{
         background: "var(--panel)",
         borderColor: "rgba(var(--ink-rgb), 0.12)",
