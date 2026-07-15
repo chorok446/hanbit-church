@@ -1,0 +1,2 @@
+# Gradle wrapper 배치 파일은 CRLF 원본 그대로 둔다 — autocrlf=input 로컬에서 상시 dirty 로 보이는 것 방지
+*.bat -text
