@@ -11,12 +11,12 @@
     "e2e": "node scripts/e2e.mjs"
   },
   "dependencies": {
-    "@sentry/nextjs": "^10.64.0",
-    "@tiptap/extension-image": "^3.27.3",
-    "@tiptap/extension-link": "^3.27.3",
-    "@tiptap/extension-placeholder": "^3.27.3",
-    "@tiptap/react": "^3.27.3",
-    "@tiptap/starter-kit": "^3.27.3",
+    "@sentry/nextjs": "^10.65.0",
+    "@tiptap/extension-image": "^3.27.4",
+    "@tiptap/extension-link": "^3.27.4",
+    "@tiptap/extension-placeholder": "^3.27.4",
+    "@tiptap/react": "^3.27.4",
+    "@tiptap/starter-kit": "^3.27.4",
     "isomorphic-dompurify": "^3.18.0",
     "lucide-react": "1.24.0",
     "motion": "12.42.2",
