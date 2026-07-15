@@ -8,7 +8,8 @@
 
 - **게시글/카테고리**: 작성·수정·삭제, 이미지 다중 업로드(EXIF/GPS 자동 제거), 좋아요·북마크·댓글, 태그. 카테고리는 공지·주보·설교·나눔·기도(공지·주보는 관리자 전용 채널 — 상단 고정·예약 게시 지원, 교제(/feed)는 나눔·기도만 노출, 설교는 전용 아카이브)
 - **기도 프라이버시**: 기도제목 익명 게시(작성자 마스킹 + 검색·프로필 유출 차단), 교인만 공개(비로그인 완전 비노출)
-- **행사·사역**: 개설·모집 시작·참여/취소, 댓글, 참여자 목록·명단 CSV 내보내기(개설자 전용), 캘린더에 추가(.ics), 저장(북마크) 사용자 D-1 마감 임박 알림 배치
+- **행사·사역**: 개설·모집 시작·참여/취소, 댓글, 참여자 목록·명단 CSV 내보내기(개설자 전용), 캘린더에 추가(.ics), 저장(북마크) 사용자 D-1 마감 임박 알림 배치. 모집중 정원 늘리기(증원·취소로 자리가 나면 북마커에게 자리 알림), 모집중 수정은 안내 정보만 허용(참여 조건 보호)
+- **찬양팀**: 콘티(세트리스트) 아카이브, 일정 관리(지난 일정 포함 토글), 팀원 관리 — 찬양팀원(praiseRole)·관리자 전용 대시보드
 - **캘린더**: 예배 반복 일정 + 행사 + 관리자 수동 일정 + 공휴일(2030년까지), iCal(.ics) 구독 피드
 - **알림**: 타입별 필터 탭 + 안읽음 필터 AND 조합, 유형별 수신 설정(행사·댓글·좋아요), WebSocket 실시간 push, 새 기기 로그인 보안 알림
 - **계정 보안**: 승인제 가입(+이용약관·개인정보 동의), 2단계 인증(TOTP), 접속 기록·현재 세션 표시, 원격 세션 로그아웃(개별/전체·비밀번호 변경 시 자동), 로그아웃 토큰 무효화(denylist)
@@ -17,7 +18,7 @@
 - **검색/신고**: 통합 검색(게시글·행사·관련도 정렬·최근 검색어), 콘텐츠 신고. 회원 검색·프로필은 교인/관리자 전용
 - **관리자**: 회원 승인·정지·역할, 신고 처리, 콘텐츠 숨김/복구(일괄 포함), 새가족 등록 관리, 통계 대시보드(가입·게시글·행사·신고·일별 활성 회원), 감사 로그
 - **성능/SEO**: 홈·목록 ISR 선주입, 공개 GET ETag/304, gzip, React Compiler, 카톡 공유 OG 이미지·웹 매니페스트
-- **품질/운영**: e2e 65+ 스펙(axe 접근성 15페이지 게이트 포함), Prometheus + Grafana 대시보드(compose --profile monitoring), Sentry(env 게이트), 시간대 KST 고정(UTC 컨테이너 안전)
+- **품질/운영**: e2e 94개(axe 접근성 게이트 — 라이트/다크 × 공개/로그인/관리자/찬양팀 매트릭스 포함), Prometheus + Grafana 대시보드(compose --profile monitoring), Sentry(env 게이트), 시간대 KST 고정(UTC 컨테이너 안전)
 
 ## 기술 스택
 
@@ -31,7 +32,7 @@
 
 ### Backend
 
-![Kotlin](https://img.shields.io/badge/Kotlin-2.4.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
+![Kotlin](https://img.shields.io/badge/Kotlin-2.4.10-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1.0-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
 ![Java](https://img.shields.io/badge/Java-21-437291?style=for-the-badge&logo=openjdk&logoColor=white)
 ![QueryDSL](https://img.shields.io/badge/QueryDSL-7.4.0-4479A1?style=for-the-badge)
@@ -47,7 +48,7 @@
 ![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 ![Valkey](https://img.shields.io/badge/Valkey-8-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![H2](https://img.shields.io/badge/H2-0949BA?style=for-the-badge)
-![Gradle](https://img.shields.io/badge/Gradle-8.14.5-02303A?style=for-the-badge&logo=gradle&logoColor=white)
+![Gradle](https://img.shields.io/badge/Gradle-9.6.1-02303A?style=for-the-badge&logo=gradle&logoColor=white)
 ![pnpm](https://img.shields.io/badge/pnpm-11.9.0-F69220?style=for-the-badge&logo=pnpm&logoColor=white)
 
 ## 구조
