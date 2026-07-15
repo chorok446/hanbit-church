@@ -1,4 +1,4 @@
-# apps/web — 다시,다 프론트엔드
+# apps/web — 한빛교회 프론트엔드
 
 Next.js (App Router) + TypeScript + Tailwind v4. 모노레포의 프론트엔드 패키지.
 
