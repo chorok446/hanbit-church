@@ -14,6 +14,7 @@ import {
   type AdminContentPageResponse,
 } from "@/data/admin";
 import { postCategoryLabel, type PostCategory } from "@/data/posts";
+import { emptyPageFallback } from "@/lib/paginated-section-utils";
 
 const PAGE_SIZE = 20;
 
@@ -49,7 +50,15 @@ export default function AdminContentClient() {
     let cancelled = false;
     fetchAdminContentPage({ type, hiddenOnly, page, size: PAGE_SIZE, q: appliedQ })
       .then((data) => {
-        if (!cancelled) setResult({ key: requestKey, status: "success", data });
+        if (cancelled) return;
+        // 숨김만 보기에서 마지막 페이지의 항목을 전부 복구하면 현재 page 가 비므로
+        // 직전 page 로 되돌린다 — 앞 페이지에 남은 숨김 글이 있는데 빈 화면에 갇히지 않게.
+        const fallbackPage = emptyPageFallback(data);
+        if (fallbackPage !== null) {
+          setPage(fallbackPage);
+          return;
+        }
+        setResult({ key: requestKey, status: "success", data });
       })
       .catch(() => {
         if (!cancelled) setResult({ key: requestKey, status: "error", data: null });
