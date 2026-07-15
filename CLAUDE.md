@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 > **응답 언어: 항상 한국어로 답변한다.** (사용자 지시 — 코드/식별자/커밋 메시지 컨벤션은 그대로 두되, 설명·요약·질문 등 사용자에게 보이는 산문은 한국어로.)
 
+> **PR 베이스: 개발 중 작업은 항상 `develop` 으로 PR 한다.** (사용자 지시 — `main` 은 배포 스냅샷용 스테일 브랜치라 개발 PR 베이스로 쓰지 않는다. 새 작업 브랜치도 `origin/develop` 에서 딴다.)
+
 ## Project
 
 **한빛교회 홈페이지** — 다시다(dasida) 커뮤니티 플랫폼을 포크해 교회 홈페이지로 리스킨한 프로젝트. pnpm + Gradle monorepo. upstream 리모트가 원본(dasida)을 가리키며, 필요한 개선만 체리픽한다.
