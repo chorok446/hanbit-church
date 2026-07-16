@@ -6,8 +6,10 @@ import com.hanbit.api.event.EventProofRepository
 import com.hanbit.api.event.EventRepository
 import com.hanbit.api.notification.NotificationService
 import com.hanbit.api.notification.NotificationType
+import com.hanbit.api.post.Post
 import com.hanbit.api.post.PostCommentRepository
 import com.hanbit.api.post.PostRepository
+import com.hanbit.api.post.SCHEDULED_HIDDEN_REASON
 import com.hanbit.api.report.ReportTargetType
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -127,6 +129,11 @@ class AdminContentService(
         when (targetType) {
             ReportTargetType.POST -> {
                 val post = posts.findByIdForUpdate(targetId) ?: throw notFound()
+                // 예약 게시 대기 글(미래 publishAt)은 hiddenAt 슬롯을 예약이 선점한 상태라 관리자 숨김 대상이 아니다.
+                // 숨김을 허용하면 hiddenAt!=null 가드에 걸려 사일런트 no-op 이 되거나 예약 상태를 훼손하므로 거절한다.
+                if (post.isScheduledPending()) {
+                    throw ResponseStatusException(HttpStatus.CONFLICT, "예약 게시 대기 중인 글은 숨김할 수 없습니다")
+                }
                 if (post.hiddenAt != null) return false
                 post.hiddenAt = now
                 post.hiddenReason = reason
@@ -183,6 +190,11 @@ class AdminContentService(
             ReportTargetType.POST -> {
                 val post = posts.findByIdForUpdate(targetId) ?: throw notFound()
                 if (post.deletedAt != null) throw notFound()
+                // 예약 게시 대기 글은 관리자 숨김이 아니므로 '복구' 대상이 아니다 — 복구하면 예약 시각을 무시하고 즉시 공개되고
+                // (seq·발행 알림도 잡 경로를 안 타 잘못 처리)되므로 거절한다. 발행 예정 시각이 지났으나 잡 미실행인 구간도 마커로 포착.
+                if (post.isScheduledPending()) {
+                    throw ResponseStatusException(HttpStatus.CONFLICT, "예약 게시 대기 중인 글은 숨김 해제 대상이 아닙니다")
+                }
                 if (post.hiddenAt == null) return false
                 post.hiddenAt = null
                 post.hiddenReason = null
@@ -250,6 +262,14 @@ class AdminContentService(
             )
         }
     }
+
+    /**
+     * 예약 게시 대기 여부 — 아직 `ScheduledPublishJob` 이 공개 전환하지 않은 예약 글.
+     * 잡은 발행 시 hiddenAt·마커를 지우므로 "예약 마커가 남아 있음" == "미발행"이다. 발행 예정 시각이 이미 지났지만
+     * 잡(60초 주기)이 아직 안 돈 구간까지 포함해야 하므로 `publishAt.isAfter(now)`(미래) 대신 마커 잔존으로 판별한다.
+     * 단 마커는 free-text(관리자 사유와 값 충돌 가능)라, 예약 글만 갖는 `publishAt != null` 로 게이트해 오분류를 막는다.
+     */
+    private fun Post.isScheduledPending() = publishAt != null && hiddenReason == SCHEDULED_HIDDEN_REASON
 
     private fun notFound() = ResponseStatusException(HttpStatus.NOT_FOUND, "content not found")
 

@@ -116,8 +116,11 @@ class AdminController(
                 )
                 processed++
             } catch (e: org.springframework.web.server.ResponseStatusException) {
-                // 삭제 경합 등으로 사라진 대상만 건너뛴다. 그 외(잘못된 타입 등)는 요청 오류로 그대로 전파.
-                if (e.statusCode == org.springframework.http.HttpStatus.NOT_FOUND) missing += item else throw e
+                // 처리 불가한 개별 항목은 건너뛴다: 사라진 대상(NOT_FOUND)·예약 게시 대기 글 숨김/해제 거부(CONFLICT).
+                // 그 외(잘못된 타입 등)는 요청 오류로 그대로 전파해 배치가 중단되지 않게 한다.
+                val skippable = e.statusCode == org.springframework.http.HttpStatus.NOT_FOUND ||
+                    e.statusCode == org.springframework.http.HttpStatus.CONFLICT
+                if (skippable) missing += item else throw e
             }
         }
         return ContentVisibilityBulkResponse(
