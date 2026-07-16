@@ -45,7 +45,7 @@ function makeArgs(overrides: Partial<UsePagedCommentsArgs<C>> = {}): UsePagedCom
     targetCommentId: null,
     fetchPage: vi.fn(async () => pageResponse([{ id: "c1", text: "첫 댓글" }])),
     fetchTargetLocation: vi.fn(async () => ({ page: 0 })),
-    createComment: vi.fn(async () => ({})),
+    createComment: vi.fn(async () => ({ id: "created", text: "새 댓글" })),
     updateComment: vi.fn(async (id: string, text: string) => ({ id, text })),
     removeComment: vi.fn(async () => {}),
     onPageChange: vi.fn(),

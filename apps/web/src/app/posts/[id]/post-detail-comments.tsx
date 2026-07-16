@@ -10,6 +10,7 @@ import { usePagedComments } from "@/lib/use-paged-comments";
 import { Avatar } from "@/components/avatar";
 import { CurrentUserAvatar } from "@/components/current-user-avatar";
 import { MentionText } from "@/components/mention-text";
+import { NewItemReveal } from "@/components/new-item-reveal";
 import { ReportButton } from "@/components/report-button";
 import { Pagination } from "@/components/ui/pagination";
 import {
@@ -124,8 +125,9 @@ export function PostDetailComments({
     }
     setSubmittingReply(true);
     try {
-      await apiPost<PostComment>(`/api/posts/${postId}/comments`, { text, parentId });
+      const createdReply = await apiPost<PostComment>(`/api/posts/${postId}/comments`, { text, parentId });
       if (getSessionId() !== requestToken) return;
+      comments.markCreated(createdReply.id);
       onCountChange((current) => current + 1);
       setReplyText("");
       setReplyingToId(null);
@@ -356,12 +358,12 @@ export function PostDetailComments({
           <p className="text-[13px] opacity-50" style={{ color: "var(--foreground)" }}>첫 댓글을 남겨보세요.</p>
         ) : (
           visibleComments.map((c) => (
-            <div key={c.id}>
+            <NewItemReveal key={c.id} isNew={c.id === comments.lastCreatedId} onRevealed={comments.clearCreatedMarker}>
               {renderComment(c, false)}
               {(c.replies?.length ?? 0) > 0 || replyingToId === c.id ? (
                 <div className="ml-8 mt-1 space-y-1 border-l pl-3 sm:ml-12" style={{ borderColor: "var(--border)" }}>
                   {c.replies?.map((reply) => (
-                    <div key={reply.id}>{renderComment(reply, true)}</div>
+                    <NewItemReveal key={reply.id} isNew={reply.id === comments.lastCreatedId} onRevealed={comments.clearCreatedMarker}>{renderComment(reply, true)}</NewItemReveal>
                   ))}
                   {replyingToId === c.id ? (
                     <div
@@ -399,7 +401,7 @@ export function PostDetailComments({
                   ) : null}
                 </div>
               ) : null}
-            </div>
+            </NewItemReveal>
           ))
         )}
       </div>

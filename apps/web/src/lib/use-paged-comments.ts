@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, apiErrorMessage } from "@/lib/api";
 import { clearSession, getSessionId, PROFILE_EVENT } from "@/lib/auth";
@@ -44,7 +44,7 @@ export type UsePagedCommentsArgs<C extends { id: string; text: string }> = {
   maxLength?: number;
   fetchPage: (page: number, size: number) => Promise<PagedCommentsResponse<C>>;
   fetchTargetLocation: (commentId: string, size: number) => Promise<{ page: number }>;
-  createComment: (text: string) => Promise<unknown>;
+  createComment: (text: string) => Promise<C>;
   updateComment: (commentId: string, text: string) => Promise<C>;
   removeComment: (commentId: string) => Promise<void>;
   /** 페이지 이동 반영. preserveTarget=false 면 target(commentId) 해제도 함께 처리해야 한다. */
@@ -93,6 +93,11 @@ export function usePagedComments<C extends { id: string; text: string }>(args: U
   const [composeText, setComposeText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
+  // 방금 등록한 댓글/답글 id — 목록 리로드 후 그 항목에만 등장 모션을 주는 1회용 마커.
+  // 모션이 재생되면(NewItemReveal onRevealed) clearCreatedMarker 로 해제해 이후 리마운트에서 재생되지 않는다.
+  const [lastCreatedId, setLastCreatedId] = useState<string | null>(null);
+  const markCreated = useCallback((id: string) => setLastCreatedId(id), []);
+  const clearCreatedMarker = useCallback(() => setLastCreatedId(null), []);
 
   const deletingIdsRef = useRef(new Set<string>());
   const [deletingIds, setDeletingIds] = useState<Set<string>>(() => new Set());
@@ -257,8 +262,9 @@ export function usePagedComments<C extends { id: string; text: string }>(args: U
     setSubmitting(true);
     argsRef.current.onMutationErrorClear?.();
     try {
-      await argsRef.current.createComment(normalized);
+      const created = await argsRef.current.createComment(normalized);
       if (getSessionId() !== requestToken) return;
+      setLastCreatedId(created.id);
       argsRef.current.onCountDelta?.(1);
       setComposeText("");
       argsRef.current.onAfterMutation?.();
@@ -418,6 +424,9 @@ export function usePagedComments<C extends { id: string; text: string }>(args: U
     setComposeText,
     submitting,
     submit,
+    lastCreatedId,
+    markCreated,
+    clearCreatedMarker,
     deletingIds,
     remove,
     editingCommentId,
