@@ -3,6 +3,7 @@
 import { type FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CornerDownRight, Loader2, MessageCircle, RefreshCw, Send } from "lucide-react";
+import { NewItemReveal } from "@/components/new-item-reveal";
 import { Pagination } from "@/components/ui/pagination";
 import { StatePanel } from "@/components/ui/state-panel";
 import {
@@ -103,8 +104,9 @@ export function EventComments({
     setSubmittingReply(true);
     setMutationError("");
     try {
-      await apiPost<EventComment>(`/api/events/${eventId}/comments`, { text, parentId });
+      const createdReply = await apiPost<EventComment>(`/api/events/${eventId}/comments`, { text, parentId });
       if (getSessionId() !== requestToken) return;
+      comments.markCreated(createdReply.id);
       setReplyText("");
       setReplyingToId(null);
       reload();
@@ -191,7 +193,7 @@ export function EventComments({
         ) : null}
 
         {comments.status === "success" && response ? response.content.map((comment) => (
-          <div key={comment.id}>
+          <NewItemReveal key={comment.id} isNew={comment.id === comments.lastCreatedId} onRevealed={comments.clearCreatedMarker}>
             <EventCommentItem
               comment={comment}
               deleting={deletingIds.has(comment.id)}
@@ -211,22 +213,23 @@ export function EventComments({
             {(comment.replies?.length ?? 0) > 0 || replyingToId === comment.id ? (
               <div className="ml-6 mt-2 space-y-2 border-l pl-3 sm:ml-10" style={{ borderColor: "var(--border)" }}>
                 {comment.replies?.map((reply) => (
-                  <EventCommentItem
-                    key={reply.id}
-                    comment={reply}
-                    isReply
-                    deleting={deletingIds.has(reply.id)}
-                    editing={editingCommentId === reply.id && reply.ownedByMe}
-                    saving={savingCommentId === reply.id}
-                    editText={editingCommentId === reply.id ? editText : reply.text}
-                    editError={editingCommentId === reply.id ? editError : ""}
-                    highlighted={reply.id === targetCommentId}
-                    onEdit={comments.startEditing}
-                    onEditTextChange={setEditText}
-                    onSave={(target) => void comments.saveEditing(target.id)}
-                    onCancel={comments.cancelEditing}
-                    onDelete={(target) => void comments.remove(target.id)}
-                  />
+                  <NewItemReveal key={reply.id} isNew={reply.id === comments.lastCreatedId} onRevealed={comments.clearCreatedMarker}>
+                    <EventCommentItem
+                      comment={reply}
+                      isReply
+                      deleting={deletingIds.has(reply.id)}
+                      editing={editingCommentId === reply.id && reply.ownedByMe}
+                      saving={savingCommentId === reply.id}
+                      editText={editingCommentId === reply.id ? editText : reply.text}
+                      editError={editingCommentId === reply.id ? editError : ""}
+                      highlighted={reply.id === targetCommentId}
+                      onEdit={comments.startEditing}
+                      onEditTextChange={setEditText}
+                      onSave={(target) => void comments.saveEditing(target.id)}
+                      onCancel={comments.cancelEditing}
+                      onDelete={(target) => void comments.remove(target.id)}
+                    />
+                  </NewItemReveal>
                 ))}
                 {replyingToId === comment.id ? (
                   <div
@@ -264,7 +267,7 @@ export function EventComments({
                 ) : null}
               </div>
             ) : null}
-          </div>
+          </NewItemReveal>
         )) : null}
       </div>
 
