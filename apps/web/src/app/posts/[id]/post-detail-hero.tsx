@@ -73,6 +73,9 @@ export function PostDetailHero({
   const rX = useTransform(sy, [-0.5, 0.5], [4, -4]);
   // 교회 공식 소식(공지·주보)에는 좋아요를 노출하지 않는다.
   const officialNotice = isAdminOnlyCategory(p.category);
+  // 대표 이미지가 없으면(텍스트 전용 글 — 교제/피드에 흔함) 왼쪽 이미지 열을 접어 검은 빈 패널을 없애고
+  // 본문 카드가 전체 폭을 쓰게 한다. src 없는 <img> 는 onError 가 안 떠서 imageFailed 폴백으로도 못 가린다.
+  const hasHeroImage = p.images.length > 0;
 
   return (
     <div style={{ perspective: 1400 }}>
@@ -95,8 +98,9 @@ export function PostDetailHero({
           background: "var(--card)",
           borderColor: "var(--border)",
         }}
-        className="rounded-3xl border overflow-hidden shadow-[0_40px_80px_-30px_rgba(0,0,0,0.4)] grid grid-cols-1 md:grid-cols-[1.1fr_1fr]"
+        className={`rounded-3xl border overflow-hidden shadow-[0_40px_80px_-30px_rgba(0,0,0,0.4)] grid grid-cols-1${hasHeroImage ? " md:grid-cols-[1.1fr_1fr]" : ""}`}
       >
+        {hasHeroImage && (
         <div className="relative aspect-square md:aspect-auto bg-black overflow-hidden">
           {imageFailed ? (
             <div className="flex h-full w-full items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>
@@ -141,6 +145,7 @@ export function PostDetailHero({
             </>
           )}
         </div>
+        )}
 
         <div className="p-7 flex flex-col gap-5">
           <AuthorHeader
