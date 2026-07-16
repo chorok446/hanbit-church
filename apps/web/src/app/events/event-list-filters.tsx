@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import { EventDateRangeFilterControls } from "@/components/event-date-range-filters";
 import { ActiveFilterChips, type FilterChip } from "@/components/active-filter-chips";
+import { FilterPillGroup } from "@/components/filter-pill-group";
 import { SearchField } from "@/components/search-field";
 import {
   EMPTY_EVENT_DATE_RANGE_FILTERS,
@@ -119,29 +119,14 @@ export function EventListFilters({
 
   return (
     <div className="mb-8 space-y-4">
-      <div
-        className="flex w-full flex-wrap gap-1 rounded-3xl p-1 md:w-fit md:rounded-full"
-        style={{ background: "rgba(var(--ink-rgb), 0.06)" }}
-      >
-        {FILTER_ITEMS.map((item) => {
-          const active = state.filter === item.id;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              aria-pressed={active}
-              onClick={() => onFilter(item.id)}
-              className="relative shrink-0 rounded-full px-5 py-2 text-[13px]"
-              style={{ color: active ? "var(--surface-dark)" : "var(--foreground-muted)" }}
-            >
-              {active ? (
-                <motion.div layoutId="filter-pill" className="absolute inset-0 rounded-full" style={{ background: "var(--accent)" }} />
-              ) : null}
-              <span className="relative">{item.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      <FilterPillGroup
+        items={FILTER_ITEMS.map((item) => ({ key: item.id, label: item.label }))}
+        value={state.filter}
+        onChange={(key) => onFilter(key as EventListFilter)}
+        layoutId="filter-pill"
+        label="행사 필터"
+        className="w-full rounded-3xl md:w-fit md:rounded-full"
+      />
 
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <SearchField
