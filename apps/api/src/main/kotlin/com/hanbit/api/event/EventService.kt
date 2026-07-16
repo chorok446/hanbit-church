@@ -215,18 +215,16 @@ class EventService(
     }
 
     /**
-     * 참여 행사 pagination. participant row 를 id ASC(deterministic, 참여 일시 없음)로 page 한 뒤
-     * 해당 page 의 eventId 만 bulk 조회하고 participant page 순서를 보존한다. 삭제된 행사의 orphan 은 제외.
+     * 참여 행사 pagination. 공개(숨김·삭제 아님) 행사만 JOIN 쿼리로 page·count 해 total 과 슬라이스를
+     * 함께 필터한다(orphan·숨김이 있어도 마지막 페이지가 비어 보이지 않는다). 순서는 participant id ASC.
      */
     @Transactional(readOnly = true)
     fun getJoinedEventsPage(userId: Long, page: Int, size: Int): EventPageResponse {
         validatePageParams(page, size)
         val today = LocalDate.now(clock)
-        val participantPage = participants.findByUserId(userId, PageRequest.of(page, size, Sort.by("id").ascending()))
-        val eventIds = participantPage.content.map { it.eventId }
-        val byId = if (eventIds.isEmpty()) emptyMap() else repo.findAllById(eventIds).associateBy { it.id }
-        // participant page 순서 보존, orphan·숨김 행사 제외
-        val ordered = eventIds.mapNotNull { byId[it] }.filter { it.hiddenAt == null }
+        // 공개 행사만 JOIN 으로 페이지·카운트 — 슬라이스와 total 이 함께 숨김/orphan 을 제외해 정합한다.
+        val eventPage = repo.findVisibleJoinedByUser(userId, PageRequest.of(page, size))
+        val ordered = eventPage.content
         val bookmarkedIds = bookmarkedByPage(userId, ordered.map { it.id })
         return EventPageResponse(
             content = ordered.map {
@@ -234,8 +232,8 @@ class EventService(
             },
             page = page,
             size = size,
-            totalElements = participantPage.totalElements,
-            totalPages = totalPages(participantPage.totalElements, size),
+            totalElements = eventPage.totalElements,
+            totalPages = totalPages(eventPage.totalElements, size),
         )
     }
 
@@ -408,18 +406,16 @@ class EventService(
     }
 
     /**
-     * 저장한 행사 pagination. bookmark row 를 id ASC(deterministic, createdAt 없음)로 page 한 뒤
-     * 해당 page 의 eventId 만 bulk 조회하고 bookmark page 순서를 보존한다. 삭제된 행사의 orphan bookmark 는 제외.
+     * 저장한 행사 pagination. 공개(숨김·삭제 아님) 행사만 JOIN 쿼리로 page·count 해 total 과 슬라이스를
+     * 함께 필터한다(orphan·숨김이 있어도 마지막 페이지가 비어 보이지 않는다). 순서는 bookmark id ASC.
      */
     @Transactional(readOnly = true)
     fun getMyBookmarksPage(userId: Long, page: Int, size: Int): EventPageResponse {
         validatePageParams(page, size)
         val today = LocalDate.now(clock)
-        val bookmarkPage = bookmarkRepo.findByUserId(userId, PageRequest.of(page, size, Sort.by("id").ascending()))
-        val eventIds = bookmarkPage.content.map { it.eventId }
-        val eventsById = if (eventIds.isEmpty()) emptyMap() else repo.findAllById(eventIds).associateBy { it.id }
-        // bookmark page 순서 보존, orphan·숨김 행사 제외
-        val ordered = eventIds.mapNotNull { eventsById[it] }.filter { it.hiddenAt == null }
+        // 공개 행사만 JOIN 으로 페이지·카운트 — 슬라이스와 total 이 함께 숨김/orphan 을 제외해 정합한다.
+        val eventPage = repo.findVisibleBookmarkedByUser(userId, PageRequest.of(page, size))
+        val ordered = eventPage.content
         val joinedIds = joinedByPage(userId, ordered.map { it.id })
         return EventPageResponse(
             content = ordered.map {
@@ -427,8 +423,8 @@ class EventService(
             },
             page = page,
             size = size,
-            totalElements = bookmarkPage.totalElements,
-            totalPages = totalPages(bookmarkPage.totalElements, size),
+            totalElements = eventPage.totalElements,
+            totalPages = totalPages(eventPage.totalElements, size),
         )
     }
 

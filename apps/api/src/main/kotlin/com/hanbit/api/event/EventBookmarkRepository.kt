@@ -1,7 +1,5 @@
 package com.hanbit.api.event
 
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.transaction.annotation.Transactional
 
@@ -12,7 +10,6 @@ interface EventBookmarkRepository : JpaRepository<EventBookmark, String> {
 
     /** 마감 임박 알림 수신자 조회용 — 행사를 저장한 사용자 전체. */
     fun findByEventId(eventId: String): List<EventBookmark>
-    fun findByUserId(userId: Long, pageable: Pageable): Page<EventBookmark>
     fun findByUserIdAndEventIdIn(userId: Long, eventIds: Collection<String>): List<EventBookmark>
     fun countByEventId(eventId: String): Long
 

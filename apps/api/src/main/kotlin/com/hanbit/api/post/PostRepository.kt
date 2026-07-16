@@ -12,6 +12,18 @@ import org.springframework.data.repository.query.Param
 interface PostRepository : JpaRepository<Post, String> {
     fun findAllByIdInOrderBySeqDesc(ids: Collection<String>): List<Post>
 
+    /**
+     * 사용자가 저장(북마크)한 게시글 중 공개(숨김·삭제 아님)만 페이지네이션한다.
+     * bookmark row 를 그대로 페이지한 뒤 숨김을 거르면 total 은 필터 전 수라 슬라이스와 어긋나(마지막 페이지가
+     * 비어 보이고 카운트 과대) 문제였다. JOIN 으로 공개 글만 페이지·카운트해 정합을 맞춘다.
+     * order by b.id — bookmark id(무작위 UUID) ASC. 결정적·안정적 순서지만 생성 순은 아니다(createdAt 컬럼 없음). 기존 동작 유지.
+     */
+    @Query(
+        "select p from Post p, PostBookmark b " +
+            "where b.postId = p.id and b.userId = :userId and p.hiddenAt is null order by b.id asc",
+    )
+    fun findVisibleBookmarkedByUser(@Param("userId") userId: Long, pageable: Pageable): Page<Post>
+
     /** 예약 게시 잡 — 도래한 예약 글(운영 숨김 아님, 마커 일치)만 집는다. */
     fun findByPublishAtLessThanEqualAndHiddenAtIsNotNullAndHiddenReason(
         publishAt: java.time.Instant,

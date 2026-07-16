@@ -157,6 +157,26 @@ class PostMyPagePaginationTest(
     }
 
     @Test
+    fun `숨김된 북마크 글은 total 과 content 모두에서 제외돼 정합한다`() {
+        val a = savePost(seq = 1, authorUserId = 2L)
+        val b = savePost(seq = 2, authorUserId = 2L)
+        val hidden = savePost(seq = 3, authorUserId = 2L)
+        bookmark(a); bookmark(b); bookmark(hidden)
+        posts.findById(hidden).get().also { it.hiddenAt = java.time.Instant.now(); posts.saveAndFlush(it) }
+
+        // total 이 필터 전 3 이 아니라 공개 2 여야 슬라이스와 어긋나지 않는다(마지막 페이지 빈 화면 방지).
+        mvc.get("/api/posts/bookmarks/page") {
+            headers { add("Authorization", "Bearer $token") }
+            param("size", "10")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.totalElements") { value(2) }
+            jsonPath("$.content.length()") { value(2) }
+            jsonPath("$.content[?(@.id == '$hidden')]") { isEmpty() }
+        }
+    }
+
+    @Test
     fun `저장 해제 후 page 결과에서 제외된다`() {
         val id = savePost(seq = 1, authorUserId = 2L)
         val bid = bookmark(id)
