@@ -2,6 +2,7 @@ package com.hanbit.api.notificationws
 
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
+import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
 import tools.jackson.databind.json.JsonMapper
@@ -69,6 +70,31 @@ class NotificationSessionHubTest {
 
         Mockito.verify(closed, Mockito.never()).sendMessage(Mockito.any(TextMessage::class.java))
         Mockito.verify(open).sendMessage(Mockito.any(TextMessage::class.java))
+    }
+
+    @Test
+    fun `세션 원격 해지 시 해당 sid 의 WS 만 닫는다`() {
+        val hub = NotificationSessionHub(JsonMapper())
+        val revoked = session("s-revoked")
+        val kept = session("s-kept")
+        hub.register(revoked, 1L, "sid-A")
+        hub.register(kept, 1L, "sid-B")
+
+        hub.closeAuthSession("sid-A")
+
+        Mockito.verify(revoked).close(CloseStatus.POLICY_VIOLATION)
+        Mockito.verify(kept, Mockito.never()).close(Mockito.any(CloseStatus::class.java))
+    }
+
+    @Test
+    fun `sid 없이 등록된 세션이나 없는 sid 는 close 대상이 아니다`() {
+        val hub = NotificationSessionHub(JsonMapper())
+        val noSid = session("s-nosid")
+        hub.register(noSid, 1L) // 레거시 토큰 — authSessionId 없음
+
+        hub.closeAuthSession("sid-unknown")
+
+        Mockito.verify(noSid, Mockito.never()).close(Mockito.any(CloseStatus::class.java))
     }
 
     @Test

@@ -16,6 +16,7 @@ class AccessLogService(
     private val writer: AccessLogWriter,
     private val notifications: com.hanbit.api.notification.NotificationService,
     private val denylist: com.hanbit.api.security.TokenDenylistStore,
+    private val wsHub: com.hanbit.api.notificationws.NotificationSessionHub,
     private val meterRegistry: io.micrometer.core.instrument.MeterRegistry,
     @param:org.springframework.beans.factory.annotation.Value("\${app.jwt.refresh-ttl-millis}") private val refreshTtlMillis: Long,
     private val clock: Clock,
@@ -99,6 +100,8 @@ class AccessLogService(
             )
         }
         denylist.deny(com.hanbit.api.security.sessionDenyKey(sessionId), refreshTtlMillis / 1000)
+        // 이미 열린 이 세션의 WS 도 즉시 끊는다(denylist 는 HTTP·재연결만 막고 열린 WS 는 재검증 안 함).
+        wsHub.closeAuthSession(sessionId)
         return SessionRevokeResponse(revoked = true, sessionId = sessionId)
     }
 
@@ -108,14 +111,15 @@ class AccessLogService(
      */
     fun revokeOtherSessions(userId: Long, currentSessionId: String?): SessionRevokeAllResponse {
         val since = Instant.now(clock).minusMillis(refreshTtlMillis)
-        val targets = repo.findDistinctSessionIdsSince(userId, since)
-            .filter { it != currentSessionId }
-            .filterNot { sid ->
-                runCatching { denylist.isDenied(com.hanbit.api.security.sessionDenyKey(sid)) }.getOrDefault(false)
-            }
+        val candidates = repo.findDistinctSessionIdsSince(userId, since).filter { it != currentSessionId }
+        val targets = candidates.filterNot { sid ->
+            runCatching { denylist.isDenied(com.hanbit.api.security.sessionDenyKey(sid)) }.getOrDefault(false)
+        }
         targets.forEach { sid ->
             denylist.deny(com.hanbit.api.security.sessionDenyKey(sid), refreshTtlMillis / 1000)
         }
+        // close 는 deny 여부와 무관하게 후보 전체 — 이전 revoke 로 이미 denied 됐지만 아직 살아있는 WS 도 끊는다.
+        candidates.forEach { wsHub.closeAuthSession(it) }
         return SessionRevokeAllResponse(revokedCount = targets.size)
     }
 
@@ -130,13 +134,16 @@ class AccessLogService(
         val since = Instant.now(clock).minusMillis(refreshTtlMillis)
         // 아직 유효(미해지)한 다른 기기 세션만 카운트 — 이미 원격 로그아웃된 세션은 다시 세지 않는다
         // (revokeOtherSessions 와 동일). isDenied 가 store 장애로 던지면 전파해 fail-closed.
-        val liveOthers = repo.findDistinctSessionIdsSince(userId, since)
-            .filter { it != currentSessionId && !denylist.isDenied(com.hanbit.api.security.sessionDenyKey(it)) }
+        val allOthers = repo.findDistinctSessionIdsSince(userId, since).filter { it != currentSessionId }
+        val liveOthers = allOthers.filterNot { denylist.isDenied(com.hanbit.api.security.sessionDenyKey(it)) }
         // 현재 세션은 항상 무효화 대상(기존 refresh 차단). 카운트("다른 기기 수")에서만 제외한다.
-        val targets = (liveOthers + listOfNotNull(currentSessionId)).distinct()
-        targets.forEach { sid ->
+        val denyTargets = (liveOthers + listOfNotNull(currentSessionId)).distinct()
+        denyTargets.forEach { sid ->
             denylist.deny(com.hanbit.api.security.sessionDenyKey(sid), refreshTtlMillis / 1000)
         }
+        // close 는 deny 여부와 무관하게 후보 전체 + 현재 세션 — 이미 denied 됐지만 살아있는 다른 기기 WS 와
+        // 옛 sid 로 열린 현재 세션 WS 를 모두 끊는다(클라이언트는 재발급된 새 sid 로 재연결).
+        (allOthers + listOfNotNull(currentSessionId)).distinct().forEach { wsHub.closeAuthSession(it) }
         return SessionRevokeAllResponse(revokedCount = liveOthers.size)
     }
 
