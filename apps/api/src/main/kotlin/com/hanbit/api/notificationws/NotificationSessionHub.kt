@@ -63,10 +63,20 @@ class NotificationSessionHub(
     /**
      * 원격 세션 해지 시 해당 인증 sid 로 열린 WS 를 즉시 끊는다(POLICY_VIOLATION). denylist 는 HTTP·재연결만
      * 막고 이미 열린 WS 는 재검증하지 않으므로, 끊지 않으면 해지된 세션이 계속 알림 push 를 받는다.
-     * afterConnectionClosed → unregister 로 인덱스는 정리된다. 이 인스턴스에 로컬인 연결만 대상
-     * (ponytail: 멀티 인스턴스 원격 close 전파는 미구현 — 그 경우에도 denylist 로 재연결은 차단된다).
+     * 로컬 연결을 끊고, 멀티 인스턴스(Redis fanout)면 다른 replica 에도 close 를 전파한다.
      */
     fun closeAuthSession(authSessionId: String) {
+        closeLocalAuthSession(authSessionId)
+        // 다른 replica 의 열린 WS 도 끊도록 전파(fanout 없으면 no-op). Redis 실패는 relay 내부에서 삼킨다.
+        fanout?.relay(NotificationRelayEnvelope(closeAuthSessionId = authSessionId))
+    }
+
+    /** 다른 replica 에서 Redis 로 수신한 close 명령 — 로컬만 끊고 재전파하지 않는다(무한 루프 방지). */
+    fun closeAuthSessionFromRelay(authSessionId: String) {
+        closeLocalAuthSession(authSessionId)
+    }
+
+    private fun closeLocalAuthSession(authSessionId: String) {
         val sessionIds = authSessions[authSessionId] ?: return
         // 순회 중 unregister 가 authSessions 를 수정하므로 스냅샷 복사 후 닫는다.
         // close 실패(decorator lock timeout 등)는 삼켜 다른 세션 close 를 막지 않는다 — 실패 시 인덱스·소켓이

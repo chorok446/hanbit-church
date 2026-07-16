@@ -39,6 +39,8 @@ class NotificationWsFanout(
             mapper.readValue(message.body, NotificationRelayEnvelope::class.java)
         }.getOrNull() ?: return
         if (envelope.origin == instanceId) return
+        // 세션 해지 전파는 close 명령, 그 외는 알림 배지 전달 — 봉투는 둘 중 하나만 채워진다.
+        envelope.closeAuthSessionId?.let { hub.closeAuthSessionFromRelay(it); return }
         hub.deliverFromRelay(envelope)
     }
 
