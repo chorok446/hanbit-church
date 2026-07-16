@@ -27,7 +27,7 @@ function profileUpdateError(error: ApiError): string {
     return `표시 이름은 ${MAX_NAME_LENGTH}자 이하여야 합니다.`;
   }
   if (detail.includes("profile image url must be http(s)")) {
-    return "프로필 이미지 URL은 http:// 또는 https:// 로 시작해야 합니다.";
+    return "프로필 이미지 URL은 https:// 로 시작해야 합니다.";
   }
   if (detail.includes("profile image url is too long")) {
     return `프로필 이미지 URL은 ${MAX_PROFILE_IMAGE_URL_LENGTH}자 이하여야 합니다.`;

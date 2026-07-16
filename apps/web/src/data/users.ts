@@ -1,4 +1,5 @@
 import { apiDeleteVoid, apiGet, apiPostVoid, apiPut } from "@/lib/api";
+import { isAllowedImageUrl } from "@/lib/image-url";
 import type { PostPageResponse } from "@/data/posts";
 
 export type UserProfile = {
@@ -78,8 +79,7 @@ export const MAX_NAME_LENGTH = 30;
 export const MAX_PROFILE_IMAGE_URL_LENGTH = 500;
 
 export function isValidProfileImageUrl(url: string): boolean {
-  const trimmed = url.trim();
-  return trimmed.startsWith("http://") || trimmed.startsWith("https://");
+  return isAllowedImageUrl(url);
 }
 
 export function validateProfileUpdate(input: { name: string; profileImageUrl: string }):
@@ -95,7 +95,7 @@ export function validateProfileUpdate(input: { name: string; profileImageUrl: st
     return { ok: false, message: `프로필 이미지 URL은 ${MAX_PROFILE_IMAGE_URL_LENGTH}자 이하여야 합니다.` };
   }
   if (imageUrl && !isValidProfileImageUrl(imageUrl)) {
-    return { ok: false, message: "프로필 이미지 URL은 http:// 또는 https:// 로 시작해야 합니다." };
+    return { ok: false, message: "프로필 이미지 URL은 https:// 로 시작해야 합니다." };
   }
   return { ok: true, name, profileImageUrl: imageUrl || null };
 }
