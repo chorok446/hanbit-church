@@ -226,6 +226,26 @@ body {
   background: rgba(var(--ink-rgb), 0.03);
 }
 
+/* 터치 타깃 44px(HIG/Material) 확장 — 옵트인 전용. 시각 크기는 그대로 두고 히트 영역만 ::after 로 넓힌다.
+   ⚠ 확장 영역이 겹치면 DOM 뒤쪽 요소가 앞 요소의 '보이는 픽셀'까지 가로채므로,
+   상하좌우로 다른 인터랙티브 요소와 8px 이상 여유가 있는 단독 컨트롤에만 붙일 것.
+   밀집 아이콘 열(에디터 툴바·순서/삭제 버튼 줄)은 이 클래스 대신 실제 크기·간격을 키워야 한다.
+   overflow-hidden 컨트롤에서는 확장이 클리핑되어 무효다(components 레이어라 absolute 유틸리티가 position 을 이긴다). */
+@layer components {
+  .hit-area {
+    position: relative;
+  }
+  .hit-area::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}
+
 /* 링크형 카드 표면 — 은은한 base 그림자 + hover lift/그림자 심화를 한곳에 모은다.
    클릭 가능한 카드(홈 퀵정보·교제·행사 등)에만 붙이고, 정적 정보 카드에는 쓰지 않는다(거짓 어포던스 방지).
    그림자는 --ink-rgb 채널이라 다크에선 은은한 글로우로 뒤집힌다. */

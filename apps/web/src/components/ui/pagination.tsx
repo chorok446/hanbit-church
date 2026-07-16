@@ -43,7 +43,7 @@ export function Pagination({
 
   const borderColor = "rgba(var(--ink-rgb), 0.15)";
   const foreground = "var(--foreground)";
-  const navButtonClass = `inline-flex items-center justify-center border transition-[background-color,border-color,box-shadow,transform] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 motion-reduce:transform-none ${compact ? "h-9 w-9 rounded-full text-[12px]" : "h-10 w-10 rounded-xl text-[13px]"}`;
+  const navButtonClass = `hit-area inline-flex items-center justify-center border transition-[background-color,border-color,box-shadow,transform] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 motion-reduce:transform-none ${compact ? "h-9 w-9 rounded-full text-[12px]" : "h-10 w-10 rounded-xl text-[13px]"}`;
   const numberButtonClass = `inline-flex items-center justify-center border transition-[background-color,border-color,box-shadow] disabled:opacity-40 ${compact ? "h-9 min-w-9 rounded-full px-2 text-[12px]" : "h-10 min-w-10 rounded-xl px-2.5 text-[13px]"}`;
 
   return (
@@ -58,7 +58,7 @@ export function Pagination({
           총 {totalElements.toLocaleString()}개 · {page + 1} / {totalPages} 페이지
         </span>
       )}
-      <div className="flex flex-wrap items-center justify-center gap-1.5">
+      <div className="flex flex-wrap items-center justify-center gap-2">
         {totalPages > 7 ? (
           <button
             type="button"

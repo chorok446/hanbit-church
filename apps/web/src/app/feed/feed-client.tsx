@@ -238,7 +238,7 @@ export default function FeedClient({ events }: { events: Event[] }) {
                       role="tab"
                       aria-selected={active}
                       onClick={() => setView(tab.value)}
-                      className="rounded-full px-3.5 py-1.5 text-[12px] font-medium"
+                      className="min-h-11 rounded-full px-3.5 py-1.5 text-[12px] font-medium"
                       style={
                         active
                           ? { background: "var(--cta-bg)", color: "var(--cta-fg)" }
@@ -263,7 +263,7 @@ export default function FeedClient({ events }: { events: Event[] }) {
               title="피드 새로고침"
               onClick={() => setRetryTick((tick) => tick + 1)}
               disabled={refreshing}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full disabled:opacity-45"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full disabled:opacity-45"
               style={{ background: "rgba(var(--ink-rgb), 0.07)" }}
             >
               <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />

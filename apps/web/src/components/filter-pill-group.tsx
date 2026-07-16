@@ -42,7 +42,7 @@ export function FilterPillGroup({
             type="button"
             aria-pressed={active}
             onClick={() => onChange(item.key)}
-            className="relative shrink-0 rounded-full px-4 py-2 text-[13px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+            className="relative min-h-11 shrink-0 rounded-full px-4 py-2 text-[13px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
             style={{ color: active ? "var(--surface-dark)" : "var(--foreground-muted)" }}
           >
             {active ? (

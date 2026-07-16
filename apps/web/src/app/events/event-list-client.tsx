@@ -227,7 +227,7 @@ export default function EventListClient({
                   role="tab"
                   aria-selected={active}
                   onClick={() => updateUrl({ view: tab.value })}
-                  className="rounded-full px-3.5 py-1.5 text-[12px] font-medium"
+                  className="min-h-11 rounded-full px-3.5 py-1.5 text-[12px] font-medium"
                   style={
                     active
                       ? { background: "var(--cta-bg)", color: "var(--cta-fg)" }
