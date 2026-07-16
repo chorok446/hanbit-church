@@ -68,7 +68,8 @@ test("리치 에디터 굵게·미리보기가 동작한다", async ({ page }) =
   await page.getByRole("button", { name: "굵게" }).click();
   await page.keyboard.type(word);
   await page.getByRole("tab", { name: "미리보기" }).click();
-  await expect(page.locator("strong", { hasText: word })).toBeVisible();
+  // 굵게 텍스트는 에디터 미리보기 탭과 하단 발행 프리뷰 카드 양쪽에 렌더되므로 first() 로 좁힌다(word 는 타임스탬프로 유니크).
+  await expect(page.locator("strong", { hasText: word }).first()).toBeVisible();
 });
 
 test("시드 행사 상세에 본문 이미지 그리드가 보인다", async ({ page }) => {
