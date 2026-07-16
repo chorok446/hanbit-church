@@ -12,6 +12,7 @@ import { getSessionId, PROFILE_EVENT } from "@/lib/auth";
 import { beginAuthedRequest, clearSessionIfUnauthorized } from "@/lib/authed-request";
 import { useAuthSession } from "@/lib/use-auth-session";
 import { CurrentUserAvatar } from "@/components/current-user-avatar";
+import { FilterPillGroup } from "@/components/filter-pill-group";
 import { PageShell } from "@/components/page-shell";
 import { FeedPostCard } from "@/app/feed/feed-post-card";
 import { FeedSideHot } from "@/app/feed/feed-sidebar";
@@ -279,26 +280,14 @@ export default function FeedClient({ events }: { events: Event[] }) {
             onResetAll={() => updateUrl({ query: "", eventOnly: false, category: null, sort: "latest", page: 0 })}
           />
 
-          <div className="-mt-2 mb-6 flex flex-wrap gap-2" role="group" aria-label="카테고리 필터">
-            {[{ value: null as PostCategory | null, label: "전체" }, ...FEED_CATEGORIES].map((item) => {
-              const active = urlState.category === item.value;
-              return (
-                <button
-                  key={item.value ?? "all"}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => updateUrl({ category: item.value, page: 0 })}
-                  className="rounded-full border px-3.5 py-1.5 text-[12px] font-medium"
-                  style={
-                    active
-                      ? { background: "var(--cta-bg)", borderColor: "var(--cta-bg)", color: "var(--cta-fg)" }
-                      : { background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground-muted)" }
-                  }
-                >
-                  {item.label}
-                </button>
-              );
-            })}
+          <div className="-mt-2 mb-6">
+            <FilterPillGroup
+              items={[{ key: "all", label: "전체" }, ...FEED_CATEGORIES.map((item) => ({ key: item.value, label: item.label }))]}
+              value={urlState.category ?? "all"}
+              onChange={(key) => updateUrl({ category: key === "all" ? null : (key as PostCategory), page: 0 })}
+              layoutId="feed-category-pill"
+              label="카테고리 필터"
+            />
           </div>
 
           {requestStatus === "loading" && !response ? (

@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "motion/react";
 import { toast } from "sonner";
 import { Bell, CheckCheck, Trash2, Loader2 } from "lucide-react";
 import { useAuthSession } from "@/lib/use-auth-session";
+import { FilterPillGroup } from "@/components/filter-pill-group";
 import { Pagination } from "@/components/ui/pagination";
 import { StatePanel } from "@/components/ui/state-panel";
 import { StaggerItem } from "@/components/scroll-reveal";
@@ -254,29 +254,13 @@ export default function NotificationsClient() {
 
         <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
-            <div
-              className="flex gap-1 p-1 rounded-full"
-              style={{ background: "rgba(var(--ink-rgb), 0.06)" }}
-            >
-              {filters.map((f) => {
-                const active = filter === f.id;
-                return (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => changeFilter(f.id)}
-                    aria-pressed={active}
-                    className="relative px-4 py-2 text-[13px] rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
-                    style={{ color: active ? "var(--surface-dark)" : "var(--foreground-muted)" }}
-                  >
-                    {active && (
-                      <motion.div layoutId="notif-filter-pill" className="absolute inset-0 rounded-full" style={{ background: "var(--accent)" }} />
-                    )}
-                    <span className="relative">{f.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <FilterPillGroup
+              items={filters.map((f) => ({ key: f.id, label: f.label }))}
+              value={filter}
+              onChange={(key) => changeFilter(key as NotificationFilterId)}
+              layoutId="notif-filter-pill"
+              label="알림 필터"
+            />
             <button
               type="button"
               onClick={toggleUnreadOnly}
