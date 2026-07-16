@@ -29,6 +29,10 @@ class ScheduledPublishJob(
             due.forEach { post ->
                 post.hiddenAt = null
                 post.hiddenReason = null
+                // 발행 완료 — publishAt 을 비워 재발행을 막는다. 과거 publishAt 이 남으면, 이후 관리자가 이 글을
+                // 우연히 '예약 게시 대기' 사유로 숨겼을 때 (publishAt<=now + 마커 일치) 잡이 다시 공개로 되살린다.
+                // publishAt=null 이면 isScheduledPending 도 false 라 관리자 숨김이 정상 동작한다.
+                post.publishAt = null
                 // 게시 시각 기준으로 최신 정렬 상단에 오도록 정렬 키를 갱신한다(작성 시점이 아니라 게시 시점).
                 post.seq = now.toEpochMilli()
                 // 작성자에게 발행 확인 알림 — 주일 아침 예약이 실제로 나갔는지 확인하는 용도.

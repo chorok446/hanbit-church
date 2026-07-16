@@ -105,6 +105,8 @@ class ScheduledPublishTest(
 
         assertThat(published.hiddenAt).isNull()
         assertThat(published.hiddenReason).isNull()
+        // 발행 완료 시 publishAt 을 비운다 — 재발행·isScheduledPending 오판 방지.
+        assertThat(published.publishAt).isNull()
         assertThat(published.seq).isGreaterThan(oldSeq - 1)
         mvc.get("/api/posts/search") {
             param("category", "NOTICE")
@@ -113,6 +115,29 @@ class ScheduledPublishTest(
             status { isOk() }
             jsonPath("$.totalElements") { value(1) }
         }
+    }
+
+    @Test
+    fun `발행된 글을 이후 예약 마커 사유로 숨겨도 잡이 되살리지 않는다`() {
+        // 회귀 가드: 예전엔 발행 후 과거 publishAt 이 남아, 관리자가 우연히 '예약 게시 대기' 사유로 숨기면
+        // 잡이 다시 공개로 되살렸다. 발행 시 publishAt 을 비우므로 더는 대상이 되지 않는다.
+        val id = mapper.readTree(
+            createScheduled(future()).andExpect { status { isCreated() } }.andReturn().response.contentAsString,
+        )["id"].asString()
+        val post = posts.findById(id).orElseThrow()
+        post.publishAt = Instant.now().minusSeconds(60)
+        posts.saveAndFlush(post)
+        job.publishDue() // 1차 발행 → publishAt 정리됨
+
+        // 관리자가 이후 이 글을 우연히 예약 마커와 같은 사유로 숨긴다(과거엔 되살아나던 조건).
+        val republished = posts.findById(id).orElseThrow()
+        republished.hiddenAt = Instant.now()
+        republished.hiddenReason = SCHEDULED_HIDDEN_REASON
+        posts.saveAndFlush(republished)
+
+        job.publishDue() // 2차 — publishAt 이 null 이라 대상 아님
+
+        assertThat(posts.findById(id).orElseThrow().hiddenAt).isNotNull()
     }
 
     @Test
