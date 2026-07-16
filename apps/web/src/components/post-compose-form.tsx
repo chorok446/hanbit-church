@@ -52,6 +52,7 @@ function ImagePreview({ src, index }: { src: string; index: number }) {
       src={src}
       alt={`첨부 이미지 미리보기 ${index + 1}`}
       className="h-full w-full object-cover"
+      referrerPolicy="no-referrer"
       onError={() => setFailed(true)}
     />
   );
@@ -120,7 +121,7 @@ export function PostComposeForm({
     if (!raw) return;
 
     if (!isValidPostImageUrl(raw)) {
-      const message = "http:// 또는 https:// 로 시작하는 URL을 입력해주세요.";
+      const message = "https:// 로 시작하는 이미지 URL을 입력해주세요.";
       setImageInputError(message);
       toast.error(message);
       return;

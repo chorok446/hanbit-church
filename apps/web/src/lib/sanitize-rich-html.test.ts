@@ -30,6 +30,12 @@ describe("sanitize-rich-html", () => {
     expect(sanitizeRichHtml('<p><img src="http://tracker.example.com/a.png" alt="a"></p>')).not.toContain("<img");
   });
 
+  it("허용된 이미지에는 referrerpolicy=no-referrer 를 붙인다", () => {
+    expect(sanitizeRichHtml('<p><img src="https://cdn.example.com/a.png" alt="a"></p>')).toContain(
+      'referrerpolicy="no-referrer"',
+    );
+  });
+
   it("isRichHtml 은 마크업 여부를 판별한다", () => {
     expect(isRichHtml("<p>x</p>")).toBe(true);
     expect(isRichHtml("**굵게**")).toBe(false);

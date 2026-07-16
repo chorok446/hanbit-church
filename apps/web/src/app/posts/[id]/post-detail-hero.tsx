@@ -114,6 +114,7 @@ export function PostDetailHero({
               src={p.images[idx]}
               alt={`게시글 이미지 ${idx + 1}`}
               className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
               onError={onImageError}
             />
           )}

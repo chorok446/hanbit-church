@@ -572,25 +572,24 @@ class AuthControllerTest(
     }
 
     @Test
-    fun `javascript와 data profileImageUrl은 400`() {
+    fun `안전하지 않은 profileImageUrl(외부 http·ftp·javascript·data)은 드롭된다`() {
+        // 아바타도 게시글·행사와 같은 https 정책 — 안전하지 않으면 400 대신 드롭(이미지 없음).
         val user = saveUser(email = "bad-avatar@hanbit.com")
-        listOf("javascript:alert(1)", "data:image/png;base64,abc").forEach { url ->
+        listOf(
+            "javascript:alert(1)",
+            "data:image/png;base64,abc",
+            "ftp://example.com/a.png",
+            "http://tracker.example/pixel.gif",
+        ).forEach { url ->
             mvc.put("/api/auth/me") {
                 headers { add("Authorization", authorization(user)) }
                 contentType = MediaType.APPLICATION_JSON
                 content = """{"name":"${user.name}","profileImageUrl":"$url"}"""
-            }.andExpect { status { isBadRequest() } }
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$.profile.profileImageUrl") { value(null) }
+            }
         }
-    }
-
-    @Test
-    fun `http(s)가 아닌 profileImageUrl은 400`() {
-        val user = saveUser(email = "ftp-avatar@hanbit.com")
-        mvc.put("/api/auth/me") {
-            headers { add("Authorization", authorization(user)) }
-            contentType = MediaType.APPLICATION_JSON
-            content = """{"name":"${user.name}","profileImageUrl":"ftp://example.com/a.png"}"""
-        }.andExpect { status { isBadRequest() } }
     }
 
     @Test

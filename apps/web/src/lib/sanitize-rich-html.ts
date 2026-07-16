@@ -1,8 +1,9 @@
 import DOMPurify from "isomorphic-dompurify";
+import { isAllowedImageUrl } from "@/lib/image-url";
 
 const PURIFY_CONFIG = {
   ALLOWED_TAGS: ["p", "br", "strong", "b", "em", "i", "ul", "ol", "li", "a", "img"],
-  ALLOWED_ATTR: ["href", "src", "alt", "target", "rel", "loading"],
+  ALLOWED_ATTR: ["href", "src", "alt", "target", "rel", "loading", "referrerpolicy"],
   ALLOW_DATA_ATTR: false,
 };
 
@@ -22,26 +23,15 @@ function ensurePurifyHooks() {
   });
   DOMPurify.addHook("afterSanitizeAttributes", (node) => {
     if (node.tagName !== "IMG") return;
-    if (!isSafeImageSrc(node.getAttribute("src") ?? "")) {
+    // 이미지는 https 만 허용(로컬 http 예외) — mixed content·추적 픽셀 방어. 링크(a href)는 탐색이라 http 유지.
+    if (!isAllowedImageUrl(node.getAttribute("src") ?? "")) {
       node.remove();
+      return;
     }
+    // 외부 호스트에 열람 페이지 URL(리퍼러)을 넘기지 않는다 — 추적 표면 축소.
+    node.setAttribute("referrerpolicy", "no-referrer");
   });
   hooksReady = true;
-}
-
-/**
- * 이미지는 https 만 허용해 https 배포에서 mixed content 로 깨지지 않게 한다.
- * http 는 로컬 개발(localhost·127.0.0.1 업로드 서빙)만 예외. 링크(a href)는 탐색이라 http 허용 유지.
- */
-function isSafeImageSrc(src: string): boolean {
-  if (src.startsWith("https://")) return true;
-  if (!src.startsWith("http://")) return false;
-  try {
-    const host = new URL(src).hostname;
-    return host === "localhost" || host === "127.0.0.1";
-  } catch {
-    return false;
-  }
 }
 
 export function sanitizeRichHtml(html: string): string {

@@ -1,5 +1,6 @@
 package com.hanbit.api.post
 
+import com.hanbit.api.common.isAllowedImageUrl
 import com.hanbit.api.common.splitRichBodyHtml
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
@@ -51,11 +52,10 @@ fun normalizeTags(tags: List<String>): List<String> {
 fun normalizeImages(images: List<String>): List<String> {
     val normalized = images.map { it.trim() }.filter { it.isNotBlank() }.distinct()
     if (normalized.size > MAX_IMAGES) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "too many images")
-    // 서버가 이미지를 fetch 하지 않으므로 SSRF 방어는 범위 밖. http(s) 형식만 최소 검증.
-    if (normalized.any { !(it.startsWith("http://") || it.startsWith("https://")) }) {
-        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "image must be http(s) url")
-    }
-    return normalized
+    // 추적 픽셀·mixed content 방어로 https 만 유지(http 는 로컬 업로드만). 안전하지 않은 URL 은 드롭한다 —
+    // 400 을 내면 정책 도입 전 http 이미지가 붙은 레거시 글을 편집 불가(제목만 고쳐도 400)하게 만들기 때문.
+    // 프론트가 입력 시 이미 https 를 강제하므로 정상 경로에선 드롭될 일이 없고, 본문 인라인 이미지 필터와도 일관.
+    return normalized.filter { isAllowedImageUrl(it) }
 }
 
 /** 카테고리 검증. null·blank 는 기본값(나눔). */

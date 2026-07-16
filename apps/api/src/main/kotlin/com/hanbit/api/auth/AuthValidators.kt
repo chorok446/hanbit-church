@@ -1,5 +1,6 @@
 package com.hanbit.api.auth
 
+import com.hanbit.api.common.isAllowedImageUrl
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 
@@ -32,7 +33,7 @@ fun normalizeName(rawName: String): String {
     return name
 }
 
-/** profileImageUrl trim 후 http(s) 형식 검증. null/blank 는 이미지 없음으로 처리한다. */
+/** profileImageUrl trim 후 https 정책 검증. null/blank 는 이미지 없음으로 처리한다. */
 fun normalizeProfileImageUrl(rawUrl: String?): String? {
     if (rawUrl == null) return null
     val url = rawUrl.trim()
@@ -40,14 +41,10 @@ fun normalizeProfileImageUrl(rawUrl: String?): String? {
     if (url.length > MAX_PROFILE_IMAGE_URL_LENGTH) {
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "profile image url is too long")
     }
-    val lower = url.lowercase()
-    if (lower.startsWith("javascript:") || lower.startsWith("data:")) {
-        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "profile image url must be http(s)")
-    }
-    if (!(url.startsWith("http://") || url.startsWith("https://"))) {
-        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "profile image url must be http(s)")
-    }
-    return url
+    // 아바타도 외부 호스트 이미지라 게시글·행사와 같은 https 정책(추적 픽셀·mixed content 방어)을 적용한다.
+    // 안전하지 않으면(외부 http·javascript:·data: 등) 400 대신 드롭 — 정책 도입 전 http 프로필을 편집 불가하게
+    // 만들지 않기 위해. isAllowedImageUrl 이 정책 단일 출처.
+    return url.takeIf { isAllowedImageUrl(it) }
 }
 
 /** password 정책 검증. 회원가입과 비밀번호 변경이 공유한다. */

@@ -74,6 +74,8 @@ export function FallbackImage({
       className={className}
       loading={loading}
       decoding="async"
+      // 외부 호스트 이미지에 열람 페이지 URL(리퍼러)을 넘기지 않는다 — 추적 표면 축소(백엔드 https 강제와 함께).
+      referrerPolicy="no-referrer"
       onError={() => (useThumb ? setThumbFailed(true) : setFailed(true))}
       aria-hidden={decorative || undefined}
     />
