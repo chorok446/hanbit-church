@@ -12,6 +12,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { AuthorHeader } from "@/components/author-header";
+import { IconPop } from "@/components/icon-pop";
 import { FallbackImage } from "@/components/fallback-image";
 import { PostText } from "@/components/post-text";
 import { PostAttachments } from "@/components/post-attachments";
@@ -240,7 +241,10 @@ export function PostDetailHero({
                   color: liked ? "var(--danger)" : "var(--foreground)",
                 }}
               >
-                <Heart size={14} fill={liked ? "var(--danger)" : "transparent"} /> {likes}
+                <IconPop active={liked}>
+                  <Heart size={14} fill={liked ? "var(--danger)" : "transparent"} />
+                </IconPop>{" "}
+                {likes}
               </motion.button>
             )}
             <button

@@ -9,6 +9,7 @@ import { apiGet, apiPost, apiDelete, ApiError } from "@/lib/api";
 import { clearSession, getSessionId } from "@/lib/auth";
 import { useAuthSession } from "@/lib/use-auth-session";
 import { Avatar } from "@/components/avatar";
+import { IconPop } from "@/components/icon-pop";
 import { AuthorHeader } from "@/components/author-header";
 import { FallbackImage } from "@/components/fallback-image";
 import { PostPreview } from "@/components/post-text";
@@ -259,7 +260,10 @@ export function FeedPostCard({
               {/* 교회 공식 소식(공지·주보)에는 좋아요를 노출하지 않는다 */}
               {isAdminOnlyCategory(p.category) ? null : (
                 <motion.button whileTap={{ scale: 0.85 }} onClick={onLike} disabled={liking || refreshing} className="flex items-center gap-1 hover:text-[var(--danger)] transition-colors disabled:opacity-50" style={liked ? { color: "var(--danger)" } : undefined}>
-                  <Heart size={14} fill={liked ? "var(--danger)" : "none"} /> {likes}
+                  <IconPop active={liked}>
+                    <Heart size={14} fill={liked ? "var(--danger)" : "none"} />
+                  </IconPop>{" "}
+                  {likes}
                 </motion.button>
               )}
               <button onClick={toggleComments} className="flex items-center gap-1">

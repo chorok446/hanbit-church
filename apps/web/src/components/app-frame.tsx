@@ -15,6 +15,8 @@ import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 export function AppFrame({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
   return (
+    // reducedMotion="user" — 모든 framer-motion 애니메이션(whileTap 포함)이 OS 모션 축소 설정을 따른다.
+    <MotionConfig reducedMotion="user">
     <ConfirmProvider>
       {/* reducedMotion="user" — layoutId 인디케이터 등 JS 주도 transform 애니메이션도
           OS 모션 축소 설정을 따르게 한다(CSS 쪽은 globals.css 미디어쿼리가 담당). */}
@@ -43,5 +45,6 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
       </div>
       </MotionConfig>
     </ConfirmProvider>
+    </MotionConfig>
   );
 }
