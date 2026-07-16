@@ -162,18 +162,21 @@ class RemoteSessionLogoutTest(
         val current = login(email)
         me(other).andExpect { status { isOk() } }
 
-        mvc.put("/api/auth/password") {
+        val changeRes = mvc.put("/api/auth/password") {
             headers { add("Authorization", "Bearer ${current.access}") }
             contentType = MediaType.APPLICATION_JSON
             content = """{"currentPassword":"Password1!","newPassword":"NewPassword2!"}"""
         }.andExpect {
             status { isOk() }
-            // 가입 세션 + other 세션 = 2 (current 는 제외).
+            // "다른 기기" 수 = 가입 세션 + other 세션 = 2 (현재 세션은 새 토큰으로 이어지므로 제외).
             jsonPath("$.revokedSessions") { value(2) }
-        }
+        }.andReturn().response
 
         me(other).andExpect { status { isUnauthorized() } }
-        me(current).andExpect { status { isOk() } }
+        // 현재 세션의 기존 access/refresh 도 무효화된다 — 탈취된 토큰을 변경과 동시에 끊는다.
+        me(current).andExpect { status { isUnauthorized() } }
+        // 응답으로 내려온 새 세션 쿠키(새 sid)로는 계속 이어갈 수 있다.
+        me(sessionFrom(changeRes)).andExpect { status { isOk() } }
     }
 
     @Test

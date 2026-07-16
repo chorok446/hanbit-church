@@ -292,6 +292,32 @@ class AuthControllerTest(
         }
     }
 
+    @Test
+    fun `비밀번호 변경은 현재 세션의 기존 refresh 를 무효화하고 새 refresh 쿠키를 발급한다`() {
+        val email = "pw-rotate-${java.util.UUID.randomUUID()}@hanbit.com"
+        savePasswordUser(email = email)
+        // 로그인으로 현재 세션의 refresh 쿠키·access 확보.
+        val loginRes = login(email, "Current1!").andExpect { status { isOk() } }.andReturn().response
+        val oldRefresh = requireNotNull(loginRes.getCookie(com.hanbit.api.security.AuthCookies.REFRESH_NAME)).value
+        val access = objectMapper.readTree(loginRes.contentAsString).get("token").asString()
+
+        // 현재 세션 Bearer 로 비밀번호 변경 → 새 refresh 쿠키가 내려온다.
+        val changeRes = mvc.put("/api/auth/password") {
+            headers { add("Authorization", "Bearer $access") }
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(ChangePasswordRequest("Current1!", "Changed2@"))
+        }.andExpect { status { isOk() } }.andReturn().response
+        val newRefresh = requireNotNull(changeRes.getCookie(com.hanbit.api.security.AuthCookies.REFRESH_NAME)).value
+
+        // 변경 전 발급된 refresh 는 무효(탈취돼도 세션 연장 불가), 새 refresh 는 정상 rotation.
+        mvc.post("/api/auth/refresh") {
+            cookie(jakarta.servlet.http.Cookie(com.hanbit.api.security.AuthCookies.REFRESH_NAME, oldRefresh))
+        }.andExpect { status { isUnauthorized() } }
+        mvc.post("/api/auth/refresh") {
+            cookie(jakarta.servlet.http.Cookie(com.hanbit.api.security.AuthCookies.REFRESH_NAME, newRefresh))
+        }.andExpect { status { isOk() } }
+    }
+
     // ---- 이메일 변경 ----
 
     @Test

@@ -119,6 +119,27 @@ class AccessLogService(
         return SessionRevokeAllResponse(revokedCount = targets.size)
     }
 
+    /**
+     * 비밀번호 변경 등 계정 복구 경로 — 현재 세션을 포함한 모든 세션을 원격 로그아웃한다.
+     * 접속 기록의 sid 전부 + 명시적으로 currentSessionId(아직 기록에 없을 수 있음)를 denylist 에 올려
+     * 변경 전 발급된 access·refresh(탈취 가능)를 전부 끊는다. 호출부는 변경 후 새 sid 로 재발급한다.
+     * best-effort 아님 — store 장애 시 예외를 전파해 호출 트랜잭션이 롤백되게 한다(무효화 실패 시 변경도 취소).
+     * revokedCount 는 현재 세션을 뺀 "다른 기기" 수 — UX 안내 문구용(현재 세션은 새 토큰으로 이어지므로 제외).
+     */
+    fun revokeAllSessions(userId: Long, currentSessionId: String?): SessionRevokeAllResponse {
+        val since = Instant.now(clock).minusMillis(refreshTtlMillis)
+        // 아직 유효(미해지)한 다른 기기 세션만 카운트 — 이미 원격 로그아웃된 세션은 다시 세지 않는다
+        // (revokeOtherSessions 와 동일). isDenied 가 store 장애로 던지면 전파해 fail-closed.
+        val liveOthers = repo.findDistinctSessionIdsSince(userId, since)
+            .filter { it != currentSessionId && !denylist.isDenied(com.hanbit.api.security.sessionDenyKey(it)) }
+        // 현재 세션은 항상 무효화 대상(기존 refresh 차단). 카운트("다른 기기 수")에서만 제외한다.
+        val targets = (liveOthers + listOfNotNull(currentSessionId)).distinct()
+        targets.forEach { sid ->
+            denylist.deny(com.hanbit.api.security.sessionDenyKey(sid), refreshTtlMillis / 1000)
+        }
+        return SessionRevokeAllResponse(revokedCount = liveOthers.size)
+    }
+
     @Transactional
     fun deleteForUser(userId: Long) {
         repo.deleteByUserId(userId)
