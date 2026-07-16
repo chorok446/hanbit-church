@@ -1,0 +1,74 @@
+name: Cache Cleanup
+
+# 닫힌 PR ref(refs/pull/N/merge)의 Actions 캐시를 매일 청소한다.
+# pull_request(closed) 트리거를 쓰지 않는 이유: 이 레포의 주 머지 경로는 ci.yml 의
+# automerge 잡이 GITHUB_TOKEN 으로 수행하는데, GITHUB_TOKEN 이 일으킨 이벤트는
+# 다른 워크플로를 트리거하지 않는다(재귀 방지 규칙) — closed 훅은 대부분 안 울린다.
+# 스케줄 방식은 자동머지·수동 닫힘·포크 PR 을 모두 커버하고 토큰도 항상 쓰기 가능하다.
+# https://docs.github.com/actions/reference/workflows-and-actions/dependency-caching#managing-caches
+
+on:
+  schedule:
+    # 매일 KST 09:47 (00:47 UTC) — 정각 회피.
+    - cron: "47 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  # gh cache list/delete + gh pr view.
+  actions: write
+  pull-requests: read
+
+concurrency:
+  group: cache-cleanup
+
+jobs:
+  cleanup:
+    name: 닫힌 PR 캐시 삭제
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Delete caches of closed PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -o pipefail
+          deleted=0
+          failed=0
+          # 삭제 후 재조회를 반복해 100개 페이징 한계를 넘긴다(최대 10라운드 안전장치).
+          for _ in $(seq 1 10); do
+            refs=$(gh cache list --limit 100 --json ref --jq '[.[].ref | select(startswith("refs/pull/"))] | unique | .[]')
+            [ -z "$refs" ] && break
+            any_deleted_this_round=0
+            for ref in $refs; do
+              pr=${ref#refs/pull/}; pr=${pr%/merge}
+              state=$(gh pr view "$pr" --json state --jq .state || echo "UNKNOWN")
+              [ "$state" = "OPEN" ] && continue
+              if [ "$state" = "UNKNOWN" ]; then
+                failed=$((failed + 1))
+                continue
+              fi
+              ids=$(gh cache list --ref "$ref" --limit 100 --json id --jq '.[].id')
+              for id in $ids; do
+                if gh cache delete "$id"; then
+                  deleted=$((deleted + 1))
+                  any_deleted_this_round=1
+                else
+                  failed=$((failed + 1))
+                fi
+              done
+            done
+            # 이번 라운드에 지운 게 없으면(전부 OPEN 이거나 조회 실패) 더 돌 이유가 없다.
+            [ "$any_deleted_this_round" = "0" ] && break
+          done
+          echo "deleted=$deleted failed=$failed"
+          {
+            echo "## 🧹 닫힌 PR 캐시 정리"
+            echo ""
+            echo "- 삭제: ${deleted}개"
+            if [ "$failed" -gt 0 ]; then
+              echo "- ⚠️ 실패: ${failed}개 — 로그를 확인하세요(레이스로 이미 삭제된 캐시일 수 있습니다)."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          # 조회/삭제 실패가 있으면 잡을 실패로 표시해 조용한 미정리를 막는다.
+          [ "$failed" -eq 0 ]
