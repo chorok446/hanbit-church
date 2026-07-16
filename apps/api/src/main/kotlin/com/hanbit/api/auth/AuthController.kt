@@ -180,11 +180,20 @@ class AuthController(
     fun changePassword(
         @AuthenticationPrincipal principal: AuthUser?,
         @RequestBody req: ChangePasswordRequest,
+        http: HttpServletRequest,
         res: HttpServletResponse,
-    ): ChangePasswordResponse =
-        accountService.changePassword(requireUserId(principal), req, principal?.sessionId).also { result ->
-            result.token?.let { res.setAuthCookie(it) }
-        }
+    ): ChangePasswordResponse {
+        val userId = requireUserId(principal)
+        // 1) 비밀번호 교체(트랜잭션 커밋). 이후 단계는 커밋 성공 후에만 실행된다.
+        val user = accountService.changePassword(userId, req)
+        // 2) 현재 세션 포함 전 세션 무효화 — 기존 access·refresh(탈취 가능)를 전부 끊는다. store 장애 시 예외 전파(fail-closed).
+        val revoked = accessLogService.revokeAllSessions(userId, principal?.sessionId)
+        // 3) 현재 기기는 로그인 상태를 이어가야 하므로 새 sid 로 재발급하고 접속 기록에 남긴다("현재 세션" 배지 유지).
+        val tokens = authService.issueTokensFor(user)
+        accessLogService.record(tokens.userId, ClientRequestInfo.from(http), tokens.sessionId)
+        val body = res.setAuthCookies(tokens)
+        return ChangePasswordResponse(changed = true, token = body.token, revokedSessions = revoked.revokedCount)
+    }
 
     @Operation(summary = "이메일 변경")
     @SecurityRequirement(name = "bearerAuth")

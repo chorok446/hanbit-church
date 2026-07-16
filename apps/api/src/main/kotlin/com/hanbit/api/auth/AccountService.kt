@@ -38,8 +38,13 @@ class AccountService(
         return UpdateProfileResponse(token = jwt.issue(user, sessionId), profile = user.toProfile())
     }
 
+    /**
+     * 비밀번호를 검증·교체하고 갱신된 사용자를 돌려준다. 세션 무효화(Redis)·새 토큰 발급·접속기록은
+     * 이 트랜잭션 밖(커밋 이후, AuthController)에서 수행한다 — 비트랜잭션 Redis 쓰기를 커밋 전에 하면
+     * 커밋 실패 시 비밀번호는 롤백되는데 세션만 죽는 정합성 붕괴가 생기기 때문(전 기기 잠금 + 구 비밀번호 유효).
+     */
     @Transactional
-    fun changePassword(userId: Long, req: ChangePasswordRequest, sessionId: String? = null): ChangePasswordResponse {
+    fun changePassword(userId: Long, req: ChangePasswordRequest): User {
         val user = repo.findActiveOrThrow(userId)
         if (req.currentPassword.isBlank()) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "current password is required")
@@ -54,11 +59,7 @@ class AccountService(
         user.passwordHash = encoder.encode(req.newPassword)!!
         // 관리자 초기화로 발급된 임시 비밀번호를 새 비밀번호로 교체했으므로 강제 변경 안내를 해제한다.
         user.passwordResetRequired = false
-        // 표준 보안 관행: 비밀번호 변경 시 현재 세션만 남기고 전부 로그아웃 — 탈취범이 이미
-        // 로그인해 있어도 새 비밀번호 적용과 동시에 끊긴다. 실패해도 변경 자체는 성공 처리(best-effort).
-        val revokedSessions = runCatching { accessLogs.revokeOtherSessions(userId, sessionId).revokedCount }
-            .getOrDefault(0)
-        return ChangePasswordResponse(changed = true, token = jwt.issue(user, sessionId), revokedSessions = revokedSessions)
+        return user
     }
 
     @Transactional
