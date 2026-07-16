@@ -2,7 +2,7 @@ import { FallbackImage } from "@/components/fallback-image";
 import { worshipPhotos } from "@/data/photos";
 
 // TODO(교회 확인: 실제 사진 교체) — 실사진이 준비되기 전까지 임시 사진을 쓴다.
-// 섬김 사진은 로컬 정적 이미지(Pexels, 출처: public/images/IMAGE_SOURCES.md), 예배 사진은 아직 unsplash 풀.
+// 섬김 사진은 로컬 정적 이미지(Pexels, 출처: docs/IMAGE_SOURCES.md), 예배 사진은 아직 Unsplash 풀.
 const PHOTOS = [
   {
     src: worshipPhotos[1],
