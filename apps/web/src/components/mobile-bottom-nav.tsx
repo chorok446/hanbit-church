@@ -40,7 +40,8 @@ export function MobileBottomNav() {
               {active ? (
                 <motion.div
                   layoutId="bottomnav-dot"
-                  className="absolute top-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full"
+                  // 중앙 정렬은 mx-auto 로 — layout 애니메이션이 transform 을 덮어써서 -translate-x-1/2 는 무시된다.
+                  className="absolute top-0.5 inset-x-0 mx-auto h-1 w-1 rounded-full"
                   style={{ background: "var(--accent)" }}
                 />
               ) : null}
