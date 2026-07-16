@@ -110,10 +110,12 @@ class ContentWriteRateLimitTest(
 
     @Test
     fun `이미지 업로드는 IP당 limit 초과 시 429를 반환한다`() {
-        val pngBytes = byteArrayOf(
-            0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
-            0x00, 0x00, 0x00, 0x00,
-        )
+        // 실제 디코딩 가능한 PNG — 업로드가 정상 처리(200)돼야 rate limit(초과 시 429)을 검증할 수 있다.
+        val pngBytes = java.io.ByteArrayOutputStream().also {
+            javax.imageio.ImageIO.write(
+                java.awt.image.BufferedImage(8, 8, java.awt.image.BufferedImage.TYPE_INT_RGB), "png", it,
+            )
+        }.toByteArray()
         repeat(2) {
             mvc.perform(
                 multipart("/api/media")
