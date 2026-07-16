@@ -67,6 +67,7 @@ export function EventThumb({
       className={className}
       loading={loading}
       decoding="async"
+      referrerPolicy="no-referrer"
       onError={() => (useThumb ? setThumbFailed(true) : setFailed(true))}
     />
   );

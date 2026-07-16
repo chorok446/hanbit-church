@@ -38,6 +38,7 @@ function ImagePreview({ src }: { src: string }) {
       src={src}
       alt="행사 썸네일 미리보기"
       className="h-full w-full object-cover"
+      referrerPolicy="no-referrer"
       onError={() => setFailed(true)}
     />
   );
@@ -73,7 +74,7 @@ export function EventComposeThumb({
     if (!raw) return;
 
     if (!isValidEventImageUrl(raw)) {
-      const message = "http:// 또는 https:// 로 시작하는 URL을 입력해주세요.";
+      const message = "https:// 로 시작하는 이미지 URL을 입력해주세요.";
       setThumbInputError(message);
       toast.error(message);
       return;
@@ -210,7 +211,7 @@ export function EventComposeThumb({
               aria-label={thumb === src ? "선택된 썸네일" : "썸네일 이미지 선택"}
               aria-pressed={thumb === src}
             >
-              <img src={src} alt="" aria-hidden className="h-full w-full object-cover" />
+              <img src={src} alt="" aria-hidden referrerPolicy="no-referrer" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>

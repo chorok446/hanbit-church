@@ -473,6 +473,7 @@ function SongItem({ song, myParts }: { song: PraiseSetlistSong; myParts: PraiseP
                         src={link.url}
                         alt={link.label}
                         loading="lazy"
+                        referrerPolicy="no-referrer"
                         className="h-40 w-auto max-w-full object-contain"
                         style={{ background: "var(--panel)" }}
                       />

@@ -51,9 +51,12 @@ describe("postCategoryLabel / postCategoryBadge", () => {
 });
 
 describe("isValidPostImageUrl", () => {
-  it("http/https 만 허용", () => {
+  it("https 와 로컬 http 만 허용(추적 픽셀 방어)", () => {
     expect(isValidPostImageUrl("https://cdn/x.jpg")).toBe(true);
-    expect(isValidPostImageUrl("  http://cdn/x.jpg  ")).toBe(true); // trim 후 판정
+    expect(isValidPostImageUrl("  http://localhost:8080/uploads/x.jpg  ")).toBe(true); // trim 후 판정
+    expect(isValidPostImageUrl("HTTPS://cdn/x.jpg")).toBe(true); // 대문자 스킴도 동일 판정
+    expect(isValidPostImageUrl("http://LOCALHOST:8080/x.jpg")).toBe(true); // 대문자 호스트도 로컬 예외(백엔드와 정합)
+    expect(isValidPostImageUrl("http://cdn/x.jpg")).toBe(false); // 외부 http 는 차단
     expect(isValidPostImageUrl("ftp://x")).toBe(false);
     expect(isValidPostImageUrl("/local/x.jpg")).toBe(false);
     expect(isValidPostImageUrl("javascript:alert(1)")).toBe(false);

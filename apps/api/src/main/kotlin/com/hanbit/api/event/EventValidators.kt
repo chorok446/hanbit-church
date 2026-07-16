@@ -1,5 +1,6 @@
 package com.hanbit.api.event
 
+import com.hanbit.api.common.isAllowedImageUrl
 import com.hanbit.api.common.splitRichBodyHtml
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
@@ -78,13 +79,18 @@ fun normalizeEventInput(
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "runStart must be on or before runEnd")
     }
 
+    // 대표 이미지(thumb)도 사용자 직접 URL 입력이 가능하므로 본문·갤러리와 같은 https 정책을 적용한다.
+    // 안전하지 않으면 400 대신 빈 값으로 드롭 — 레거시 http thumb 이 붙은 행사를 편집 불가하게 만들지 않기 위해.
+    val rawThumb = thumb.trim()
+    val normalizedThumb = if (rawThumb.isEmpty() || isAllowedImageUrl(rawThumb)) rawThumb else ""
+
     val normalizedBody = body.trim()
     val (paragraphHtml, imageUrls) = splitRichBodyHtml(normalizedBody)
     return NormalizedEventInput(
         title = normalizedTitle,
         summary = summary.trim(),
         body = EventBody("행사 소개", listOf(paragraphHtml).filter { it.isNotBlank() }, imageUrls),
-        thumb = thumb.trim(),
+        thumb = normalizedThumb,
         recruitStart = recruitStart.toString(),
         recruitEnd = recruitEnd.toString(),
         runStart = runStart.toString(),

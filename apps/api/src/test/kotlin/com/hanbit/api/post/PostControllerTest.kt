@@ -346,8 +346,15 @@ class PostControllerTest(
     }
 
     @Test
-    fun `image 가 http(s) URL 이 아니면 400`() {
-        postPost("""{"text":"형식","images":["ftp://a.com/x.png"]}""").andExpect { status { isBadRequest() } }
+    fun `안전하지 않은 이미지(외부 http·ftp)는 드롭되고 저장은 성공한다`() {
+        // https(로컬 http 예외)만 유지 — 추적 픽셀 방어. 400 이 아니라 드롭이라 레거시 글 편집이 막히지 않는다.
+        postPost(
+            """{"text":"형식","images":["ftp://a.com/x.png","https://ok.com/y.jpg","http://tracker.example/p.gif"]}""",
+        ).andExpect {
+            status { isCreated() }
+            jsonPath("$.images.length()") { value(1) }
+            jsonPath("$.images[0]") { value("https://ok.com/y.jpg") }
+        }
     }
 
     @Test

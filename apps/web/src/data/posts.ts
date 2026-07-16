@@ -1,5 +1,6 @@
 import { richTextPlainLength } from "@/lib/rich-text-length";
 import { mergeRichBodyForEditor, splitRichBodyHtml } from "@/lib/rich-body-html";
+import { isAllowedImageUrl } from "@/lib/image-url";
 import { apiGet, apiPatch, apiPut } from "@/lib/api";
 import type { CommentPageLocationResponse } from "@/data/comments";
 
@@ -83,8 +84,7 @@ export type PostComposeValidationResult =
   | { ok: false; message: string; field?: PostComposeField };
 
 export function isValidPostImageUrl(url: string): boolean {
-  const trimmed = url.trim();
-  return trimmed.startsWith("http://") || trimmed.startsWith("https://");
+  return isAllowedImageUrl(url);
 }
 
 export function normalizePostTags(tags: string[]): string[] {

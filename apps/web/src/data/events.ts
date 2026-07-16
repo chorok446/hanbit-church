@@ -1,6 +1,7 @@
 // 행사 데이터는 백엔드 API가 source of truth. 타입 + 프레젠테이션 메타만 유지.
 import { apiDelete, apiDeleteVoid, apiGet, apiPost, apiPut, apiPatch } from "@/lib/api";
 import { mergeEventBodyForEditor } from "@/lib/rich-body-html";
+import { isAllowedImageUrl } from "@/lib/image-url";
 import { richTextPlainLength } from "@/lib/rich-text-length";
 import type { CommentPageLocationResponse } from "@/data/comments";
 
@@ -462,8 +463,7 @@ export type EventComposeValidationResult =
   | { ok: false; message: string; field?: EventComposeField };
 
 export function isValidEventImageUrl(url: string): boolean {
-  const trimmed = url.trim();
-  return trimmed.startsWith("http://") || trimmed.startsWith("https://");
+  return isAllowedImageUrl(url);
 }
 
 export const DEFAULT_EVENT_COMPOSE_VALUES: EventComposeValues = {
