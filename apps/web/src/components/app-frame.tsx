@@ -1,6 +1,7 @@
 "use client";
 
 import { Toaster } from "sonner";
+import { MotionConfig } from "motion/react";
 import { useTheme } from "@/lib/theme-context";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -13,6 +14,8 @@ import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 export function AppFrame({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
   return (
+    // reducedMotion="user" — 모든 framer-motion 애니메이션(whileTap 포함)이 OS 모션 축소 설정을 따른다.
+    <MotionConfig reducedMotion="user">
     <ConfirmProvider>
       {/* min-h-screen flex-col + 본문 flex-1 — 콘텐츠가 짧아도 푸터가 뷰포트 하단 이하에 붙는다. */}
       <div className="relative flex min-h-screen w-full flex-col transition-colors pb-14 md:pb-0" style={{ background: "var(--surface)" }}>
@@ -36,5 +39,6 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
         <Toaster theme={theme === "dark" ? "dark" : "light"} position="bottom-center" toastOptions={{ style: { borderRadius: 16 } }} />
       </div>
     </ConfirmProvider>
+    </MotionConfig>
   );
 }
