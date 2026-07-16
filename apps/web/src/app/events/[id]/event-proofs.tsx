@@ -301,7 +301,7 @@ export function EventProofs({ event }: { event: Event }) {
                     type="button"
                     aria-label="후기 사진 제거"
                     onClick={() => setComposeImages((current) => current.filter((it) => it !== image))}
-                    className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/55 text-white"
+                    className="absolute right-1 top-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white"
                   >
                     <X size={12} />
                   </button>

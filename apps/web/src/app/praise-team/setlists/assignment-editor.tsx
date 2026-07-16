@@ -195,7 +195,7 @@ export function AssignmentEditor({
                   type="button"
                   onClick={() => setRows((prev) => prev.filter((r) => r.clientKey !== row.clientKey))}
                   aria-label={`${index + 1}번 배정 삭제`}
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border"
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border"
                   style={{ borderColor: "var(--border)", color: "var(--danger)" }}
                 >
                   <Trash2 size={13} aria-hidden />

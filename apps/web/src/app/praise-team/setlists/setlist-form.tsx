@@ -462,13 +462,13 @@ export function SetlistForm({
                   >
                     {index + 1}
                   </span>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => moveSong(index, -1)}
                       disabled={index === 0}
                       aria-label={`${index + 1}번 곡 위로`}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border disabled:opacity-30"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-full border disabled:opacity-30"
                       style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
                     >
                       <ArrowUp size={14} aria-hidden />
@@ -478,7 +478,7 @@ export function SetlistForm({
                       onClick={() => moveSong(index, 1)}
                       disabled={index === songs.length - 1}
                       aria-label={`${index + 1}번 곡 아래로`}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border disabled:opacity-30"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-full border disabled:opacity-30"
                       style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
                     >
                       <ArrowDown size={14} aria-hidden />
@@ -489,7 +489,7 @@ export function SetlistForm({
                         setSongs((prev) => prev.filter((s) => s.clientKey !== song.clientKey))
                       }
                       aria-label={`${index + 1}번 곡 삭제`}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border"
+                      className="ml-1 inline-flex h-11 w-11 items-center justify-center rounded-full border"
                       style={{ borderColor: "var(--border)", color: "var(--danger)" }}
                     >
                       <Trash2 size={14} aria-hidden />
@@ -607,7 +607,7 @@ export function SetlistForm({
                           })
                         }
                         aria-label={`${index + 1}번 곡 링크 ${linkIndex + 1} 삭제`}
-                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border"
+                        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border"
                         style={{ borderColor: "var(--border)", color: "var(--danger)" }}
                       >
                         <Trash2 size={13} aria-hidden />
@@ -620,7 +620,7 @@ export function SetlistForm({
                       onClick={() =>
                         patchSong(song.clientKey, { links: [...song.links, { label: "", url: "" }] })
                       }
-                      className="inline-flex min-h-9 items-center gap-1.5 text-[13px] underline underline-offset-2"
+                      className="inline-flex min-h-11 items-center gap-1.5 text-[13px] underline underline-offset-2"
                       style={{ color: "var(--foreground-muted)" }}
                     >
                       <Link2 size={13} aria-hidden />
@@ -630,7 +630,7 @@ export function SetlistForm({
                       type="button"
                       onClick={() => pickFile(song.clientKey)}
                       disabled={uploading}
-                      className="inline-flex min-h-9 items-center gap-1.5 text-[13px] underline underline-offset-2 disabled:opacity-50"
+                      className="inline-flex min-h-11 items-center gap-1.5 text-[13px] underline underline-offset-2 disabled:opacity-50"
                       style={{ color: "var(--foreground-muted)" }}
                     >
                       <Upload size={13} aria-hidden />
@@ -684,7 +684,7 @@ export function SetlistForm({
                           })
                         }
                         aria-label={`${index + 1}번 곡 파트 메모 ${entryIndex + 1} 삭제`}
-                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border"
+                        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border"
                         style={{ borderColor: "var(--border)", color: "var(--danger)" }}
                       >
                         <Trash2 size={13} aria-hidden />
@@ -698,7 +698,7 @@ export function SetlistForm({
                         partNotes: [...song.partNotes, { part: PRAISE_PARTS[1], note: "" }],
                       })
                     }
-                    className="inline-flex min-h-9 items-center gap-1.5 text-[13px] underline underline-offset-2"
+                    className="inline-flex min-h-11 items-center gap-1.5 text-[13px] underline underline-offset-2"
                     style={{ color: "var(--foreground-muted)" }}
                   >
                     <PlusCircle size={13} aria-hidden />
@@ -802,7 +802,7 @@ export function SetlistForm({
                       setNotices((prev) => prev.filter((n) => n.clientKey !== notice.clientKey))
                     }
                     aria-label={`${index + 1}번 공지 삭제`}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border"
                     style={{ borderColor: "var(--border)", color: "var(--danger)" }}
                   >
                     <Trash2 size={14} aria-hidden />
@@ -933,7 +933,7 @@ function SongLibraryPicker({
             type="button"
             onClick={onClose}
             aria-label="닫기"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border"
             style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
           >
             <X size={14} aria-hidden />
