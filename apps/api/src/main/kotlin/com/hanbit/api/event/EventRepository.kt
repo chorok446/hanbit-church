@@ -13,17 +13,17 @@ interface EventRepository : JpaRepository<Event, String> {
     /**
      * 사용자가 참여/저장한 행사 중 공개(숨김·삭제 아님)만 페이지네이션한다. participant/bookmark row 를 그대로
      * 페이지한 뒤 숨김을 거르면 total 과 슬라이스가 어긋나(마지막 페이지 빈 화면) 문제였다 — JOIN 으로 정합.
-     * order by 조인 row id(무작위 UUID) ASC — 결정적·안정적 순서지만 생성 순은 아니다(createdAt 컬럼 없음). 기존 동작 유지.
+     * order by c.seq desc, c.id — 행사 최신순(레거시 비페이지 배열과 동일 정렬), id 는 seq 동률 tiebreak(결정적 페이지 경계).
      */
     @Query(
         "select c from Event c, EventParticipant ep " +
-            "where ep.eventId = c.id and ep.userId = :userId and c.hiddenAt is null order by ep.id asc",
+            "where ep.eventId = c.id and ep.userId = :userId and c.hiddenAt is null order by c.seq desc, c.id asc",
     )
     fun findVisibleJoinedByUser(@Param("userId") userId: Long, pageable: Pageable): Page<Event>
 
     @Query(
         "select c from Event c, EventBookmark b " +
-            "where b.eventId = c.id and b.userId = :userId and c.hiddenAt is null order by b.id asc",
+            "where b.eventId = c.id and b.userId = :userId and c.hiddenAt is null order by c.seq desc, c.id asc",
     )
     fun findVisibleBookmarkedByUser(@Param("userId") userId: Long, pageable: Pageable): Page<Event>
 

@@ -176,47 +176,24 @@ class EventService(
     }
 
     /**
-     * 현재 사용자가 참여한 행사 목록. 인증 필수.
-     * 1) participant 조회(user_id 인덱스) → eventId 목록 추출
-     * 2) event IN 조회(seq DESC) → N+1 없이 2쿼리 완료
-     * 삭제된 행사의 orphan participant 는 자동으로 결과에서 제외.
+     * 참여 행사(레거시 비페이지 배열). 무제한 반환을 막기 위해 페이지 버전의 첫 페이지(최대 MAX_SEARCH_PAGE_SIZE)로
+     * 상한을 둔다 — 전체가 필요하면 /joined/page 를 쓴다.
      */
     @Transactional(readOnly = true)
-    fun getJoinedEvents(userId: Long): List<EventResponse> {
-        val today = LocalDate.now(clock)
-        val eventIds = participants.findByUserId(userId).map { it.eventId }
-        if (eventIds.isEmpty()) return emptyList()
-        val bookmarkedIds = bookmarkRepo.findByUserIdAndEventIdIn(userId, eventIds).map { it.eventId }.toSet()
-        return repo.findAllByIdInAndHiddenAtIsNullOrderBySeqDesc(eventIds)
-            .map { it.toResponse(viewerId = userId, joinedByMe = true, bookmarkedByMe = it.id in bookmarkedIds, today = today) }
-    }
+    fun getJoinedEvents(userId: Long): List<EventResponse> =
+        getJoinedEventsPage(userId, 0, MAX_SEARCH_PAGE_SIZE).content
 
-    /** 현재 사용자가 개설한 행사. 행사와 참여 상태를 각각 bulk 조회해 N+1을 피한다. */
+    /**
+     * 현재 사용자가 개설한 행사(레거시 비페이지 배열). 무제한 반환을 막기 위해 페이지 버전의 첫 페이지
+     * (최대 MAX_SEARCH_PAGE_SIZE)로 상한을 둔다 — 전체가 필요하면 /mine/page 를 쓴다.
+     */
     @Transactional(readOnly = true)
-    fun getMyEvents(userId: Long): List<EventResponse> {
-        val today = LocalDate.now(clock)
-        val events = repo.findByAuthorUserIdAndDeletedAtIsNullOrderBySeqDesc(userId)
-        if (events.isEmpty()) return emptyList()
-
-        val joinedIds = participants.findByUserIdAndEventIdIn(userId, events.map { it.id })
-            .map { it.eventId }
-            .toSet()
-        val bookmarkedIds = bookmarkRepo.findByUserIdAndEventIdIn(userId, events.map { it.id })
-            .map { it.eventId }
-            .toSet()
-        return events.map {
-            it.toResponse(
-                viewerId = userId,
-                joinedByMe = it.id in joinedIds,
-                bookmarkedByMe = it.id in bookmarkedIds,
-                today = today,
-            )
-        }
-    }
+    fun getMyEvents(userId: Long): List<EventResponse> =
+        getMyEventsPage(userId, 0, MAX_SEARCH_PAGE_SIZE).content
 
     /**
      * 참여 행사 pagination. 공개(숨김·삭제 아님) 행사만 JOIN 쿼리로 page·count 해 total 과 슬라이스를
-     * 함께 필터한다(orphan·숨김이 있어도 마지막 페이지가 비어 보이지 않는다). 순서는 participant id ASC.
+     * 함께 필터한다(orphan·숨김이 있어도 마지막 페이지가 비어 보이지 않는다). 순서는 행사 최신순(seq DESC).
      */
     @Transactional(readOnly = true)
     fun getJoinedEventsPage(userId: Long, page: Int, size: Int): EventPageResponse {
@@ -391,23 +368,12 @@ class EventService(
 
     /** 현재 사용자가 저장한 행사. 북마크/행사/참여를 각각 bulk 조회해 N+1을 피한다. */
     @Transactional(readOnly = true)
-    fun getMyBookmarks(userId: Long): List<EventResponse> {
-        val today = LocalDate.now(clock)
-        val eventIds = bookmarkRepo.findByUserId(userId).map { it.eventId }.distinct()
-        if (eventIds.isEmpty()) return emptyList()
-
-        val events = repo.findAllByIdInAndHiddenAtIsNullOrderBySeqDesc(eventIds)
-        val joinedIds = participants.findByUserIdAndEventIdIn(userId, eventIds)
-            .map { it.eventId }
-            .toSet()
-        return events.map {
-            it.toResponse(viewerId = userId, joinedByMe = it.id in joinedIds, bookmarkedByMe = true, today = today)
-        }
-    }
+    fun getMyBookmarks(userId: Long): List<EventResponse> =
+        getMyBookmarksPage(userId, 0, MAX_SEARCH_PAGE_SIZE).content
 
     /**
      * 저장한 행사 pagination. 공개(숨김·삭제 아님) 행사만 JOIN 쿼리로 page·count 해 total 과 슬라이스를
-     * 함께 필터한다(orphan·숨김이 있어도 마지막 페이지가 비어 보이지 않는다). 순서는 bookmark id ASC.
+     * 함께 필터한다(orphan·숨김이 있어도 마지막 페이지가 비어 보이지 않는다). 순서는 최신순(seq DESC).
      */
     @Transactional(readOnly = true)
     fun getMyBookmarksPage(userId: Long, page: Int, size: Int): EventPageResponse {
