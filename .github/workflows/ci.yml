@@ -29,13 +29,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Next.js 빌드 캐시: 소스가 바뀌면 갱신, 아니면 복원해 재빌드 단축.
-      - uses: actions/cache@v6
-        with:
-          path: apps/web/.next/cache
-          key: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/web/src/**') }}
-          restore-keys: |
-            nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+      # Next.js 캐시 스텝은 제거했다 — Turbopack 빌드에서 .next/cache 는 fetch-cache(ISR 응답)
+      # ~180KB 뿐이라 빌드 가속이 전혀 없는데, src 해시 키 때문에 커밋마다 캐시 엔트리만 쌓였다.
       - id: lint
         run: pnpm --filter web lint
       - id: test
