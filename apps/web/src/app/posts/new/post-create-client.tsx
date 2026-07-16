@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Image as ImageIcon } from "lucide-react";
 import { CurrentUserAvatar } from "@/components/current-user-avatar";
 import { FallbackImage } from "@/components/fallback-image";
+import { PostText } from "@/components/post-text";
 import { apiGet, apiPost, ApiError } from "@/lib/api";
 import { clearSession, getSessionId } from "@/lib/auth";
 import { useAuthSession } from "@/lib/use-auth-session";
@@ -404,9 +405,14 @@ export default function PostCreateClient() {
                 </div>
               )}
               <div className="space-y-3 p-4">
-                <p style={{ color: "var(--foreground)", fontSize: 14, lineHeight: 1.6 }}>
-                  {values.text || <span className="opacity-40">내용이 여기에 표시됩니다…</span>}
-                </p>
+                {/* 본문은 리치 HTML(tiptap 출력)이라 raw 로 렌더하면 <p> 태그가 그대로 노출된다 — 상세/에디터 미리보기와 동일하게 PostText 로 렌더. */}
+                {values.text.trim() ? (
+                  <PostText text={values.text} style={{ color: "var(--foreground)", fontSize: 14, lineHeight: 1.6 }} />
+                ) : (
+                  <p className="opacity-40" style={{ color: "var(--foreground)", fontSize: 14, lineHeight: 1.6 }}>
+                    내용이 여기에 표시됩니다…
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-1.5">
                   {values.tags.map((tag) => (
                     <span

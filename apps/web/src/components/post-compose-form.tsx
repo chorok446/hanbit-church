@@ -221,8 +221,10 @@ export function PostComposeForm({
               placeholder="https://example.com/image.jpg"
               aria-invalid={Boolean(fieldErrors.images || imageInputError)}
               aria-describedby={fieldErrors.images || imageInputError ? imageErrorId : undefined}
-              className="ui-control w-full rounded-xl py-2.5 pl-9 pr-3 text-[13px] placeholder:opacity-50"
-              style={controlStyle}
+              className="ui-control w-full rounded-xl text-[13px] placeholder:opacity-50"
+              // .ui-control 의 padding shorthand(레이어 밖이라 유틸리티보다 우선)가 pl-9 를 덮어써 아이콘과
+              // placeholder 가 겹쳤다. 인라인 padding 으로 아이콘 자리(왼쪽)를 확실히 비운다(인라인이 클래스보다 우선).
+              style={{ ...controlStyle, paddingLeft: "2.25rem", paddingRight: "0.75rem", paddingTop: "0.625rem", paddingBottom: "0.625rem" }}
             />
           </div>
           <button
