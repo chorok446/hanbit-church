@@ -87,6 +87,17 @@ class NotificationSessionHubTest {
     }
 
     @Test
+    fun `relay 로 받은 close 명령은 로컬 WS 를 끊는다`() {
+        val hub = NotificationSessionHub(JsonMapper())
+        val revoked = session("s-relay")
+        hub.register(revoked, 1L, "sid-A")
+
+        hub.closeAuthSessionFromRelay("sid-A")
+
+        Mockito.verify(revoked).close(CloseStatus.POLICY_VIOLATION)
+    }
+
+    @Test
     fun `sid 없이 등록된 세션이나 없는 sid 는 close 대상이 아니다`() {
         val hub = NotificationSessionHub(JsonMapper())
         val noSid = session("s-nosid")
