@@ -44,18 +44,31 @@ const REFRESH_EXEMPT = ["/api/auth/refresh", "/api/auth/login", "/api/auth/signu
 // 여러 요청이 동시에 401 을 맞아도 refresh 는 한 번만 나간다(single-flight).
 let refreshInFlight: Promise<boolean> | null = null;
 
+function postRefresh(): Promise<boolean> {
+  return fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
+    method: "POST",
+    credentials: "include",
+    cache: "no-store",
+  })
+    .then((res) => res.ok)
+    .catch(() => false);
+}
+
+// 여러 탭이 같은 refresh 쿠키로 동시에 401 을 맞을 때, 서버의 원자적 rotation 소비 때문에
+// 동시 refresh 하면 패자 탭이 401 로 로그아웃될 수 있다. Web Locks 로 탭 간 refresh 를 직렬화하면
+// 승자가 rotation(R1→R2)한 뒤 대기하던 탭이 갱신된 쿠키(R2)로 refresh(R2→R3)해 모두 성공한다.
+// navigator.locks 미지원 환경(구형 브라우저)에서는 단발 refresh 로 폴백한다.
+function refreshSerialized(): Promise<boolean> {
+  const locks = typeof navigator !== "undefined" ? navigator.locks : undefined;
+  if (!locks) return postRefresh();
+  return locks.request("hanbit-token-refresh", () => postRefresh());
+}
+
 function tryRefreshToken(): Promise<boolean> {
   if (!refreshInFlight) {
-    refreshInFlight = fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-    })
-      .then((res) => res.ok)
-      .catch(() => false)
-      .finally(() => {
-        refreshInFlight = null;
-      });
+    refreshInFlight = refreshSerialized().finally(() => {
+      refreshInFlight = null;
+    });
   }
   return refreshInFlight;
 }

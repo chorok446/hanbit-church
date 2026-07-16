@@ -19,6 +19,14 @@ interface TokenDenylistStore {
     fun deny(tokenHash: String, ttlSeconds: Long)
 
     fun isDenied(tokenHash: String): Boolean
+
+    /**
+     * 원자적 1회 소비 — 아직 등록되지 않았으면 등록하고 true, 이미 등록돼 있으면 false.
+     * refresh rotation 의 "한 refresh 토큰은 정확히 한 번만 교환된다" 계약을 저장소 수준에서 보장한다
+     * (isDenied→deny 2단계는 병렬 요청이 둘 다 통과하는 레이스가 있었다).
+     * ttlSeconds <= 0(이미 만료)이면 소비 불가로 false — 만료 직전 토큰의 이중 사용도 fail-closed.
+     */
+    fun consume(tokenHash: String, ttlSeconds: Long): Boolean
 }
 
 /**
@@ -44,6 +52,12 @@ class RedisTokenDenylistStore(
     }
 
     override fun isDenied(tokenHash: String): Boolean = redis.hasKey(redisKey(tokenHash)) == true
+
+    override fun consume(tokenHash: String, ttlSeconds: Long): Boolean {
+        if (ttlSeconds <= 0) return false
+        // SET NX EX — 최초 요청만 true. Redis 단일 연산이라 다중 인스턴스에서도 원자적이다.
+        return redis.opsForValue().setIfAbsent(redisKey(tokenHash), "1", Duration.ofSeconds(ttlSeconds)) == true
+    }
 }
 
 @Component
@@ -64,5 +78,21 @@ class InMemoryTokenDenylistStore : TokenDenylistStore {
             return false
         }
         return true
+    }
+
+    override fun consume(tokenHash: String, ttlSeconds: Long): Boolean {
+        if (ttlSeconds <= 0) return false
+        val now = Instant.now()
+        var consumed = false
+        // compute 는 키 단위 원자 — 만료된 기존 항목은 새로 소비할 수 있다(Redis TTL 만료와 동일 의미).
+        denied.compute(tokenHash) { _, existing ->
+            if (existing == null || !now.isBefore(existing)) {
+                consumed = true
+                now.plusSeconds(ttlSeconds)
+            } else {
+                existing
+            }
+        }
+        return consumed
     }
 }
