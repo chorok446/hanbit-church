@@ -10,6 +10,7 @@
     "dev:api": "cd apps/api && ./gradlew bootRun",
     "build:api": "cd apps/api && ./gradlew build",
     "test:api": "cd apps/api && ./gradlew test",
+    "ci:summary": "node scripts/ci-summary.mjs",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "docker:local": "docker compose -f compose.local.yml up --build",

@@ -7,6 +7,10 @@ on:
     branches: [develop, main]
     types: [opened, synchronize, reopened, ready_for_review]
 
+# 기본 토큰은 읽기 전용 — automerge 잡만 자체 permissions 로 쓰기 권한을 올린다.
+permissions:
+  contents: read
+
 # 같은 브랜치/PR에서 새 푸시가 오면 진행 중 실행을 취소한다.
 concurrency:
   group: ci-${{ github.ref }}
@@ -16,6 +20,7 @@ jobs:
   web:
     name: web (Next.js)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -31,14 +36,37 @@ jobs:
           key: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/web/src/**') }}
           restore-keys: |
             nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
-      - run: pnpm --filter web lint
-      - run: pnpm --filter web test
-      - run: pnpm --filter web build
+      - id: lint
+        run: pnpm --filter web lint
+      - id: test
+        run: pnpm --filter web test
+      - id: build
+        run: pnpm --filter web build
+      # 실행 페이지(Actions run)에 한국어 요약을 남긴다 — 어떤 단계에서 멈췄는지 한눈에.
+      - name: 한국어 잡 요약
+        if: always()
+        env:
+          LINT: ${{ steps.lint.outcome }}
+          TEST: ${{ steps.test.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          icon() { case "$1" in success) echo "✅ 성공";; failure) echo "❌ 실패";; cancelled) echo "🚫 취소";; *) echo "⏭️ 건너뜀";; esac; }
+          {
+            echo "## 🌐 웹 (Next.js)"
+            echo ""
+            echo "| 단계 | 결과 |"
+            echo "| --- | --- |"
+            echo "| ESLint 검사 | $(icon "$LINT") |"
+            echo "| 단위 테스트 (vitest) | $(icon "$TEST") |"
+            echo "| 프로덕션 빌드 | $(icon "$BUILD") |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # 회원가입→글 작성→피드 핵심 경로 스모크. web 프로덕션 빌드 + api bootRun 을 Playwright webServer 가 띄운다.
   e2e:
     name: e2e (smoke)
     runs-on: ubuntu-latest
+    # 워밍 캐시 기준 ~13분. 콜드 캐시(pnpm·브라우저·gradle 전부 미스) 여유를 두고 40분.
+    timeout-minutes: 40
     services:
       mysql:
         image: mysql:8.4
@@ -71,7 +99,8 @@ jobs:
       - run: pnpm --filter web exec playwright install --with-deps chromium
       # API 기본 DB 는 3307/hanbit(로컬 docker-compose) 이므로, e2e MySQL 서비스(3306/hanbit)에
       # 맞춰 DB env 를 주입한다. 없으면 bootRun 이 Communications link failure 로 기동 실패한다.
-      - run: pnpm --filter web e2e
+      - id: e2e
+        run: pnpm --filter web e2e
         env:
           DB_URL: jdbc:mysql://localhost:3306/hanbit
           DB_USER: hanbit
@@ -88,11 +117,30 @@ jobs:
           name: playwright-traces
           path: apps/web/test-results/
           retention-days: 7
+      - name: 한국어 잡 요약
+        if: always()
+        env:
+          E2E: ${{ steps.e2e.outcome }}
+        run: |
+          {
+            echo "## 🧪 브라우저 스모크 테스트 (Playwright)"
+            echo ""
+            if [ "$E2E" = "success" ]; then
+              echo "✅ 전체 시나리오 통과 — 회원가입·글 작성·피드 핵심 경로 정상."
+            elif [ "$E2E" = "failure" ]; then
+              echo "❌ 실패 — 아래 Artifacts 의 **playwright-traces** 를 내려받아 실패 시점 트레이스를 확인하세요."
+              echo ""
+              echo "> 로컬 재현: \`docker compose up -d\` 후 \`ADMIN_EMAIL=e2e-admin@hanbit.local ADMIN_PASSWORD='E2eAdmin1!' ADMIN_NAME=e2e관리자 pnpm --filter web e2e\`"
+            else
+              echo "⏭️ 실행되지 않았습니다 ($E2E)."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # 의존성/파일시스템 취약점 스캔. 초기에는 비차단(continue-on-error)으로 리포트만 남긴다.
   security:
     name: security (deps scan)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -105,12 +153,30 @@ jobs:
       # 비차단(continue-on-error): 취약점을 리포트만 하고 빌드는 막지 않는다.
       # (컨테이너 이미지 스캔은 외부 액션 버전 드리프트로 잡이 통째로 실패할 수 있어 후속 과제로 분리)
       - name: pnpm audit (JS workspace, high+)
+        id: audit
         continue-on-error: true
         run: pnpm audit --audit-level=high
+      - name: 한국어 잡 요약
+        if: always()
+        env:
+          AUDIT: ${{ steps.audit.outcome }}
+        run: |
+          {
+            echo "## 🔒 의존성 보안 스캔"
+            echo ""
+            if [ "$AUDIT" = "success" ]; then
+              echo "✅ high 이상 알려진 취약점 없음."
+            elif [ "$AUDIT" = "failure" ]; then
+              echo "⚠️ audit 이 비정상 종료했습니다(비차단 — 빌드는 계속됩니다). 위 로그에서 **취약점 리포트**인지 **레지스트리/네트워크 오류**인지 확인하세요."
+            else
+              echo "⏭️ audit 이 실행되지 않았습니다 ($AUDIT) — 앞 단계(checkout/install) 실패 여부를 확인하세요."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
   api:
     name: api (Spring Boot)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
@@ -119,8 +185,25 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v6
       - name: Build
+        id: build
         working-directory: apps/api
         run: ./gradlew build --no-daemon
+      - name: 한국어 잡 요약
+        if: always()
+        env:
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          {
+            echo "## ⚙️ 백엔드 (Spring Boot)"
+            echo ""
+            if [ "$BUILD" = "success" ]; then
+              echo "✅ 컴파일·단위 테스트(H2)·패키징 전부 통과."
+            elif [ "$BUILD" = "failure" ]; then
+              echo "❌ 실패 — 위 Build 스텝 로그에서 컴파일 오류 또는 실패한 테스트를 확인하세요."
+            else
+              echo "⏭️ 실행되지 않았습니다 ($BUILD)."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # develop 대상 Ready PR은 web/api/e2e 검사 통과 후 자동 머지한다.
   # main 대상 PR은 release/deploy gate 이므로 자동 머지하지 않는다(CI + image build 검증만).
@@ -130,6 +213,7 @@ jobs:
     name: main PR source gate
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Only develop may target main
         env:
@@ -137,6 +221,13 @@ jobs:
         run: |
           if [ "$HEAD_REF" != "develop" ]; then
             echo "::error::main 대상 PR은 develop 브랜치에서만 열 수 있습니다 (head: $HEAD_REF)."
+            # 요약은 마크다운으로 렌더링되므로 포크가 지은 브랜치명을 그대로 싣지 않는다(마크다운 인젝션 방지).
+            SAFE_REF=$(printf '%s' "$HEAD_REF" | tr -cd 'A-Za-z0-9._/-' | cut -c1-100)
+            {
+              echo "## 🚧 main 브랜치 보호 게이트"
+              echo ""
+              echo "❌ main 대상 PR 은 develop 브랜치에서만 열 수 있습니다 (현재 head: ${SAFE_REF})."
+            } >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
 
@@ -149,13 +240,30 @@ jobs:
       github.event.pull_request.user.login != 'dependabot[bot]' &&
       github.base_ref == 'develop'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: write
       pull-requests: write
     steps:
       - name: Merge PR
+        id: merge
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
         run: gh pr merge "$PR" --merge --delete-branch
+      - name: 한국어 잡 요약
+        if: always()
+        env:
+          MERGE: ${{ steps.merge.outcome }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          {
+            echo "## 🔀 자동 머지"
+            echo ""
+            if [ "$MERGE" = "success" ]; then
+              echo "✅ web·api·e2e 전부 통과 — PR #$PR 을 develop 에 머지하고 브랜치를 정리했습니다."
+            else
+              echo "❌ 머지 실패 ($MERGE) — 브랜치 보호 규칙·머지 충돌·동시 머지 경합 여부를 확인하세요. CI 는 통과했으므로 해결 후 수동 머지하면 됩니다."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
