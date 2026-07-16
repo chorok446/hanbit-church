@@ -94,16 +94,20 @@ describe("PostComposeForm", () => {
     });
   });
 
-  it("http(s)가 아닌 이미지 URL은 추가하지 않는다", () => {
+  it("https 가 아닌 이미지 URL(ftp·외부 http)은 추가하지 않는다", () => {
     const onChange = vi.fn();
     render(<PostComposeForm values={baseValues} onChange={onChange} events={[]} />);
+    const input = screen.getByPlaceholderText("https://example.com/image.jpg");
 
-    fireEvent.change(screen.getByPlaceholderText("https://example.com/image.jpg"), {
-      target: { value: "ftp://example.com/a.jpg" },
-    });
+    fireEvent.change(input, { target: { value: "ftp://example.com/a.jpg" } });
     fireEvent.click(screen.getByRole("button", { name: "이미지 URL 추가" }));
+    expect(screen.getByRole("alert").textContent).toBe("https:// 로 시작하는 이미지 URL을 입력해주세요.");
+    expect(onChange).not.toHaveBeenCalled();
 
-    expect(screen.getByRole("alert").textContent).toBe("http:// 또는 https:// 로 시작하는 URL을 입력해주세요.");
+    // 추적 픽셀 방어 — 외부 http 도 거부한다(로컬 http 만 예외).
+    fireEvent.change(input, { target: { value: "http://tracker.example/pixel.gif" } });
+    fireEvent.click(screen.getByRole("button", { name: "이미지 URL 추가" }));
+    expect(screen.getByRole("alert").textContent).toBe("https:// 로 시작하는 이미지 URL을 입력해주세요.");
     expect(onChange).not.toHaveBeenCalled();
   });
 });

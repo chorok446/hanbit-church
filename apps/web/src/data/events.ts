@@ -512,7 +512,7 @@ export function validateEventCompose(values: EventComposeValues): EventComposeVa
   if (thumb && !isValidEventImageUrl(thumb)) {
     return {
       ok: false,
-      message: "썸네일 URL은 http:// 또는 https:// 로 시작해야 합니다.",
+      message: "썸네일 URL은 https:// 로 시작해야 합니다.",
       field: "thumb",
     };
   }
