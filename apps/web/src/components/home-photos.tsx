@@ -1,7 +1,8 @@
 import { FallbackImage } from "@/components/fallback-image";
-import { servePhotos, worshipPhotos } from "@/data/photos";
+import { worshipPhotos } from "@/data/photos";
 
-// TODO(교회 확인: 실제 사진 교체) — 실사진이 준비되기 전까지 photos.ts 공용 풀의 임시 사진을 쓴다.
+// TODO(교회 확인: 실제 사진 교체) — 실사진이 준비되기 전까지 임시 사진을 쓴다.
+// 섬김 사진은 로컬 정적 이미지(Pexels, 출처: public/images/IMAGE_SOURCES.md), 예배 사진은 아직 unsplash 풀.
 const PHOTOS = [
   {
     src: worshipPhotos[1],
@@ -9,8 +10,8 @@ const PHOTOS = [
     caption: "함께 드리는 예배",
   },
   {
-    src: servePhotos[0],
-    alt: "이웃에게 전할 나눔 식품을 정리하는 봉사자들",
+    src: "/images/seed/serve/food-packing-pexels-6995260.webp",
+    alt: "이웃에게 전할 나눔 도시락을 포장하는 봉사자들의 손",
     caption: "지역과 이웃을 향한 섬김",
   },
 ] as const;
