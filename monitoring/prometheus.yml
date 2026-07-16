@@ -1,5 +1,6 @@
 # 로컬 모니터링용 Prometheus 설정. docker compose --profile monitoring up -d 로 기동.
 # 호스트에서 도는 API(8080)를 컨테이너에서 host.docker.internal 로 스크레이프한다.
+# ※ /actuator/prometheus 는 기본 비공개다 — API 를 MANAGEMENT_ENDPOINTS=health,prometheus 로 기동해야 스크레이프된다.
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
