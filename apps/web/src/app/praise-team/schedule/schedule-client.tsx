@@ -302,7 +302,7 @@ export function ScheduleClient() {
                 type="button"
                 onClick={() => setEditing(null)}
                 aria-label="폼 닫기"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border"
                 style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
               >
                 <X size={14} aria-hidden />
@@ -495,7 +495,7 @@ export function ScheduleClient() {
                           type="button"
                           onClick={() => openEdit(schedule)}
                           aria-label={`${schedule.title} 수정`}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border"
+                          className="inline-flex h-11 w-11 items-center justify-center rounded-full border"
                           style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
                         >
                           <Pencil size={13} aria-hidden />
@@ -505,7 +505,7 @@ export function ScheduleClient() {
                           onClick={() => void remove(schedule)}
                           disabled={deletingId === schedule.id}
                           aria-label={`${schedule.title} 삭제`}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border disabled:opacity-50"
+                          className="inline-flex h-11 w-11 items-center justify-center rounded-full border disabled:opacity-50"
                           style={{ borderColor: "var(--border)", color: "var(--danger)" }}
                         >
                           <Trash2 size={13} aria-hidden />

@@ -58,7 +58,7 @@ function ToolbarButton({
       disabled={disabled}
       aria-label={label}
       aria-pressed={active}
-      className="inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[var(--accent-soft)] disabled:opacity-40"
+      className="inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors hover:bg-[var(--accent-soft)] disabled:opacity-40 sm:h-9 sm:w-9"
       style={{
         color: active ? "var(--accent-secondary)" : "var(--foreground)",
         background: active ? "var(--accent-soft)" : undefined,
@@ -215,7 +215,7 @@ export function RichTextEditor({
             ))}
           </div>
           {mode === "edit" ? (
-            <div className="flex flex-wrap items-center gap-0.5" role="toolbar" aria-label="글 서식">
+            <div className="flex flex-wrap items-center gap-1" role="toolbar" aria-label="글 서식">
           <ToolbarButton
             label="굵게"
             disabled={disabled || !editor}

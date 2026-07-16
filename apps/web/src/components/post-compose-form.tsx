@@ -256,24 +256,23 @@ export function PostComposeForm({
               {values.images.map((url, index) => (
                 <li
                   key={url}
-                  className="flex items-center gap-3 rounded-xl p-2"
+                  className="rounded-xl p-2"
                   style={{
                     background: "var(--border)",
                     border: "1px solid var(--border)",
                   }}
                 >
-                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg">
-                    <ImagePreview src={url} index={index} />
-                  </div>
-                  <p className="min-w-0 flex-1 truncate text-[12px]" style={{ color: "var(--foreground)" }} title={url}>
-                    {url}
-                  </p>
-                  <div className="flex shrink-0 items-center gap-0.5">
+                  {/* 윗줄: 썸네일 + 조작 버튼(44px), 아랫줄: URL 전체 폭 — 버튼 확대로 줄어든 가독 폭 회복. */}
+                  <div className="flex items-center gap-3">
+                    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg">
+                      <ImagePreview src={url} index={index} />
+                    </div>
+                    <div className="ml-auto flex shrink-0 items-center gap-2">
                     <button
                       type="button"
                       onClick={() => moveImage(index, -1)}
                       disabled={index === 0}
-                      className="rounded-lg p-2 opacity-70 transition-opacity hover:opacity-100 disabled:opacity-25"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-lg opacity-70 transition-opacity hover:opacity-100 disabled:opacity-25"
                       aria-label={`이미지 순서 위로: ${url}`}
                     >
                       <ChevronUp size={14} aria-hidden />
@@ -282,7 +281,7 @@ export function PostComposeForm({
                       type="button"
                       onClick={() => moveImage(index, 1)}
                       disabled={index === values.images.length - 1}
-                      className="rounded-lg p-2 opacity-70 transition-opacity hover:opacity-100 disabled:opacity-25"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-lg opacity-70 transition-opacity hover:opacity-100 disabled:opacity-25"
                       aria-label={`이미지 순서 아래로: ${url}`}
                     >
                       <ChevronDown size={14} aria-hidden />
@@ -290,12 +289,17 @@ export function PostComposeForm({
                     <button
                       type="button"
                       onClick={() => patch({ images: values.images.filter((item) => item !== url) })}
-                      className="rounded-lg p-2 opacity-70 transition-opacity hover:opacity-100"
+                      className="ml-1 inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors hover:bg-[var(--danger-soft)]"
+                      style={{ color: "var(--danger)" }}
                       aria-label={`이미지 URL 제거: ${url}`}
                     >
                       <X size={14} aria-hidden />
                     </button>
+                    </div>
                   </div>
+                  <p className="mt-1 min-w-0 truncate text-[12px]" style={{ color: "var(--foreground)" }} title={url}>
+                    {url}
+                  </p>
                 </li>
               ))}
             </ul>
