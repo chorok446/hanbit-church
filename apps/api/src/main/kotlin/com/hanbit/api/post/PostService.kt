@@ -233,17 +233,15 @@ class PostService(
     }
 
     /**
-     * 저장한 게시글 pagination. bookmark row 를 id ASC(deterministic, createdAt 없음)로 page 한 뒤
-     * 해당 page 의 postId 만 bulk 조회하고 bookmark page 순서를 보존한다. 삭제된 게시글의 orphan bookmark 는 제외.
+     * 저장한 게시글 pagination. 공개(숨김·삭제 아님) 게시글만 JOIN 쿼리로 page·count 해 total 과 슬라이스를
+     * 함께 필터한다(orphan·숨김이 있어도 마지막 페이지가 비어 보이지 않는다). 순서는 bookmark id ASC.
      */
     @Transactional(readOnly = true)
     fun getMyBookmarksPage(userId: Long, page: Int, size: Int): PostPageResponse {
         validatePageParams(page, size)
-        val bookmarkPage = bookmarkRepo.findByUserId(userId, PageRequest.of(page, size, Sort.by("id").ascending()))
-        val postIds = bookmarkPage.content.map { it.postId }
-        val postsById = if (postIds.isEmpty()) emptyMap() else repo.findAllById(postIds).associateBy { it.id }
-        // bookmark page 순서 보존, orphan·숨김 게시글 제외
-        val orderedPosts = postIds.mapNotNull { postsById[it] }.filter { it.hiddenAt == null }
+        // 공개 글만 JOIN 으로 페이지·카운트 — 슬라이스와 total 이 함께 숨김/orphan 을 제외해 정합한다.
+        val postPage = repo.findVisibleBookmarkedByUser(userId, PageRequest.of(page, size))
+        val orderedPosts = postPage.content
         val likedIds = likedByPage(userId, orderedPosts.map { it.id })
         return PostPageResponse(
             content = orderedPosts.map {
@@ -251,8 +249,8 @@ class PostService(
             },
             page = page,
             size = size,
-            totalElements = bookmarkPage.totalElements,
-            totalPages = totalPages(bookmarkPage.totalElements, size),
+            totalElements = postPage.totalElements,
+            totalPages = totalPages(postPage.totalElements, size),
         )
     }
 

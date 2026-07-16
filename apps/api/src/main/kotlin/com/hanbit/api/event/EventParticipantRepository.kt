@@ -11,7 +11,6 @@ interface EventParticipantRepository : JpaRepository<EventParticipant, String> {
     fun findByIdAndEventId(id: String, eventId: String): EventParticipant?
     fun findByUserIdAndEventIdIn(userId: Long, eventIds: Collection<String>): List<EventParticipant>
     fun findByUserId(userId: Long): List<EventParticipant>
-    fun findByUserId(userId: Long, pageable: Pageable): Page<EventParticipant>
     fun findByEventId(eventId: String): List<EventParticipant>
     fun findByEventId(eventId: String, sort: org.springframework.data.domain.Sort): List<EventParticipant>
     fun findByEventId(eventId: String, pageable: Pageable): Page<EventParticipant>

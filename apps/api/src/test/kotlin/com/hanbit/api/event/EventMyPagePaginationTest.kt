@@ -107,6 +107,26 @@ class EventMyPagePaginationTest(
     }
 
     @Test
+    fun `숨김된 참여 행사는 total 과 content 모두에서 제외돼 정합한다`() {
+        val a = saveEvent(seq = 1, authorUserId = 2L)
+        val b = saveEvent(seq = 2, authorUserId = 2L)
+        val hidden = saveEvent(seq = 3, authorUserId = 2L)
+        addParticipant(a); addParticipant(b); addParticipant(hidden)
+        eventRepo.findById(hidden).get().also { it.hiddenAt = java.time.Instant.now(); eventRepo.saveAndFlush(it) }
+
+        // total 이 필터 전 3 이 아니라 공개 2 여야 슬라이스와 어긋나지 않는다(마지막 페이지 빈 화면 방지).
+        mvc.get("/api/events/joined/page") {
+            headers { add("Authorization", "Bearer $token") }
+            param("size", "10")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.totalElements") { value(2) }
+            jsonPath("$.content.length()") { value(2) }
+            jsonPath("$.content[?(@.id == '$hidden')]") { isEmpty() }
+        }
+    }
+
+    @Test
     fun `기존 joined 배열 응답은 유지된다`() {
         val id = saveEvent(seq = 1, authorUserId = 2L)
         addParticipant(id)
