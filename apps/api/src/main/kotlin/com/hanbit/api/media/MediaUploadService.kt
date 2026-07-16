@@ -53,15 +53,12 @@ class MediaUploadService(
         val id = UUID.randomUUID().toString()
         val dir = resolveUploadDir()
 
-        // webp 은 기본 ImageIO 디코더가 없다. 디코딩 불가(webp·손상 파일)면 원본 그대로 저장하고
-        // 썸네일을 만들지 않는다 — 프론트는 썸네일 404 시 원본으로 fallback 한다(FallbackImage thumbnail).
-        val image = if (extension == "webp") null else decodeOrNull(bytes)
-
+        // 크기 상한(디컴프레션 폭탄 방어) + 메타데이터 제거. jpg/png 손상은 거절, webp 은 image=null(썸네일 생략,
+        // 프론트는 썸네일 404 시 원본으로 fallback — FallbackImage thumbnail).
+        val sanitized = capAndSanitizeImage(bytes, extension)
         val filename = "$id.$extension"
-        Files.write(dir.resolve(filename), sanitizedOriginal(bytes, image, extension))
-        if (image != null) {
-            writeThumbnail(image, dir.resolve("$id$THUMB_SUFFIX"))
-        }
+        Files.write(dir.resolve(filename), sanitized.bytes)
+        sanitized.image?.let { writeThumbnail(it, dir.resolve("$id$THUMB_SUFFIX")) }
 
         val base = publicBaseUrl.trim().trimEnd('/')
         return "$base/uploads/$filename"
@@ -128,10 +125,9 @@ class MediaUploadService(
                 if (bytes.size > MAX_BYTES) {
                     throw ResponseStatusException(HttpStatus.BAD_REQUEST, "file is too large")
                 }
-                // webp 은 ImageIO 디코더가 없어 RIFF 청크에서 메타데이터만 떼어 저장(축소 생략). 썸네일은 만들지 않는다.
+                // 크기 상한(디컴프레션 폭탄 방어) + 메타데이터 제거. webp 은 축소 없이 RIFF 메타데이터만 떼어낸다.
                 val filename = "${UUID.randomUUID()}.$imageExt"
-                val image = if (imageExt == "webp") null else decodeOrNull(bytes)
-                Files.write(dir.resolve(filename), sanitizedOriginal(bytes, image, imageExt))
+                Files.write(dir.resolve(filename), capAndSanitizeImage(bytes, imageExt).bytes)
                 StoredPraiseFile(filename = filename, kind = "image")
             }
             isPdf(bytes) -> {
@@ -174,21 +170,100 @@ class MediaUploadService(
 
     private fun resolvePraiseDir(): Path = resolveUploadDir().resolve(PRAISE_SUBDIR).also { Files.createDirectories(it) }
 
-    private fun decodeOrNull(bytes: ByteArray): BufferedImage? =
-        runCatching { ImageIO.read(ByteArrayInputStream(bytes)) }.getOrNull()
+    /** 저장용 정제 결과 — 정제된 바이트와 (썸네일 생성용) 디코드된 이미지(webp·디코드 불가 시 null). */
+    private data class SanitizedImage(val bytes: ByteArray, val image: BufferedImage?)
 
     /**
-     * 저장용 원본 인코딩. 디코딩 가능한 이미지(jpg/png)는 크기와 무관하게 항상 재인코딩한다 —
-     * EXIF(GPS 위치·촬영 기기)·PNG 텍스트 청크 같은 메타데이터가 재인코딩 과정에서 제거된다(프라이버시).
-     * MAX_ORIGINAL_DIM 초과분은 축소도 함께 된다. webp 은 ImageIO 디코더가 없어 재인코딩 대신
-     * RIFF 컨테이너에서 EXIF/XMP 청크만 떼어낸다. 디코딩·인코딩 실패(손상 파일)면 원본을 그대로 쓴다.
+     * 크기 상한 검사 + 메타데이터 제거 재인코딩. jpg/png 는 **전체 디코드 전에** 헤더에서 크기를 읽어
+     * 상한(한 변 MAX_IMAGE_DIM · 총 픽셀 MAX_IMAGE_PIXELS)을 넘으면 거절한다 — 작은 압축 파일이 수억 픽셀로
+     * 팽창해 JVM heap 을 고갈시키는 디컴프레션 폭탄을 막는다. 총 픽셀 상한이 핵심 방어선이다: progressive JPEG 은
+     * 서브샘플과 무관하게 full-res DCT 계수 버퍼를 먼저 잡으므로 한 변 상한만으로는 메모리가 제한되지 않기 때문이다.
+     * 통과분은 subsample 디코드로 출력 raster 를 목표 크기 수준으로 낮춘다. EXIF(GPS·기기)·PNG 텍스트 청크는
+     * 재인코딩으로 제거된다(프라이버시). MAX_ORIGINAL_DIM 초과분은 축소.
+     * 헤더를 못 읽거나(손상) 디코드 불가(CMYK 등 ImageIO 미지원 color model)면 상한 위반이 아닌 정상 파일로 보고
+     * 원본을 그대로 저장한다(CLAUDE.md '디코딩 실패만 원본 저장' 계약 — 400 은 상한 초과에만).
+     * webp 은 ImageIO 디코더가 없어 재인코딩 불가 — RIFF 헤더에서 캔버스 크기만 읽어 같은 상한을 적용(클라이언트 렌더 폭탄 방어)하고 메타데이터만 떼어낸다.
      */
-    private fun sanitizedOriginal(bytes: ByteArray, image: BufferedImage?, extension: String): ByteArray {
-        if (extension == "webp") return stripWebpMetadata(bytes)
-        if (image == null) return bytes
+    private fun capAndSanitizeImage(bytes: ByteArray, extension: String): SanitizedImage {
+        if (extension == "webp") {
+            readWebpDimensions(bytes)?.let { (w, h) -> requireWithinPixelLimits(w, h) }
+            return SanitizedImage(stripWebpMetadata(bytes), image = null)
+        }
+        // jpg/png: 헤더 크기 검사(폭탄 차단) 후 subsample 디코드. 헤더 손상·디코드 불가(CMYK 등)면 null → 원본 저장.
+        val image = decodeWithinLimitsOrNull(bytes)
+            ?: return SanitizedImage(bytes, image = null)
         val format = if (extension == "png") "png" else "jpg"
         val scaled = scaleToFit(image, MAX_ORIGINAL_DIM, keepAlpha = format == "png")
-        return encodeOrNull(scaled, format) ?: bytes
+        return SanitizedImage(encodeOrNull(scaled, format) ?: bytes, image)
+    }
+
+    /**
+     * 한 리더로 헤더 크기 검사와 디코드를 함께 처리한다(헤더 이중 파싱 방지).
+     * - 리더 없음/헤더 손상/디코드 불가(CMYK 등) → null(호출부가 원본 저장 fallback — 400 아님).
+     * - 크기가 상한(requireWithinPixelLimits) 초과 → 400(폭탄).
+     * read 의 catch 는 Exception 만 삼키고 OutOfMemoryError 등 Error 는 전파해 폭탄을 원본으로 저장하지 않는다.
+     */
+    private fun decodeWithinLimitsOrNull(bytes: ByteArray): BufferedImage? {
+        val iis = ImageIO.createImageInputStream(ByteArrayInputStream(bytes)) ?: return null
+        return iis.use {
+            val readers = ImageIO.getImageReaders(it)
+            if (!readers.hasNext()) return@use null
+            val reader = readers.next()
+            try {
+                reader.input = it
+                val width: Int
+                val height: Int
+                try {
+                    width = reader.getWidth(0)
+                    height = reader.getHeight(0)
+                } catch (_: Exception) {
+                    return@use null // 헤더 손상 → 원본 저장 fallback
+                }
+                requireWithinPixelLimits(width, height) // 상한 초과면 여기서 400
+                // 목표 축소 배율(정수) — 디코드 시점에 픽셀을 건너뛰어 출력 raster 메모리를 원본 크기와 무관하게 제한한다.
+                val step = maxOf(1, maxOf(width, height) / MAX_ORIGINAL_DIM)
+                val param = reader.defaultReadParam.apply {
+                    if (step > 1) setSourceSubsampling(step, step, 0, 0)
+                }
+                try {
+                    reader.read(0, param)
+                } catch (_: Exception) {
+                    null // 디코드 불가(CMYK 등 미지원 color model) → 원본 저장 fallback
+                }
+            } finally {
+                reader.dispose()
+            }
+        }
+    }
+
+    /**
+     * 헤더에서 읽은 크기가 디컴프레션 폭탄 상한을 넘으면 400 으로 거절한다.
+     * 한 변(MAX_IMAGE_DIM)과 총 픽셀 수(MAX_IMAGE_PIXELS)를 함께 본다 — 총 픽셀 상한이 실제 메모리 방어선이고,
+     * 한 변 상한은 극단적으로 가늘고 긴 이미지를 거르는 보조 가드다.
+     */
+    private fun requireWithinPixelLimits(width: Int, height: Int) {
+        if (width > MAX_IMAGE_DIM || height > MAX_IMAGE_DIM ||
+            width.toLong() * height.toLong() > MAX_IMAGE_PIXELS
+        ) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "image dimensions too large")
+        }
+    }
+
+    /** webp(RIFF) 헤더에서 캔버스 (width, height) 를 읽는다. VP8X/VP8/VP8L 만 지원하며 파싱 불가면 null. */
+    private fun readWebpDimensions(bytes: ByteArray): Pair<Int, Int>? {
+        fun ascii(off: Int, s: String) = off + s.length <= bytes.size && s.indices.all { bytes[off + it] == s[it].code.toByte() }
+        fun u8(i: Int) = bytes[i].toInt() and 0xFF
+        if (bytes.size < 30 || !ascii(0, "RIFF") || !ascii(8, "WEBP")) return null
+        return when (String(bytes, 12, 4, Charsets.US_ASCII)) {
+            // VP8X: flags(20)+reserved(21..23), width-1 LE24(24..26), height-1 LE24(27..29).
+            "VP8X" -> ((u8(24) or (u8(25) shl 8) or (u8(26) shl 16)) + 1) to ((u8(27) or (u8(28) shl 8) or (u8(29) shl 16)) + 1)
+            // VP8(lossy): keyframe 크기 14-bit at 26..29.
+            "VP8 " -> ((u8(26) or (u8(27) shl 8)) and 0x3FFF) to ((u8(28) or (u8(29) shl 8)) and 0x3FFF)
+            // VP8L(lossless): signature 0x2f at 20, 그다음 14-bit width-1, 14-bit height-1.
+            "VP8L" -> if (u8(20) != 0x2f) null else (((u8(22) and 0x3F) shl 8 or u8(21)) + 1) to
+                ((((u8(24) and 0x0F) shl 10) or (u8(23) shl 2) or ((u8(22) and 0xC0) shr 6)) + 1)
+            else -> null
+        }
     }
 
     /** jpg 는 명시 품질(JPEG_QUALITY)로, png 는 기본 인코더로 재인코딩한다. 실패 시 null. */
@@ -307,6 +382,19 @@ class MediaUploadService(
                 bytes[2] == 'D'.code.toByte() &&
                 bytes[3] == 'F'.code.toByte() &&
                 bytes[4] == '-'.code.toByte()
+
+        /**
+         * 한 변 상한(보조 가드) — 가늘고 긴 극단 이미지를 거른다. 총 픽셀 상한과 함께 헤더에서 검사한다.
+         */
+        internal const val MAX_IMAGE_DIM = 30_000
+
+        /**
+         * 총 픽셀 상한(디컴프레션 폭탄 핵심 방어선) — 60MP. 헤더 크기로 디코드 전에 검사한다.
+         * 정상 폰 카메라 원본(12MP·48MP·50MP)은 통과하고, 900MP 급 폭탄은 거절한다.
+         * progressive JPEG 은 subsample 로도 full-res DCT 계수 버퍼를 잡으므로 이 상한이 유일한 메모리 방어다.
+         * ponytail: 60MP progressive 는 계수 버퍼가 ~360MB — 동시성은 media rate limit 으로 제한. 부하가 커지면 상한을 낮추거나 progressive 감지 후 별도 컷.
+         */
+        internal const val MAX_IMAGE_PIXELS = 60_000_000L
 
         /** 원본 저장 시 긴 변 상한. 이보다 크면 축소 재인코딩한다. */
         internal const val MAX_ORIGINAL_DIM = 1920
