@@ -96,8 +96,18 @@ class TwoFactorService(
         if (!Totp.verify(requireNotNull(user.totpSecret), req.code, clock)) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid code")
         }
-        // 성공한 챌린지는 남은 TTL 동안 재사용 불가 — 탈취·리플레이로 추가 토큰 발급을 막는다.
-        runCatching { denylist.deny(hashToken(req.challengeToken), jwt.remainingTtlSeconds(req.challengeToken)) }
+        // 코드까지 맞은 뒤 챌린지를 원자적으로 1회 소비 — 탈취·리플레이로 같은 챌린지에서 세션 토큰이
+        // 두 벌 발급되는 것을 막는다(refresh rotation 과 동일한 consume 계약). 코드 검증 실패 시에는 소비하지 않아
+        // 정당한 재입력이 가능하다. store 장애(exception)면 fail-OPEN — 로그인 진행 중인 2FA 사용자를 outage 로
+        // 완전 잠그지 않기 위해 원래 정책(runCatching{deny})을 유지한다. 정상 store 에서의 재사용은 false 로 거절.
+        val consumed = try {
+            denylist.consume(hashToken(req.challengeToken), jwt.remainingTtlSeconds(req.challengeToken).coerceAtLeast(1))
+        } catch (_: Exception) {
+            true
+        }
+        if (!consumed) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid challenge")
+        }
         return authService.issueTokensFor(user)
     }
 

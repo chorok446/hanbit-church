@@ -136,16 +136,8 @@ class AuthService(
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid refresh token")
         }
         val userId = claims.userId
-        // store 장애로 확인 불가면 fail-closed(denylist 정책과 동일): 무효화됐을 수 있는 refresh 를 통과시키지 않는다.
-        val denied = try {
-            denylist.isDenied(hashToken(refreshToken))
-        } catch (_: Exception) {
-            true
-        }
-        if (denied) {
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid refresh token")
-        }
-        // 원격 세션 로그아웃 — 무효화된 세션(sid)의 refresh 로는 재발급할 수 없다(fail-closed 동일).
+        // 원격 세션 로그아웃 — 무효화된 세션(sid)의 refresh 로는 재발급할 수 없다.
+        // store 장애면 fail-closed: 무효화됐을 수 있는 refresh 를 통과시키지 않는다.
         val sessionRevoked = claims.sessionId?.let {
             try {
                 denylist.isDenied(com.hanbit.api.security.sessionDenyKey(it))
@@ -156,6 +148,20 @@ class AuthService(
         if (sessionRevoked) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid refresh token")
         }
+        // 원자적 1회 소비 — DB 조회보다 먼저 수행해 두 가지를 한 번에 얻는다:
+        //   (1) 같은 refresh 로 병렬 요청(다른 탭·기기·탈취자)이 와도 정확히 하나만 rotation 에 성공(레이스 차단).
+        //   (2) 이미 소비/로그아웃된 토큰의 대량 재전송이 users 테이블 조회로 번지지 않게 하는 fast-reject.
+        //       (isDenied→deny 2단계는 둘 다 통과하는 레이스가 있었고, 별도 isDenied fast-reject 는 중복 왕복이었다.)
+        // TTL 최소 1초 floor: parseRefresh 가 유효를 확인한 토큰인데 잔여 수명이 초 미만이면 0 이 되어
+        // consume 이 만료로 오판·거절하던 회귀 방지. store 장애 시 fail-closed. 병렬 패자의 401 은 프런트가 복구(api.ts).
+        val consumed = try {
+            denylist.consume(hashToken(refreshToken), jwt.remainingTtlSeconds(refreshToken).coerceAtLeast(1))
+        } catch (_: Exception) {
+            false
+        }
+        if (!consumed) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid refresh token")
+        }
         val user = repo.findById(userId).orElse(null)
         if (user == null || user.deletedAt != null) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid refresh token")
@@ -164,7 +170,6 @@ class AuthService(
         if (user.isSuspendedAt(Instant.now(clock)) || user.isPendingApproval) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid refresh token")
         }
-        denylist.deny(hashToken(refreshToken), jwt.remainingTtlSeconds(refreshToken))
         // rotation 시 세션 id 유지 — 접속 기록 "현재 세션" 표시가 refresh 후에도 이어진다.
         return issueTokens(user, claims.sessionId ?: newSessionId())
     }

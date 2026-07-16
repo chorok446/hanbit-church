@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.Date
+import java.util.UUID
 
 @Service
 class JwtService(
@@ -47,6 +48,9 @@ class JwtService(
             .subject(user.id.toString())
             .claim("typ", "refresh")
             .apply { if (sessionId != null) claim("sid", sessionId) }
+            // jti(고유 nonce) — 같은 초에 rotation 이 두 번 일어나도 토큰이 byte 동일해지지 않는다.
+            // 없으면 초 단위 iat/exp·동일 claim 이라 새 refresh 가 방금 denylist 된 토큰과 겹쳐 즉시 무효화됐다.
+            .id(UUID.randomUUID().toString())
             .issuedAt(Date())
             .expiration(Date(System.currentTimeMillis() + refreshTtlMillis))
             .signWith(key)
@@ -57,6 +61,7 @@ class JwtService(
         Jwts.builder()
             .subject(user.id.toString())
             .claim("typ", "2fa")
+            .id(UUID.randomUUID().toString()) // 1회용 챌린지 — 재발급 시 매번 고유 토큰.
             .issuedAt(Date())
             .expiration(Date(System.currentTimeMillis() + TWO_FACTOR_CHALLENGE_TTL_MS))
             .signWith(key)
