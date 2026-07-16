@@ -26,6 +26,8 @@ class NotificationHandshakeInterceptor(
             // HTTP 필터와 동일 정책: denylist·sid 해지·탈퇴·정지까지 공통 validator 로 검증한다.
             val validated = validator.validate(token)
             attributes[ATTR_USER_ID] = validated.principal.id
+            // 세션 원격 해지 시 이 sid 의 열린 WS 를 골라 끊기 위해 함께 보관한다(레거시 토큰은 sid 없음 → 미추적).
+            validated.principal.sessionId?.let { attributes[ATTR_SESSION_ID] = it }
             true
         } catch (_: Exception) {
             false
@@ -41,5 +43,6 @@ class NotificationHandshakeInterceptor(
 
     companion object {
         const val ATTR_USER_ID = "notificationWsUserId"
+        const val ATTR_SESSION_ID = "notificationWsSessionId"
     }
 }
