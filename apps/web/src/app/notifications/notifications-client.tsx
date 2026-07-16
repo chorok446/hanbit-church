@@ -265,7 +265,7 @@ export default function NotificationsClient() {
               type="button"
               onClick={toggleUnreadOnly}
               aria-pressed={unreadOnly}
-              className="px-3.5 py-2 text-[13px] rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+              className="hit-area px-3.5 py-2 text-[13px] rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
               style={{
                 background: unreadOnly ? "var(--accent)" : "rgba(var(--ink-rgb), 0.06)",
                 color: unreadOnly ? "var(--surface-dark)" : "var(--foreground-muted)",

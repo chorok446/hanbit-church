@@ -59,7 +59,7 @@ function ProfileMenu({
         ref={buttonRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`flex h-10 w-10 items-center justify-center overflow-hidden rounded-full transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none ${
+        className={`flex h-11 w-11 items-center justify-center overflow-hidden rounded-full transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none ${
           open ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--surface)]" : ""
         }`}
         aria-label="내 계정 메뉴"
@@ -177,7 +177,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-2 sm:gap-3">
           <Link
             href="/search"
-            className="flex h-9 items-center justify-center gap-2 rounded-full px-3 transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none"
+            className="flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none"
             style={{
               background: pathname === "/search" ? "var(--accent-soft)" : "rgba(var(--ink-rgb), 0.07)",
               color: pathname === "/search" ? "var(--accent-strong)" : "var(--heading)",
@@ -189,7 +189,7 @@ export function SiteHeader() {
           </Link>
           <Link
             href="/notifications"
-            className="relative flex h-10 w-10 items-center justify-center rounded-full transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none"
+            className="relative flex h-11 w-11 items-center justify-center rounded-full transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none"
             style={{
               background: onNotifications
                 ? "var(--accent-soft)"
