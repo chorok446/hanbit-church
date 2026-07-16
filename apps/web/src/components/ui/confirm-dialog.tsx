@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useModalDialog } from "@/lib/use-modal-dialog";
 
 type ConfirmOptions = {
   title?: string;
@@ -50,26 +51,14 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
 }
 
 function ConfirmDialogUI({ state, onClose }: { state: OpenState; onClose: (result: boolean) => void }) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  // 네이티브 <dialog> 수명주기(showModal·Esc·backdrop 클릭)는 공용 훅이 처리한다.
+  const { dialogRef, onBackdropClick } = useModalDialog(() => onClose(false));
   const cancelRef = useRef<HTMLButtonElement>(null);
 
-  // 네이티브 <dialog>.showModal()이 포커스 트랩·top-layer 렌더링을 기본 제공한다.
+  // 파괴적 액션 기본값 안전 — 열리면 취소 버튼에 초기 포커스.
   useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    const onCancel = (e: Event) => {
-      // 브라우저 기본 auto-close 대신 onClose(false)로 통일해 Promise resolve를 보장한다.
-      e.preventDefault();
-      onClose(false);
-    };
-    dialog.addEventListener("cancel", onCancel);
-    dialog.showModal();
     cancelRef.current?.focus();
-    return () => {
-      dialog.removeEventListener("cancel", onCancel);
-      dialog.close();
-    };
-  }, [onClose]);
+  }, []);
 
   return (
     <dialog
@@ -83,13 +72,7 @@ function ConfirmDialogUI({ state, onClose }: { state: OpenState; onClose: (resul
         borderColor: "rgba(var(--ink-rgb), 0.12)",
         color: "var(--foreground)",
       }}
-      onClick={(e) => {
-        // dialog 박스 바깥(= backdrop 영역) 클릭 시 닫는다.
-        const rect = dialogRef.current?.getBoundingClientRect();
-        if (!rect) return;
-        const inDialog = rect.top <= e.clientY && e.clientY <= rect.bottom && rect.left <= e.clientX && e.clientX <= rect.right;
-        if (!inDialog) onClose(false);
-      }}
+      onClick={onBackdropClick}
     >
       <h2 id="confirm-dialog-title" className="text-[16px] font-semibold">
         {state.title ?? "확인"}
