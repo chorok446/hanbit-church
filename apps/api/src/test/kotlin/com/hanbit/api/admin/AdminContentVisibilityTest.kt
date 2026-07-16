@@ -15,6 +15,7 @@ import com.hanbit.api.post.Post
 import com.hanbit.api.post.PostComment
 import com.hanbit.api.post.PostCommentRepository
 import com.hanbit.api.post.PostRepository
+import com.hanbit.api.post.SCHEDULED_HIDDEN_REASON
 import com.hanbit.api.report.Report
 import com.hanbit.api.report.ReportRepository
 import com.hanbit.api.security.JwtService
@@ -82,6 +83,15 @@ class AdminContentVisibilityTest(
             authorUserId = authorUserId,
         ),
     )
+
+    /** 예약 게시 대기 글 — publishAt(미래) + hiddenAt/hiddenReason 마커. 생성 시 PostService 가 세팅하는 상태를 재현. */
+    private fun saveScheduledPost(authorUserId: Long? = 9): Post {
+        val post = savePost(authorUserId = authorUserId)
+        post.publishAt = Instant.now().plusSeconds(3600)
+        post.hiddenAt = Instant.now()
+        post.hiddenReason = SCHEDULED_HIDDEN_REASON
+        return posts.saveAndFlush(post)
+    }
 
     private fun saveComment(postId: String, authorUserId: Long? = 9): PostComment = postComments.saveAndFlush(
         PostComment(
@@ -282,6 +292,74 @@ class AdminContentVisibilityTest(
     }
 
     @Test
+    fun `예약 대기 글은 숨김 대상이 아니라 409 로 거절되고 예약 상태가 보존된다`() {
+        val post = saveScheduledPost()
+        setVisibility("POST", post.id, true, reason = "정책 위반").andExpect { status { isConflict() } }
+        val stored = posts.findById(post.id).orElseThrow()
+        // publishAt·마커 그대로 — 예약이 훼손되거나 관리자 숨김으로 뒤바뀌지 않는다(게시 잡이 예정대로 발행 가능).
+        assertThat(stored.publishAt).isNotNull()
+        assertThat(stored.hiddenReason).isEqualTo(SCHEDULED_HIDDEN_REASON)
+        assertThat(stored.hiddenAt).isNotNull()
+    }
+
+    @Test
+    fun `예약 대기 글은 숨김 해제 대상이 아니라 409 로 거절돼 조기 공개를 막는다`() {
+        val post = saveScheduledPost()
+        setVisibility("POST", post.id, false).andExpect { status { isConflict() } }
+        val stored = posts.findById(post.id).orElseThrow()
+        // 예약 상태 그대로 유지 — 숨김 해제로 조기 공개되지 않는다.
+        assertThat(stored.hiddenAt).isNotNull()
+        assertThat(stored.hiddenReason).isEqualTo(SCHEDULED_HIDDEN_REASON)
+        assertThat(stored.publishAt).isNotNull()
+    }
+
+    @Test
+    fun `발행 예정 시각이 지났어도 잡이 아직 공개 안 한 예약 글은 여전히 숨김 해제 거부된다`() {
+        // publishAt 은 과거지만 ScheduledPublishJob(60초 주기)이 아직 안 돌아 마커가 남은 구간 재현 —
+        // isAfter(now) 판별이면 이 창에서 조기 발행 우회가 뚫린다. 마커 잔존으로 포착해 409.
+        val post = savePost()
+        post.publishAt = Instant.now().minusSeconds(10)
+        post.hiddenAt = Instant.now()
+        post.hiddenReason = SCHEDULED_HIDDEN_REASON
+        posts.saveAndFlush(post)
+        setVisibility("POST", post.id, false).andExpect { status { isConflict() } }
+        assertThat(posts.findById(post.id).orElseThrow().hiddenAt).isNotNull()
+    }
+
+    @Test
+    fun `관리자 사유가 우연히 예약 마커 문자열이어도 정상 숨김·복구된다`() {
+        // hiddenReason 은 관리자 자유 입력이라 예약 마커와 값이 겹칠 수 있다 — publishAt 으로 판별하므로 영향 없다.
+        val post = savePost()
+        setVisibility("POST", post.id, true, reason = SCHEDULED_HIDDEN_REASON).andExpect { status { isOk() } }
+        assertThat(posts.findById(post.id).orElseThrow().hiddenAt).isNotNull()
+        // 마커 문자열 사유여도(예약 글이 아니므로) 복구는 정상 동작해야 한다.
+        setVisibility("POST", post.id, false).andExpect { status { isOk() } }
+        assertThat(posts.findById(post.id).orElseThrow().hiddenAt).isNull()
+    }
+
+    @Test
+    fun `일괄 복구에 예약 대기 글이 섞여도 나머지는 복구되고 예약 글은 건너뛴다`() {
+        val hidden = savePost().also { setVisibility("POST", it.id, true).andExpect { status { isOk() } } }
+        val scheduled = saveScheduledPost()
+        val body = """
+            {"items":[
+                {"targetType":"POST","targetId":"${hidden.id}"},
+                {"targetType":"POST","targetId":"${scheduled.id}"}
+            ],"hidden":false}
+        """.trimIndent()
+        // 예약 글의 409 가 배치를 중단시키지 않고 missing 으로 보고된다(부분 성공 계약 유지).
+        bulk(body).andExpect {
+            status { isOk() }
+            jsonPath("$.processed") { value(1) }
+            jsonPath("$.missing[0].targetId") { value(scheduled.id) }
+        }
+        assertThat(posts.findById(hidden.id).orElseThrow().hiddenAt).isNull()
+        // 예약 글은 그대로(조기 공개되지 않음).
+        assertThat(posts.findById(scheduled.id).orElseThrow().hiddenAt).isNotNull()
+        assertThat(posts.findById(scheduled.id).orElseThrow().publishAt).isNotNull()
+    }
+
+    @Test
     fun `잘못된 대상 타입은 400 없는 대상은 404`() {
         setVisibility("WRONG", "any", true).andExpect { status { isBadRequest() } }
         setVisibility("POST", "missing-post", true).andExpect { status { isNotFound() } }
@@ -318,6 +396,35 @@ class AdminContentVisibilityTest(
         // 작성자에게 숨김 알림 + 신고자에게 처리 알림이 모두 생성된다
         val types = notifications.findAll().map { it.type }
         assertThat(types).contains(NotificationType.CONTENT_HIDDEN, NotificationType.REPORT_RESOLVED)
+    }
+
+    @Test
+    fun `예약 대기 글 신고에 hideContent 를 줘도 숨김은 거부되지만 신고는 정상 해결된다`() {
+        val post = saveScheduledPost()
+        val report = reports.saveAndFlush(
+            Report(
+                id = "vis-report-${UUID.randomUUID()}",
+                reporterUserId = 2,
+                targetType = "POST",
+                targetId = post.id,
+                reason = "SPAM",
+                detail = null,
+                time = "방금",
+                seq = 1,
+            ),
+        )
+        // hide() 의 CONFLICT 가 신고 해결 트랜잭션을 중단시키지 않는다 — 신고는 RESOLVED, 콘텐츠는 예약 상태 그대로.
+        mvc.patch("/api/admin/reports/${report.id}") {
+            headers { add("Authorization", "Bearer $adminToken") }
+            contentType = MediaType.APPLICATION_JSON
+            content = mapper.writeValueAsString(ResolveReportRequest("RESOLVED", "확인", hideContent = true))
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.status") { value("RESOLVED") }
+        }
+        val stored = posts.findById(post.id).orElseThrow()
+        assertThat(stored.publishAt).isNotNull()
+        assertThat(stored.hiddenReason).isEqualTo(SCHEDULED_HIDDEN_REASON)
     }
 
     @Test

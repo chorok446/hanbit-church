@@ -107,7 +107,9 @@ class AdminReportService(
                         actionLogs.record(adminUserId, AdminActionType.CONTENT_HIDDEN, type.name, report.targetId, note)
                     }
                 } catch (e: ResponseStatusException) {
-                    if (e.statusCode != HttpStatus.NOT_FOUND) throw e
+                    // 사라진 대상(NOT_FOUND)·예약 게시 대기 글 숨김 거부(CONFLICT)는 조용히 넘어가 신고 해결은 계속한다
+                    // (bulk 핸들러와 동일 기준 — 숨김 불가여도 신고 자체는 RESOLVED 로 마감).
+                    if (e.statusCode != HttpStatus.NOT_FOUND && e.statusCode != HttpStatus.CONFLICT) throw e
                 }
             }
         }
