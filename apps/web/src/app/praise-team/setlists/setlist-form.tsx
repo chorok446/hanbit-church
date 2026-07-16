@@ -910,7 +910,7 @@ function SongLibraryPicker({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+      className="overlay-fade fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
       style={{ background: "rgba(var(--ink-rgb), 0.4)" }}
       role="dialog"
       aria-modal="true"
@@ -918,7 +918,7 @@ function SongLibraryPicker({
       onClick={onClose}
     >
       <div
-        className="max-h-[80vh] w-full max-w-lg overflow-hidden rounded-3xl border"
+        className="dialog-panel-pop max-h-[80vh] w-full max-w-lg overflow-hidden rounded-3xl border"
         style={{ background: "var(--card)", borderColor: "var(--border)" }}
         onClick={(e) => e.stopPropagation()}
       >
