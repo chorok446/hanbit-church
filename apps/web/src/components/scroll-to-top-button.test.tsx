@@ -37,8 +37,8 @@ describe("ScrollToTopButton", () => {
     render(<ScrollToTopButton />);
     const button = screen.getByRole("button", { name: "맨 위로" });
 
-    const scrollTo = vi.fn();
-    window.scrollTo = scrollTo as typeof window.scrollTo;
+    // 직접 대입은 restoreAllMocks 로 복원되지 않는다 — spy 로 감싸 afterEach 에서 원복.
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
     fireEvent.click(button);
     expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }));
   });
