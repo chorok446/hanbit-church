@@ -20,6 +20,7 @@ jobs:
     name: ${{ matrix.app }} image
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       matrix:
         include:
@@ -54,3 +55,21 @@ jobs:
           build-args: ${{ matrix.build-args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: 한국어 잡 요약
+        if: always()
+        env:
+          APP: ${{ matrix.app }}
+          RESULT: ${{ job.status }}
+        run: |
+          {
+            echo "## 📦 ${APP} 이미지 빌드 검증"
+            echo ""
+            if [ "$RESULT" = "success" ]; then
+              echo "✅ 프로덕션 Dockerfile 빌드 통과 (push 없음 — 검증 전용)."
+            elif [ "$RESULT" = "cancelled" ]; then
+              echo "🚫 취소됨 — 새 푸시로 대체되었거나 타임아웃입니다. 빌드 오류가 아닙니다."
+            else
+              echo "❌ 이미지 빌드 실패 — Dockerfile·빌드 인자·의존성 설치 단계를 확인하세요."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

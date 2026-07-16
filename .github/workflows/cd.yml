@@ -26,6 +26,7 @@ jobs:
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       matrix:
         include:
@@ -68,3 +69,22 @@ jobs:
           build-args: ${{ matrix.build-args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: 한국어 잡 요약
+        if: always()
+        env:
+          APP: ${{ matrix.app }}
+          RESULT: ${{ job.status }}
+          SHA_TAG: ${{ steps.tag.outputs.sha }}
+        run: |
+          {
+            echo "## 🚢 ${APP} 이미지 배포"
+            echo ""
+            if [ "$RESULT" = "success" ]; then
+              echo "✅ Docker Hub 에 푸시 완료: \`hanbit-${APP}:${SHA_TAG}\`, \`hanbit-${APP}:main\`"
+            elif [ "$RESULT" = "cancelled" ]; then
+              echo "🚫 취소됨 — 새 실행으로 대체되었거나 타임아웃입니다. 빌드 오류가 아닙니다."
+            else
+              echo "❌ 이미지 빌드/푸시 실패 — 위 build-push 스텝 로그를 확인하세요. CI 를 통과한 커밋만 트리거되므로 대부분 Dockerfile·레지스트리 인증 문제입니다."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
