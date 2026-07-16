@@ -188,7 +188,8 @@ body {
 }
 
 .cta-solid:active:not(:disabled) {
-  transform: translateY(0);
+  /* 눌림 피드백 — 미세 스케일 다운(tactile). hover lift 는 여기서 자연스레 풀린다. */
+  transform: scale(0.98);
   filter: brightness(0.98);
 }
 
@@ -207,7 +208,7 @@ body {
 }
 
 .cta-danger:active:not(:disabled) {
-  transform: translateY(0);
+  transform: scale(0.98);
   filter: brightness(0.97);
 }
 
@@ -311,9 +312,11 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  /* CTA·카드 hover 의 lift(transform)는 모션 축소 시 제거한다. */
+  /* CTA·카드 hover 의 lift, CTA press 의 scale(transform)은 모션 축소 시 제거한다(브라이트니스로 피드백 유지). */
   .cta-solid:hover:not(:disabled),
   .cta-danger:hover:not(:disabled),
+  .cta-solid:active:not(:disabled),
+  .cta-danger:active:not(:disabled),
   .card-lift:hover {
     transform: none;
   }
