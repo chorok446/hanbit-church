@@ -9,8 +9,14 @@ import { getServerApiBaseUrl } from "./api-url";
  * (기존 apiGetOrNull 은 쿠키 없이 호출되어 작성자도 자기 숨김 글 상세가 404 였다.)
  * 쿠키를 쓰므로 라우트는 요청마다 렌더된다(상세는 원래 dynamic — 캐시 손해 없음).
  */
+// SSR 개인화 GET 인증에 필요한 건 access 토큰뿐 — 백엔드 AuthCookies.NAME 과 일치.
+const ACCESS_COOKIE = "hanbit_token";
+
 export async function apiGetOrNullWithCookies<T>(path: string): Promise<T | null> {
-  const cookieHeader = (await cookies()).toString();
+  // 브라우저의 모든 쿠키(분석·서드파티 등)를 API 로 넘기지 않고 access 토큰만 화이트리스트해 전달한다(최소권한).
+  // refresh(hanbit_refresh)는 /api/auth 전용이라 SSR GET 에 불필요하다.
+  const token = (await cookies()).get(ACCESS_COOKIE)?.value;
+  const cookieHeader = token ? `${ACCESS_COOKIE}=${token}` : "";
   const res = await fetch(`${getServerApiBaseUrl()}${path}`, {
     cache: "no-store",
     headers: cookieHeader ? { cookie: cookieHeader } : undefined,
