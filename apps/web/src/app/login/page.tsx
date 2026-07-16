@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AuthShell, FieldInput } from "@/components/auth-shell";
 import { apiPost, ApiError, apiErrorMessage } from "@/lib/api";
@@ -137,7 +137,12 @@ export default function LoginPage() {
             disabled={submitting || otpCode.length !== 6}
             className="cta-solid mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-55 motion-reduce:transform-none"
           >
-            {submitting ? "확인 중…" : "인증하고 로그인"} <ArrowRight size={16} aria-hidden="true" />
+            {submitting ? "확인 중…" : "인증하고 로그인"}
+            {submitting ? (
+              <Loader2 className="animate-spin" size={16} aria-hidden="true" />
+            ) : (
+              <ArrowRight size={16} aria-hidden="true" />
+            )}
           </button>
           <button
             type="button"
@@ -203,7 +208,12 @@ export default function LoginPage() {
           disabled={submitting || !email.trim() || !password}
           className="cta-solid mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-55 motion-reduce:transform-none"
         >
-          {submitting ? "로그인 중…" : "로그인"} <ArrowRight size={16} aria-hidden="true" />
+          {submitting ? "로그인 중…" : "로그인"}
+          {submitting ? (
+            <Loader2 className="animate-spin" size={16} aria-hidden="true" />
+          ) : (
+            <ArrowRight size={16} aria-hidden="true" />
+          )}
         </button>
       </form>
       )}

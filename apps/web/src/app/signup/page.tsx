@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, User, Check, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, Check, ArrowRight, Loader2 } from "lucide-react";
 import { AuthShell, FieldInput } from "@/components/auth-shell";
 import { apiPost, ApiError } from "@/lib/api";
 import { setSession } from "@/lib/auth";
@@ -169,7 +169,12 @@ export default function SignupPage() {
           disabled={submitting || !canSubmit}
           className="cta-solid mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 font-medium transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-55 motion-reduce:transform-none"
         >
-          {submitting ? "가입 중…" : "회원가입"} <ArrowRight size={16} aria-hidden="true" />
+          {submitting ? "가입 중…" : "회원가입"}
+          {submitting ? (
+            <Loader2 className="animate-spin" size={16} aria-hidden="true" />
+          ) : (
+            <ArrowRight size={16} aria-hidden="true" />
+          )}
         </button>
       </form>
     </AuthShell>
