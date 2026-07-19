@@ -165,6 +165,11 @@ function eventsPage(path: string, page: number): Promise<EventPageResponse> {
   return apiGet<EventPageResponse>(`${path}?${params.toString()}`);
 }
 
+// 캘린더·홈 요약용 창 한정 목록 — 진행 종료가 1년 전 이후인 공개 행사만(서버가 과거를 잘라 무제한 직렬화 방지).
+// 카드 목록/검색은 /api/events/search 페이지네이션을 쓴다.
+export const UPCOMING_EVENTS_PATH = "/api/events/upcoming";
+export const fetchUpcomingEvents = () => apiGet<Event[]>(UPCOMING_EVENTS_PATH);
+
 export const fetchJoinedEventsPage = (page: number) => eventsPage("/api/events/joined/page", page);
 export const fetchMyEventsPage = (page: number) => eventsPage("/api/events/mine/page", page);
 /** 모집중 행사 정원 증원(개설자 전용) — 늘리기만 허용, 감원·미정 전환은 서버가 400. */

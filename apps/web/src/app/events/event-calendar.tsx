@@ -1,15 +1,14 @@
 "use client";
 
 // 행사·사역 "캘린더 보기" — 월간 그리드 + 이번 주 일정 패널.
-// 데이터: 예배 반복 일정(church.ts) + 행사 전체 목록(GET /api/events, 공개 API).
+// 데이터: 예배 반복 일정(church.ts) + 다가오는 행사(GET /api/events/upcoming, 공개 API — 서버가 1년 전 이후로 창 한정).
 // 카드 보기의 검색어·모집 상태·날짜 범위 필터(urlState)를 내려받아 행사만 클라이언트에서 거른다
 // — 예배·수동 일정·공휴일은 필터와 무관하게 항상 표시한다.
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-react";
-import { apiGet } from "@/lib/api";
 import { getClientApiBaseUrl } from "@/lib/api-url";
-import type { Event } from "@/data/events";
+import { fetchUpcomingEvents, type Event } from "@/data/events";
 import type { EventListUrlState } from "@/lib/use-url-query";
 import { fetchPublicPraiseSchedules, type PraiseSchedule } from "@/data/praise-team";
 import {
@@ -121,7 +120,7 @@ export function EventCalendarView({ urlState }: { urlState?: EventListUrlState }
 
   useEffect(() => {
     let cancelled = false;
-    apiGet<Event[]>("/api/events")
+    fetchUpcomingEvents()
       .then((events) => {
         if (!cancelled) setFetchState({ status: "success", events });
       })

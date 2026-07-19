@@ -106,7 +106,7 @@ export default function EventListClient({
 
   useEffect(() => {
     if (getSessionId() !== token) return;
-    // 캘린더 보기는 EventCalendarView 가 전체 목록(/api/events)을 따로 불러온다.
+    // 캘린더 보기는 EventCalendarView 가 창 한정 목록(/api/events/upcoming)을 따로 불러온다.
     if (urlState.view === "calendar") return;
     // 현재 identity 의 성공 결과(SSR 선주입 포함)가 이미 있으면 재요청하지 않는다.
     if (searchState.identity === requestIdentity && searchState.status === "success") return;
