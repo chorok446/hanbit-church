@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { PostComposeValues } from "@/data/posts";
 import { PostComposeForm } from "./post-compose-form";
 
-vi.mock("@/components/rich-text-editor", () => ({
+vi.mock("@/components/rich-text-editor-dynamic", () => ({
   RichTextEditor: ({
     id,
     value,
