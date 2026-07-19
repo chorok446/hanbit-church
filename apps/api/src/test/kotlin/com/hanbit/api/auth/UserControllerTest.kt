@@ -106,6 +106,24 @@ class UserControllerTest(
     }
 
     @Test
+    fun `정지·미승인 사용자의 공개 프로필은 404 — 공개 노출 단일 기준`() {
+        val now = java.time.Instant.now()
+        val viewer = users.save(User(email = "pv-${UUID.randomUUID()}@t.com", passwordHash = "x", name = "열람자"))
+        val token = jwt.issue(viewer)
+        val suspended = users.save(
+            User(email = "ps-${UUID.randomUUID()}@t.com", passwordHash = "x", name = "정지회원", suspendedUntil = now.plusSeconds(3600)),
+        )
+        val pending = users.save(
+            User(email = "pp-${UUID.randomUUID()}@t.com", passwordHash = "x", name = "대기회원", approvedAt = null),
+        )
+
+        mvc.get("/api/users/${suspended.id}") { header("Authorization", "Bearer $token") }
+            .andExpect { status { isNotFound() } }
+        mvc.get("/api/users/${pending.id}") { header("Authorization", "Bearer $token") }
+            .andExpect { status { isNotFound() } }
+    }
+
+    @Test
     fun `프로필과 프로필 글 목록은 비로그인이면 401 — 교인 전용`() {
         val user = users.save(User(email = "an-${UUID.randomUUID()}@t.com", passwordHash = "x", name = "익명확인"))
         val userId = requireNotNull(user.id)

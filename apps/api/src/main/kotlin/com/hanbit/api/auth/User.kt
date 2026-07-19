@@ -53,6 +53,15 @@ class User(
 
     fun isSuspendedAt(now: Instant): Boolean = suspendedUntil?.isAfter(now) == true
 
+    /**
+     * 공개 노출 대상 여부 — "승인 + 미탈퇴 + 미정지"의 단일 기준(canonical).
+     * 새 공개 read 경로(프로필·목록 등)는 개별로 조건을 나열하지 말고 이 메서드를 통과시켜야
+     * 정지·미승인·탈퇴 계정이 노출되는 회귀(P3 유형)를 자동으로 막는다.
+     * 쿼리 경로(UserRepository.searchPublic)는 이 조건을 SQL 로 그대로 미러링한다.
+     */
+    fun isPubliclyVisible(now: Instant): Boolean =
+        deletedAt == null && approvedAt != null && !isSuspendedAt(now)
+
     val totpEnabled: Boolean
         @JsonIgnore get() = totpSecret != null && totpEnabledAt != null
 }
