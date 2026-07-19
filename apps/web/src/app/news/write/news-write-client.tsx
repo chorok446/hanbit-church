@@ -3,7 +3,8 @@
 import { toast } from "sonner";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiGet, apiPost, ApiError } from "@/lib/api";
+import { apiPost, ApiError } from "@/lib/api";
+import { fetchLinkableEvents } from "@/data/events";
 import { clearSession, getSessionId } from "@/lib/auth";
 import { PageShell } from "@/components/page-shell";
 import { StaffContentGuard } from "@/components/staff-content-guard";
@@ -41,7 +42,7 @@ export function NewsWriteClient() {
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<PostComposeField, string>>>({});
 
   useEffect(() => {
-    apiGet<{ id: string; title: string }[]>("/api/events")
+    fetchLinkableEvents()
       .then(setEvents)
       .catch(() => setEvents([]));
   }, []);

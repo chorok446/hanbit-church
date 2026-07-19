@@ -170,6 +170,13 @@ function eventsPage(path: string, page: number): Promise<EventPageResponse> {
 export const UPCOMING_EVENTS_PATH = "/api/events/upcoming";
 export const fetchUpcomingEvents = () => apiGet<Event[]>(UPCOMING_EVENTS_PATH);
 
+// 게시글 작성/수정 시 "행사 연결" 피커용 목록. GET /api/events 는 페이지네이션 응답이므로 첫 페이지
+// content(최대 하드캡 50건)에서 id·title 만 뽑는다 — 배열 계약 전환 후 소비처가 여기 한 곳으로 모인다.
+export const fetchLinkableEvents = (): Promise<{ id: string; title: string }[]> =>
+  apiGet<EventPageResponse>("/api/events?page=0&size=50").then((res) =>
+    res.content.map((event) => ({ id: event.id, title: event.title })),
+  );
+
 export const fetchJoinedEventsPage = (page: number) => eventsPage("/api/events/joined/page", page);
 export const fetchMyEventsPage = (page: number) => eventsPage("/api/events/mine/page", page);
 /** 모집중 행사 정원 증원(개설자 전용) — 늘리기만 허용, 감원·미정 전환은 서버가 400. */
