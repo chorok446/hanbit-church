@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
@@ -157,8 +158,8 @@ class AuthController(
     @GetMapping("/access-logs")
     fun accessLogs(
         @AuthenticationPrincipal principal: AuthUser?,
-        page: Int = 0,
-        size: Int = 20,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
     ): AccessLogPageResponse =
         accessLogService.listForUser(requireUserId(principal), page, size, principal?.sessionId)
 
