@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -30,7 +31,19 @@ import { fetchNewFamilyPage } from "@/data/new-family";
 import { useAdminProfile } from "./admin-guard";
 import { ACTION_LABELS, RESTRICTIVE_ACTIONS } from "./logs/action-labels";
 import { getAdminPermissions, type AdminPermissions } from "./permissions";
-import { StatsChartSection } from "./stats-chart";
+
+// 추이 차트는 recharts(~100KB)를 싣고 스크롤 아래·데이터 fetch 후에만 그려지므로 동적 로드해
+// /admin 초기 번들에서 뺀다(ssr:false — 클라이언트 전용 차트).
+const StatsChartSection = dynamic(() => import("./stats-chart").then((m) => m.StatsChartSection), {
+  ssr: false,
+  loading: () => (
+    <section
+      className="h-[22rem] rounded-3xl border p-5"
+      style={{ background: "var(--card)", borderColor: "var(--border)" }}
+      aria-hidden
+    />
+  ),
+});
 
 // 대시보드가 한 번에 병렬 조회하는 데이터: 요약 통계 + 오늘 처리할 일 카운트.
 // 신고 검토 대기 수는 /api/admin/summary 의 pendingReports(status=PENDING 집계)를 그대로 쓴다
