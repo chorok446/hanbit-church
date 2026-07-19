@@ -41,22 +41,30 @@ class PostService(
     private val clock: Clock,
 ) {
     @Transactional(readOnly = true)
-    fun listPosts(currentUserId: Long?): List<PostResponse> {
-        // 무제한 직렬화 방지 — DB LIMIT 으로 첫 페이지(최대 MAX_SEARCH_PAGE_SIZE)만 반환한다.
-        // 전체 브라우징은 /search 페이지네이션을 쓴다. 교인만 공개(MEMBERS) 가시성은 로그인 사용자에게만
-        // (승인제라 로그인 = 승인 교인) — 비로그인은 WHERE 로 걸러 LIMIT 슬라이스가 정확하다.
-        val pageable = PageRequest.of(0, MAX_SEARCH_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "seq"))
-        val posts = if (currentUserId != null) {
+    fun listPosts(currentUserId: Long?, page: Int, size: Int): PostPageResponse {
+        // 무제한 직렬화 방지 — page/size 페이지네이션. 기본 size 는 MAX_SEARCH_PAGE_SIZE(=하드캡).
+        // 전체 브라우징·필터는 /search 를 쓴다. 교인만 공개(MEMBERS) 가시성은 로그인 사용자에게만
+        // (승인제라 로그인 = 승인 교인) — 비로그인은 WHERE 로 걸러 슬라이스와 total 이 정확하다.
+        checkPageParams(page, size, MAX_SEARCH_PAGE_SIZE)
+        val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "seq"))
+        val result = if (currentUserId != null) {
             repo.findByHiddenAtIsNull(pageable)
         } else {
             repo.findByHiddenAtIsNullAndVisibility(PostVisibility.PUBLIC, pageable)
-        }.content
+        }
+        val posts = result.content
         // N+1 회피: 내가 좋아요/북마크한 postId 를 각각 한 번에 조회.
         val likedIds = likedByPage(currentUserId, posts.map { it.id })
         val bookmarkedIds = bookmarkedByPage(currentUserId, posts.map { it.id })
-        return posts.map {
-            it.toResponse(viewerId = currentUserId, likedByMe = it.id in likedIds, bookmarkedByMe = it.id in bookmarkedIds)
-        }
+        return PostPageResponse(
+            content = posts.map {
+                it.toResponse(viewerId = currentUserId, likedByMe = it.id in likedIds, bookmarkedByMe = it.id in bookmarkedIds)
+            },
+            page = page,
+            size = size,
+            totalElements = result.totalElements,
+            totalPages = totalPages(result.totalElements, size),
+        )
     }
 
     /** sitemap 전용 id 목록. JSON 본문 없이 id 만 페이지 단위로 반환한다. */

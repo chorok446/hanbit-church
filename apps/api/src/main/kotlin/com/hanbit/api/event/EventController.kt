@@ -30,10 +30,17 @@ class EventController(
     private val proofService: EventProofService,
     private val calendarIcs: com.hanbit.api.calendar.CalendarIcsService,
 ) {
-    @Operation(summary = "행사 목록 조회", description = "공개 API. JWT 가 있으면 사용자별 참여/소유 상태를 포함한다.")
+    @Operation(
+        summary = "행사 목록 조회",
+        description = "공개 API. page/size 페이지네이션 응답(content/page/size/totalElements/totalPages). " +
+            "JWT 가 있으면 사용자별 참여/소유 상태를 포함한다. 전체 브라우징·필터는 /search 를 쓴다.",
+    )
     @GetMapping
-    fun list(@AuthenticationPrincipal user: AuthUser?): List<EventResponse> =
-        eventService.listEvents(user?.id)
+    fun list(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "50") size: Int,
+        @AuthenticationPrincipal user: AuthUser?,
+    ): EventPageResponse = eventService.listEvents(user?.id, page, size)
 
     @Operation(
         summary = "다가오는 행사 목록",
