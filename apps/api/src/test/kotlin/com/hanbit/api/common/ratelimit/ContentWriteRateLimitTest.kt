@@ -35,9 +35,11 @@ import java.util.UUID
         "app.rate-limit.content.comment.limit=2",
         "app.rate-limit.content.report.limit=2",
         "app.rate-limit.content.media.limit=2",
+        "app.rate-limit.content.create.limit=2",
         "app.rate-limit.content.comment.window-seconds=60",
         "app.rate-limit.content.report.window-seconds=60",
         "app.rate-limit.content.media.window-seconds=60",
+        "app.rate-limit.content.create.window-seconds=60",
         "app.rate-limit.auth.login.limit=10000",
         "app.rate-limit.auth.signup.limit=10000",
     ],
@@ -79,6 +81,25 @@ class ContentWriteRateLimitTest(
                 status { isTooManyRequests() }
                 header { exists("Retry-After") }
             }
+    }
+
+    @Test
+    fun `게시글 생성은 IP당 limit 초과 시 429를 반환한다`() {
+        // 회귀 가드: POST /api/posts·/api/events(본문 생성)는 댓글·상호작용과 달리 rate limit 이 비어
+        // 있었다. CONTENT_CREATE 버킷 공유(행사 생성도 같은 규칙), 전용 IP 로 격리.
+        fun createPost() = mvc.post("/api/posts") {
+            headers {
+                add("Authorization", "Bearer $token")
+                add("X-Forwarded-For", "203.0.113.15")
+            }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"text":"본문"}"""
+        }
+        repeat(2) { createPost().andExpect { status { isCreated() } } }
+        createPost().andExpect {
+            status { isTooManyRequests() }
+            header { exists("Retry-After") }
+        }
     }
 
     @Test
