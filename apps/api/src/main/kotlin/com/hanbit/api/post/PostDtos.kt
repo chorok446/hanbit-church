@@ -134,3 +134,9 @@ data class PostPageResponse(
 
 @Schema(description = "고정 토글 요청")
 data class SetPostPinnedRequest(val pinned: Boolean)
+
+@Schema(description = "예약 게시 재예약 요청")
+data class ReschedulePostRequest(
+    @field:Schema(description = "새 게시 시각(ISO-8601, 미래). 예약 대기 글에만 적용된다.")
+    val publishAt: String? = null,
+)

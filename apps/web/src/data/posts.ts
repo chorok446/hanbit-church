@@ -1,7 +1,7 @@
 import { richTextPlainLength } from "@/lib/rich-text-length";
 import { mergeRichBodyForEditor, splitRichBodyHtml } from "@/lib/rich-body-html";
 import { isAllowedImageUrl } from "@/lib/image-url";
-import { apiGet, apiPatch, apiPut } from "@/lib/api";
+import { apiGet, apiPatch, apiPut, apiDelete } from "@/lib/api";
 import type { CommentPageLocationResponse } from "@/data/comments";
 
 /** 백엔드 PostValidators 와 동일한 제한. */
@@ -317,4 +317,14 @@ export function updatePostComment(
 /** 공지·주보 상단 고정 토글 — 스태프 전용(서버에서 검증). */
 export function setPostPinned(postId: string, pinned: boolean): Promise<Post> {
   return apiPatch<Post>(`/api/posts/${postId}/pin`, { pinned });
+}
+
+/** 예약 게시 재예약 — 예약 대기 글의 게시 시각을 새 미래 시각(ISO-8601)으로 변경. 작성자·스태프. */
+export function reschedulePost(postId: string, publishAt: string): Promise<Post> {
+  return apiPatch<Post>(`/api/posts/${postId}/schedule`, { publishAt });
+}
+
+/** 예약 게시 취소 — 예약을 철회하고 '발행 안 함(숨김)' 상태로 되돌린다(삭제 아님). 작성자·스태프. */
+export function cancelPostSchedule(postId: string): Promise<Post> {
+  return apiDelete<Post>(`/api/posts/${postId}/schedule`);
 }

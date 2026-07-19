@@ -12,7 +12,9 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.json.JsonMapper
@@ -160,5 +162,99 @@ class ScheduledPublishTest(
         createScheduled(future(), category = "SHARING").andExpect { status { isBadRequest() } }
         createScheduled(Instant.now().minusSeconds(60).toString()).andExpect { status { isBadRequest() } }
         createScheduled("내일 아침").andExpect { status { isBadRequest() } }
+    }
+
+    private fun createScheduledId(publishAt: String = future()): String = mapper.readTree(
+        createScheduled(publishAt).andExpect { status { isCreated() } }.andReturn().response.contentAsString,
+    )["id"].asString()
+
+    @Test
+    fun `재예약은 게시 시각만 새 미래 시각으로 바꾸고 예약 대기 상태를 유지한다`() {
+        val id = createScheduledId()
+        val next = Instant.now().plusSeconds(7200).toString()
+        mvc.patch("/api/posts/$id/schedule") {
+            headers { add("Authorization", "Bearer $adminToken") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"publishAt":"$next"}"""
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.publishAt") { value(next) }
+            jsonPath("$.hidden") { value(true) }
+        }
+        val post = posts.findById(id).orElseThrow()
+        // 마커·숨김이 그대로라 여전히 예약 대기 — 잡이 새 시각에 공개 전환한다.
+        assertThat(post.hiddenReason).isEqualTo(SCHEDULED_HIDDEN_REASON)
+        assertThat(post.publishAt).isEqualTo(Instant.parse(next))
+    }
+
+    @Test
+    fun `재예약 과거·형식 오류는 400`() {
+        val id = createScheduledId()
+        mvc.patch("/api/posts/$id/schedule") {
+            headers { add("Authorization", "Bearer $adminToken") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"publishAt":"${Instant.now().minusSeconds(60)}"}"""
+        }.andExpect { status { isBadRequest() } }
+        mvc.patch("/api/posts/$id/schedule") {
+            headers { add("Authorization", "Bearer $adminToken") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"publishAt":"내일"}"""
+        }.andExpect { status { isBadRequest() } }
+    }
+
+    @Test
+    fun `취소는 예약을 철회해 발행 안 함(숨김) 상태로 되돌리고 잡이 발행하지 않는다`() {
+        val id = createScheduledId()
+        mvc.delete("/api/posts/$id/schedule") {
+            headers { add("Authorization", "Bearer $adminToken") }
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.hidden") { value(true) } // 취소는 공개가 아니라 미발행 — 여전히 숨김
+            jsonPath("$.publishAt") { value(null) } // 예약 시각 제거
+        }
+        val post = posts.findById(id).orElseThrow()
+        assertThat(post.publishAt).isNull()
+        assertThat(post.hiddenReason).isNull() // 마커 제거 — 더는 예약 대기 아님
+        assertThat(post.hiddenAt).isNotNull()
+
+        // 과거 시각으로 돌려도(예약 마커가 없으므로) 잡이 발행하지 않는다.
+        post.publishAt = Instant.now().minusSeconds(60)
+        posts.saveAndFlush(post)
+        job.publishDue()
+        assertThat(posts.findById(id).orElseThrow().hiddenAt).isNotNull()
+    }
+
+    @Test
+    fun `발행된 글의 취소·재예약은 409`() {
+        val id = createScheduledId()
+        // 도래시켜 발행한다 — publishAt 이 비워져 더는 예약 대기가 아니다.
+        val post = posts.findById(id).orElseThrow()
+        post.publishAt = Instant.now().minusSeconds(60)
+        posts.saveAndFlush(post)
+        job.publishDue()
+
+        mvc.delete("/api/posts/$id/schedule") {
+            headers { add("Authorization", "Bearer $adminToken") }
+        }.andExpect { status { isConflict() } }
+        mvc.patch("/api/posts/$id/schedule") {
+            headers { add("Authorization", "Bearer $adminToken") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"publishAt":"${future()}"}"""
+        }.andExpect { status { isConflict() } }
+    }
+
+    @Test
+    fun `작성자도 스태프도 아니면 취소·재예약은 403`() {
+        val id = createScheduledId()
+        mvc.delete("/api/posts/$id/schedule") {
+            headers { add("Authorization", "Bearer $userToken") }
+        }.andExpect { status { isForbidden() } }
+        mvc.patch("/api/posts/$id/schedule") {
+            headers { add("Authorization", "Bearer $userToken") }
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"publishAt":"${future()}"}"""
+        }.andExpect { status { isForbidden() } }
+        // 예약은 유지된다.
+        assertThat(posts.findById(id).orElseThrow().isScheduledPending()).isTrue()
     }
 }
