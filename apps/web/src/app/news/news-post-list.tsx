@@ -285,11 +285,11 @@ export function NewsPostList({ initialData = null }: { initialData?: PostSearchR
       />
 
       {loading ? (
-        <p className="py-16 text-center text-[14px]" style={{ color: "var(--foreground-muted)" }}>
+        <p role="status" className="py-16 text-center text-[14px]" style={{ color: "var(--foreground-muted)" }}>
           불러오는 중입니다…
         </p>
       ) : result.status === "error" || !result.data ? (
-        <div className="py-16 text-center text-[14px]" style={{ color: "var(--foreground-muted)" }}>
+        <div role="alert" className="py-16 text-center text-[14px]" style={{ color: "var(--foreground-muted)" }}>
           목록을 불러오지 못했습니다.{" "}
           <button
             type="button"
