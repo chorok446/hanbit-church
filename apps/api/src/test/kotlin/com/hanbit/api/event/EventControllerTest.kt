@@ -105,6 +105,18 @@ class EventControllerTest(
     }
 
     @Test
+    fun `다가오는 행사 목록은 진행 종료가 1년 이상 지난 행사를 제외한다`() {
+        // 고정 시계 2026-07-15 → 기준일(horizon) 2025-07-15. runEnd 가 그 이전이면 제외.
+        val stale = saveEvent(status = "closed", runStart = "2024-01-05", runEnd = "2024-01-10")
+        val current = saveEvent(runStart = "2026-08-05", runEnd = "2026-08-30")
+        mvc.get("/api/events/upcoming").andExpect {
+            status { isOk() }
+            jsonPath("$[*].id") { value(Matchers.hasItem(current)) }
+            jsonPath("$[*].id") { value(Matchers.not(Matchers.hasItem(stale))) }
+        }
+    }
+
+    @Test
     fun `id로 단건을 반환한다`() {
         mvc.get("/api/events/c2").andExpect {
             status { isOk() }

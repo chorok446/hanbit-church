@@ -42,9 +42,15 @@ class PostService(
 ) {
     @Transactional(readOnly = true)
     fun listPosts(currentUserId: Long?): List<PostResponse> {
-        val posts = repo.findByHiddenAtIsNull(Sort.by(Sort.Direction.DESC, "seq"))
-            // 교인만 공개(MEMBERS)는 로그인 사용자에게만 — 승인제라 로그인 = 승인 교인.
-            .filter { currentUserId != null || it.visibility == PostVisibility.PUBLIC }
+        // 무제한 직렬화 방지 — DB LIMIT 으로 첫 페이지(최대 MAX_SEARCH_PAGE_SIZE)만 반환한다.
+        // 전체 브라우징은 /search 페이지네이션을 쓴다. 교인만 공개(MEMBERS) 가시성은 로그인 사용자에게만
+        // (승인제라 로그인 = 승인 교인) — 비로그인은 WHERE 로 걸러 LIMIT 슬라이스가 정확하다.
+        val pageable = PageRequest.of(0, MAX_SEARCH_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "seq"))
+        val posts = if (currentUserId != null) {
+            repo.findByHiddenAtIsNull(pageable)
+        } else {
+            repo.findByHiddenAtIsNullAndVisibility(PostVisibility.PUBLIC, pageable)
+        }.content
         // N+1 회피: 내가 좋아요/북마크한 postId 를 각각 한 번에 조회.
         val likedIds = likedByPage(currentUserId, posts.map { it.id })
         val bookmarkedIds = bookmarkedByPage(currentUserId, posts.map { it.id })

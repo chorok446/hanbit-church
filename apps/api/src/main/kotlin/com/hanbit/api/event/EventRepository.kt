@@ -69,6 +69,9 @@ interface EventRepository : JpaRepository<Event, String> {
 
     // 공개 노출 경로용(숨김 제외). 개설자 본인 목록(mine)은 위의 무필터 메서드를 그대로 쓴다.
     fun findByHiddenAtIsNull(sort: org.springframework.data.domain.Sort): List<Event>
+
+    // 공개 목록(무제한 직렬화 방지) — DB LIMIT 으로 첫 페이지만. 캘린더·홈은 창 한정 upcoming 쿼리를 쓴다.
+    fun findByHiddenAtIsNull(pageable: Pageable): Page<Event>
     fun findAllByIdInAndHiddenAtIsNullOrderBySeqDesc(ids: Collection<String>): List<Event>
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

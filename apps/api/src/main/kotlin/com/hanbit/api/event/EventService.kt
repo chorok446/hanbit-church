@@ -44,9 +44,28 @@ class EventService(
 ) {
     @Transactional(readOnly = true)
     fun listEvents(currentUserId: Long?): List<EventResponse> {
+        // 무제한 직렬화 방지 — DB LIMIT 으로 첫 페이지(최대 MAX_SEARCH_PAGE_SIZE)만. 캘린더·홈은 창 한정
+        // /upcoming 을, 전체 브라우징은 /search 페이지네이션을 쓴다.
+        val events = repo.findByHiddenAtIsNull(
+            PageRequest.of(0, MAX_SEARCH_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "seq")),
+        ).content
+        return toEventResponses(currentUserId, events, LocalDate.now(clock))
+    }
+
+    /**
+     * 캘린더·홈 요약용 창 한정 조회 — 진행 종료가 기준일(1년 전) 이후인 공개 행사만.
+     * iCal 피드와 같은 쿼리를 재사용해 공개 엔드포인트가 테이블 전체를 직렬화하지 않게 한다(과거 무한 적재 방지).
+     */
+    @Transactional(readOnly = true)
+    fun listUpcomingEvents(currentUserId: Long?): List<EventResponse> {
         val today = LocalDate.now(clock)
-        val events = repo.findByHiddenAtIsNull(Sort.by(Sort.Direction.DESC, "seq"))
-        // N+1 회피: 내가 참여·북마크한 eventId 를 각각 한 번에 조회.
+        val horizon = today.minusYears(1).toString()
+        val events = repo.findByHiddenAtIsNullAndDeletedAtIsNullAndRunEndGreaterThanEqualOrderBySeqDesc(horizon)
+        return toEventResponses(currentUserId, events, today)
+    }
+
+    /** 공개 목록 공통 매핑 — N+1 회피(참여·북마크 bulk 조회) 후 뷰어 상태를 채운다. */
+    private fun toEventResponses(currentUserId: Long?, events: List<Event>, today: LocalDate): List<EventResponse> {
         val joinedIds = joinedByPage(currentUserId, events.map { it.id })
         val bookmarkedIds = bookmarkedByPage(currentUserId, events.map { it.id })
         return events.map {
