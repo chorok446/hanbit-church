@@ -207,7 +207,9 @@ export type AdminActionType =
   | "PASSWORD_RESET"
   | "TWO_FACTOR_RESET"
   | "USER_REJECTED"
-  | "PRAISE_ROLE_CHANGED";
+  | "PRAISE_ROLE_CHANGED"
+  | "MANUAL_CALENDAR_UPDATED"
+  | "MANUAL_CALENDAR_DELETED";
 
 export type AdminActionLogItem = {
   id: number;

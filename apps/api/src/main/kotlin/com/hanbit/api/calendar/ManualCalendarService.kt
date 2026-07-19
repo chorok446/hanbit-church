@@ -1,5 +1,7 @@
 package com.hanbit.api.calendar
 
+import com.hanbit.api.admin.AdminActionLogService
+import com.hanbit.api.admin.AdminActionType
 import com.hanbit.api.event.parseEventDate
 import com.hanbit.api.security.AuthUser
 import org.springframework.http.HttpStatus
@@ -13,6 +15,7 @@ import java.util.UUID
 @Service
 class ManualCalendarService(
     private val repo: ManualCalendarEventRepository,
+    private val actionLogs: AdminActionLogService,
     private val clock: Clock,
 ) {
     /** 공개 캘린더용 범위 조회. from/to 미지정이면 전체(수동 일정은 소량 전제). */
@@ -47,7 +50,7 @@ class ManualCalendarService(
     }
 
     @Transactional
-    fun update(id: String, req: SaveManualCalendarEventRequest): ManualCalendarEventResponse {
+    fun update(user: AuthUser, id: String, req: SaveManualCalendarEventRequest): ManualCalendarEventResponse {
         val event = repo.findById(id).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "calendar event $id not found")
         }
@@ -58,15 +61,19 @@ class ManualCalendarService(
         event.endDate = input.endDate
         event.startTime = input.startTime
         event.location = input.location
+        // 감사 추적 — 조치 주체(actor)를 append-only 로그에 남긴다(수정은 row snapshot 이 아니라 로그로 기록).
+        actionLogs.record(user.id, AdminActionType.MANUAL_CALENDAR_UPDATED, "MANUAL_CALENDAR", id, input.title)
         return event.toResponse()
     }
 
     @Transactional
-    fun delete(id: String) {
-        if (!repo.existsById(id)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "calendar event $id not found")
+    fun delete(user: AuthUser, id: String) {
+        val event = repo.findById(id).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "calendar event $id not found")
         }
-        repo.deleteById(id)
+        // 하드 삭제라 row 에는 흔적이 안 남는다 — 삭제 전 제목과 조치 주체를 로그에 남긴다.
+        actionLogs.record(user.id, AdminActionType.MANUAL_CALENDAR_DELETED, "MANUAL_CALENDAR", id, event.title)
+        repo.delete(event)
     }
 
     private data class NormalizedInput(

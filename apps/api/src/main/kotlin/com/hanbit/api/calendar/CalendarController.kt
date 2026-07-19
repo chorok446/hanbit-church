@@ -63,12 +63,13 @@ class AdminCalendarController(
     fun update(
         @PathVariable id: String,
         @RequestBody req: SaveManualCalendarEventRequest,
-    ): ManualCalendarEventResponse = service.update(id, req)
+        @AuthenticationPrincipal user: AuthUser,
+    ): ManualCalendarEventResponse = service.update(user, id, req)
 
     @Operation(summary = "수동 일정 삭제")
     @DeleteMapping("/{id}")
-    fun delete(@PathVariable id: String): Map<String, Boolean> {
-        service.delete(id)
+    fun delete(@PathVariable id: String, @AuthenticationPrincipal user: AuthUser): Map<String, Boolean> {
+        service.delete(user, id)
         return mapOf("deleted" to true)
     }
 }

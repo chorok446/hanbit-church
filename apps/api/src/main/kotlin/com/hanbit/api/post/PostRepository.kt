@@ -58,6 +58,12 @@ interface PostRepository : JpaRepository<Post, String> {
     // 공개 노출 경로용(숨김 제외). 작성자 본인 목록(mine)은 위의 무필터 메서드를 그대로 쓴다.
     fun findByHiddenAtIsNull(sort: org.springframework.data.domain.Sort): List<Post>
 
+    // 공개 목록(무제한 직렬화 방지) — DB LIMIT 으로 첫 페이지만. 로그인=전체 가시성.
+    fun findByHiddenAtIsNull(pageable: Pageable): Page<Post>
+
+    // 비로그인 공개 목록 — 교인만 공개(MEMBERS)를 WHERE 로 제외해 LIMIT 슬라이스가 정확하다(인메모리 후필터 제거).
+    fun findByHiddenAtIsNullAndVisibility(visibility: String, pageable: Pageable): Page<Post>
+
     fun findByAuthorUserIdAndHiddenAtIsNull(authorUserId: Long, pageable: Pageable): Page<Post>
 
     // 공개 프로필용 — 익명 기도제목은 프로필 목록·게시글 수에서 제외해 작성자 연결을 차단한다.

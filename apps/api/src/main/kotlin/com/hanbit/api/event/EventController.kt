@@ -35,6 +35,14 @@ class EventController(
     fun list(@AuthenticationPrincipal user: AuthUser?): List<EventResponse> =
         eventService.listEvents(user?.id)
 
+    @Operation(
+        summary = "다가오는 행사 목록",
+        description = "공개 API. 캘린더·홈 요약용 — 진행 종료가 1년 전 이후인 행사만(과거 무한 적재 방지). JWT 가 있으면 사용자별 상태를 포함한다.",
+    )
+    @GetMapping("/upcoming")
+    fun upcoming(@AuthenticationPrincipal user: AuthUser?): List<EventResponse> =
+        eventService.listUpcomingEvents(user?.id)
+
     @Operation(summary = "행사 검색", description = "공개 API. JWT 가 있으면 사용자별 상태를 포함한다.")
     @GetMapping("/search")
     fun search(

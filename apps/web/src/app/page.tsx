@@ -1,6 +1,12 @@
 import { ChurchHero } from "@/components/church-hero";
 import { apiGetIsr } from "@/lib/api";
 import { HOME_NEWS_PREVIEW_SIZE, type Post, type PostSearchResponse } from "@/data/posts";
+import { UPCOMING_EVENTS_PATH, type Event } from "@/data/events";
+import {
+  mapManualToCalendarEvent,
+  type CalendarEvent,
+  type ManualCalendarEventResponse,
+} from "@/data/calendar";
 import { HomeQuickInfo } from "@/components/home-quick-info";
 import { WorshipSummary } from "@/components/worship-summary";
 import { HomeWeeklySchedule } from "@/components/home-weekly-schedule";
@@ -19,11 +25,18 @@ export const revalidate = 60;
 export default async function Home() {
   const previewQuery = (category: string) =>
     apiGetIsr<PostSearchResponse>(`/api/posts/search?category=${category}&sort=latest&page=0&size=${HOME_NEWS_PREVIEW_SIZE}`);
-  const [notices, bulletins] = await Promise.all([previewQuery("NOTICE"), previewQuery("BULLETIN")]);
+  // 이번 주 일정 시드 — 다가오는 행사(창 한정) + 수동 일정. 찬양팀 일정은 요청자 스코프라 클라이언트에서 조회한다.
+  const [notices, bulletins, upcomingEvents, manualEvents] = await Promise.all([
+    previewQuery("NOTICE"),
+    previewQuery("BULLETIN"),
+    apiGetIsr<Event[]>(UPCOMING_EVENTS_PATH),
+    apiGetIsr<ManualCalendarEventResponse[]>("/api/calendar"),
+  ]);
   // 둘 다 실패(null)면 클라이언트 fetch 폴백, 일부 실패는 빈 배열로 합친다(home-news 병합 규칙과 동일).
   const initialNews: Post[] | null = notices === null && bulletins === null
     ? null
     : [...(notices?.content ?? []), ...(bulletins?.content ?? [])].slice(0, HOME_NEWS_PREVIEW_SIZE);
+  const initialManual: CalendarEvent[] | null = manualEvents === null ? null : manualEvents.map(mapManualToCalendarEvent);
   return (
     <>
       {/* Hero·퀵정보는 폴드 위(퀵정보는 -mt-10 로 히어로와 겹침)라 리빌 제외 — 페이지 전환 fade 로 충분.
@@ -31,7 +44,7 @@ export default async function Home() {
       <ChurchHero />
       <HomeQuickInfo />
       <ScrollReveal><WorshipSummary /></ScrollReveal>
-      <ScrollReveal><HomeWeeklySchedule /></ScrollReveal>
+      <ScrollReveal><HomeWeeklySchedule initialEvents={upcomingEvents} initialManual={initialManual} /></ScrollReveal>
       <ScrollReveal><HomeVisit /></ScrollReveal>
       <ScrollReveal><HomeIdentity /></ScrollReveal>
       <ScrollReveal><HomePhotos /></ScrollReveal>

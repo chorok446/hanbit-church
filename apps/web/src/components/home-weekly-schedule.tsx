@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock, MapPin } from "lucide-react";
-import { apiGet } from "@/lib/api";
-import type { Event } from "@/data/events";
+import { fetchUpcomingEvents, type Event } from "@/data/events";
 import { fetchPublicPraiseSchedules } from "@/data/praise-team";
 import {
   eventTypeLabel,
@@ -24,19 +23,29 @@ type WeeklyItem = { dateKey: string; event: CalendarEvent };
 /**
  * 홈 "이번 주 교회 일정" 요약 — 예배 반복 일정 + 행사 중 앞선 3~5건.
  * 전체 캘린더는 /events?view=calendar. 일정이 없으면 섹션 자체를 숨긴다.
+ *
+ * 행사(다가오는)·수동 일정은 서버가 ISR(60s)로 선주입한 시드를 우선 쓰고, 없으면(빌드 시 API 미가용)
+ * 클라이언트로 폴백 조회한다 — 홈의 다른 목록과 같은 패턴으로 useEffect 워터폴을 없앤다.
+ * 찬양팀 일정만 요청자별 노출 범위(쿠키 스코프)라 항상 클라이언트에서 조회한다.
  */
-export function HomeWeeklySchedule() {
+export function HomeWeeklySchedule({
+  initialEvents = null,
+  initialManual = null,
+}: {
+  initialEvents?: Event[] | null;
+  initialManual?: CalendarEvent[] | null;
+} = {}) {
   const [items, setItems] = useState<WeeklyItem[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      apiGet<Event[]>("/api/events").catch(() => [] as Event[]), // 행사를 못 불러와도 예배 일정은 보여준다.
-      // 찬양팀 일정 — 서버가 요청자별 범위(비로그인 PUBLIC / 로그인 CHURCH+PUBLIC / 멤버 전체)로 좁혀 준다.
-      fetchPublicPraiseSchedules().catch(() => []),
-      // 관리자 수동 등록 일정(절기·심방 등).
-      fetchManualCalendarEvents().catch(() => [] as CalendarEvent[]),
-    ])
+    const eventsP =
+      initialEvents !== null ? Promise.resolve(initialEvents) : fetchUpcomingEvents().catch(() => [] as Event[]);
+    const manualP =
+      initialManual !== null ? Promise.resolve(initialManual) : fetchManualCalendarEvents().catch(() => [] as CalendarEvent[]);
+    // 찬양팀 일정 — 서버가 요청자별 범위(비로그인 PUBLIC / 로그인 CHURCH+PUBLIC / 멤버 전체)로 좁혀 준다.
+    const praiseP = fetchPublicPraiseSchedules().catch(() => []);
+    Promise.all([eventsP, praiseP, manualP])
       .then(([events, praiseSchedules, manualEvents]) => {
         if (cancelled) return;
         const week = getEventsForWeek(events, new Date(), [
@@ -57,7 +66,7 @@ export function HomeWeeklySchedule() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialEvents, initialManual]);
 
   // 로딩 중이거나 이번 주 일정이 없으면 섹션 숨김(레이아웃 점프 최소화).
   if (!items || items.length === 0) return null;
