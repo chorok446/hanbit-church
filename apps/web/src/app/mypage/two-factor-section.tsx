@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import QRCode from "qrcode";
 import { KeyRound, Loader2, ShieldCheck, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 import { apiPost, ApiError } from "@/lib/api";
@@ -26,7 +25,9 @@ export function TwoFactorSection({ initialEnabled }: { initialEnabled: boolean }
   useEffect(() => {
     if (!setup) return; // QR 초기화는 setSetup(null) 을 부르는 핸들러에서 함께 한다(effect 내 동기 setState 금지).
     let cancelled = false;
-    QRCode.toDataURL(setup.otpauthUrl, { width: 176, margin: 1 })
+    // qrcode(~50KB)는 2FA 등록을 실제로 시작한 사용자만 필요하므로 동적 로드해 /mypage 초기 번들에서 뺀다.
+    import("qrcode")
+      .then(({ default: QRCode }) => QRCode.toDataURL(setup.otpauthUrl, { width: 176, margin: 1 }))
       .then((url) => {
         if (!cancelled) setQrDataUrl(url);
       })
