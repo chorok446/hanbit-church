@@ -15,9 +15,11 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 /**
- * 관리자 통계. 가입·게시글·행사·신고의 일별 생성 건수를 집계한다.
- * 콘텐츠의 seq(epoch millis)와 사용자 createdAt 을 기간 필터로만 조회하고
- * 일 단위 버킷팅은 서버에서 처리해 H2/MySQL 간 date 함수 차이를 피한다.
+ * 관리자 통계. 가입·게시글·행사·신고의 일별 생성 건수와 일별 활성 회원(DAU)을 집계한다.
+ * 생성 건수는 콘텐츠 seq(epoch millis)·사용자 createdAt 을 기간 필터로만 조회하고 일 버킷팅을
+ * 서버에서 처리한다(단순 count 라 데이터량이 작고 H2/MySQL date 함수 차이를 피할 수 있다).
+ * DAU 는 distinct 비용이 커 DB단에서 KST 일 버킷·distinct 집계하고(정수 epoch-day 만 반환해
+ * date 타입 매핑 차이를 회피 — UserAccessLogRepository.dailyActiveUsersSince) 앱은 결과만 매핑한다.
  */
 @Service
 class AdminStatsService(
@@ -41,12 +43,9 @@ class AdminStatsService(
         val postCounts = posts.creationSeqSince(since.toEpochMilli()).groupingBy { it.toLocalDateAtZone() }.eachCount()
         val eventCounts = events.creationSeqSince(since.toEpochMilli()).groupingBy { it.toLocalDateAtZone() }.eachCount()
         val reportCounts = reports.creationSeqSince(since.toEpochMilli()).groupingBy { it.toLocalDateAtZone() }.eachCount()
-        // 일별 활성 회원(DAU): 접속 기록(로그인·세션 갱신)의 (userId, 날짜) 중복 제거 후 일별 사용자 수.
-        val activeUsers = accessLogs.findUserAccessSince(since)
-            .map { row -> (row[0] as Long) to (row[1] as Instant).toLocalDateAtZone() }
-            .distinct()
-            .groupingBy { it.second }
-            .eachCount()
+        // 일별 활성 회원(DAU): 접속 기록의 (userId, 날짜) distinct 카운트를 DB단에서 KST 일 버킷으로 집계.
+        val activeUsers = accessLogs.dailyActiveUsersSince(since)
+            .associate { row -> LocalDate.ofEpochDay((row[0] as Number).toLong()) to (row[1] as Number).toLong() }
 
         val daily = (0 until days).map { offset ->
             val date = start.plusDays(offset.toLong())
@@ -56,7 +55,7 @@ class AdminStatsService(
                 posts = (postCounts[date] ?: 0).toLong(),
                 events = (eventCounts[date] ?: 0).toLong(),
                 reports = (reportCounts[date] ?: 0).toLong(),
-                activeUsers = (activeUsers[date] ?: 0).toLong(),
+                activeUsers = activeUsers[date] ?: 0L,
             )
         }
         return AdminStatsResponse(days = days, daily = daily)
