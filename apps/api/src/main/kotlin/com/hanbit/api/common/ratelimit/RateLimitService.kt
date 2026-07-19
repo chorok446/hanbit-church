@@ -51,6 +51,7 @@ class RateLimitService(
             RateLimitRule.COMMENT_CREATE -> properties.content.comment
             RateLimitRule.REPORT_CREATE -> properties.content.report
             RateLimitRule.MEDIA_UPLOAD -> properties.content.media
+            RateLimitRule.CONTENT_CREATE -> properties.content.create
             RateLimitRule.INTERACTION_TOGGLE -> properties.content.interaction
         }
 

@@ -15,6 +15,10 @@ class ContentWriteRateLimitFilter(
         // 새가족 등록은 비로그인 공개 POST — 신고와 같은 IP 한도를 공유한다.
         if (path == "/api/new-family") return RateLimitRule.REPORT_CREATE
         if (path == "/api/media" || path == "/api/media/document") return RateLimitRule.MEDIA_UPLOAD
+        // 찬양팀 파일 업로드도 디스크에 파일을 쓰므로 미디어 업로드 한도를 공유한다.
+        if (path == "/api/praise/files") return RateLimitRule.MEDIA_UPLOAD
+        // 게시글·행사 본문 생성(2-세그먼트 POST). 댓글/상호작용(4-세그먼트)과 겹치지 않는다.
+        if (path == "/api/posts" || path == "/api/events") return RateLimitRule.CONTENT_CREATE
         if (isCommentCreatePath(path)) return RateLimitRule.COMMENT_CREATE
         if (isInteractionPath(path)) return RateLimitRule.INTERACTION_TOGGLE
         return null
