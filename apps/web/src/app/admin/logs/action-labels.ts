@@ -14,6 +14,8 @@ export const ACTION_LABELS: Record<AdminActionType, string> = {
   PRAISE_ROLE_CHANGED: "찬양팀 역할 변경",
   PASSWORD_RESET: "비밀번호 초기화",
   TWO_FACTOR_RESET: "2단계 인증 해제",
+  MANUAL_CALENDAR_UPDATED: "교회 일정 수정",
+  MANUAL_CALENDAR_DELETED: "교회 일정 삭제",
 };
 
 /** 제재 성격의 조치는 경고색, 되돌리는 조치는 보통색으로 구분한다. */

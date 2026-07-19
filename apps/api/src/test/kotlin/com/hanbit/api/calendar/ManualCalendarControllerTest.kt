@@ -30,6 +30,7 @@ class ManualCalendarControllerTest(
     @param:Autowired private val users: UserRepository,
     @param:Autowired private val repo: ManualCalendarEventRepository,
     @param:Autowired private val eventsRepo: com.hanbit.api.event.EventRepository,
+    @param:Autowired private val actionLogs: com.hanbit.api.admin.AdminActionLogRepository,
 ) {
     private val adminToken = jwt.issue(
         User(id = 4, email = "test-user-4@hanbit.local", passwordHash = "x", name = "일정관리자"),
@@ -139,6 +140,27 @@ class ManualCalendarControllerTest(
         mvc.delete("/api/admin/calendar/${saved.id}") {
             headers { add("Authorization", "Bearer $adminToken") }
         }.andExpect { status { isNotFound() } }
+    }
+
+    @Test
+    fun `수정·삭제는 조치 주체를 감사 로그에 남긴다`() {
+        val saved = saveEvent("2026-09-01", title = "감사대상 일정")
+
+        mvc.put("/api/admin/calendar/${saved.id}") {
+            headers { add("Authorization", "Bearer $adminToken") }
+            contentType = MediaType.APPLICATION_JSON
+            content = body(title = "수정본", type = "etc", startDate = "2026-09-02")
+        }.andExpect { status { isOk() } }
+
+        mvc.delete("/api/admin/calendar/${saved.id}") {
+            headers { add("Authorization", "Bearer $adminToken") }
+        }.andExpect { status { isOk() } }
+
+        val logs = actionLogs.findAll().filter { it.targetId == saved.id }
+        assertThat(logs.map { it.action }).contains("MANUAL_CALENDAR_UPDATED", "MANUAL_CALENDAR_DELETED")
+        // 조치 주체(actor)와 삭제 시점 제목 스냅샷이 남는다.
+        assertThat(logs).allSatisfy { assertThat(it.adminUserId).isEqualTo(4L) }
+        assertThat(logs.first { it.action == "MANUAL_CALENDAR_DELETED" }.detail).isEqualTo("수정본")
     }
 
     @Test

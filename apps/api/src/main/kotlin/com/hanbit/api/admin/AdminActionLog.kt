@@ -46,6 +46,8 @@ enum class AdminActionType {
     PRAISE_ROLE_CHANGED,
     PASSWORD_RESET,
     TWO_FACTOR_RESET,
+    MANUAL_CALENDAR_UPDATED,
+    MANUAL_CALENDAR_DELETED,
 }
 
 interface AdminActionLogRepository : JpaRepository<AdminActionLog, Long> {
