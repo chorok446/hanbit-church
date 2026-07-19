@@ -18,7 +18,10 @@ class RateLimitConfig {
     fun authRateLimitFilterRegistration(filter: AuthRateLimitFilter): FilterRegistrationBean<AuthRateLimitFilter> =
         FilterRegistrationBean(filter).apply {
             order = Ordered.HIGHEST_PRECEDENCE + 50
-            addUrlPatterns("/api/auth/login", "/api/auth/signup")
+            // 2fa/verify 도 등록 대상 — ruleFor 가 AUTH_LOGIN 버킷을 반환해도 여기 패턴에 없으면 필터가
+            // 그 경로에서 실행되지 않아 6자리 코드 무차별 대입에 무방비가 된다(FilterRegistrationBean 참조
+            // @Component 필터는 /* 자동등록에서 제외됨).
+            addUrlPatterns("/api/auth/login", "/api/auth/signup", "/api/auth/2fa/verify")
         }
 
     @Bean
@@ -27,7 +30,9 @@ class RateLimitConfig {
     ): FilterRegistrationBean<ContentWriteRateLimitFilter> =
         FilterRegistrationBean(filter).apply {
             order = Ordered.HIGHEST_PRECEDENCE + 51
-            addUrlPatterns("/api/reports", "/api/posts/*", "/api/events/*", "/api/media", "/api/media/document")
+            // /api/new-family 는 비로그인 공개 POST(SecurityConfig) — ruleFor 가 REPORT_CREATE 를 반환해도
+            // 등록 패턴에 없으면 필터 미실행이라 무제한 스팸 등록에 노출된다. 반드시 포함.
+            addUrlPatterns("/api/reports", "/api/new-family", "/api/posts/*", "/api/events/*", "/api/media", "/api/media/document")
         }
 }
 

@@ -186,6 +186,28 @@ class UserControllerTest(
     }
 
     @Test
+    fun `승인 대기(pending) 사용자는 공개 프로필 404, 검색에서도 제외된다`() {
+        val tag = UUID.randomUUID().toString().take(8)
+        // approvedAt = null → 관리자 미승인(pending). 공개 노출 대상(승인+미탈퇴+미정지)이 아니다.
+        val pending = users.save(
+            User(email = "pd-$tag@t.com", passwordHash = "x", name = "대기-$tag", approvedAt = null),
+        )
+        val admin = users.save(User(email = "pa-$tag@t.com", passwordHash = "x", name = "승인관리자", role = UserRole.ADMIN.name))
+        val token = jwt.issue(admin)
+
+        mvc.get("/api/users/${pending.id}") {
+            header("Authorization", "Bearer $token")
+        }.andExpect { status { isNotFound() } }
+
+        mvc.get("/api/users/search") {
+            param("q", tag)
+            header("Authorization", "Bearer $token")
+        }
+            .andExpect { status { isOk() } }
+            .andExpect { jsonPath("$.totalElements", Matchers.`is`(0)) }
+    }
+
+    @Test
     fun `사용자 검색에서 빈 검색어는 빈 결과, 로그인 시 차단 상태를 포함한다`() {
         val tag = UUID.randomUUID().toString().take(8)
         val viewer = users.save(User(email = "sv-$tag@t.com", passwordHash = "x", name = "탐색자-$tag", role = UserRole.ADMIN.name))

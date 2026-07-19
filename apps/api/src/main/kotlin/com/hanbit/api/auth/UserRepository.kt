@@ -45,10 +45,12 @@ interface UserRepository : JpaRepository<User, Long> {
 
     fun countByApprovedAtIsNullAndDeletedAtIsNull(): Long
 
-    // 공개 사용자 검색. 이름 부분 일치(q 는 소문자), 탈퇴·정지 중 사용자는 제외한다.
+    // 공개 사용자 검색. 이름 부분 일치(q 는 소문자), 탈퇴·정지·미승인(pending) 사용자는 제외한다
+    // (공개 노출 대상 = 승인+미탈퇴+미정지 — 관리자 검색 searchForAdmin·publicUser 와 동일 기준).
     @org.springframework.data.jpa.repository.Query(
         """select u from User u
            where u.deletedAt is null
+           and u.approvedAt is not null
            and (u.suspendedUntil is null or u.suspendedUntil <= :now)
            and lower(u.name) like concat('%', :q, '%')""",
     )
