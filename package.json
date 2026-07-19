@@ -11,6 +11,7 @@
     "build:api": "cd apps/api && ./gradlew build",
     "test:api": "cd apps/api && ./gradlew test",
     "ci:summary": "node scripts/ci-summary.mjs",
+    "check:flyway": "node scripts/check-flyway-versions.mjs",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "docker:local": "docker compose -f compose.local.yml up --build",

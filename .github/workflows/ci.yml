@@ -179,6 +179,10 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
+      # Flyway 버전 중복 가드 — 빌드 전에 값싸게 fail-fast (ubuntu runner 기본 node 사용).
+      - name: Flyway 버전 중복 검사
+        id: flyway
+        run: node scripts/check-flyway-versions.mjs
       - name: Build
         id: build
         working-directory: apps/api
@@ -186,12 +190,15 @@ jobs:
       - name: 한국어 잡 요약
         if: always()
         env:
+          FLYWAY: ${{ steps.flyway.outcome }}
           BUILD: ${{ steps.build.outcome }}
         run: |
           {
             echo "## ⚙️ 백엔드 (Spring Boot)"
             echo ""
-            if [ "$BUILD" = "success" ]; then
+            if [ "$FLYWAY" = "failure" ]; then
+              echo "❌ Flyway 마이그레이션 버전이 중복됩니다 — 위 **Flyway 버전 중복 검사** 로그에서 겹치는 버전·파일을 확인하고 하나를 리네임하세요."
+            elif [ "$BUILD" = "success" ]; then
               echo "✅ 컴파일·단위 테스트(H2)·패키징 전부 통과."
             elif [ "$BUILD" = "failure" ]; then
               echo "❌ 실패 — 위 Build 스텝 로그에서 컴파일 오류 또는 실패한 테스트를 확인하세요."
