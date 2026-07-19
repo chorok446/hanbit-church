@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ArrowDown, ArrowUp, Library, Link2, Loader2, PlusCircle, Save, Search, Trash2, Upload, X } from "lucide-react";
 import { StatePanel } from "@/components/ui/state-panel";
+import { useModalDialog } from "@/lib/use-modal-dialog";
 import { ApiError, apiErrorMessage } from "@/lib/api";
 import { formatDateLabel } from "@/data/calendar";
 import {
@@ -882,6 +883,7 @@ function SongLibraryPicker({
   onClose: () => void;
   onPick: (entry: PraiseSongLibraryEntry) => void;
 }) {
+  const { dialogRef, onBackdropClick } = useModalDialog(onClose);
   const [query, setQuery] = useState("");
   // result.key === query 가 아니면 로딩 중으로 취급(effect 안 동기 setState 없이 로딩 표현).
   const [result, setResult] = useState<{ key: string; entries: PraiseSongLibraryEntry[]; error: boolean } | null>(null);
@@ -909,19 +911,13 @@ function SongLibraryPicker({
   const error = loading ? false : result.error;
 
   return (
-    <div
-      className="overlay-fade fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
-      style={{ background: "rgba(var(--ink-rgb), 0.4)" }}
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={dialogRef}
       aria-label="곡 라이브러리"
-      onClick={onClose}
+      className="dialog-pop max-h-[80vh] w-[calc(100%-2rem)] max-w-lg overflow-hidden rounded-3xl border p-0 backdrop:bg-[rgba(var(--ink-rgb),0.4)]"
+      style={{ background: "var(--card)", borderColor: "var(--border)" }}
+      onClick={onBackdropClick}
     >
-      <div
-        className="dialog-panel-pop max-h-[80vh] w-full max-w-lg overflow-hidden rounded-3xl border"
-        style={{ background: "var(--card)", borderColor: "var(--border)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
         <div className="flex items-center justify-between gap-2 border-b p-5" style={{ borderColor: "var(--border)" }}>
           <h3
             className="text-[18px]"
@@ -950,6 +946,7 @@ function SongLibraryPicker({
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              aria-label="곡명 검색"
               placeholder="곡명 검색 (예: 은혜)"
               className="w-full rounded-2xl border py-3 pl-10 pr-4 text-[14px] outline-none placeholder:opacity-50"
               style={inputStyle}
@@ -996,7 +993,6 @@ function SongLibraryPicker({
             </ul>
           )}
         </div>
-      </div>
-    </div>
+    </dialog>
   );
 }
