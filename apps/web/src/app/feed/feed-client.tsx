@@ -285,7 +285,6 @@ export default function FeedClient({ events }: { events: Event[] }) {
               items={[{ key: "all", label: "전체" }, ...FEED_CATEGORIES.map((item) => ({ key: item.value, label: item.label }))]}
               value={urlState.category ?? "all"}
               onChange={(key) => updateUrl({ category: key === "all" ? null : (key as PostCategory), page: 0 })}
-              layoutId="feed-category-pill"
               label="카테고리 필터"
             />
           </div>

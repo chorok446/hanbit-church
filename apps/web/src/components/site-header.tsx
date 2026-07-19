@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, LogOut, Search, ShieldCheck, UserRound } from "lucide-react";
-import { motion } from "motion/react";
 import { useAuthSession } from "@/lib/use-auth-session";
 import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
 import { useNotificationUnread } from "@/lib/use-unread-badges";
@@ -159,11 +158,12 @@ export function SiteHeader() {
             const isActive = pathname === it.href || (it.href !== "/" && pathname.startsWith(it.href));
             const className = "relative rounded-lg px-4 py-2 text-[14px] transition-opacity hover:opacity-100";
             const style = { color: "var(--heading)", opacity: isActive ? 1 : 0.7 };
+            {/* 활성 nav 점 — layoutId 슬라이드 대신 활성 링크에 즉시 페이드 등장(.indicator-fade). */}
             const dot = isActive && (
-              <motion.div
-                layoutId="navdot"
-                className="absolute left-1/2 -translate-x-1/2 bottom-1 w-1.5 h-1.5 rounded-full"
+              <span
+                className="indicator-fade absolute left-1/2 -translate-x-1/2 bottom-1 w-1.5 h-1.5 rounded-full"
                 style={{ background: "var(--accent)" }}
+                aria-hidden
               />
             );
             return (
@@ -201,16 +201,13 @@ export function SiteHeader() {
           >
             <Bell size={18} aria-hidden />
             {isLoggedIn && unread > 0 && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center text-[10px] font-semibold leading-none"
+              <span
+                className="badge-pop absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center text-[10px] font-semibold leading-none"
                 style={{ background: "var(--danger-solid)", color: "var(--on-danger)" }}
                 aria-hidden
               >
                 {unread > 99 ? "99+" : unread}
-              </motion.span>
+              </span>
             )}
           </Link>
           {/* 서버 스냅샷은 항상 로그아웃 상태 → 비로그인 뷰로 hydration, 이후 클라이언트에서 갱신. */}

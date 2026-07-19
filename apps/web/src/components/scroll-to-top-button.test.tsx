@@ -4,7 +4,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { ScrollToTopButton } from "./scroll-to-top-button";
 
 beforeAll(() => {
-  // jsdom 에는 matchMedia 가 없다 — motion 의 useReducedMotion 이 참조한다.
+  // jsdom 에는 matchMedia 가 없다 — 일부 컴포넌트/라이브러리가 참조할 수 있어 안전하게 스텁한다.
   window.matchMedia ??= ((query: string) => ({
     matches: false,
     media: query,
@@ -52,7 +52,7 @@ describe("ScrollToTopButton", () => {
     act(() => {
       window.dispatchEvent(new Event("scroll"));
     });
-    // AnimatePresence 퇴장 애니메이션이 끝나면 DOM 에서 제거된다.
+    // 임계치 위로 올라가면 조건부 언마운트로 DOM 에서 제거된다(퇴장 모션 없음).
     await vi.waitFor(() => {
       expect(screen.queryByRole("button", { name: "맨 위로" })).toBeNull();
     });

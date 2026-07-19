@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "motion/react";
-import { EASE_OUT } from "@/components/scroll-reveal";
 
 /**
  * 목록에 방금 추가된 항목만 부드럽게 등장시킨다. isNew 가 아닌 항목은 일반 <div> 로
- * 렌더해 목록 전체가 motion 인스턴스를 만드는 비용을 피한다(한 화면에 새 항목은 최대 1개).
+ * 렌더해 목록 전체가 애니메이션 노드를 만드는 비용을 피한다(한 화면에 새 항목은 최대 1개).
  * isNew 는 마운트 시점에 래치된다 — 등장 직후 onRevealed 로 마커를 해제해도(1회용 소비)
- * 이 마운트에서는 motion.div 를 유지해 진행 중인 모션이 끊기지 않는다.
- * 모션 축소는 MotionConfig 전역 처리(transform 억제 시 opacity 페이드만 남는다).
+ * 이 마운트에서는 애니메이션 노드를 유지해 진행 중인 모션이 끊기지 않는다.
+ * 모션은 globals.css `.stagger`(마운트 시 fade+rise), 모션 축소는 reduced-motion 규칙이 처리.
  */
 export function NewItemReveal({
   isNew,
@@ -28,12 +26,8 @@ export function NewItemReveal({
 
   if (!reveal) return <div>{children}</div>;
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: EASE_OUT }}
-    >
+    <div className="stagger" style={{ "--reveal-y": "8px", "--reveal-dur": "250ms" } as React.CSSProperties}>
       {children}
-    </motion.div>
+    </div>
   );
 }

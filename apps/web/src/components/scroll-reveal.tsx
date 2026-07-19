@@ -1,12 +1,31 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { animate, motion, useInView, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 
-// 공용 easing. 페이지 전환/리빌/스태거가 같은 곡선을 쓴다.
-export const EASE_OUT = [0.16, 1, 0.3, 1] as const;
+// 뷰포트 진입을 1회만 감지하는 IntersectionObserver 훅. framer useInView/whileInView 대체.
+// once=true 동작(진입 즉시 disconnect)이며, 마운트 시 이미 보이면 곧바로 true 가 된다.
+function useInViewOnce<T extends HTMLElement>(amount = 0, margin?: string) {
+  const ref = useRef<T>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || inView) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { threshold: amount, rootMargin: margin },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [amount, margin, inView]);
+  return { ref, inView };
+}
 
-// 스크롤 진입 시 fade + rise. 랜딩/목록 공용 리빌 래퍼.
+// 스크롤 진입 시 fade + rise. 랜딩/목록 공용 리빌 래퍼(트리거=IntersectionObserver, 모션=globals.css `.reveal`).
 export function ScrollReveal({
   children,
   delay = 0,
@@ -18,48 +37,48 @@ export function ScrollReveal({
   className?: string;
   style?: React.CSSProperties;
 }) {
-  const reduce = useReducedMotion();
+  const { ref, inView } = useInViewOnce<HTMLDivElement>(0.3);
   return (
-    <motion.div
-      className={className}
-      style={style}
-      initial={reduce ? false : { opacity: 0, y: 32 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.6, delay, ease: EASE_OUT }}
+    <div
+      ref={ref}
+      className={`reveal${inView ? " is-visible" : ""}${className ? ` ${className}` : ""}`}
+      style={{ "--reveal-y": "32px", "--reveal-delay": `${delay * 1000}ms`, ...style } as React.CSSProperties}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
-// 뷰포트 진입 시 0 → to 카운트업. reduced-motion이면 즉시 최종값.
+// 뷰포트 진입 시 0 → to 카운트업. reduced-motion이면 즉시 최종값(숫자라 CSS 로는 못 해 JS 로 판정).
 export function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-  const reduce = useReducedMotion();
+  const { ref, inView } = useInViewOnce<HTMLSpanElement>(0, "-80px");
 
   useEffect(() => {
     const el = ref.current;
     if (!el || !inView) return;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (reduce) {
       el.textContent = `${to.toLocaleString()}${suffix}`;
       return;
     }
-    const controls = animate(0, to, {
-      duration: 1.8,
-      ease: EASE_OUT,
-      onUpdate: (v) => {
-        el.textContent = `${Math.round(v).toLocaleString()}${suffix}`;
-      },
-    });
-    return () => controls.stop();
-  }, [inView, to, suffix, reduce]);
+    let raf = 0;
+    let startTs = 0;
+    const duration = 1800;
+    const tick = (ts: number) => {
+      if (!startTs) startTs = ts;
+      const t = Math.min((ts - startTs) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 4); // ease-out-quart ≈ cubic-bezier(0.16,1,0.3,1)
+      el.textContent = `${Math.round(eased * to).toLocaleString()}${suffix}`;
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [ref, inView, to, suffix]);
 
   return <span ref={ref}>{`0${suffix}`}</span>;
 }
 
-// 목록 아이템 순차 등장. 마운트 시 1회 재생, 페이지네이션으로 리마운트되면 다시 재생.
+// 목록 아이템 순차 등장. 마운트 시 1회 재생, 페이지네이션으로 리마운트되면 다시 재생(모션=globals.css `.stagger`).
 export function StaggerItem({
   index,
   children,
@@ -69,15 +88,12 @@ export function StaggerItem({
   children: React.ReactNode;
   className?: string;
 }) {
-  const reduce = useReducedMotion();
   return (
-    <motion.div
-      className={className}
-      initial={reduce ? false : { opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: Math.min(index * 0.06, 0.48), ease: EASE_OUT }}
+    <div
+      className={`stagger${className ? ` ${className}` : ""}`}
+      style={{ "--reveal-y": "16px", "--reveal-delay": `${Math.min(index * 0.06, 0.48) * 1000}ms` } as React.CSSProperties}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }

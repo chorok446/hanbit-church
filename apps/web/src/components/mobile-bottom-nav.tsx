@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "motion/react";
 import { Home, LayoutList, Flag, User } from "lucide-react";
 
 const tabs = [
@@ -36,13 +35,12 @@ export function MobileBottomNav() {
               style={{ color: active ? "var(--accent)" : "var(--foreground-muted)" }}
               aria-current={active ? "page" : undefined}
             >
-              {/* 데스크톱 헤더 navdot 과 같은 활성 표식 — 탭 전환 시 점이 이동한다. */}
+              {/* 데스크톱 헤더 navdot 과 같은 활성 표식 — 활성 탭에 즉시 페이드 등장(.indicator-fade). */}
               {active ? (
-                <motion.div
-                  layoutId="bottomnav-dot"
-                  // 중앙 정렬은 mx-auto 로 — layout 애니메이션이 transform 을 덮어써서 -translate-x-1/2 는 무시된다.
-                  className="absolute top-0.5 inset-x-0 mx-auto h-1 w-1 rounded-full"
+                <span
+                  className="indicator-fade absolute top-0.5 inset-x-0 mx-auto h-1 w-1 rounded-full"
                   style={{ background: "var(--accent)" }}
+                  aria-hidden
                 />
               ) : null}
               <Icon size={20} aria-hidden />

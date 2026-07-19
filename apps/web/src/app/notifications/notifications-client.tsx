@@ -258,7 +258,6 @@ export default function NotificationsClient() {
               items={filters.map((f) => ({ key: f.id, label: f.label }))}
               value={filter}
               onChange={(key) => changeFilter(key as NotificationFilterId)}
-              layoutId="notif-filter-pill"
               label="알림 필터"
             />
             <button

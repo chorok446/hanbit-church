@@ -3,8 +3,8 @@
 import { toast } from "sonner";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import { CalendarPlus, Flag, Link2, MoreHorizontal, Pencil, Trash2, Users, Bookmark } from "lucide-react";
+import { useTilt } from "@/lib/use-tilt";
 import { progressPercent } from "@/lib/progress";
 import { eventLifecycle, eventProgressLabel, type Event } from "@/data/events";
 import { Avatar } from "@/components/avatar";
@@ -138,13 +138,7 @@ export function EventHeaderCard({
   onBookmark?: () => void;
   bookmarkDisabled?: boolean;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const sx = useSpring(mx, { stiffness: 150, damping: 22 });
-  const sy = useSpring(my, { stiffness: 150, damping: 22 });
-  const rY = useTransform(sx, [-0.5, 0.5], [-6, 6]);
-  const rX = useTransform(sy, [-0.5, 0.5], [5, -5]);
+  const { ref, onMouseMove, onMouseLeave } = useTilt(6, 5);
   const pct = progressPercent(c.joined, c.capacity);
   const lifecycle = eventLifecycle(c);
   const progressLabel = eventProgressLabel(c);
@@ -159,26 +153,12 @@ export function EventHeaderCard({
 
   return (
     <div style={{ perspective: 1600 }}>
-      <motion.div
+      <div
         ref={ref}
-        onMouseMove={(e) => {
-          const r = ref.current?.getBoundingClientRect();
-          if (!r) return;
-          mx.set((e.clientX - r.left) / r.width - 0.5);
-          my.set((e.clientY - r.top) / r.height - 0.5);
-        }}
-        onMouseLeave={() => {
-          mx.set(0);
-          my.set(0);
-        }}
-        style={{
-          rotateX: rX,
-          rotateY: rY,
-          transformStyle: "preserve-3d",
-          background: "var(--card)",
-          borderColor: "var(--border)",
-        }}
-        className="rounded-3xl border overflow-hidden shadow-[0_40px_80px_-30px_rgba(0,0,0,0.4)]"
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+        style={{ background: "var(--card)", borderColor: "var(--border)" }}
+        className="tilt-card rounded-3xl border overflow-hidden shadow-[0_40px_80px_-30px_rgba(0,0,0,0.4)]"
       >
         <div className="grid grid-cols-1 md:grid-cols-[400px_1fr]">
           <div className="relative aspect-[4/3] sm:aspect-square md:aspect-auto overflow-hidden">
@@ -257,12 +237,9 @@ export function EventHeaderCard({
                 className="h-2 w-full rounded-full overflow-hidden"
                 style={{ background: "var(--border)" }}
               >
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${pct}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                  className="h-full rounded-full"
-                  style={{ background: lifecycle.badge.color }}
+                <div
+                  className="bar-grow h-full rounded-full"
+                  style={{ width: `${pct}%`, background: lifecycle.badge.color }}
                 />
               </div>
               <div className="flex justify-between text-[12px] mt-2" style={{ color: "var(--foreground-muted)" }}>
@@ -279,7 +256,7 @@ export function EventHeaderCard({
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

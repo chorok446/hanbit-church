@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { Check, Copy, Landmark } from "lucide-react";
 import { CHURCH, CHURCH_GIVING } from "@/data/church";
@@ -65,21 +64,12 @@ export function GivingAccountCard() {
           color: copied ? "var(--accent-strong)" : "var(--foreground)",
         }}
       >
-        {/* 아이콘 교체를 즉시 스왑하지 않고 cross-fade+scale 로 materialize — 복사됐음을 명확히 각인(Jakub §5).
-            전역 MotionConfig reducedMotion="user" 로 모션 축소 시 자동으로 즉시 전환된다. */}
+        {/* 아이콘 교체를 즉시 스왑하지 않고 새 아이콘을 페이드로 materialize — 복사됐음을 명확히 각인(Jakub §5).
+            key 로 상태 전환마다 리마운트해 .fade-in 이 재생된다. 모션 축소는 globals.css 가 즉시 전환시킨다. */}
         <span className="relative inline-flex h-[13px] w-[13px] items-center justify-center">
-          <AnimatePresence initial={false}>
-            <motion.span
-              key={copied ? "check" : "copy"}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute inset-0 inline-flex items-center justify-center"
-            >
-              {copied ? <Check size={13} aria-hidden /> : <Copy size={13} aria-hidden />}
-            </motion.span>
-          </AnimatePresence>
+          <span key={copied ? "check" : "copy"} className="fade-in absolute inset-0 inline-flex items-center justify-center">
+            {copied ? <Check size={13} aria-hidden /> : <Copy size={13} aria-hidden />}
+          </span>
         </span>
         <span>{copied ? "복사됨" : "계좌 복사"}</span>
       </button>
