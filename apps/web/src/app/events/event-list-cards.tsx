@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef } from "react";
 import Link from "next/link";
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import { Calendar, CalendarRange, Users } from "lucide-react";
+import { useTilt } from "@/lib/use-tilt";
 import {
   eventLifecycle,
   eventProgressLabel,
@@ -48,13 +47,9 @@ function ProgressBar({ event }: { event: Event }) {
         className="h-1.5 w-full overflow-hidden rounded-full"
         style={{ background: "rgba(var(--ink-rgb), 0.1)" }}
       >
-        <motion.div
-          initial={{ width: 0 }}
-          whileInView={{ width: `${pct}%` }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
-          className="h-full rounded-full"
-          style={{ background: "var(--accent)" }}
+        <div
+          className="bar-grow h-full rounded-full"
+          style={{ width: `${pct}%`, background: "var(--accent)" }}
         />
       </div>
       <div className="mt-1.5 flex justify-between text-[11px]" style={{ color: "var(--foreground-muted)" }}>
@@ -117,31 +112,16 @@ function CardCta({ event, lifecycle }: { event: Event; lifecycle: EventLifecycle
 }
 
 export function EventListCard({ event }: { event: Event }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const springX = useSpring(mouseX, { stiffness: 200, damping: 22 });
-  const springY = useSpring(mouseY, { stiffness: 200, damping: 22 });
-  const rotateY = useTransform(springX, [-0.5, 0.5], [-8, 8]);
-  const rotateX = useTransform(springY, [-0.5, 0.5], [7, -7]);
+  const { ref, onMouseMove, onMouseLeave } = useTilt(8, 7);
   const lifecycle = eventLifecycle(event);
 
   return (
     <div className="relative h-full" style={{ perspective: 1000 }}>
-      <motion.div
+      <div
         ref={ref}
-        onMouseMove={(event) => {
-          const rect = ref.current?.getBoundingClientRect();
-          if (!rect) return;
-          mouseX.set((event.clientX - rect.left) / rect.width - 0.5);
-          mouseY.set((event.clientY - rect.top) / rect.height - 0.5);
-        }}
-        onMouseLeave={() => {
-          mouseX.set(0);
-          mouseY.set(0);
-        }}
-        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-        className="h-full overflow-hidden rounded-2xl border shadow-[0_20px_50px_-25px_rgba(0,0,0,0.5)]"
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+        className="tilt-card h-full overflow-hidden rounded-2xl border shadow-[0_20px_50px_-25px_rgba(0,0,0,0.5)]"
       >
         <div className="h-full" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
           <div className="relative aspect-[4/3] overflow-hidden">
@@ -200,7 +180,7 @@ export function EventListCard({ event }: { event: Event }) {
             <CardCta event={event} lifecycle={lifecycle} />
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

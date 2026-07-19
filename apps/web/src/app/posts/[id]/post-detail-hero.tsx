@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
+import { useTilt } from "@/lib/use-tilt";
 import {
   Heart,
   MessageCircle,
@@ -64,13 +63,7 @@ export function PostDetailHero({
   onOpenEvent: (id: string) => void;
   onScrollToComments: () => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const sx = useSpring(mx, { stiffness: 150, damping: 22 });
-  const sy = useSpring(my, { stiffness: 150, damping: 22 });
-  const rY = useTransform(sx, [-0.5, 0.5], [-5, 5]);
-  const rX = useTransform(sy, [-0.5, 0.5], [4, -4]);
+  const { ref, onMouseMove, onMouseLeave } = useTilt(5, 4);
   // 교회 공식 소식(공지·주보)에는 좋아요를 노출하지 않는다.
   const officialNotice = isAdminOnlyCategory(p.category);
   // 대표 이미지가 없으면(텍스트 전용 글 — 교제/피드에 흔함) 왼쪽 이미지 열을 접어 검은 빈 패널을 없애고
@@ -79,26 +72,12 @@ export function PostDetailHero({
 
   return (
     <div style={{ perspective: 1400 }}>
-      <motion.div
+      <div
         ref={ref}
-        onMouseMove={(e) => {
-          const r = ref.current?.getBoundingClientRect();
-          if (!r) return;
-          mx.set((e.clientX - r.left) / r.width - 0.5);
-          my.set((e.clientY - r.top) / r.height - 0.5);
-        }}
-        onMouseLeave={() => {
-          mx.set(0);
-          my.set(0);
-        }}
-        style={{
-          rotateX: rX,
-          rotateY: rY,
-          transformStyle: "preserve-3d",
-          background: "var(--card)",
-          borderColor: "var(--border)",
-        }}
-        className={`rounded-3xl border overflow-hidden shadow-[0_40px_80px_-30px_rgba(0,0,0,0.4)] grid grid-cols-1${hasHeroImage ? " md:grid-cols-[1.1fr_1fr]" : ""}`}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+        style={{ background: "var(--card)", borderColor: "var(--border)" }}
+        className={`tilt-card rounded-3xl border overflow-hidden shadow-[0_40px_80px_-30px_rgba(0,0,0,0.4)] grid grid-cols-1${hasHeroImage ? " md:grid-cols-[1.1fr_1fr]" : ""}`}
       >
         {hasHeroImage && (
         <div className="relative aspect-square md:aspect-auto bg-black overflow-hidden">
@@ -107,13 +86,12 @@ export function PostDetailHero({
               <ImageIcon size={32} color="rgba(255,255,255,0.35)" aria-hidden />
             </div>
           ) : (
-            <motion.img
+            // eslint-disable-next-line @next/next/no-img-element -- 원격 사용자 업로드 URL(임의 도메인)이라 next/image 최적화 대상이 아니다
+            <img
               key={idx}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
               src={p.images[idx]}
               alt={`게시글 이미지 ${idx + 1}`}
-              className="w-full h-full object-cover"
+              className="fade-in w-full h-full object-cover"
               referrerPolicy="no-referrer"
               onError={onImageError}
             />
@@ -237,11 +215,11 @@ export function PostDetailHero({
 
           <div className="flex items-center gap-2 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
             {officialNotice ? null : (
-              <motion.button
-                whileTap={{ scale: 0.85 }}
+              <button
+                type="button"
                 onClick={onLike}
                 disabled={liking || refreshing}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px] disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[13px] transition-transform active:scale-[0.85] motion-reduce:active:scale-100 disabled:opacity-50"
                 style={{
                   background: liked ? "var(--danger-soft)" : "var(--border)",
                   color: liked ? "var(--danger)" : "var(--foreground)",
@@ -251,7 +229,7 @@ export function PostDetailHero({
                   <Heart size={14} fill={liked ? "var(--danger)" : "transparent"} />
                 </IconPop>{" "}
                 {likes}
-              </motion.button>
+              </button>
             )}
             <button
               type="button"
@@ -267,22 +245,22 @@ export function PostDetailHero({
               className="flex items-center gap-1.5 rounded-full px-3 py-2 text-[13px]"
               style={{ background: "var(--border)", color: "var(--foreground)" }}
             />
-            <motion.button
-              whileTap={{ scale: 0.85 }}
+            <button
+              type="button"
               onClick={onBookmark}
               disabled={bookmarking || refreshing}
               aria-label={bookmarked ? "북마크 해제" : "북마크 추가"}
-              className="ml-auto w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-50"
+              className="ml-auto w-9 h-9 rounded-full flex items-center justify-center transition-transform active:scale-[0.85] motion-reduce:active:scale-100 disabled:opacity-50"
               style={{
                 background: bookmarked ? "var(--accent)" : "var(--border)",
                 color: bookmarked ? "var(--surface-dark)" : "var(--foreground)",
               }}
             >
               <Bookmark size={14} fill={bookmarked ? "var(--surface-dark)" : "transparent"} />
-            </motion.button>
+            </button>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

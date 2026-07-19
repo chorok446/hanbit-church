@@ -2,7 +2,6 @@
 
 import { StaggerItem } from "@/components/scroll-reveal";
 import Link from "next/link";
-import { motion } from "motion/react";
 import { CalendarDays, ExternalLink, Loader2, PenLine, Users, UserMinus, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { ListEmptyState } from "@/components/list-empty-state";
@@ -60,13 +59,9 @@ function ProgressBar({ event }: { event: Event }) {
   return (
     <div className="w-full">
       <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: "rgba(var(--ink-rgb), 0.09)" }}>
-        <motion.div
-          initial={{ width: 0 }}
-          whileInView={{ width: `${pct}%` }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
-          className="h-full rounded-full"
-          style={{ background: meta.color }}
+        <div
+          className="bar-grow h-full rounded-full"
+          style={{ width: `${pct}%`, background: meta.color }}
         />
       </div>
       <div className="mt-1.5 flex justify-between text-[11px]" style={{ color: "rgba(var(--ink-rgb), 0.6)" }}>

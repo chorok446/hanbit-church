@@ -3,7 +3,6 @@
 import { toast } from "sonner";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "motion/react";
 import { ArrowLeft, BadgeCheck, MessageCircle, FileText } from "lucide-react";
 import { apiGet, apiPost, apiPut, apiDelete, apiDeleteVoid, ApiError } from "@/lib/api";
 import { clearSession, getSessionId } from "@/lib/auth";
@@ -358,10 +357,10 @@ export default function EventDetailClient({ event }: { event: Event }) {
                   </span>
                 ) : null}
                 {active && (
-                  <motion.div
-                    layoutId="detail-tab"
-                    className="absolute left-0 right-0 -bottom-px h-0.5"
+                  <span
+                    className="indicator-fade absolute left-0 right-0 -bottom-px h-0.5"
                     style={{ background: "var(--accent)" }}
+                    aria-hidden
                   />
                 )}
               </button>

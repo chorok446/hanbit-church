@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "motion/react";
 import { visibleTabGroups, type MypageTab } from "./mypage-types";
 
 export function MypageTabBar({
@@ -52,10 +51,10 @@ export function MypageTabBar({
                   >
                     {item.label}
                     {active ? (
-                      <motion.div
-                        layoutId="mypage-tab-underline"
-                        className="absolute inset-x-2 -bottom-3 h-0.5 rounded-full sm:-bottom-3"
+                      <span
+                        className="indicator-fade absolute inset-x-2 -bottom-3 h-0.5 rounded-full sm:-bottom-3"
                         style={{ background: "var(--accent)" }}
+                        aria-hidden
                       />
                     ) : null}
                   </button>

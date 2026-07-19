@@ -2,7 +2,6 @@
 
 import { useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
-import { motion } from "motion/react";
 import { useTheme } from "@/lib/theme-context";
 
 // hydration 완료 여부. useAuthSession 과 같은 패턴 — 이펙트 내 setState 없이
@@ -30,15 +29,13 @@ export function ThemeToggle() {
       }}
       aria-label={dark ? "라이트 모드로 전환" : "다크 모드로 전환"}
     >
-      {/* 라이트(해)가 왼쪽, 다크(달)가 오른쪽 */}
-      <motion.div
-        animate={{ x: dark ? 28 : 0 }}
-        transition={{ type: "spring", stiffness: 400, damping: 28 }}
-        className="w-7 h-7 rounded-full flex items-center justify-center"
-        style={{ background: "var(--accent-secondary)", color: "var(--surface)" }}
+      {/* 라이트(해)가 왼쪽, 다크(달)가 오른쪽 — translateX 슬라이드는 CSS transition(모션 축소 시 자동 정지). */}
+      <div
+        className="w-7 h-7 rounded-full flex items-center justify-center transition-transform duration-300 ease-out"
+        style={{ background: "var(--accent-secondary)", color: "var(--surface)", transform: dark ? "translateX(28px)" : "translateX(0)" }}
       >
         {dark ? <Moon size={14} /> : <Sun size={14} />}
-      </motion.div>
+      </div>
     </button>
   );
 }

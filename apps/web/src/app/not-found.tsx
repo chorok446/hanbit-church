@@ -1,32 +1,18 @@
 "use client";
 
-import { useRef } from "react";
 import Link from "next/link";
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import { Home } from "lucide-react";
+import { useTilt } from "@/lib/use-tilt";
 
 export default function NotFound() {
-  const ref = useRef<HTMLDivElement>(null);
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const sx = useSpring(mx, { stiffness: 120, damping: 18 });
-  const sy = useSpring(my, { stiffness: 120, damping: 18 });
-  const rY = useTransform(sx, [-0.5, 0.5], [-25, 25]);
-  const rX = useTransform(sy, [-0.5, 0.5], [18, -18]);
+  // 마우스 위치를 CSS 변수(--tilt-rx/ry)로 쓰고 안쪽 .tilt-card 가 상속받아 회전한다(변수 상속).
+  const { ref, onMouseMove, onMouseLeave } = useTilt<HTMLElement>(25, 18);
 
   return (
     <section
       ref={ref}
-      onMouseMove={(e) => {
-        const r = ref.current?.getBoundingClientRect();
-        if (!r) return;
-        mx.set((e.clientX - r.left) / r.width - 0.5);
-        my.set((e.clientY - r.top) / r.height - 0.5);
-      }}
-      onMouseLeave={() => {
-        mx.set(0);
-        my.set(0);
-      }}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
       className="relative min-h-screen flex items-center justify-center overflow-hidden transition-colors"
       style={{
         position: "relative",
@@ -38,11 +24,8 @@ export default function NotFound() {
         <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] rounded-full bg-[var(--accent)] blur-[140px]" />
       </div>
 
-      <motion.div
-        style={{ rotateX: rX, rotateY: rY, transformStyle: "preserve-3d" }}
-        className="relative text-center"
-      >
-        <motion.div style={{ transform: "translateZ(120px)" }}>
+      <div className="tilt-card relative text-center">
+        <div style={{ transform: "translateZ(120px)" }}>
           <span
             style={{
               fontFamily: "var(--font-display)", fontWeight: 600,
@@ -57,8 +40,8 @@ export default function NotFound() {
           >
             404
           </span>
-        </motion.div>
-        <motion.p
+        </div>
+        <p
           style={{
             transform: "translateZ(60px)",
             color: "rgba(var(--ink-rgb), 0.85)",
@@ -68,7 +51,7 @@ export default function NotFound() {
           className="mt-4"
         >
           페이지를 찾을 수 없습니다
-        </motion.p>
+        </p>
         <Link
           href="/"
           style={{ transform: "translateZ(90px)", background: "var(--cta-bg)", color: "var(--cta-fg)" }}
@@ -76,7 +59,7 @@ export default function NotFound() {
         >
           <Home size={16} /> 메인페이지로 이동하기
         </Link>
-      </motion.div>
+      </div>
     </section>
   );
 }

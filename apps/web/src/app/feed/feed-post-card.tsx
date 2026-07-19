@@ -1,10 +1,10 @@
 "use client";
 
 import { toast } from "sonner";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import { Bookmark, Heart, Loader2, MessageCircle, Send } from "lucide-react";
+import { useTilt } from "@/lib/use-tilt";
 import { apiGet, apiPost, apiDelete, ApiError } from "@/lib/api";
 import { clearSession, getSessionId } from "@/lib/auth";
 import { useAuthSession } from "@/lib/use-auth-session";
@@ -59,13 +59,7 @@ export function FeedPostCard({
   identity: string | null;
   onOpen: () => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const sx = useSpring(mx, { stiffness: 220, damping: 22 });
-  const sy = useSpring(my, { stiffness: 220, damping: 22 });
-  const rY = useTransform(sx, [-0.5, 0.5], [-6, 6]);
-  const rX = useTransform(sy, [-0.5, 0.5], [5, -5]);
+  const { ref, onMouseMove, onMouseLeave } = useTilt<HTMLElement>(6, 5);
 
   const router = useRouter();
   const { sessionId: token } = useAuthSession();
@@ -176,26 +170,12 @@ export function FeedPostCard({
 
   return (
     <div style={{ perspective: 1200 }}>
-      <motion.article
+      <article
         ref={ref}
-        onMouseMove={(e) => {
-          const r = ref.current?.getBoundingClientRect();
-          if (!r) return;
-          mx.set((e.clientX - r.left) / r.width - 0.5);
-          my.set((e.clientY - r.top) / r.height - 0.5);
-        }}
-        onMouseLeave={() => {
-          mx.set(0);
-          my.set(0);
-        }}
-        style={{
-          rotateX: rX,
-          rotateY: rY,
-          transformStyle: "preserve-3d",
-        background: "var(--card)",
-        borderColor: "var(--border)",
-        }}
-        className="rounded-2xl border overflow-hidden shadow-[0_20px_50px_-25px_rgba(0,0,0,0.4)]"
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+        style={{ background: "var(--card)", borderColor: "var(--border)" }}
+        className="tilt-card rounded-2xl border overflow-hidden shadow-[0_20px_50px_-25px_rgba(0,0,0,0.4)]"
       >
         <div className="flex items-center gap-3 p-4">
           <AuthorHeader
@@ -259,12 +239,12 @@ export function FeedPostCard({
             <div className="flex flex-wrap gap-3 text-[13px]" style={{ color: "var(--foreground-muted)" }}>
               {/* 교회 공식 소식(공지·주보)에는 좋아요를 노출하지 않는다 */}
               {isAdminOnlyCategory(p.category) ? null : (
-                <motion.button whileTap={{ scale: 0.85 }} onClick={onLike} disabled={liking || refreshing} className="flex items-center gap-1 hover:text-[var(--danger)] transition-colors disabled:opacity-50" style={liked ? { color: "var(--danger)" } : undefined}>
+                <button type="button" onClick={onLike} disabled={liking || refreshing} className="flex items-center gap-1 hover:text-[var(--danger)] transition-[color,transform] active:scale-[0.85] motion-reduce:active:scale-100 disabled:opacity-50" style={liked ? { color: "var(--danger)" } : undefined}>
                   <IconPop active={liked}>
                     <Heart size={14} fill={liked ? "var(--danger)" : "none"} />
                   </IconPop>{" "}
                   {likes}
-                </motion.button>
+                </button>
               )}
               <button onClick={toggleComments} className="flex items-center gap-1">
                 <MessageCircle size={14} /> {commentCount}
@@ -275,16 +255,16 @@ export function FeedPostCard({
               />
               {/* 신고는 카드에 직접 노출하지 않는다 — 상세 페이지의 ⋯ 메뉴(PostActionsMenu)로 충분. */}
             </div>
-            <motion.button
-              whileTap={{ scale: 0.85 }}
+            <button
+              type="button"
               onClick={onBookmark}
               disabled={bookmarking || refreshing}
               aria-label={bookmarked ? "북마크 해제" : "북마크 추가"}
-              className="transition-colors disabled:opacity-50"
+              className="transition-[color,transform] active:scale-[0.85] motion-reduce:active:scale-100 disabled:opacity-50"
               style={{ color: bookmarked ? "var(--accent)" : "var(--foreground-muted)" }}
             >
               <Bookmark size={14} fill={bookmarked ? "var(--accent)" : "transparent"} />
-            </motion.button>
+            </button>
           </div>
 
           {showComments && (
@@ -348,7 +328,7 @@ export function FeedPostCard({
             </div>
           )}
         </div>
-      </motion.article>
+      </article>
     </div>
   );
 }

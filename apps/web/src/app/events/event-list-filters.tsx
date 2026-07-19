@@ -123,7 +123,6 @@ export function EventListFilters({
         items={FILTER_ITEMS.map((item) => ({ key: item.id, label: item.label }))}
         value={state.filter}
         onChange={(key) => onFilter(key as EventListFilter)}
-        layoutId="filter-pill"
         label="행사 필터"
         className="w-full rounded-3xl md:w-fit md:rounded-full"
       />

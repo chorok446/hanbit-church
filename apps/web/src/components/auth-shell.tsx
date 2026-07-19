@@ -1,7 +1,7 @@
 "use client";
 
-import { useId, useRef } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
+import { useId } from "react";
+import { useTilt } from "@/lib/use-tilt";
 
 export function AuthShell({
   title,
@@ -14,28 +14,12 @@ export function AuthShell({
   children: React.ReactNode;
   footer?: React.ReactNode;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const sx = useSpring(mx, { stiffness: 150, damping: 20 });
-  const sy = useSpring(my, { stiffness: 150, damping: 20 });
-  const rotateY = useTransform(sx, [-0.5, 0.5], [-10, 10]);
-  const rotateX = useTransform(sy, [-0.5, 0.5], [8, -8]);
-
-  function onMove(e: React.MouseEvent) {
-    const r = ref.current?.getBoundingClientRect();
-    if (!r) return;
-    mx.set((e.clientX - r.left) / r.width - 0.5);
-    my.set((e.clientY - r.top) / r.height - 0.5);
-  }
+  const { ref, onMouseMove, onMouseLeave } = useTilt(10, 8);
 
   return (
     <section
-      onMouseMove={onMove}
-      onMouseLeave={() => {
-        mx.set(0);
-        my.set(0);
-      }}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
       className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-28 transition-colors sm:px-6 sm:py-32"
       style={{
         position: "relative",
@@ -48,12 +32,8 @@ export function AuthShell({
         <div className="absolute -bottom-40 -right-20 w-[600px] h-[600px] rounded-full bg-[#e7dfcb] blur-[140px]" />
       </div>
 
-      <motion.div
-        ref={ref}
-        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-        className="relative w-full max-w-md"
-      >
-        <motion.div
+      <div ref={ref} className="tilt-card relative w-full max-w-md">
+        <div
           style={{ transform: "translateZ(60px)" }}
           className="rounded-3xl border p-6 shadow-[0_40px_80px_-30px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:p-10"
         >
@@ -87,10 +67,10 @@ export function AuthShell({
             <div className="mt-8 space-y-4">{children}</div>
             {footer && <div className="mt-6">{footer}</div>}
           </div>
-        </motion.div>
+        </div>
 
         {/* 카드 우상단에 띄우던 교회명 배지는 카드·제목과 겹쳐 보여 제거 — 로고는 상단 헤더에 이미 있다. */}
-      </motion.div>
+      </div>
     </section>
   );
 }

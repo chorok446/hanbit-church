@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "motion/react";
 import { toast } from "sonner";
 import { Bell } from "lucide-react";
 import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
@@ -91,10 +90,9 @@ export function NotificationSettingsForm({ embedded = false }: { embedded?: bool
                     background: enabled ? "var(--accent)" : "rgba(var(--ink-rgb), 0.15)",
                   }}
                 >
-                  <motion.div
-                    animate={{ x: enabled ? 20 : 0 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                    className="h-4 w-4 rounded-full bg-white"
+                  <div
+                    className="h-4 w-4 rounded-full bg-white transition-transform duration-300 ease-out"
+                    style={{ transform: enabled ? "translateX(20px)" : "translateX(0)" }}
                   />
                 </button>
               </div>
