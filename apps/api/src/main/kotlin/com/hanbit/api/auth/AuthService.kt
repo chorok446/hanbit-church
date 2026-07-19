@@ -204,12 +204,15 @@ class AuthService(
     @Transactional(readOnly = true)
     fun getMe(userId: Long): UserProfileResponse = repo.findActiveOrThrow(userId).toProfile()
 
-    /** 공개 프로필 조회용. 탈퇴·미존재는 404. */
+    /**
+     * 공개 프로필 조회용. 공개 노출 대상은 승인+미탈퇴+미정지만 —
+     * 탈퇴·미존재·미승인(pending)·정지 계정은 404(공개 검색 searchPublic 과 동일 기준).
+     */
     fun publicUser(userId: Long): User {
         val user = repo.findById(userId).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
         }
-        if (user.deletedAt != null) {
+        if (user.deletedAt != null || user.isPendingApproval || user.isSuspendedAt(Instant.now(clock))) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "user not found")
         }
         return user

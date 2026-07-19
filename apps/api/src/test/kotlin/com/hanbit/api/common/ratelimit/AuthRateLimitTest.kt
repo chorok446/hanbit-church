@@ -67,6 +67,28 @@ class AuthRateLimitTest(
     }
 
     @Test
+    fun `2FA 코드 검증은 IP당 로그인 버킷 limit 초과 시 429를 반환한다`() {
+        // 회귀 가드: FilterRegistrationBean 등록 패턴에 2fa/verify 가 빠지면 필터가 미실행돼
+        // 6자리 코드 무차별 대입이 가능해진다(challengeToken 은 실패 시 소비되지 않음). 전용 IP 로 로그인 버킷 격리.
+        val body = """{"challengeToken":"invalid","code":"000000"}"""
+        repeat(2) {
+            mvc.post("/api/auth/2fa/verify") {
+                contentType = MediaType.APPLICATION_JSON
+                content = body
+                header("X-Forwarded-For", "198.51.100.20")
+            }
+        }
+        mvc.post("/api/auth/2fa/verify") {
+            contentType = MediaType.APPLICATION_JSON
+            content = body
+            header("X-Forwarded-For", "198.51.100.20")
+        }.andExpect {
+            status { isTooManyRequests() }
+            header { exists("Retry-After") }
+        }
+    }
+
+    @Test
     fun `회원가입은 IP당 limit 초과 시 429를 반환한다`() {
         repeat(2) {
             val email = "rate-limit-${UUID.randomUUID()}@hanbit.com"

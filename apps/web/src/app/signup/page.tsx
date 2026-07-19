@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, User, Check, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, Lock, User, Check, Circle, ArrowRight, Loader2 } from "lucide-react";
 import { AuthShell, FieldInput } from "@/components/auth-shell";
 import { apiPost, ApiError } from "@/lib/api";
 import { setSession } from "@/lib/auth";
@@ -15,10 +15,13 @@ type SignupResponse =
   | { pendingApproval: true; name: string };
 
 function Rule({ ok, label }: { ok: boolean; label: string }) {
+  // 색만으로 충족 여부를 표시하지 않는다(색각 이상·저시력 대비): 아이콘 모양(채운 체크 vs 빈 원)과
+  // 스크린리더용 텍스트로도 상태를 전달한다. 충족 색은 대비 통과하는 --accent-strong.
   return (
-    <div className="flex items-center gap-1.5 text-[12px]" style={{ color: ok ? "var(--accent)" : "rgba(var(--ink-rgb), 0.6)" }}>
-      <Check size={14} />
-      {label}
+    <div className="flex items-center gap-1.5 text-[12px]" style={{ color: ok ? "var(--accent-strong)" : "rgba(var(--ink-rgb), 0.6)" }}>
+      {ok ? <Check size={14} aria-hidden="true" /> : <Circle size={14} aria-hidden="true" />}
+      <span>{label}</span>
+      <span className="sr-only">{ok ? "충족" : "미충족"}</span>
     </div>
   );
 }
@@ -90,7 +93,7 @@ export default function SignupPage() {
       footer={
         <p className="text-center text-[14px] mt-4" style={{ color: "rgba(var(--ink-rgb), 0.8)" }}>
           이미 계정이 있으신가요?{" "}
-          <Link href="/login" className="underline" style={{ color: "var(--accent)" }}>
+          <Link href="/login" className="underline" style={{ color: "var(--accent-strong)" }}>
             로그인
           </Link>
         </p>

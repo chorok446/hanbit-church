@@ -42,7 +42,6 @@ export function MypageTabBar({
                     id={`mypage-tab-${item.id}`}
                     aria-selected={active}
                     aria-controls={`mypage-panel-${item.id}`}
-                    tabIndex={active ? 0 : -1}
                     onClick={() => onSelect(item.id)}
                     className="relative shrink-0 rounded-lg px-3 py-2 text-[13px] transition-colors sm:px-4"
                     style={{

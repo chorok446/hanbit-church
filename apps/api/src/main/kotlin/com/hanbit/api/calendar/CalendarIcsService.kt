@@ -114,11 +114,13 @@ class CalendarIcsService(
         }
     }
 
-    /** RFC 5545 TEXT 이스케이프 — 백슬래시·세미콜론·콤마·개행. */
+    /** RFC 5545 TEXT 이스케이프 — 백슬래시·세미콜론·콤마·개행(CRLF·CR·LF 모두 정규화). */
     private fun escape(value: String): String = value
         .replace("\\", "\\\\")
         .replace(";", "\\;")
         .replace(",", "\\,")
+        .replace("\r\n", "\n")
+        .replace("\r", "\n")
         .replace("\n", "\\n")
 
     /**

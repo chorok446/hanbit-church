@@ -105,7 +105,7 @@ export default function LoginPage() {
       footer={
         <p className="text-center text-[14px] mt-6" style={{ color: "rgba(var(--ink-rgb), 0.8)" }}>
           아직 회원이 아니신가요?{" "}
-          <Link href="/signup" className="underline" style={{ color: "var(--accent)" }}>
+          <Link href="/signup" className="underline" style={{ color: "var(--accent-strong)" }}>
             회원가입
           </Link>
         </p>
@@ -191,13 +191,14 @@ export default function LoginPage() {
             type="button"
             onClick={() => setShowRecoveryHint((v) => !v)}
             aria-expanded={showRecoveryHint}
+            aria-controls="login-recovery-hint"
             className="underline-offset-4 hover:underline"
           >
             비밀번호를 잊으셨나요?
           </button>
         </div>
         {showRecoveryHint ? (
-          <p className="rounded-xl border px-4 py-3 text-[13px] leading-6" style={{ borderColor: "var(--border)", background: "var(--card)", color: "var(--foreground)" }}>
+          <p id="login-recovery-hint" className="rounded-xl border px-4 py-3 text-[13px] leading-6" style={{ borderColor: "var(--border)", background: "var(--card)", color: "var(--foreground)" }}>
             교회 사무실({CHURCH.phone})로 문의해주세요. 본인 확인 후 임시 비밀번호를 발급해 드리며, 로그인 후 새
             비밀번호로 변경하시면 됩니다.
           </p>
