@@ -109,6 +109,28 @@ class ContentWriteRateLimitTest(
     }
 
     @Test
+    fun `새가족 공개 등록은 IP당 신고 버킷 limit 초과 시 429를 반환한다`() {
+        // 회귀 가드: /api/new-family 는 비로그인 공개 POST 라 rate limit 이 유일한 스팸/DoS 방어다.
+        // 등록 패턴에서 빠지면 필터 미실행 → 무제한 등록. REPORT_CREATE(limit=2) 버킷 공유, 전용 IP 로 격리.
+        val body = """{"name":"새가족","phone":"010-0000-0000","note":""}"""
+        repeat(2) {
+            mvc.post("/api/new-family") {
+                headers { add("X-Forwarded-For", "203.0.113.30") }
+                contentType = MediaType.APPLICATION_JSON
+                content = body
+            }
+        }
+        mvc.post("/api/new-family") {
+            headers { add("X-Forwarded-For", "203.0.113.30") }
+            contentType = MediaType.APPLICATION_JSON
+            content = body
+        }.andExpect {
+            status { isTooManyRequests() }
+            header { exists("Retry-After") }
+        }
+    }
+
+    @Test
     fun `이미지 업로드는 IP당 limit 초과 시 429를 반환한다`() {
         // 실제 디코딩 가능한 PNG — 업로드가 정상 처리(200)돼야 rate limit(초과 시 429)을 검증할 수 있다.
         val pngBytes = java.io.ByteArrayOutputStream().also {

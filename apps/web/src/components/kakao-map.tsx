@@ -91,5 +91,5 @@ export function KakaoMap({ address, className }: { address: string; className?: 
   }
 
   // data-third-party: axe 검사에서 SDK 생성 DOM(<area> 등)을 제외하는 마커.
-  return <div ref={mapRef} data-third-party="kakao-map" className={className} aria-label={`지도: ${address}`} />;
+  return <div ref={mapRef} data-third-party="kakao-map" role="img" className={className} aria-label={`지도: ${address}`} />;
 }
