@@ -27,6 +27,12 @@ const nextConfig: NextConfig = {
             // - frame-ancestors 'none': X-Frame-Options DENY 의 CSP 표준 대응(클릭재킹)
             value: "object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
           },
+          // MIME 스니핑 차단 — 렌더된 사용자 콘텐츠가 선언 타입과 다르게 해석되는 것을 막는다.
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          // 외부로 나가는 리퍼러에서 경로·쿼리를 떼어 열람 페이지 URL 유출을 줄인다(origin 만 전송).
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          // 미사용 브라우저 기능(카메라·마이크·위치)을 전면 차단해 서드파티 오남용 표면을 없앤다.
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
         ],
       },
     ];
