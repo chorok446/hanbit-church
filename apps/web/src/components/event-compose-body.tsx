@@ -1,7 +1,7 @@
 "use client";
 
 import { useId } from "react";
-import { RichTextEditor } from "@/components/rich-text-editor";
+import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
 import { EVENT_MAX_BODY_LENGTH } from "@/data/events";
 
 export function EventComposeBody({

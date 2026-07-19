@@ -3,7 +3,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { ChevronDown, ChevronUp, Image as ImageIcon, Link2, Loader2, Plus, X } from "lucide-react";
-import { RichTextEditor } from "@/components/rich-text-editor";
+import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
 import { ImageFileUploadButton } from "@/components/image-file-upload-button";
 import { toast } from "sonner";
 import {

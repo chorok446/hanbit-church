@@ -10,7 +10,7 @@ import { PageShell } from "@/components/page-shell";
 import { StaffContentGuard } from "@/components/staff-content-guard";
 import { PostAttachmentsEditor } from "@/components/post-attachments-editor";
 import { PostComposeSubmitButton } from "@/components/post-compose-form";
-import { RichTextEditor } from "@/components/rich-text-editor";
+import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
 import { splitRichBodyHtml } from "@/lib/rich-body-html";
 import { richTextPlainLength } from "@/lib/rich-text-length";
 import { POST_MAX_TEXT_LENGTH, normalizePostTags, type PostAttachment } from "@/data/posts";
