@@ -103,6 +103,31 @@ class PostController(
         @AuthenticationPrincipal user: AuthUser,
     ): PostResponse = postService.setPinned(id, req.pinned)
 
+    @Operation(
+        summary = "예약 게시 재예약",
+        description = "예약 대기 중인 글의 게시 시각을 새 미래 시각으로 변경. 작성자 또는 스태프. " +
+            "예약 대기가 아니면 409, 과거·형식 오류는 400.",
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @PatchMapping("/{id}/schedule")
+    fun reschedule(
+        @PathVariable id: String,
+        @RequestBody req: ReschedulePostRequest,
+        @AuthenticationPrincipal user: AuthUser,
+    ): PostResponse = postService.reschedule(user.id, id, req.publishAt)
+
+    @Operation(
+        summary = "예약 게시 취소",
+        description = "예약 대기 중인 글의 예약을 철회한다(삭제 아님) — '발행 안 함(숨김)' 상태로 되돌린다. " +
+            "작성자 또는 스태프. 예약 대기가 아니면 409.",
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @DeleteMapping("/{id}/schedule")
+    fun cancelSchedule(
+        @PathVariable id: String,
+        @AuthenticationPrincipal user: AuthUser,
+    ): PostResponse = postService.cancelSchedule(user.id, id)
+
     @Operation(summary = "좋아요")
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/{id}/like")

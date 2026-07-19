@@ -34,6 +34,14 @@ data class AuthorPostCount(val authorUserId: Long, val count: Long)
 /** 예약 게시 대기 상태를 나타내는 hiddenReason 마커 — 운영 숨김과 구분해 게시 잡이 이 값만 공개 전환한다. */
 const val SCHEDULED_HIDDEN_REASON = "예약 게시 대기"
 
+/**
+ * 예약 게시 대기 여부 — 아직 `ScheduledPublishJob` 이 공개 전환하지 않은 예약 글.
+ * 잡은 발행 시 hiddenAt·마커·publishAt 을 함께 지우므로 "예약 마커가 남아 있음" == "미발행"이다.
+ * 발행 예정 시각이 지났으나 잡(60초 주기)이 아직 안 돈 구간까지 포함해야 하므로 미래 시각 대신 마커 잔존으로 판별한다.
+ * 단 마커는 free-text(관리자 사유와 값 충돌 가능)라, 예약 글만 갖는 `publishAt != null` 로 게이트해 오분류를 막는다.
+ */
+fun Post.isScheduledPending(): Boolean = publishAt != null && hiddenReason == SCHEDULED_HIDDEN_REASON
+
 object PostCategory {
     const val NOTICE = "NOTICE" // 공지
     const val BULLETIN = "BULLETIN" // 주보

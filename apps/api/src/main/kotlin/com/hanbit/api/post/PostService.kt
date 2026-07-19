@@ -402,10 +402,16 @@ class PostService(
 
     /** 예약 게시 시각 정규화 — 공지·주보 전용, ISO-8601 미래 시각만. 미지정이면 즉시 게시(null). */
     private fun normalizePublishAt(raw: String?, category: String): Instant? {
-        val value = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        if (raw?.trim().isNullOrEmpty()) return null
         if (category !in PostCategory.ADMIN_ONLY) {
             badRequest("예약 게시는 공지·주보에서만 가능합니다.")
         }
+        return requireFuturePublishAt(raw)
+    }
+
+    /** ISO-8601 미래 시각 파싱 — 비었거나 형식 오류·과거면 400. 재예약처럼 시각이 필수인 경로에서 쓴다. */
+    private fun requireFuturePublishAt(raw: String?): Instant {
+        val value = raw?.trim()?.takeIf { it.isNotEmpty() } ?: badRequest("예약 게시 시각을 지정해야 합니다.")
         val parsed = try {
             Instant.parse(value)
         } catch (_: java.time.format.DateTimeParseException) {
@@ -433,12 +439,16 @@ class PostService(
      */
     private fun requireAdminForOfficialCategory(category: String) {
         if (category !in PostCategory.STAFF_WRITE) return
-        val allowed = setOf("ROLE_ADMIN", "ROLE_OPERATOR", "ROLE_CONTENT")
-        val hasRole = SecurityContextHolder.getContext().authentication
-            ?.authorities?.any { it.authority in allowed } == true
-        if (!hasRole) {
+        if (!hasStaffRole()) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "only staff can write this category")
         }
+    }
+
+    /** 공지·주보 쓰기 권한(스태프: 최고 관리자·운영자·콘텐츠 관리자) 보유 여부. JwtAuthFilter 가 매 요청 DB role 로 채운 SecurityContext 기준. */
+    private fun hasStaffRole(): Boolean {
+        val staff = setOf("ROLE_ADMIN", "ROLE_OPERATOR", "ROLE_CONTENT")
+        return SecurityContextHolder.getContext().authentication
+            ?.authorities?.any { it.authority in staff } == true
     }
 
     /**
@@ -456,6 +466,52 @@ class PostService(
         requireAdminForOfficialCategory(post.category)
         post.pinnedAt = if (pinned) java.time.Instant.now(clock) else null
         return post.toResponse(viewerId = null)
+    }
+
+    /**
+     * 예약 게시 취소. 예약 대기 중인 글의 예약을 철회한다(삭제 아님) — publishAt 을 비우고 예약 마커를 지워
+     * '발행 안 함(일반 숨김)' 상태로 되돌린다. hiddenAt 은 유지 — 취소는 공개가 아니라 미발행이며,
+     * 이후 관리자 숨김 해제로 공개하거나 삭제로 처리한다. 발행 완료·미예약 글은 409.
+     */
+    @Transactional
+    fun cancelSchedule(userId: Long, postId: String): PostResponse {
+        val post = scheduledPendingForUpdate(userId, postId)
+        // 마커를 지우면 isScheduledPending=false — 잡 대상에서 빠지고 관리자 숨김/해제가 정상 동작한다.
+        post.publishAt = null
+        post.hiddenReason = null
+        return post.toResponse(viewerId = userId)
+    }
+
+    /**
+     * 예약 게시 재예약. 예약 대기 중인 글의 게시 시각만 새 미래 시각으로 바꾼다(과거·형식 오류는 400).
+     * 숨김·마커 상태는 그대로라 잡이 새 시각에 공개 전환한다. 발행 완료·미예약 글은 409.
+     */
+    @Transactional
+    fun reschedule(userId: Long, postId: String, publishAtRaw: String?): PostResponse {
+        val post = scheduledPendingForUpdate(userId, postId)
+        post.publishAt = requireFuturePublishAt(publishAtRaw)
+        return post.toResponse(viewerId = userId)
+    }
+
+    /**
+     * 예약 취소·재예약 공통 로더. 예약 대기 글을 write lock 으로 잡고 권한을 확인한다.
+     * 없음/삭제됨=404, 작성자도 스태프도 아니면=403, 예약 대기가 아니면(발행 완료·미예약)=409
+     * (AdminContentService 의 예약 대기 CONFLICT 정책과 일관).
+     */
+    private fun scheduledPendingForUpdate(userId: Long, postId: String): Post {
+        val post = repo.findByIdForUpdate(postId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $postId not found")
+        if (post.deletedAt != null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "post $postId not found")
+        }
+        val isAuthor = post.authorUserId != null && post.authorUserId == userId
+        if (!isAuthor && !hasStaffRole()) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "not allowed to modify this schedule")
+        }
+        if (!post.isScheduledPending()) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "예약 게시 대기 중인 글이 아닙니다")
+        }
+        return post
     }
 
     /**
