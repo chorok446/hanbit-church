@@ -43,13 +43,20 @@ class EventService(
     private val notificationRepo: com.hanbit.api.notification.NotificationRepository,
 ) {
     @Transactional(readOnly = true)
-    fun listEvents(currentUserId: Long?): List<EventResponse> {
-        // 무제한 직렬화 방지 — DB LIMIT 으로 첫 페이지(최대 MAX_SEARCH_PAGE_SIZE)만. 캘린더·홈은 창 한정
-        // /upcoming 을, 전체 브라우징은 /search 페이지네이션을 쓴다.
-        val events = repo.findByHiddenAtIsNull(
-            PageRequest.of(0, MAX_SEARCH_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "seq")),
-        ).content
-        return toEventResponses(currentUserId, events, LocalDate.now(clock))
+    fun listEvents(currentUserId: Long?, page: Int, size: Int): EventPageResponse {
+        // 무제한 직렬화 방지 — page/size 페이지네이션. 기본 size 는 MAX_SEARCH_PAGE_SIZE(=하드캡).
+        // 캘린더·홈은 창 한정 /upcoming 을, 전체 브라우징·필터는 /search 를 쓴다.
+        checkPageParams(page, size, MAX_SEARCH_PAGE_SIZE)
+        val result = repo.findByHiddenAtIsNull(
+            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "seq")),
+        )
+        return EventPageResponse(
+            content = toEventResponses(currentUserId, result.content, LocalDate.now(clock)),
+            page = page,
+            size = size,
+            totalElements = result.totalElements,
+            totalPages = totalPages(result.totalElements, size),
+        )
     }
 
     /**

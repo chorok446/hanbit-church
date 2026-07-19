@@ -7,7 +7,8 @@ import { Image as ImageIcon } from "lucide-react";
 import { CurrentUserAvatar } from "@/components/current-user-avatar";
 import { FallbackImage } from "@/components/fallback-image";
 import { PostText } from "@/components/post-text";
-import { apiGet, apiPost, ApiError } from "@/lib/api";
+import { apiPost, ApiError } from "@/lib/api";
+import { fetchLinkableEvents } from "@/data/events";
 import { clearSession, getSessionId } from "@/lib/auth";
 import { useAuthSession } from "@/lib/use-auth-session";
 import { useConfirm } from "@/components/ui/confirm-dialog";
@@ -101,7 +102,7 @@ export default function PostCreateClient() {
   );
 
   useEffect(() => {
-    apiGet<{ id: string; title: string }[]>("/api/events")
+    fetchLinkableEvents()
       .then(setEvents)
       .catch(() => setEvents([]));
   }, []);

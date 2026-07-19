@@ -19,6 +19,7 @@ import {
   postToComposeValues,
   validatePostCompose,
 } from "@/data/posts";
+import { fetchLinkableEvents } from "@/data/events";
 import { PostAttachmentsEditor } from "@/components/post-attachments-editor";
 import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
 import { getAdminPermissions } from "@/app/admin/permissions";
@@ -58,7 +59,7 @@ export default function PostEditPage() {
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    apiGet<{ id: string; title: string }[]>("/api/events")
+    fetchLinkableEvents()
       .then(setEvents)
       .catch(() => setEvents([]));
   }, []);

@@ -843,11 +843,12 @@ class EventSearchControllerTest(
 
     @Test
     fun `기존 목록 배열 계약을 유지하고 search를 id로 오인하지 않는다`() {
-        val arrayResponse = mvc.get("/api/events").andExpect {
+        val listResponse = mvc.get("/api/events").andExpect {
             status { isOk() }
-            jsonPath("$") { isArray() }
+            jsonPath("$.content") { isArray() }
+            jsonPath("$.page") { value(0) }
         }.andReturn().response.contentAsString
-        assertThat(arrayResponse).startsWith("[")
+        assertThat(listResponse).startsWith("{")
 
         mvc.get("/api/events/search").andExpect {
             status { isOk() }

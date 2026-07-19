@@ -77,7 +77,7 @@ class DeletedResourceVisibilityTest(
 
         mvc.get("/api/posts").andExpect {
             status { isOk() }
-            jsonPath("$[?(@.id == '$id')]") { value(Matchers.empty<Any>()) }
+            jsonPath("$.content[?(@.id == '$id')]") { value(Matchers.empty<Any>()) }
         }
         mvc.get("/api/posts/search") { param("q", marker) }.andExpect {
             status { isOk() }
@@ -100,7 +100,7 @@ class DeletedResourceVisibilityTest(
 
         mvc.get("/api/events").andExpect {
             status { isOk() }
-            jsonPath("$[?(@.id == '$id')]") { value(Matchers.empty<Any>()) }
+            jsonPath("$.content[?(@.id == '$id')]") { value(Matchers.empty<Any>()) }
         }
         mvc.get("/api/events/search") { param("q", marker) }.andExpect {
             status { isOk() }
