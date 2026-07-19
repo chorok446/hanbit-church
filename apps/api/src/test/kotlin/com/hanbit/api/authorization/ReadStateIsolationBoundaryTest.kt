@@ -141,8 +141,8 @@ class ReadStateIsolationBoundaryTest(
 
         getPostList(viewerToken).andExpect {
             status { isOk() }
-            jsonPath("$[?(@.id == '$id')].likedByMe") { value(org.hamcrest.Matchers.hasItem(false)) }
-            jsonPath("$[?(@.id == '$id')].bookmarkedByMe") { value(org.hamcrest.Matchers.hasItem(false)) }
+            jsonPath("$.content[?(@.id == '$id')].likedByMe") { value(org.hamcrest.Matchers.hasItem(false)) }
+            jsonPath("$.content[?(@.id == '$id')].bookmarkedByMe") { value(org.hamcrest.Matchers.hasItem(false)) }
         }
     }
 
@@ -175,7 +175,7 @@ class ReadStateIsolationBoundaryTest(
 
         getEventList(viewerToken).andExpect {
             status { isOk() }
-            jsonPath("$[?(@.id == '$id')].joinedByMe") { value(org.hamcrest.Matchers.hasItem(false)) }
+            jsonPath("$.content[?(@.id == '$id')].joinedByMe") { value(org.hamcrest.Matchers.hasItem(false)) }
         }
     }
 }

@@ -299,11 +299,12 @@ class PostSearchControllerTest(
 
     @Test
     fun `기존 목록 배열 계약을 유지하고 search를 id로 오인하지 않는다`() {
-        val arrayResponse = mvc.get("/api/posts").andExpect {
+        val listResponse = mvc.get("/api/posts").andExpect {
             status { isOk() }
-            jsonPath("$") { isArray() }
+            jsonPath("$.content") { isArray() }
+            jsonPath("$.page") { value(0) }
         }.andReturn().response.contentAsString
-        assertThat(arrayResponse).startsWith("[")
+        assertThat(listResponse).startsWith("{")
 
         mvc.get("/api/posts/search").andExpect {
             status { isOk() }

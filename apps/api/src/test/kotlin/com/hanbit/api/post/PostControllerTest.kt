@@ -96,8 +96,8 @@ class PostControllerTest(
     fun `목록은 시드 전체를 반환한다`() {
         mvc.get("/api/posts").andExpect {
             status { isOk() }
-            jsonPath("$.length()") { value(PostSeed.posts.size) }
-            jsonPath("$[0].id") { value("p1") }
+            jsonPath("$.content.length()") { value(PostSeed.posts.size) }
+            jsonPath("$.content[0].id") { value("p1") }
         }
     }
 
@@ -217,7 +217,7 @@ class PostControllerTest(
         mvc.get("/api/posts/$id/comments").andExpect { status { isNotFound() } }
         mvc.get("/api/posts").andExpect {
             status { isOk() }
-            jsonPath("$[?(@.id == '$id')]") { isEmpty() }
+            jsonPath("$.content[?(@.id == '$id')]") { isEmpty() }
         }
         mvc.get("/api/posts/search?q=교인만 보는&category=PRAYER").andExpect {
             status { isOk() }
@@ -495,7 +495,7 @@ class PostControllerTest(
         likeRepo.saveAndFlush(PostLike("plk-list", id, 1))
         mvc.get("/api/posts") { headers { add("Authorization", "Bearer $token") } }.andExpect {
             status { isOk() }
-            jsonPath("$[?(@.id == '$id')].likedByMe") { value(Matchers.hasItem(true)) }
+            jsonPath("$.content[?(@.id == '$id')].likedByMe") { value(Matchers.hasItem(true)) }
         }
     }
 
@@ -567,7 +567,7 @@ class PostControllerTest(
         }
         mvc.get("/api/posts").andExpect {
             status { isOk() }
-            jsonPath("$[?(@.id == '$id')].bookmarkedByMe") { value(Matchers.hasItem(false)) }
+            jsonPath("$.content[?(@.id == '$id')].bookmarkedByMe") { value(Matchers.hasItem(false)) }
         }
     }
 
@@ -581,7 +581,7 @@ class PostControllerTest(
         }
         mvc.get("/api/posts") { headers { add("Authorization", "Bearer $token") } }.andExpect {
             status { isOk() }
-            jsonPath("$[?(@.id == '$id')].bookmarkedByMe") { value(Matchers.hasItem(true)) }
+            jsonPath("$.content[?(@.id == '$id')].bookmarkedByMe") { value(Matchers.hasItem(true)) }
         }
     }
 

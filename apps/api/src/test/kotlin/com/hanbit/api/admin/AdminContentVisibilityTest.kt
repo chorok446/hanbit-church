@@ -140,7 +140,7 @@ class AdminContentVisibilityTest(
 
         mvc.get("/api/posts").andExpect {
             status { isOk() }
-            jsonPath("$[?(@.id == '${post.id}')]") { isEmpty() }
+            jsonPath("$.content[?(@.id == '${post.id}')]") { isEmpty() }
         }
         mvc.get("/api/posts/search?q=숨김 대상 게시글").andExpect {
             status { isOk() }
@@ -243,7 +243,7 @@ class AdminContentVisibilityTest(
 
         mvc.get("/api/events").andExpect {
             status { isOk() }
-            jsonPath("$[?(@.id == '${event.id}')]") { isEmpty() }
+            jsonPath("$.content[?(@.id == '${event.id}')]") { isEmpty() }
         }
         mvc.get("/api/events/${event.id}").andExpect { status { isNotFound() } }
         mvc.get("/api/events/${event.id}") {

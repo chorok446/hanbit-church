@@ -99,8 +99,8 @@ class EventControllerTest(
     fun `목록은 시드 전체를 반환한다`() {
         mvc.get("/api/events").andExpect {
             status { isOk() }
-            jsonPath("$.length()") { value(EventSeed.events.size) }
-            jsonPath("$[0].id") { value("c1") }
+            jsonPath("$.content.length()") { value(EventSeed.events.size) }
+            jsonPath("$.content[0].id") { value("c1") }
         }
     }
 
@@ -908,7 +908,7 @@ class EventControllerTest(
         val id = saveEvent(authorUserId = 1)
         mvc.get("/api/events").andExpect {
             status { isOk() }
-            jsonPath("$[?(@.id == '$id')].ownedByMe") { value(Matchers.hasItem(false)) }
+            jsonPath("$.content[?(@.id == '$id')].ownedByMe") { value(Matchers.hasItem(false)) }
         }
         mvc.get("/api/events/$id").andExpect {
             status { isOk() }
@@ -1379,7 +1379,7 @@ class EventControllerTest(
         participantRepo.saveAndFlush(EventParticipant("cp-list", id, 1))
         mvc.get("/api/events") { headers { add("Authorization", "Bearer $token") } }.andExpect {
             status { isOk() }
-            jsonPath("$[?(@.id == '$id')].joinedByMe") { value(Matchers.hasItem(true)) }
+            jsonPath("$.content[?(@.id == '$id')].joinedByMe") { value(Matchers.hasItem(true)) }
         }
     }
 
@@ -1773,7 +1773,7 @@ class EventControllerTest(
         }
         mvc.get("/api/events").andExpect {
             status { isOk() }
-            jsonPath("$[?(@.id == '$id')].bookmarkedByMe") { value(Matchers.hasItem(false)) }
+            jsonPath("$.content[?(@.id == '$id')].bookmarkedByMe") { value(Matchers.hasItem(false)) }
         }
     }
 
@@ -1787,7 +1787,7 @@ class EventControllerTest(
         }
         mvc.get("/api/events") { headers { add("Authorization", "Bearer $token") } }.andExpect {
             status { isOk() }
-            jsonPath("$[?(@.id == '$id')].bookmarkedByMe") { value(Matchers.hasItem(true)) }
+            jsonPath("$.content[?(@.id == '$id')].bookmarkedByMe") { value(Matchers.hasItem(true)) }
         }
     }
 
