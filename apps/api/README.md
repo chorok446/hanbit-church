@@ -49,7 +49,7 @@ JWT secret(`JWT_SECRET`), DB 접속 정보, CORS origin 등 민감 설정은 운
 | `SIGNUP_REQUIRE_APPROVAL` | 가입 승인제 on/off | `true` |
 | `FEATURE_DM` | DM REST API 플래그 | `false` |
 | `UPLOAD_DIR` / `APP_PUBLIC_URL` | 업로드 저장 경로 / 업로드 파일 공개 URL 베이스 | `uploads` / `http://localhost:8080` |
-| `MANAGEMENT_ENDPOINTS` | actuator web 노출 목록(공개 배포 시 `health` 만 권장) | `health,prometheus` |
+| `MANAGEMENT_ENDPOINTS` | actuator web 노출 목록. `prometheus` 는 기본 비공개 — 스크레이프 환경만 `health,prometheus` 로 opt-in | `health` |
 | `SENTRY_DSN` / `SENTRY_ENVIRONMENT` | 에러 추적(미설정 시 SDK 비활성) | 비활성 / `local` |
 
 프론트엔드(env) 목록은 `apps/web/.env.example` 참고.
@@ -126,11 +126,15 @@ APP_CORS_ALLOWED_ORIGINS=https://app.example.com,https://www.example.com
 
 | Endpoint | limit / window | Redis key prefix (`{clientIp}` = 클라이언트 IP) |
 |----------|----------------|------------------------------------------------|
-| `POST /api/auth/login` | 20 / 60초 | `rate-limit:auth:login:ip:{clientIp}` |
+| `POST /api/auth/login` | IP 20 / 60초 | `rate-limit:auth:login:ip:{clientIp}` |
+| `POST /api/auth/login` (계정당) | 계정(email) 10 / 60초 — 분산 IP 표적 추측 방지 | `rate-limit:auth:login:account:{email}` |
+| `POST /api/auth/2fa/verify` | 로그인 IP 버킷 공유 (2FA 코드 무차별 대입 방지) | `rate-limit:auth:login:ip:{clientIp}` |
 | `POST /api/auth/signup` | 10 / 60초 | `rate-limit:auth:signup:ip:{clientIp}` |
-| `POST /api/posts/{id}/comments` | 20 / 60초 (게시글·행사 댓글 작성 공유 버킷) | `rate-limit:comment:create:ip:{clientIp}` |
-| `POST /api/events/{id}/comments` | 20 / 60초 (게시글·행사 댓글 작성 공유 버킷) | `rate-limit:comment:create:ip:{clientIp}` |
-| `POST /api/reports` | 10 / 60초 | `rate-limit:report:create:ip:{clientIp}` |
+| `POST /api/posts`, `POST /api/events` (본문 생성) | 30 / 60초 (공유 버킷) | `rate-limit:content:create:ip:{clientIp}` |
+| `POST /api/posts/{id}/comments`, `POST /api/events/{id}/comments`, `POST /api/{posts\|events}/{id}/proofs` | 20 / 60초 (댓글·참여 후기 공유 버킷) | `rate-limit:comment:create:ip:{clientIp}` |
+| `POST /api/reports`, `POST /api/new-family` (비로그인 공개 POST) | 10 / 60초 (공유 버킷) | `rate-limit:report:create:ip:{clientIp}` |
+| `POST /api/media`, `POST /api/media/document`, `POST /api/praise/files` (업로드) | 10 / 60초 (공유 버킷) | `rate-limit:media:upload:ip:{clientIp}` |
+| 좋아요·북마크·참여·차단 토글(`POST /api/{posts\|events}/{id}/{like\|bookmark\|join}`, `POST /api/users/{id}/block`) | 60 / 60초 (공유 버킷) | `rate-limit:interaction:toggle:ip:{clientIp}` |
 
 - **기준**: 클라이언트 IP. `X-Forwarded-For` 가 있으면 첫 hop 을 사용하고, 없으면 `remoteAddr` 를 사용한다.
 - **알고리즘**: fixed-window. window 는 `app.rate-limit.*.window-seconds`(기본 60초)로 설정한다.
@@ -156,8 +160,6 @@ compose local 스택(`docker compose -f compose.local.yml up`)은 MySQL·API·We
 
 Redis 연결 smoke test(선택): compose 기동 후 `REDIS_SMOKE=true ./gradlew test --tests RedisCompatibleStoreConnectionTest`
 
-DM WS Redis fan-out smoke(선택): `REDIS_SMOKE=true ./gradlew test --tests DmWsFanoutRedisTest`
-
 #### 설정 property
 
 `app.rate-limit.*` (`RateLimitProperties`)로 제어한다. 환경변수 바인딩은 Spring Boot relaxed binding(`APP_RATE_LIMIT_*`)을 따른다.
@@ -166,14 +168,22 @@ DM WS Redis fan-out smoke(선택): `REDIS_SMOKE=true ./gradlew test --tests DmWs
 |----------|--------|------|
 | `app.rate-limit.enabled` | `true` | `false` 이면 rate limit 을 적용하지 않는다 |
 | `app.rate-limit.store` | `memory` | `memory` 또는 `redis` |
-| `app.rate-limit.auth.login.limit` | `20` | 로그인 limit |
-| `app.rate-limit.auth.login.window-seconds` | `60` | 로그인 window(초) |
+| `app.rate-limit.auth.login.limit` | `20` | 로그인 IP limit |
+| `app.rate-limit.auth.login.window-seconds` | `60` | 로그인 IP window(초) |
+| `app.rate-limit.auth.login-per-account.limit` | `10` | 로그인 계정(email)당 limit |
+| `app.rate-limit.auth.login-per-account.window-seconds` | `60` | 로그인 계정당 window(초) |
 | `app.rate-limit.auth.signup.limit` | `10` | 회원가입 limit |
 | `app.rate-limit.auth.signup.window-seconds` | `60` | 회원가입 window(초) |
-| `app.rate-limit.content.comment.limit` | `20` | 댓글 작성 limit |
+| `app.rate-limit.content.create.limit` | `30` | 게시글·행사 본문 생성 limit |
+| `app.rate-limit.content.create.window-seconds` | `60` | 본문 생성 window(초) |
+| `app.rate-limit.content.comment.limit` | `20` | 댓글·참여 후기 작성 limit |
 | `app.rate-limit.content.comment.window-seconds` | `60` | 댓글 작성 window(초) |
-| `app.rate-limit.content.report.limit` | `10` | 신고 생성 limit |
+| `app.rate-limit.content.report.limit` | `10` | 신고·새가족 등록 limit |
 | `app.rate-limit.content.report.window-seconds` | `60` | 신고 생성 window(초) |
+| `app.rate-limit.content.media.limit` | `10` | 업로드(이미지·문서·찬양팀 자료) limit |
+| `app.rate-limit.content.media.window-seconds` | `60` | 업로드 window(초) |
+| `app.rate-limit.content.interaction.limit` | `60` | 좋아요·북마크·참여·차단 토글 limit |
+| `app.rate-limit.content.interaction.window-seconds` | `60` | 상호작용 토글 window(초) |
 
 관련 회귀 테스트: `AuthRateLimitTest`, `ContentWriteRateLimitTest`, `RateLimitServiceTest`.
 
