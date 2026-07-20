@@ -57,6 +57,8 @@ class SecurityConfig(
                 it.requestMatchers(HttpMethod.GET, "/api/admin/users").hasAnyRole("ADMIN", "OPERATOR")
                 it.requestMatchers("/api/admin/reports/**").hasAnyRole("ADMIN", "OPERATOR")
                 it.requestMatchers("/api/admin/content/**").hasAnyRole("ADMIN", "OPERATOR")
+                // 데일리 큐티(오늘의 말씀·묵상) 작성·수정·삭제: 공지·주보와 동일한 콘텐츠 관리 권한.
+                it.requestMatchers("/api/admin/devotions/**").hasAnyRole("ADMIN", "OPERATOR", "CONTENT")
                 // 교회 일정(수동 등록) 관리: 운영자까지. 공개 조회는 GET /api/calendar (아래 GET permitAll).
                 it.requestMatchers("/api/admin/calendar/**").hasAnyRole("ADMIN", "OPERATOR")
                 // 대시보드 요약·추이: 모든 스태프.
@@ -95,6 +97,9 @@ class SecurityConfig(
                 it.requestMatchers(HttpMethod.POST, "/api/notifications/**").authenticated()
                 it.requestMatchers(HttpMethod.GET, "/api/reports/mine").authenticated()
                 it.requestMatchers(HttpMethod.POST, "/api/reports").authenticated()
+                // 큐티 은혜나눔 댓글 작성·삭제는 로그인 교인만. 조회(GET)는 공개(/api/** permitAll).
+                it.requestMatchers(HttpMethod.POST, "/api/devotions/*/comments").authenticated()
+                it.requestMatchers(HttpMethod.DELETE, "/api/devotions/*/comments/*").authenticated()
                 // 찬양팀 공개 일정(교회 캘린더 합류용)만 예외 — 응답 범위는 서비스가 요청자별로 좁힌다
                 // (비로그인 PUBLIC / 로그인 CHURCH+PUBLIC / 찬양팀 멤버 전체). authenticated 매처보다 먼저 선언.
                 it.requestMatchers(HttpMethod.GET, "/api/praise/schedules/public").permitAll()

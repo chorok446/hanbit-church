@@ -15,6 +15,8 @@ import { HomeIdentity } from "@/components/home-identity";
 import { HomePhotos } from "@/components/home-photos";
 import { HomeNews } from "@/components/home-news";
 import { HomeCommunity } from "@/components/home-community";
+import { HomeDevotion } from "@/components/home-devotion";
+import { TODAY_DEVOTION_PATH, type Devotion } from "@/data/devotion";
 import { ScrollReveal } from "@/components/scroll-reveal";
 
 // ISR: 최신 소식(공지·주보)을 서버에서 선주입(60초 재검증) — 홈 LCP·SEO.
@@ -26,11 +28,12 @@ export default async function Home() {
   const previewQuery = (category: string) =>
     apiGetIsr<PostSearchResponse>(`/api/posts/search?category=${category}&sort=latest&page=0&size=${HOME_NEWS_PREVIEW_SIZE}`);
   // 이번 주 일정 시드 — 다가오는 행사(창 한정) + 수동 일정. 찬양팀 일정은 요청자 스코프라 클라이언트에서 조회한다.
-  const [notices, bulletins, upcomingEvents, manualEvents] = await Promise.all([
+  const [notices, bulletins, upcomingEvents, manualEvents, devotion] = await Promise.all([
     previewQuery("NOTICE"),
     previewQuery("BULLETIN"),
     apiGetIsr<Event[]>(UPCOMING_EVENTS_PATH),
     apiGetIsr<ManualCalendarEventResponse[]>("/api/calendar"),
+    apiGetIsr<Devotion>(TODAY_DEVOTION_PATH),
   ]);
   // 둘 다 실패(null)면 클라이언트 fetch 폴백, 일부 실패는 빈 배열로 합친다(home-news 병합 규칙과 동일).
   const initialNews: Post[] | null = notices === null && bulletins === null
@@ -43,6 +46,7 @@ export default async function Home() {
           그 아래 내러티브 섹션만 스크롤 진입 시 은은하게 fade+rise 한다(reduced-motion 자동 무효). */}
       <ChurchHero />
       <HomeQuickInfo />
+      <ScrollReveal><HomeDevotion devotion={devotion} /></ScrollReveal>
       <ScrollReveal><WorshipSummary /></ScrollReveal>
       <ScrollReveal><HomeWeeklySchedule initialEvents={upcomingEvents} initialManual={initialManual} /></ScrollReveal>
       <ScrollReveal><HomeVisit /></ScrollReveal>

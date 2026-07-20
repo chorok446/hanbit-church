@@ -13,6 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/worship",
     "/welcome",
     "/sermons",
+    "/devotion",
     "/bulletin",
     "/news",
     "/feed",
@@ -26,13 +27,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // API 장애 시에도 sitemap 자체는 응답한다(정적 경로만 노출).
   let contentRoutes: MetadataRoute.Sitemap = [];
   try {
-    const [postIds, eventIds] = await Promise.all([
+    const [postIds, eventIds, devotionIds] = await Promise.all([
       fetchAllSitemapIds("/api/posts/sitemap-ids"),
       fetchAllSitemapIds("/api/events/sitemap-ids"),
+      fetchAllSitemapIds("/api/devotions/sitemap-ids"),
     ]);
     contentRoutes = [
       ...postIds.map((id) => ({ url: `${site}/posts/${encodeURIComponent(id)}` })),
       ...eventIds.map((id) => ({ url: `${site}/events/${encodeURIComponent(id)}` })),
+      ...devotionIds.map((id) => ({ url: `${site}/devotion/${encodeURIComponent(id)}` })),
     ];
   } catch {
     contentRoutes = [];

@@ -3,6 +3,8 @@ package com.hanbit.api.common
 import com.hanbit.api.auth.User
 import com.hanbit.api.auth.UserRepository
 import com.hanbit.api.auth.UserRole
+import com.hanbit.api.devotion.DevotionRepository
+import com.hanbit.api.devotion.DevotionSeed
 import com.hanbit.api.event.EventRepository
 import com.hanbit.api.event.EventSeed
 import com.hanbit.api.post.PostRepository
@@ -24,8 +26,10 @@ class SeedRunner(
     private val posts: PostRepository,
     private val events: EventRepository,
     private val praiseSetlists: PraiseSetlistRepository,
+    private val devotions: DevotionRepository,
     private val users: UserRepository,
     private val encoder: PasswordEncoder,
+    private val clock: java.time.Clock,
     @Value("\${app.admin.email}") private val adminEmail: String,
     @Value("\${app.admin.password}") private val adminPassword: String,
     @Value("\${app.admin.name}") private val adminName: String,
@@ -39,6 +43,9 @@ class SeedRunner(
         }
         if (praiseSetlists.count() == 0L) {
             praiseSetlists.saveAll(PraiseSeed.setlists(java.time.Instant.now()))
+        }
+        if (devotions.count() == 0L) {
+            devotions.saveAll(DevotionSeed.devotions(clock))
         }
         seedAdmin()
     }
