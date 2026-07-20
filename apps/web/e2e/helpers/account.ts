@@ -98,6 +98,8 @@ export async function signup(page: Page, prefix = "e2e"): Promise<Account> {
   await page.getByLabel("비밀번호", { exact: true }).fill(account.password);
   await page.getByLabel("비밀번호 확인").fill(account.password);
   await page.getByLabel("이름(실명)").fill(account.nickname);
+  // 법정 확인 게이트(만 14세 이상) — 체크해야 제출 버튼이 활성화된다.
+  await page.getByRole("checkbox", { name: /만 14세 이상/ }).check();
   const submit = page.getByRole("button", { name: "회원가입" });
   await expect(submit).toBeEnabled();
   await submit.click();

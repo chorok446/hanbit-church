@@ -25,7 +25,7 @@ async function expectNoSevereViolations(page: Page) {
  * 실행: pnpm --filter web e2e a11y.spec.ts
  */
 // 시드 상세(p1 게시글·c1 행사) 포함 — 목록만 검사하면 댓글·상호작용 UI 가 사각이 된다.
-const PAGES = ["/", "/sermons", "/news", "/events", "/feed", "/login", "/signup", "/about", "/worship", "/welcome", "/giving", "/posts/p1", "/events/c1"];
+const PAGES = ["/", "/sermons", "/news", "/events", "/feed", "/login", "/signup", "/about", "/worship", "/welcome", "/giving", "/privacy", "/posts/p1", "/events/c1"];
 
 for (const path of PAGES) {
   test(`a11y: ${path} 에 serious/critical 위반이 없다`, async ({ page }) => {

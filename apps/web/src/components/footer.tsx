@@ -139,6 +139,11 @@ export function Footer() {
       </div>
       <div className="mx-auto mt-10 flex max-w-7xl flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-6">
         <p className="text-[11px] tracking-[0.25em] uppercase opacity-80">© 2026 {CHURCH.nameEn}</p>
+        <p className="flex gap-4 text-[12px]">
+          <Link href="/privacy" className="font-medium opacity-85 transition-opacity hover:opacity-100">
+            개인정보처리방침
+          </Link>
+        </p>
       </div>
     </footer>
   );
