@@ -34,6 +34,7 @@ class PostService(
     private val events: EventRepository,
     private val users: UserRepository,
     private val likeRepo: PostLikeRepository,
+    private val prayerRepo: PostPrayerRepository,
     private val bookmarkRepo: PostBookmarkRepository,
     private val commentRepo: PostCommentRepository,
     private val postSearch: PostSearchRepository,
@@ -56,9 +57,15 @@ class PostService(
         // N+1 회피: 내가 좋아요/북마크한 postId 를 각각 한 번에 조회.
         val likedIds = likedByPage(currentUserId, posts.map { it.id })
         val bookmarkedIds = bookmarkedByPage(currentUserId, posts.map { it.id })
+        val prayedIds = prayedByPage(currentUserId, posts.map { it.id })
         return PostPageResponse(
             content = posts.map {
-                it.toResponse(viewerId = currentUserId, likedByMe = it.id in likedIds, bookmarkedByMe = it.id in bookmarkedIds)
+                it.toResponse(
+                    viewerId = currentUserId,
+                    likedByMe = it.id in likedIds,
+                    bookmarkedByMe = it.id in bookmarkedIds,
+                    prayedByMe = it.id in prayedIds,
+                )
             },
             page = page,
             size = size,
@@ -144,6 +151,7 @@ class PostService(
         val postIds = result.content.map { it.id }
         val likedIds = likedByPage(currentUserId, postIds)
         val bookmarkedIds = bookmarkedByPage(currentUserId, postIds)
+        val prayedIds = prayedByPage(currentUserId, postIds)
 
         return PostSearchResponse(
             content = result.content.map {
@@ -151,6 +159,7 @@ class PostService(
                     viewerId = currentUserId,
                     likedByMe = it.id in likedIds,
                     bookmarkedByMe = it.id in bookmarkedIds,
+                    prayedByMe = it.id in prayedIds,
                 )
             },
             page = page,
@@ -278,6 +287,7 @@ class PostService(
             viewerId = currentUserId,
             likedByMe = currentUserId != null && likeRepo.existsByPostIdAndUserId(id, currentUserId),
             bookmarkedByMe = currentUserId != null && bookmarkRepo.existsByPostIdAndUserId(id, currentUserId),
+            prayedByMe = currentUserId != null && prayerRepo.existsByPostIdAndUserId(id, currentUserId),
         ).copy(views = viewsAfter)
     }
 
@@ -328,6 +338,69 @@ class PostService(
             likedByMe = false,
             bookmarkedByMe = bookmarkRepo.existsByPostIdAndUserId(postId, userId),
         )
+    }
+
+    /**
+     * '함께 기도했어요' 반응. 기도(PRAYER) 글에만 허용(그 외 400). 이미 누른 경우 idempotent(200, 증가 없음).
+     * 익명 집계라 작성자에게 알림을 보내지 않는다(누가 눌렀는지 드러내지 않는다). 동시성은 좋아요와 동일하게
+     * post row write lock 으로 직렬화해 prayed_count 증가 유실을 막고, unique 제약을 최종 방어선으로 둔다.
+     */
+    @Transactional
+    fun prayPost(userId: Long, postId: String): PostResponse {
+        val post = prayableForUpdateOrNotFound(postId)
+        if (!prayerRepo.existsByPostIdAndUserId(postId, userId)) {
+            prayerRepo.save(PostPrayer("ppr-${UUID.randomUUID()}", postId, userId))
+            post.prayedCount += 1
+            repo.save(post)
+        }
+        return prayResponse(post, userId, prayedByMe = true)
+    }
+
+    /** '함께 기도했어요' 취소. 누르지 않은 경우 idempotent(200). prayed_count 는 0 미만으로 내려가지 않음. */
+    @Transactional
+    fun unprayPost(userId: Long, postId: String): PostResponse {
+        val post = prayableForUpdateOrNotFound(postId)
+        prayerRepo.findByPostIdAndUserId(postId, userId)?.let {
+            prayerRepo.delete(it)
+            post.prayedCount = maxOf(0, post.prayedCount - 1)
+        }
+        return prayResponse(post, userId, prayedByMe = false)
+    }
+
+    /**
+     * '응답받았어요' 마킹 토글. 기도(PRAYER) 글에만 허용(그 외 400). 작성자 본인 또는 스태프만 가능.
+     * answered=true 면 응답 시각을 찍고, false 면 지운다(재마킹은 최초 시각을 갱신).
+     */
+    @Transactional
+    fun setAnswered(userId: Long, postId: String, answered: Boolean): PostResponse {
+        val post = prayableForUpdateOrNotFound(postId)
+        val isAuthor = post.authorUserId != null && post.authorUserId == userId
+        if (!isAuthor && !hasStaffRole()) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "not allowed to mark this prayer")
+        }
+        post.answeredAt = if (answered) Instant.now(clock) else null
+        return prayResponse(post, userId, prayedByMe = prayerRepo.existsByPostIdAndUserId(postId, userId))
+    }
+
+    /** 기도 반응/응답 응답 공통 — 좋아요·북마크 상태도 함께 실어 클라이언트가 단일 응답으로 갱신하게 한다. */
+    private fun prayResponse(post: Post, userId: Long, prayedByMe: Boolean): PostResponse =
+        post.toResponse(
+            viewerId = userId,
+            likedByMe = likeRepo.existsByPostIdAndUserId(post.id, userId),
+            bookmarkedByMe = bookmarkRepo.existsByPostIdAndUserId(post.id, userId),
+            prayedByMe = prayedByMe,
+        )
+
+    /**
+     * 기도 반응/응답용 write lock 조회. 숨김 글은 존재를 드러내지 않는 404, 기도 카테고리가 아니면 400.
+     * (기도 전용 상호작용이 나눔·공지 등 다른 카테고리로 새지 않게 한다.)
+     */
+    private fun prayableForUpdateOrNotFound(postId: String): Post {
+        val post = visibleForUpdateOrNotFound(postId)
+        if (post.category != PostCategory.PRAYER) {
+            badRequest("기도 반응은 기도 카테고리에서만 가능합니다.")
+        }
+        return post
     }
 
     /** 북마크. 이미 저장된 경우에도 idempotent(200). */
@@ -626,4 +699,8 @@ class PostService(
     /** 현재 page 의 postId 만 대상으로 북마크 bulk 조회. 비로그인/빈 page 면 query 생략. */
     private fun bookmarkedByPage(userId: Long?, postIds: List<String>): Set<String> =
         presenceByPage(userId, postIds) { uid, ids -> bookmarkRepo.findByUserIdAndPostIdIn(uid, ids).map { it.postId } }
+
+    /** 현재 page 의 postId 만 대상으로 '함께 기도했어요' bulk 조회. 비로그인/빈 page 면 query 생략. */
+    private fun prayedByPage(userId: Long?, postIds: List<String>): Set<String> =
+        presenceByPage(userId, postIds) { uid, ids -> prayerRepo.findByUserIdAndPostIdIn(uid, ids).map { it.postId } }
 }

@@ -10,6 +10,7 @@ fun Post.toResponse(
     viewerId: Long?,
     likedByMe: Boolean = false,
     bookmarkedByMe: Boolean = false,
+    prayedByMe: Boolean = false,
 ) = PostResponse(
     id = id,
     author = if (anonymous) ANONYMOUS_AUTHOR else author,
@@ -26,6 +27,9 @@ fun Post.toResponse(
     pinned = pinnedAt != null,
     publishAt = publishAt?.toString(),
     edited = updatedAt != null,
+    prayedCount = prayedCount,
+    prayedByMe = prayedByMe,
+    answered = answeredAt != null,
 )
 
 fun PostComment.toResponse(viewerId: Long?, replies: List<PostCommentResponse> = emptyList()) = PostCommentResponse(

@@ -140,6 +140,30 @@ class PostController(
     fun unlike(@PathVariable id: String, @AuthenticationPrincipal user: AuthUser): PostResponse =
         postService.unlikePost(user.id, id)
 
+    @Operation(summary = "함께 기도했어요", description = "기도(PRAYER) 글 전용 반응. 익명 집계라 알림 없음. 다른 카테고리는 400.")
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/{id}/pray")
+    fun pray(@PathVariable id: String, @AuthenticationPrincipal user: AuthUser): PostResponse =
+        postService.prayPost(user.id, id)
+
+    @Operation(summary = "함께 기도했어요 취소")
+    @SecurityRequirement(name = "bearerAuth")
+    @DeleteMapping("/{id}/pray")
+    fun unpray(@PathVariable id: String, @AuthenticationPrincipal user: AuthUser): PostResponse =
+        postService.unprayPost(user.id, id)
+
+    @Operation(summary = "응답받았어요 마킹", description = "기도(PRAYER) 글 전용. 작성자 또는 스태프만. 다른 카테고리는 400.")
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/{id}/answered")
+    fun markAnswered(@PathVariable id: String, @AuthenticationPrincipal user: AuthUser): PostResponse =
+        postService.setAnswered(user.id, id, answered = true)
+
+    @Operation(summary = "응답받았어요 마킹 해제")
+    @SecurityRequirement(name = "bearerAuth")
+    @DeleteMapping("/{id}/answered")
+    fun unmarkAnswered(@PathVariable id: String, @AuthenticationPrincipal user: AuthUser): PostResponse =
+        postService.setAnswered(user.id, id, answered = false)
+
     @Operation(summary = "북마크")
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/{id}/bookmark")
