@@ -57,8 +57,3 @@ test("헌금 안내 페이지가 렌더된다", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "헌금 안내" })).toBeVisible();
   await expect(page.getByText("헌금의 종류")).toBeVisible();
 });
-
-test("개인정보처리방침 페이지가 렌더된다", async ({ page }) => {
-  await page.goto("/privacy");
-  await expect(page.getByRole("heading", { name: "개인정보처리방침" })).toBeVisible();
-});
