@@ -98,9 +98,6 @@ export async function signup(page: Page, prefix = "e2e"): Promise<Account> {
   await page.getByLabel("비밀번호", { exact: true }).fill(account.password);
   await page.getByLabel("비밀번호 확인").fill(account.password);
   await page.getByLabel("이름(실명)").fill(account.nickname);
-  // 법정 동의 게이트(이용약관·개인정보) — 둘 다 체크해야 제출 버튼이 활성화된다.
-  await page.getByRole("checkbox", { name: /이용약관/ }).check();
-  await page.getByRole("checkbox", { name: /개인정보/ }).check();
   const submit = page.getByRole("button", { name: "회원가입" });
   await expect(submit).toBeEnabled();
   await submit.click();
