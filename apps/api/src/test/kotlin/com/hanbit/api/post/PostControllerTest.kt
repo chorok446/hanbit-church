@@ -294,6 +294,31 @@ class PostControllerTest(
     }
 
     @Test
+    fun `raw 길이가 20k 를 넘는 태그 폭탄 본문은 400`() {
+        // 태그 제외 평문은 0자지만 raw 는 21,000자 — raw 캡에 걸려야 한다.
+        val tagBomb = "<b></b>".repeat(3_000)
+        postPost("""{"text":"$tagBomb"}""").andExpect { status { isBadRequest() } }
+    }
+
+    @Test
+    fun `조회수는 작성자 본인 조회에서 증가하지 않는다`() {
+        val id = savePost(authorUserId = 1)
+        mvc.get("/api/posts/$id") {
+            headers { add("Authorization", "Bearer $token") }
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.views") { value(0) }
+        }
+        // 다른 사용자의 조회는 그대로 +1.
+        mvc.get("/api/posts/$id") {
+            headers { add("Authorization", "Bearer $token2") }
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.views") { value(1) }
+        }
+    }
+
+    @Test
     fun `본문 inline img 는 images 배열로 분리된다`() {
         postPost(
             """{"text":"<p>소개</p><p><img src=\"https://example.com/a.jpg\" /></p>","images":[]}""",

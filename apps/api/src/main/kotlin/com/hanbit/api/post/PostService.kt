@@ -282,8 +282,10 @@ class PostService(
         // 조회수 증가 — 엔티티 dirty checking 대신 원자적 UPDATE 로 동시 조회 유실을 막는다.
         // (incrementViews 는 clearAutomatically 로 영속성 컨텍스트를 비우므로 post 는 이 시점 detached.
         //  detached 엔티티를 변경하지 않고, 응답 views 만 이번 조회분(+1)을 copy 로 반영한다.)
-        val viewsAfter = post.views + 1
-        repo.incrementViews(id)
+        // 작성자 본인 조회는 집계하지 않는다.
+        val isAuthorView = post.authorUserId != null && post.authorUserId == currentUserId
+        val viewsAfter = if (isAuthorView) post.views else post.views + 1
+        if (!isAuthorView) repo.incrementViews(id)
         return post.toResponse(
             viewerId = currentUserId,
             likedByMe = currentUserId != null && likeRepo.existsByPostIdAndUserId(id, currentUserId),
