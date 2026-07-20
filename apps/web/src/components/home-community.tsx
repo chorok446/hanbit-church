@@ -1,13 +1,20 @@
 import Link from "next/link";
-import { CalendarHeart, MessagesSquare } from "lucide-react";
+import { CalendarHeart, HeartHandshake, MessagesSquare } from "lucide-react";
 
 const CARDS = [
   {
     href: "/feed",
     icon: MessagesSquare,
     title: "성도의 교제",
-    body: "삶의 나눔과 기도 제목을 함께 나누는 공간입니다. 댓글과 멘션으로 서로를 격려해 주세요.",
+    body: "삶의 나눔과 소식을 함께 나누는 공간입니다. 댓글과 멘션으로 서로를 격려해 주세요.",
     cta: "교제 공간 가기",
+  },
+  {
+    href: "/prayer",
+    icon: HeartHandshake,
+    title: "기도벽",
+    body: "서로의 기도제목을 모아 함께 중보합니다. “함께 기도했어요”로 곁을 지키고 응답을 나눠 주세요.",
+    cta: "기도벽 가기",
   },
   {
     href: "/events",
@@ -32,7 +39,7 @@ export function HomeCommunity() {
         >
           함께 나누는 교제와 사역
         </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {CARDS.map(({ href, icon: Icon, title, body, cta }) => (
             <Link
               key={href}

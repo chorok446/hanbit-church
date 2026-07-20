@@ -120,6 +120,10 @@ class Post(
     @Column(name = "publish_at") var publishAt: java.time.Instant? = null,
     // 본문 수정 시각 — '수정됨' 표시용(댓글과 동일 의미). 고정/숨김 등 메타 변경은 건드리지 않는다.
     @Column(name = "updated_at") var updatedAt: java.time.Instant? = null,
+    // '함께 기도했어요' 반응 수(PRAYER 전용). 좋아요(likes)와 같은 비정규화 카운터 — post_prayers 와 동기 유지.
+    @Column(name = "prayed_count", nullable = false) var prayedCount: Int = 0,
+    // '응답받았어요' 마킹 시각(PRAYER 전용). null = 미응답. 작성자 또는 스태프만 토글.
+    @Column(name = "answered_at") var answeredAt: java.time.Instant? = null,
 )
 
 /**

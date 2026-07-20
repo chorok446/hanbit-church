@@ -8,6 +8,7 @@ const QUICK_LINKS = [
   { href: "/sermons", label: "설교" },
   { href: "/news", label: "소식" },
   { href: "/feed", label: "교제" },
+  { href: "/prayer", label: "기도벽" },
   { href: "/events", label: "행사·사역" },
   { href: "/giving", label: "헌금 안내" },
 ];

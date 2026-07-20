@@ -113,6 +113,12 @@ data class PostResponse(
     val publishAt: String? = null,
     @field:Schema(description = "본문 수정 여부 — '수정됨' 표시용")
     val edited: Boolean = false,
+    @field:Schema(description = "'함께 기도했어요' 반응 수(기도벽 전용, 익명 집계)")
+    val prayedCount: Int = 0,
+    @field:Schema(description = "현재 사용자가 '함께 기도했어요'를 눌렀는지")
+    val prayedByMe: Boolean = false,
+    @field:Schema(description = "'응답받았어요' 마킹 여부 — 작성자·스태프가 표시")
+    val answered: Boolean = false,
 )
 
 data class PostSearchResponse(

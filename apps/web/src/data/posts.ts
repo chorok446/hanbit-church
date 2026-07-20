@@ -1,7 +1,7 @@
 import { richTextPlainLength } from "@/lib/rich-text-length";
 import { mergeRichBodyForEditor, splitRichBodyHtml } from "@/lib/rich-body-html";
 import { isAllowedImageUrl } from "@/lib/image-url";
-import { apiGet, apiPatch, apiPut, apiDelete } from "@/lib/api";
+import { apiGet, apiPost, apiPatch, apiPut, apiDelete } from "@/lib/api";
 import type { CommentPageLocationResponse } from "@/data/comments";
 
 /** 백엔드 PostValidators 와 동일한 제한. */
@@ -203,7 +203,28 @@ export type Post = {
   publishAt?: string | null;
   /** 본문 수정 여부 — 상세에서 '수정됨' 표시(댓글과 동일 의미). */
   edited?: boolean;
+  /** '함께 기도했어요' 반응 수(기도벽 전용, 익명 집계). 이전 응답 호환을 위해 optional. */
+  prayedCount?: number;
+  /** 현재 사용자가 '함께 기도했어요'를 눌렀는지. */
+  prayedByMe?: boolean;
+  /** '응답받았어요' 마킹 여부(작성자·스태프가 표시). */
+  answered?: boolean;
 };
+
+/** '함께 기도했어요' 토글 — 기도(PRAYER) 글 전용(서버에서 검증). */
+export function prayPost(postId: string): Promise<Post> {
+  return apiPost<Post>(`/api/posts/${encodeURIComponent(postId)}/pray`, {});
+}
+export function unprayPost(postId: string): Promise<Post> {
+  return apiDelete<Post>(`/api/posts/${encodeURIComponent(postId)}/pray`);
+}
+
+/** '응답받았어요' 마킹 토글 — 기도(PRAYER) 글 전용, 작성자·스태프만(서버에서 검증). */
+export function markPostAnswered(postId: string, answered: boolean): Promise<Post> {
+  return answered
+    ? apiPost<Post>(`/api/posts/${encodeURIComponent(postId)}/answered`, {})
+    : apiDelete<Post>(`/api/posts/${encodeURIComponent(postId)}/answered`);
+}
 
 /**
  * 게시글 시각 표기. createdAt 이 있으면 KST 절대 시각("2026.7.10 15:30"), 없으면(시드)
