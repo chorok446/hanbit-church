@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { ApiError } from "@/lib/api";
 import { submitNewFamily } from "@/data/new-family";
@@ -215,7 +216,10 @@ export function NewFamilyRegisterForm() {
           </span>
         </label>
         <p className="mt-1.5 pl-8 text-[12.5px] leading-5" style={{ color: "var(--foreground-muted)" }}>
-          수집된 정보는 새가족 안내와 연락 목적으로만 사용됩니다.
+          수집된 정보는 새가족 안내와 연락 목적으로만 사용됩니다.{" "}
+          <Link href="/privacy" className="underline underline-offset-2 hover:opacity-80" style={{ color: "var(--accent-strong)" }}>
+            개인정보처리방침
+          </Link>
         </p>
       </div>
 
