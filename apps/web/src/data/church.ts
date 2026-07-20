@@ -36,11 +36,14 @@ export const CHURCH_STAFF: ChurchStaff[] = [
   { role: "사무 간사", name: "", note: "교회 행정과 새가족 안내를 돕습니다." },
 ];
 
-/** 헌금 계좌 안내(/giving). env 미설정(빈 값)이면 계좌 대신 교회 사무실 문의 안내로 대체된다. */
+/** 헌금 계좌 안내(/giving). env 미설정(빈 값)이면 계좌 대신 교회 사무실 문의 안내로 대체된다.
+ *  kakaopay/toss 는 교회가 발급한 간편송금 딥링크(전체 URL). 빈 값이면 해당 버튼을 숨긴다. */
 export const CHURCH_GIVING = {
   bank: process.env.NEXT_PUBLIC_CHURCH_BANK ?? "",
   account: process.env.NEXT_PUBLIC_CHURCH_ACCOUNT ?? "",
   holder: process.env.NEXT_PUBLIC_CHURCH_ACCOUNT_HOLDER ?? "",
+  kakaopay: process.env.NEXT_PUBLIC_CHURCH_KAKAOPAY ?? "",
+  toss: process.env.NEXT_PUBLIC_CHURCH_TOSS ?? "",
 } as const;
 
 export type WorshipService = {
