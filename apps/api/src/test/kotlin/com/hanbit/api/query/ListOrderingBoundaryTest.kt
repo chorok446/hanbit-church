@@ -119,6 +119,31 @@ class ListOrderingBoundaryTest(
     }
 
     @Test
+    fun `게시글 목록은 동일 seq를 id 오름차순 tie breaker로 정렬한다`() {
+        // 동시 생성 등으로 seq 가 겹쳐도 페이지 경계에서 누락/중복이 없도록 id 오름차순으로 안정 정렬돼야 한다.
+        val b = savePost(seq = 100)
+        val a = savePost(seq = 100)
+        val (lo, hi) = listOf(a, b).sorted()
+
+        val body = mvc.get("/api/posts").andReturn().response.contentAsString
+        val ids = idOrder(body)
+
+        assertThat(ids.indexOf(lo)).isLessThan(ids.indexOf(hi))
+    }
+
+    @Test
+    fun `행사 목록은 동일 seq를 id 오름차순 tie breaker로 정렬한다`() {
+        val b = saveEvent(seq = 100)
+        val a = saveEvent(seq = 100)
+        val (lo, hi) = listOf(a, b).sorted()
+
+        val body = mvc.get("/api/events").andReturn().response.contentAsString
+        val ids = idOrder(body)
+
+        assertThat(ids.indexOf(lo)).isLessThan(ids.indexOf(hi))
+    }
+
+    @Test
     fun `내 신고 목록은 seq 내림차순이며 동일 seq는 id 오름차순 tie breaker로 정렬한다`() {
         reports.saveAllAndFlush(
             listOf(

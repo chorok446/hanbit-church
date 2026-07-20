@@ -48,7 +48,8 @@ class EventService(
         // 캘린더·홈은 창 한정 /upcoming 을, 전체 브라우징·필터는 /search 를 쓴다.
         checkPageParams(page, size, MAX_SEARCH_PAGE_SIZE)
         val result = repo.findByHiddenAtIsNull(
-            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "seq")),
+            // 동일 seq(동시 생성) 레코드가 페이지 경계에서 누락/중복되지 않도록 id 오름차순 tie breaker 추가.
+            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "seq").and(Sort.by("id"))),
         )
         return EventPageResponse(
             content = toEventResponses(currentUserId, result.content, LocalDate.now(clock)),
