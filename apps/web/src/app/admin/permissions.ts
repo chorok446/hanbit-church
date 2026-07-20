@@ -22,6 +22,13 @@ export function isStaffRole(role: string | null | undefined): boolean {
   return STAFF_ROLES.includes(role as StaffRole);
 }
 
+/** 목장(소그룹) 매니저 — 그룹·로스터를 관리하는 사역 스태프. 백엔드 CellGroupAccess.MANAGER_ROLES 와 1:1. */
+export const CELL_GROUP_MANAGER_ROLES: UserRole[] = ["ADMIN", "OPERATOR", "MINISTRY"];
+
+export function isCellGroupManager(role: string | null | undefined): boolean {
+  return CELL_GROUP_MANAGER_ROLES.includes(role as UserRole);
+}
+
 export type AdminPermissions = {
   /** 신고 검토·처리 (최고 관리자·운영자) */
   canManageReports: boolean;
