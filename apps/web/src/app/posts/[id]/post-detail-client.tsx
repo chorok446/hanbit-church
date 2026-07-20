@@ -18,6 +18,7 @@ import type { Event } from "@/data/events";
 import { PostDetailComments } from "./post-detail-comments";
 import { PostDetailHero } from "./post-detail-hero";
 import { SermonDetail } from "./sermon-detail";
+import { BulletinDetail } from "./bulletin-detail";
 
 /** 상세 우상단 ⋯ 메뉴 — 링크 복사와 신고(공지·주보 제외)를 담는다. */
 function PostActionsMenu({ postId, canReport }: { postId: string; canReport: boolean }) {
@@ -123,6 +124,8 @@ export default function PostDetailClient({ post, linkedEvent }: { post: Post; li
   const confirm = useConfirm();
   // 설교는 전용 레이아웃(영상 중심 + 말씀 요약·나눔 질문 섹션)으로 분기한다.
   const isSermon = p.category === "SERMON";
+  // 주보는 PDF 인라인 뷰어 전용 레이아웃으로 분기한다(좋아요 비노출은 공식 소식 공통).
+  const isBulletin = p.category === "BULLETIN";
 
   const { refreshing, invalidatePending } = useAuthedRefresh<Post>(
     `/api/posts/${p.id}`,
@@ -238,11 +241,13 @@ export default function PostDetailClient({ post, linkedEvent }: { post: Post; li
           {/* 카테고리에 맞는 목록으로 돌려보낸다 — 소식에서 온 공지·주보가 교제로 떨어지지 않게. */}
           {(() => {
             const back =
-              p.category === "NOTICE" || p.category === "BULLETIN"
-                ? { href: "/news", label: "소식으로 돌아가기" }
-                : p.category === "SERMON"
-                  ? { href: "/sermons", label: "설교로 돌아가기" }
-                  : { href: "/feed", label: "교제로 돌아가기" };
+              p.category === "BULLETIN"
+                ? { href: "/bulletin", label: "주보로 돌아가기" }
+                : p.category === "NOTICE"
+                  ? { href: "/news", label: "소식으로 돌아가기" }
+                  : p.category === "SERMON"
+                    ? { href: "/sermons", label: "설교로 돌아가기" }
+                    : { href: "/feed", label: "교제로 돌아가기" };
             return (
               <button
                 type="button"
@@ -286,6 +291,14 @@ export default function PostDetailClient({ post, linkedEvent }: { post: Post; li
 
         {isSermon ? (
           <SermonDetail
+            post={p}
+            bookmarked={bookmarked}
+            bookmarking={bookmarking}
+            refreshing={refreshing}
+            onBookmark={() => void onBookmark()}
+          />
+        ) : isBulletin ? (
+          <BulletinDetail
             post={p}
             bookmarked={bookmarked}
             bookmarking={bookmarking}
