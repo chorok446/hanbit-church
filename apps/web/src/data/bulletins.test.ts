@@ -26,6 +26,11 @@ describe("isPdfAttachment", () => {
     expect(isPdfAttachment({ name: "주보", url: "http://x/uploads/a.pdf" })).toBe(true);
     expect(isPdfAttachment({ name: "주보.hwp", url: "http://x/uploads/a.hwp" })).toBe(false);
   });
+  it("쿼리·해시가 붙은 PDF URL 도 인식한다", () => {
+    expect(isPdfAttachment({ name: "주보", url: "http://x/uploads/a.pdf?v=123" })).toBe(true);
+    expect(isPdfAttachment({ name: "주보", url: "http://x/uploads/a.pdf#page=2" })).toBe(true);
+    expect(isPdfAttachment({ name: "주보", url: "http://x/uploads/a.pdf?download=1#top" })).toBe(true);
+  });
 });
 
 describe("bulletinPdf", () => {

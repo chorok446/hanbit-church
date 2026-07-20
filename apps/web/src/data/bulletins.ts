@@ -8,7 +8,7 @@ import type { Post, PostAttachment } from "@/data/posts";
 
 /** 첨부가 PDF 인지 — url/name 확장자로 판별한다(서버 PostAttachment 에 타입 필드가 없다). */
 export function isPdfAttachment(att: PostAttachment): boolean {
-  return /\.pdf$/i.test(att.url) || /\.pdf$/i.test(att.name ?? "");
+  return /\.pdf(?:[?#].*)?$/i.test(att.url) || /\.pdf(?:[?#].*)?$/i.test(att.name ?? "");
 }
 
 /** 주보 게시글의 PDF 첨부만 추린다(대개 1개, 최대 3개). */
