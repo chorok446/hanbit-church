@@ -106,6 +106,9 @@ class SecurityConfig(
                 // 나머지 찬양팀 내부 API — 인증만 여기서 요구하고, 찬양팀 권한(멤버/리더)은
                 // PraiseService 가 요청자 praiseRole 을 DB 조회로 검사한다(JwtAuthFilter 는 사이트 role 만 부여).
                 it.requestMatchers("/api/praise/**").authenticated()
+                // 목장(소그룹) API — 인증만 요구하고, 그룹별 권한(매니저·리더·멤버)은
+                // CellGroupService 가 요청자 role·roster 를 DB 조회로 검사한다.
+                it.requestMatchers("/api/cell-groups/**").authenticated()
                 if (eventCreateStaffOnly) {
                     // 행사 개설 스태프 제한(플래그). POST /api/events/{id}/join 등 하위 경로는 해당 없음(정확 일치).
                     it.requestMatchers(HttpMethod.POST, "/api/events").hasAnyRole("ADMIN", "OPERATOR", "MINISTRY")

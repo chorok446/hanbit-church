@@ -9,6 +9,8 @@ import com.hanbit.api.event.EventRepository
 import com.hanbit.api.event.EventSeed
 import com.hanbit.api.post.PostRepository
 import com.hanbit.api.post.PostSeed
+import com.hanbit.api.cellgroup.CellGroupRepository
+import com.hanbit.api.cellgroup.CellGroupSeed
 import com.hanbit.api.praise.PraiseSeed
 import com.hanbit.api.praise.PraiseSetlistRepository
 import org.slf4j.LoggerFactory
@@ -27,6 +29,7 @@ class SeedRunner(
     private val events: EventRepository,
     private val praiseSetlists: PraiseSetlistRepository,
     private val devotions: DevotionRepository,
+    private val cellGroups: CellGroupRepository,
     private val users: UserRepository,
     private val encoder: PasswordEncoder,
     private val clock: java.time.Clock,
@@ -46,6 +49,9 @@ class SeedRunner(
         }
         if (devotions.count() == 0L) {
             devotions.saveAll(DevotionSeed.devotions(clock))
+        }
+        if (cellGroups.count() == 0L) {
+            cellGroups.saveAll(CellGroupSeed.groups(java.time.Instant.now()))
         }
         seedAdmin()
     }

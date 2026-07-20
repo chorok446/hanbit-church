@@ -4,7 +4,7 @@ import { getAdminPermissions, isStaffRole, USER_ROLE_LABELS, type UserRole } fro
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Monitor, Music, Pencil, PenLine, Plus, ShieldCheck, UserRound } from "lucide-react";
+import { CheckCircle2, Home, Monitor, Music, Pencil, PenLine, Plus, ShieldCheck, UserRound } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { fetchAccessLogsPage, type AccessLogItem } from "@/data/access-logs";
 import type { UserProfile } from "@/data/users";
@@ -137,6 +137,11 @@ export function MypageProfileHeader({ profile }: { profile: UserProfile }) {
                 찬양팀
               </Link>
             ) : null}
+            {/* 목장(소그룹)은 로그인 교인 누구나 디렉터리를 볼 수 있어 상시 노출한다. */}
+            <Link href="/cell-groups" className={outlineBtn} style={{ borderColor: creamBorder, color: cream }}>
+              <Home size={13} aria-hidden style={{ color: "var(--accent)" }} />
+              목장
+            </Link>
             <Link href="/profile/edit" className={outlineBtn} style={{ borderColor: creamBorder, color: cream }}>
               <Pencil size={13} aria-hidden />
               프로필 편집
