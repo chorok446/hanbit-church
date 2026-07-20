@@ -47,7 +47,8 @@ class PostService(
         // 전체 브라우징·필터는 /search 를 쓴다. 교인만 공개(MEMBERS) 가시성은 로그인 사용자에게만
         // (승인제라 로그인 = 승인 교인) — 비로그인은 WHERE 로 걸러 슬라이스와 total 이 정확하다.
         checkPageParams(page, size, MAX_SEARCH_PAGE_SIZE)
-        val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "seq"))
+        // 동일 seq(동시 생성) 레코드가 페이지 경계에서 누락/중복되지 않도록 id 오름차순 tie breaker 추가.
+        val pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "seq").and(Sort.by("id")))
         val result = if (currentUserId != null) {
             repo.findByHiddenAtIsNull(pageable)
         } else {
