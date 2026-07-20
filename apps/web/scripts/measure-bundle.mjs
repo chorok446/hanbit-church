@@ -1,6 +1,6 @@
 // 프리렌더 HTML 이 참조하는 JS 청크를 gzip 합산해 라우트별 First Load JS 를 근사한다(#204 방법).
 // 사용: node scripts/measure-bundle.mjs
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { join } from "node:path";
 
