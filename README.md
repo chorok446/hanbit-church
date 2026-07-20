@@ -12,6 +12,7 @@
 - **헌금 안내(`/giving`)**: 계좌번호·이체 메모 복사, 계좌이체용 QR, 카카오페이·토스 간편송금 딥링크. 계좌·링크 값은 env 로 주입하며 미설정 시 사무실 문의 안내로 폴백(링크 없는 송금 버튼은 숨김)
 - **행사·사역**: 개설·모집 시작·참여/취소, 댓글, 참여자 목록·명단 CSV 내보내기(개설자 전용), 캘린더에 추가(.ics), 저장(북마크) 사용자 D-1 마감 임박 알림 배치. 모집중 정원 늘리기(증원·취소로 자리가 나면 북마커에게 자리 알림), 모집중 수정은 안내 정보만 허용(참여 조건 보호)
 - **찬양팀**: 콘티(세트리스트) 아카이브, 일정 관리(지난 일정 포함 토글), 팀원 관리 — 찬양팀원(praiseRole)·관리자 전용 대시보드
+- **소그룹/목장(구역)**: 목장 디렉터리·내 목장(`/cell-groups`, 로그인 교인 전용), 로스터 관리(후보 검색·전체 교체·새 멤버 합류 알림), 모임 스케줄·모임기록(참석 체크·나눔 노트). 그룹 생성·삭제·로스터 관리는 사역 스태프(ADMIN/OPERATOR/MINISTRY), 정보 수정·모임 기록은 담당 리더(목자)도 가능
 - **캘린더**: 예배 반복 일정 + 행사 + 관리자 수동 일정 + 공휴일(2030년까지), iCal(.ics) 구독 피드
 - **알림**: 타입별 필터 탭 + 안읽음 필터 AND 조합, 유형별 수신 설정(행사·댓글·좋아요), WebSocket 실시간 push, 새 기기 로그인 보안 알림
 - **계정 보안**: 승인제 가입(+이용약관·개인정보 동의), 2단계 인증(TOTP), 접속 기록·현재 세션 표시, 원격 세션 로그아웃(개별/전체·비밀번호 변경 시 자동), 로그아웃 토큰 무효화(denylist)
@@ -20,7 +21,7 @@
 - **검색/신고**: 통합 검색(게시글·행사·관련도 정렬·최근 검색어), 콘텐츠 신고. 회원 검색·프로필은 교인/관리자 전용
 - **관리자**: 회원 승인·정지·역할, 신고 처리, 콘텐츠 숨김/복구(일괄 포함), 새가족 등록 관리, 통계 대시보드(가입·게시글·행사·신고·일별 활성 회원), 감사 로그
 - **성능/SEO**: 홈·목록 ISR 선주입, 공개 GET ETag/304, gzip, React Compiler, 카톡 공유 OG 이미지·웹 매니페스트
-- **품질/운영**: e2e 94개(axe 접근성 게이트 — 라이트/다크 × 공개/로그인/관리자/찬양팀 매트릭스 포함), Prometheus + Grafana 대시보드(compose --profile monitoring), Sentry(env 게이트), 시간대 KST 고정(UTC 컨테이너 안전)
+- **품질/운영**: e2e 101개(axe 접근성 게이트 — 라이트/다크 × 공개/로그인/관리자/찬양팀 매트릭스 포함), Prometheus + Grafana 대시보드(compose --profile monitoring), Sentry(env 게이트), 시간대 KST 고정(UTC 컨테이너 안전)
 
 ## 기술 스택
 
@@ -30,7 +31,6 @@
 ![React](https://img.shields.io/badge/React-19.2.7-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![motion](https://img.shields.io/badge/motion-12.42.2-663399?style=for-the-badge)
 
 ### Backend
 
@@ -219,23 +219,27 @@ APP_CORS_ALLOWED_ORIGINS=https://app.example.com,https://www.example.com
 - 공개: `GET /actuator/health` (SecurityConfig 에서 이 경로만 permitAll)
 - 미노출: `/actuator/env`, `/actuator/beans`, `/actuator/configprops`, `/actuator/mappings`, `/actuator/metrics`, `/actuator/loggers` 등 (web exposure 를 `health` 로만 제한)
 - `health` 응답에 `details`/`components` 는 노출하지 않는다 (`management.endpoint.health.show-details=never`).
+- `prometheus` 는 메트릭이 실려 **기본 비공개** — 스크레이프가 필요한 환경(로컬 모니터링 등)만 `MANAGEMENT_ENDPOINTS=health,prometheus` 로 opt-in 하고, 그 경우에도 리버스 프록시·네트워크 격리로 보호한다.
 
 liveness/readiness probe 는 현재 사용하지 않으며, 배포 환경이 확정된 뒤 별도 PR 에서 검토한다.
 
 ## Rate limit
 
-특정 mutation endpoint 에 **클라이언트 IP 기준 fixed-window** rate limit 을 적용한다. 글로벌 API rate limit 은 없다.
+특정 mutation endpoint 에 **클라이언트 IP 기준 fixed-window** rate limit 을 적용한다(로그인은 계정(email)당 한도 추가). 글로벌 API rate limit 은 없다.
 
 | Endpoint | limit / window |
 |----------|----------------|
-| `POST /api/auth/login` | 20 / 60초 |
+| `POST /api/auth/login` | IP 20 / 60초 + 계정(email)당 10 / 60초 |
+| `POST /api/auth/2fa/verify` | 로그인 IP 버킷 공유 (2FA 코드 무차별 대입 방지) |
 | `POST /api/auth/signup` | 10 / 60초 |
-| `POST /api/posts/{id}/comments` | 20 / 60초 (댓글 작성 공유 버킷) |
-| `POST /api/events/{id}/comments` | 20 / 60초 (댓글 작성 공유 버킷) |
-| `POST /api/reports` | 10 / 60초 |
+| `POST /api/posts`, `POST /api/events` (본문 생성) | 30 / 60초 (공유 버킷) |
+| `POST /api/posts/{id}/comments`, `/api/events/{id}/comments`, `.../proofs` | 20 / 60초 (댓글·참여 후기 공유 버킷) |
+| `POST /api/reports`, `POST /api/new-family` | 10 / 60초 (공유 버킷) |
+| `POST /api/media`, `/api/media/document`, `/api/praise/files` (업로드) | 10 / 60초 (공유 버킷) |
+| 좋아요·북마크·참여·차단 토글 POST | 60 / 60초 (공유 버킷) |
 
 - **초과 응답**: HTTP `429`, `Retry-After` 헤더, Spring 기본 `/error` JSON body
-- **Redis key prefix**: `rate-limit:auth:login:ip:`, `rate-limit:auth:signup:ip:`, `rate-limit:comment:create:ip:`, `rate-limit:report:create:ip:` + `{clientIp}`
+- **Redis key prefix**: `rate-limit:` + `auth:login:ip:`·`auth:login:account:`·`auth:signup:ip:`·`comment:create:ip:`·`report:create:ip:`·`media:upload:ip:`·`content:create:ip:`·`interaction:toggle:ip:` + `{clientIp}`(계정 버킷만 email 기준)
 - **store**: 기본·테스트는 `memory`(`app.rate-limit.store=memory`). compose local(`SPRING_PROFILES_ACTIVE=local`)은 Valkey(`valkey/valkey:8`, compose 서비스명 `redis`)에 `app.rate-limit.store=redis` 로 연결한다.
 
 endpoint·property·회귀 테스트 상세는 [`apps/api/README.md`](apps/api/README.md#rate-limit) 참고.
