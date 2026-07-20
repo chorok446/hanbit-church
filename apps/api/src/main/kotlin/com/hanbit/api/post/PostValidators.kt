@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 
 private const val MAX_TEXT_LENGTH = 1000
+private const val MAX_RAW_TEXT_LENGTH = 20_000
 private const val MAX_TAGS = 10
 private const val MAX_TAG_LENGTH = 30
 private const val MAX_IMAGES = 4
@@ -17,7 +18,8 @@ private const val MAX_ATTACHMENT_NAME_LENGTH = 255
 fun normalizePostText(text: String): String {
     val trimmed = text.trim()
     if (trimmed.isBlank()) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "text is required")
-    if (richTextPlainLength(trimmed) > MAX_TEXT_LENGTH) {
+    // raw(태그 포함) 길이도 캡 — 태그만으로 HTML 을 무한 부풀리는 것을 막는다.
+    if (trimmed.length > MAX_RAW_TEXT_LENGTH || richTextPlainLength(trimmed) > MAX_TEXT_LENGTH) {
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "text is too long")
     }
     return trimmed
