@@ -35,14 +35,13 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [pendingName, setPendingName] = useState<string | null>(null);
-  // 법정 동의 게이트 — 이용약관(만 14세 이상 포함)·개인정보 수집·이용. 둘 다 필수.
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [agreePrivacy, setAgreePrivacy] = useState(false);
+  // 법정 확인 — 만 14세 미만은 법정대리인 동의 없이 가입 불가(개인정보보호법 제22조의2).
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
 
   const passwordPolicy = getPasswordPolicyState(password);
   const canSubmit =
     isValidEmail(email) && passwordPolicy.valid && password === passwordConfirm && nickname.trim() &&
-    agreeTerms && agreePrivacy;
+    ageConfirmed;
 
   const submit = async () => {
     if (!canSubmit || submitting) return;
@@ -138,33 +137,19 @@ export default function SignupPage() {
           <label className="flex cursor-pointer items-start gap-2.5 text-[13px]" style={{ color: "rgba(var(--ink-rgb), 0.8)" }}>
             <input
               type="checkbox"
-              checked={agreeTerms}
-              onChange={(e) => setAgreeTerms(e.target.checked)}
+              checked={ageConfirmed}
+              onChange={(e) => setAgeConfirmed(e.target.checked)}
               className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
             />
-            <span>
-              (필수) 만 14세 이상이며,{" "}
-              <Link href="/terms" target="_blank" className="underline" style={{ color: "var(--accent-strong)" }}>
-                이용약관
-              </Link>
-              에 동의합니다.
-            </span>
+            <span>(필수) 만 14세 이상입니다.</span>
           </label>
-          <label className="flex cursor-pointer items-start gap-2.5 text-[13px]" style={{ color: "rgba(var(--ink-rgb), 0.8)" }}>
-            <input
-              type="checkbox"
-              checked={agreePrivacy}
-              onChange={(e) => setAgreePrivacy(e.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
-            />
-            <span>
-              (필수){" "}
-              <Link href="/privacy" target="_blank" className="underline" style={{ color: "var(--accent-strong)" }}>
-                개인정보처리방침
-              </Link>
-              에 따른 개인정보 수집·이용에 동의합니다.
-            </span>
-          </label>
+          <p className="pl-6.5 text-[12px] leading-5" style={{ color: "rgba(var(--ink-rgb), 0.55)" }}>
+            개인정보 처리에 관한 사항은{" "}
+            <Link href="/privacy" target="_blank" className="underline" style={{ color: "var(--accent-strong)" }}>
+              개인정보처리방침
+            </Link>
+            을 확인해 주세요.
+          </p>
         </div>
 
         <button
