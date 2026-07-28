@@ -1532,6 +1532,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/media/members/{filename}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 교인 전용 게시글 이미지 인증 서빙
+         * @description 교인만 공개(MEMBERS) 게시글의 이미지를 스트리밍한다. 로그인(승인 교인)만 접근 가능(SecurityConfig).
+         */
+        get: operations["getMembersFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/events/{id}/participants": {
         parameters: {
             query?: never;
@@ -6489,6 +6509,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["NotificationUnreadCountResponse"];
+                };
+            };
+        };
+    };
+    getMembersFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                filename: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
                 };
             };
         };

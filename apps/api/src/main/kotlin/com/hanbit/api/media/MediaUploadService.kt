@@ -14,6 +14,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import java.util.UUID
 import javax.imageio.IIOImage
 import javax.imageio.ImageIO
@@ -169,6 +170,51 @@ class MediaUploadService(
     }
 
     private fun resolvePraiseDir(): Path = resolveUploadDir().resolve(PRAISE_SUBDIR).also { Files.createDirectories(it) }
+
+    /**
+     * 교인 전용(MEMBERS) 게시글 이미지 보호 — 공개 정적 경로(/uploads/{name})의 로컬 업로드 파일을
+     * 전용 하위 디렉터리(members/)로 옮기고 인증 서빙 URL(/api/media/members/{name})로 재작성한다.
+     * 썸네일({id}.thumb.jpg)도 함께 옮긴다. 외부 URL·이미 보호된 URL 은 그대로 반환하므로
+     * 수정 왕복(클라이언트가 기존 URL 을 되돌려 보내는 경우)에도 멱등하다.
+     */
+    fun protectMembersImageUrl(url: String): String {
+        val base = publicBaseUrl.trim().trimEnd('/')
+        val filename = url.removePrefix("$base/uploads/")
+        if (filename == url || !SAFE_MEMBERS_ORIGINAL_FILENAME.matches(filename)) return url
+        moveToMembersIfPresent(filename)
+        moveToMembersIfPresent(filename.substringBeforeLast('.') + THUMB_SUFFIX)
+        return "$base/api/media/members/$filename"
+    }
+
+    private fun moveToMembersIfPresent(filename: String) {
+        val src = resolveUploadDir().resolve(filename)
+        if (Files.isRegularFile(src)) {
+            Files.move(src, resolveMembersDir().resolve(filename), StandardCopyOption.REPLACE_EXISTING)
+        }
+    }
+
+    /**
+     * 인증 서빙용 교인 전용 이미지 로드. 파일명은 UUID(.thumb)?.이미지확장자만 허용해
+     * 경로 탐색을 원천 차단한다(찬양팀 readPraiseFile 과 동일 패턴). 없으면 404.
+     */
+    fun readMembersFile(filename: String): PraiseFileContent {
+        if (!SAFE_MEMBERS_FILENAME.matches(filename)) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "file not found")
+        }
+        val path = resolveMembersDir().resolve(filename).normalize()
+        if (!path.startsWith(resolveMembersDir()) || !Files.isRegularFile(path)) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "file not found")
+        }
+        val contentType = when (filename.substringAfterLast('.', "").lowercase()) {
+            "jpg", "jpeg" -> "image/jpeg"
+            "png" -> "image/png"
+            "webp" -> "image/webp"
+            else -> "application/octet-stream"
+        }
+        return PraiseFileContent(bytes = Files.readAllBytes(path), contentType = contentType, inline = true)
+    }
+
+    private fun resolveMembersDir(): Path = resolveUploadDir().resolve(MEMBERS_SUBDIR).also { Files.createDirectories(it) }
 
     /** 저장용 정제 결과 — 정제된 바이트와 (썸네일 생성용) 디코드된 이미지(webp·디코드 불가 시 null). */
     private data class SanitizedImage(val bytes: ByteArray, val image: BufferedImage?)
@@ -339,6 +385,17 @@ class MediaUploadService(
 
         /** 인증 서빙 시 인라인(미리보기) 허용 이미지 확장자. PDF 는 다운로드. */
         internal val INLINE_PRAISE_IMAGE_EXTENSIONS = setOf("jpg", "jpeg", "png", "webp")
+
+        /** 교인 전용 게시글 이미지 하위 디렉터리. 공개 정적 uploads 핸들러와 별개로 인증 서빙만 접근한다. */
+        internal const val MEMBERS_SUBDIR = "members"
+
+        /** members/ 로 옮길 원본 파일명 패턴 — store() 가 만드는 UUID.이미지확장자. */
+        internal val SAFE_MEMBERS_ORIGINAL_FILENAME =
+            Regex("^[0-9a-fA-F-]{36}\\.(jpg|jpeg|png|webp)$")
+
+        /** 인증 서빙 허용 파일명 패턴 — 원본 + 썸네일({id}.thumb.jpg). 경로 탐색 방지. */
+        internal val SAFE_MEMBERS_FILENAME =
+            Regex("^[0-9a-fA-F-]{36}(\\.thumb)?\\.(jpg|jpeg|png|webp)$")
 
         /** 원본 파일명에서 저장용 확장자를 뽑는다(영숫자 1~8자만, 없으면 bin). */
         internal fun documentExtension(originalFilename: String?): String {
