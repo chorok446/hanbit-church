@@ -39,6 +39,8 @@ async function parseBody(res: Response): Promise<unknown> {
 
 // 401 이어도 refresh 를 시도하지 않는 경로. refresh 자신은 무한 재귀 방지,
 // 로그인/가입의 401 은 "만료"가 아니라 "자격 증명 오류"라 재시도 의미가 없다.
+// 계약: apiFetch 의 path 인자와 **정확 일치**로 비교한다(includes 는 배열 원소 일치).
+// 쿼리스트링·트레일링 슬래시가 붙으면 면제되지 않으므로 이 경로들은 항상 원형 그대로 호출한다.
 const REFRESH_EXEMPT = ["/api/auth/refresh", "/api/auth/login", "/api/auth/signup"];
 
 // 여러 요청이 동시에 401 을 맞아도 refresh 는 한 번만 나간다(single-flight).
@@ -81,7 +83,9 @@ function tryRefreshToken(): Promise<boolean> {
  */
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const request = () =>
-    fetch(`${getApiBaseUrl()}${path}`, { credentials: "include", cache: "no-store", ...init });
+    // 고정값(credentials/cache)은 ...init 뒤에 둔다 — 호출부가 실수로 덮어써 인증 쿠키가
+    // 빠지거나 캐시가 켜지는 것을 막는다(인증·최신성은 이 함수의 계약).
+    fetch(`${getApiBaseUrl()}${path}`, { ...init, credentials: "include", cache: "no-store" });
   const res = await request();
   if (res.status !== 401 || typeof window === "undefined" || REFRESH_EXEMPT.includes(path)) {
     return res;
