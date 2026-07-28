@@ -23,6 +23,11 @@ class JwtService(
         require(!(isProd && secret.startsWith("dev-insecure"))) {
             "JWT_SECRET must be set in production (refusing to start with the insecure dev default)"
         }
+        // jjwt(Keys.hmacShaKeyFor)도 HS256 최소 키 길이를 강제하지만, 라이브러리 내부 예외 대신
+        // 기동 시점에 원인이 명확한 메시지로 실패시킨다(32바이트 = HS256 최소 256비트).
+        require(secret.toByteArray().size >= 32) {
+            "JWT_SECRET must be at least 32 bytes for HS256 (current: ${secret.toByteArray().size} bytes)"
+        }
     }
 
     private val key = Keys.hmacShaKeyFor(secret.toByteArray())
