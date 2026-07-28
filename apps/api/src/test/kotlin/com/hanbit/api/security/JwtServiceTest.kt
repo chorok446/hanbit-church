@@ -43,4 +43,11 @@ class JwtServiceTest {
             JwtService(devSecret, 86400000, 1209600000, profiles)
         }
     }
+
+    @Test
+    fun `시크릿이 32바이트 미만이면 프로파일과 무관하게 기동 실패`() {
+        assertThrows<IllegalArgumentException> {
+            JwtService("short-secret", 86400000, 1209600000, "")
+        }
+    }
 }

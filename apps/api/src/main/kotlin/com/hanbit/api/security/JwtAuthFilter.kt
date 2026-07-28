@@ -40,8 +40,15 @@ class JwtAuthFilter(
                 }
                 val auth = UsernamePasswordAuthenticationToken(validated.principal, null, authorities)
                 SecurityContextHolder.getContext().authentication = auth
-            } catch (_: Exception) {
-                // 명시적으로 Bearer 토큰을 줬는데 유효하지 않음 → 401 로 즉시 거절
+            } catch (_: io.jsonwebtoken.JwtException) {
+                // 서명·만료·형식 오류 — 명시적으로 준 토큰이 유효하지 않음 → 401 즉시 거절.
+                SecurityContextHolder.clearContext()
+                res.status = HttpServletResponse.SC_UNAUTHORIZED
+                return
+            } catch (_: IllegalArgumentException) {
+                // validator 의 정책 거절(typ 불일치·denylist·탈퇴·정지 등, fail-closed 포함) → 401.
+                // 그 외 예외(DB 장애 등 인프라 오류)는 전파해 500 으로 드러낸다 — 401 로 위장하면
+                // 클라이언트가 세션 만료로 오인해 로그아웃되는 등 장애 진단이 어려워진다.
                 SecurityContextHolder.clearContext()
                 res.status = HttpServletResponse.SC_UNAUTHORIZED
                 return
