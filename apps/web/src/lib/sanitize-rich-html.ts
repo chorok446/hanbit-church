@@ -37,7 +37,8 @@ function ensurePurifyHooks() {
 export function sanitizeRichHtml(html: string): string {
   const trimmed = html.trim();
   if (!trimmed) return "";
-  if (!isRichHtml(trimmed)) return trimmed;
+  // isRichHtml 판별과 무관하게 항상 정화한다 — 결과는 innerHTML 로 들어가므로,
+  // 태그 판별 정규식이 놓치는 마크업 파편(`</script>` 등)도 이스케이프돼야 안전하다.
   ensurePurifyHooks();
   return DOMPurify.sanitize(trimmed, PURIFY_CONFIG);
 }

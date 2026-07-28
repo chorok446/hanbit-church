@@ -36,6 +36,12 @@ describe("sanitize-rich-html", () => {
     );
   });
 
+  it("isRichHtml 이 false 인 입력도 이스케이프한다 (innerHTML 안전)", () => {
+    expect(isRichHtml("</script>alert(1)")).toBe(false);
+    expect(sanitizeRichHtml("</script>a < b")).not.toContain("</script>");
+    expect(sanitizeRichHtml("a < b")).toBe("a &lt; b");
+  });
+
   it("isRichHtml 은 마크업 여부를 판별한다", () => {
     expect(isRichHtml("<p>x</p>")).toBe(true);
     expect(isRichHtml("**굵게**")).toBe(false);
