@@ -10,6 +10,7 @@ import com.hanbit.api.common.ListingLimits.MAX_SITEMAP_PAGE_SIZE
 import com.hanbit.api.common.SitemapIdsResponse
 import com.hanbit.api.common.presenceByPage
 import com.hanbit.api.common.totalPages
+import com.hanbit.api.media.MediaUploadService
 import com.hanbit.api.notification.NotificationService
 import com.hanbit.api.notification.NotificationType
 import com.hanbit.api.security.AuthUser
@@ -39,6 +40,7 @@ class PostService(
     private val commentRepo: PostCommentRepository,
     private val postSearch: PostSearchRepository,
     private val notifications: NotificationService,
+    private val uploads: MediaUploadService,
     private val clock: Clock,
 ) {
     @Transactional(readOnly = true)
@@ -456,7 +458,7 @@ class PostService(
                 time = "방금 전",
                 text = fields.text,
                 tags = fields.tags,
-                images = fields.images,
+                images = protectImagesIfMembers(fields.images, visibility),
                 likes = 0,
                 comments = 0,
                 eventId = fields.eventId,
@@ -500,6 +502,14 @@ class PostService(
     }
 
     /** 공개 범위 정규화. 미지정=PUBLIC, MEMBERS 는 기도 전용, 그 외 값은 400. */
+    /**
+     * 교인만 공개(MEMBERS) 글의 로컬 업로드 이미지를 인증 서빙 경로로 보호한다(파일 이동 + URL 재작성).
+     * 외부·이미 보호된 URL 은 그대로라 수정 왕복에 멱등. visibility 는 생성 후 불변이므로 역방향(공개 전환)은 없다.
+     * ponytail: 같은 업로드 URL 을 다른 공개 글이 참조 중이면 그 글의 이미지가 깨진다 — 참조 추적이 필요해지면 개선.
+     */
+    private fun protectImagesIfMembers(images: List<String>, visibility: String): List<String> =
+        if (visibility == PostVisibility.MEMBERS) images.map(uploads::protectMembersImageUrl) else images
+
     private fun normalizeVisibility(raw: String?, category: String): String {
         val value = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return PostVisibility.PUBLIC
         if (value !in PostVisibility.ALL) badRequest("공개 범위는 PUBLIC 또는 MEMBERS 만 가능합니다.")
@@ -622,7 +632,7 @@ class PostService(
         val fields = normalizeFields(req.text, req.tags, req.images, req.eventId)
         post.text = fields.text
         post.tags = fields.tags
-        post.images = fields.images
+        post.images = protectImagesIfMembers(fields.images, post.visibility)
         post.eventId = fields.eventId
         post.category = category
         post.attachments = attachments

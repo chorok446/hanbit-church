@@ -116,9 +116,14 @@ class SecurityConfig(
                 // 문서(주보 PDF) 업로드는 공지·주보 작성 권한(최고 관리자·운영자·콘텐츠 관리자)과 동일.
                 it.requestMatchers(HttpMethod.POST, "/api/media/document").hasAnyRole("ADMIN", "OPERATOR", "CONTENT")
                 it.requestMatchers(HttpMethod.POST, "/api/media").authenticated()
+                // 교인 전용(MEMBERS) 게시글 이미지 인증 서빙 — 로그인(승인제라 로그인 = 승인 교인)만.
+                // GET /api/** permitAll 매처보다 먼저 선언.
+                it.requestMatchers(HttpMethod.GET, "/api/media/members/**").authenticated()
                 // 찬양팀 파일은 uploads/praise/ 하위에 저장된다. 공개 정적 경로(/uploads/**)로의 직접 접근을
                 // 차단해 인증 서빙(GET /api/praise/files/{name})만 남긴다 — permitAll 매처보다 먼저 선언.
                 it.requestMatchers(HttpMethod.GET, "/uploads/praise/**").denyAll()
+                // 교인 전용 게시글 이미지도 동일 — 정적 경로는 막고 인증 서빙(GET /api/media/members/{name})만 남긴다.
+                it.requestMatchers(HttpMethod.GET, "/uploads/members/**").denyAll()
                 it.requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                 it.requestMatchers(HttpMethod.GET, "/api/**").permitAll()
                 it.anyRequest().authenticated()

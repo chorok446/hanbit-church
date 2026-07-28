@@ -14,6 +14,12 @@ describe("uploadThumbUrl", () => {
     );
   });
 
+  it("교인 전용 인증 서빙 URL도 .thumb.jpg 로 바꾼다", () => {
+    expect(uploadThumbUrl("http://localhost:8080/api/media/members/abc-123.png")).toBe(
+      "http://localhost:8080/api/media/members/abc-123.thumb.jpg",
+    );
+  });
+
   it("업로드 경로가 아닌 URL은 그대로 반환한다", () => {
     expect(uploadThumbUrl("https://images.unsplash.com/photo-1?w=800")).toBe(
       "https://images.unsplash.com/photo-1?w=800",
