@@ -20,10 +20,8 @@ export function openNotificationSocket(): NotificationSocket {
 
   const connect = () => {
     if (closed) return;
-    let opened = false;
     ws = new WebSocket(wsUrl());
     ws.onopen = () => {
-      opened = true;
       retryMs = 1500;
     };
     ws.onmessage = (event) => {
@@ -39,7 +37,9 @@ export function openNotificationSocket(): NotificationSocket {
       }
     };
     ws.onclose = () => {
-      if (closed || !opened) return;
+      // 첫 연결 실패도 재시도한다 — 성공 이력을 조건으로 걸면 로드 시점에 서버가 잠깐
+      // 죽어 있던 세션은 알림 배지가 세션 내내 침묵한다. 백오프 상한 15초라 부하는 미미.
+      if (closed) return;
       reconnectTimer = window.setTimeout(connect, retryMs);
       retryMs = Math.min(retryMs * 2, 15_000);
     };
