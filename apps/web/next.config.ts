@@ -25,7 +25,8 @@ const nextConfig: NextConfig = {
             // - object-src 'none': 플러그인(<object>/<embed>) 기반 주입 차단
             // - base-uri 'self': <base> 태그 주입으로 상대 URL 을 탈취하는 공격 차단
             // - frame-ancestors 'none': X-Frame-Options DENY 의 CSP 표준 대응(클릭재킹)
-            value: "object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+            // - form-action 'self': 주입된 <form> 이 자격 증명·입력값을 외부 도메인으로 제출하는 것 차단
+            value: "object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
           },
           // MIME 스니핑 차단 — 렌더된 사용자 콘텐츠가 선언 타입과 다르게 해석되는 것을 막는다.
           { key: "X-Content-Type-Options", value: "nosniff" },

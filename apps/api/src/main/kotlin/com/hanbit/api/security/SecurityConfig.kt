@@ -22,10 +22,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 class SecurityConfig(
     private val jwtFilter: JwtAuthFilter,
     // 행사 개설을 스태프(최고 관리자·운영자·사역 담당자)로 제한할지. e2e·기존 흐름 보호를 위해 기본 꺼짐.
-    // TODO(운영 결정): 실제 운영 전환 시 EVENT_CREATE_STAFF_ONLY=true 로 켠다.
+    // prod 프로파일에서는 env 와 무관하게 강제로 켠다(아래 isProd) — 운영 설정 기억에 의존하지 않는다.
     @param:org.springframework.beans.factory.annotation.Value("\${app.events.staff-only-create:false}")
     private val eventCreateStaffOnly: Boolean,
+    environment: org.springframework.core.env.Environment,
 ) {
+    // CorsConfig 와 동일한 판정 — "prod" 정확 일치만(preprod/nonprod 오인 방지).
+    private val isProd = environment.activeProfiles.any { it.trim() == "prod" }
+
     @Bean
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
@@ -68,6 +72,7 @@ class SecurityConfig(
                 it.requestMatchers("/api/admin/**").hasRole("ADMIN")
                 it.requestMatchers("/ws/messages").permitAll()
                 // OpenAPI JSON / Swagger UI 는 문서 확인용으로 공개한다. /api/** 인증 정책과 무관한 별도 경로다.
+                // prod 봉인은 application-prod.yml 의 springdoc 비활성화(404)가 담당 — OpenApiProdProfileTest 가드.
                 it.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 it.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
                 // 새가족 등록 신청은 비로그인 방문자용 공개 POST(IP 레이트리밋으로 방어).
@@ -109,8 +114,9 @@ class SecurityConfig(
                 // 목장(소그룹) API — 인증만 요구하고, 그룹별 권한(매니저·리더·멤버)은
                 // CellGroupService 가 요청자 role·roster 를 DB 조회로 검사한다.
                 it.requestMatchers("/api/cell-groups/**").authenticated()
-                if (eventCreateStaffOnly) {
-                    // 행사 개설 스태프 제한(플래그). POST /api/events/{id}/join 등 하위 경로는 해당 없음(정확 일치).
+                if (eventCreateStaffOnly || isProd) {
+                    // 행사 개설 스태프 제한 — 플래그 또는 prod 프로파일이면 강제(운영 env 기억에 의존하지 않음).
+                    // POST /api/events/{id}/join 등 하위 경로는 해당 없음(정확 일치).
                     it.requestMatchers(HttpMethod.POST, "/api/events").hasAnyRole("ADMIN", "OPERATOR", "MINISTRY")
                 }
                 // 문서(주보 PDF) 업로드는 공지·주보 작성 권한(최고 관리자·운영자·콘텐츠 관리자)과 동일.
