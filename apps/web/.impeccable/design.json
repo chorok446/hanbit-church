@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-30T18:17:55Z",
+  "title": "Design System: 한빛교회 홈페이지",
+  "extensions": {
+    "colorMeta": {
+      "navy-primary": { "role": "primary", "displayName": "딥네이비", "canonical": "#1f2a44", "tonalRamp": ["#0b101c", "#131b2e", "#1f2a44", "#31405f", "#48587c", "#66759a", "#8b98b8", "#b8c1d6"] },
+      "gold-accent": { "role": "secondary", "displayName": "골드", "canonical": "#c9a227", "tonalRamp": ["#3d2f08", "#5c470c", "#7c6110", "#9c7d18", "#c9a227", "#d4b04a", "#e2c67c", "#f0e0b3"] },
+      "cream-surface": { "role": "neutral", "displayName": "크림", "canonical": "#faf8f3", "tonalRamp": ["#4a4638", "#6e6852", "#948c70", "#b5ae94", "#d2ccb8", "#ece5d2", "#f4f0e4", "#faf8f3"] },
+      "body-ink": { "role": "neutral", "displayName": "본문 잉크", "canonical": "#1a2235", "tonalRamp": ["#0a0e16", "#121826", "#1a2235", "#2c3750", "#45506c", "#65708c", "#8d96ad", "#bcc2d1"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "히어로 제목·월별 말씀·성경 구절 전용 명조. .font-display 헬퍼로만 적용." },
+      "body": { "displayName": "Body", "purpose": "본문·UI 전반의 산세리프. 최대 행길이 65–75ch." }
+    },
+    "shadows": [
+      { "name": "card-rest", "value": "0 12px 32px rgba(31, 42, 68, 0.08)", "purpose": "클릭형 카드(.card-lift)의 rest 상태." },
+      { "name": "card-hover", "value": "0 20px 44px rgba(31, 42, 68, 0.16)", "purpose": ".card-lift hover — translateY 리프트와 함께." },
+      { "name": "cta-hover", "value": "0 10px 24px -14px rgba(0, 0, 0, 0.35)", "purpose": "CTA hover. 테마와 무관하게 검정 기반(다크에서 잉크색을 쓰면 글로우가 된다)." }
+    ],
+    "motion": [
+      { "name": "ease-state", "value": "150ms ease", "purpose": "버튼·입력 등 상태 전환 기본." },
+      { "name": "ease-lift", "value": "200ms ease", "purpose": ".card-lift 의 transform/shadow 전환." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary CTA Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "주요 액션 버튼 — 라이트: 네이비 바탕+크림 글자, hover lift + active 눌림.",
+      "html": "<button class=\"ds-btn-primary\">예배 안내 보기</button>",
+      "css": ".ds-btn-primary { background: var(--cta-bg, #1f2a44); color: var(--cta-fg, #f6f3ea); padding: 0.75rem 1.5rem; border: none; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease; } .ds-btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 10px 24px -14px rgba(0,0,0,0.35); } .ds-btn-primary:active { transform: scale(0.98); filter: brightness(0.98); } .ds-btn-primary:focus-visible { outline: 2px solid #c9a227; outline-offset: 3px; }"
+    },
+    {
+      "name": "Lift Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "클릭형 카드 공통 hover(.card-lift) — rest 그림자에서 hover 시 리프트.",
+      "html": "<div class=\"ds-card\"><p class=\"ds-card-label\">주보</p><h3 class=\"ds-card-title\">7월 다섯째 주 주보</h3><p class=\"ds-card-body\">주일 예배 순서와 교회 소식을 확인하세요.</p></div>",
+      "css": ".ds-card { background: var(--card, #ffffff); border: 1px solid rgba(31,42,68,0.1); border-radius: 1rem; padding: 1.25rem; box-shadow: 0 12px 32px rgba(31,42,68,0.08); transition: transform 200ms ease, box-shadow 200ms ease; max-width: 320px; } .ds-card:hover { transform: translateY(-4px); box-shadow: 0 20px 44px rgba(31,42,68,0.16); } .ds-card-label { color: #7c6110; font-size: 0.75rem; font-weight: 600; margin: 0 0 0.25rem; } .ds-card-title { font-family: 'Noto Serif KR', serif; font-weight: 600; color: #1f2a44; margin: 0 0 0.5rem; font-size: 1.125rem; } .ds-card-body { color: rgba(31,42,68,0.7); font-size: 0.875rem; margin: 0; line-height: 1.6; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": null,
+      "description": "공통 입력 필드(.ui-control) — 골드 포커스 링.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"검색어를 입력하세요\" />",
+      "css": ".ds-input { width: 100%; max-width: 280px; border: 1px solid rgba(31,42,68,0.1); border-radius: 0.75rem; padding: 0.75rem 1rem; font-size: 0.875rem; background: #ffffff; color: #1a2235; outline: none; transition: border-color 150ms ease, box-shadow 150ms ease; } .ds-input::placeholder { color: rgba(31,42,68,0.7); } .ds-input:focus-visible { border-color: #c9a227; box-shadow: 0 0 0 3px rgba(201,162,39,0.18); }"
+    },
+    {
+      "name": "Gold Label Chip",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "골드 '한 줄' 액센트의 대표 사용처 — 태그 pill(accent-soft 틴트 + 진한 골드 텍스트).",
+      "html": "<span class=\"ds-chip\">새가족 환영</span>",
+      "css": ".ds-chip { display: inline-block; background: rgba(201,162,39,0.14); color: #7c6110; font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.625rem; border-radius: 9999px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "종이 주보(The Printed Bulletin)",
+    "overview": "잘 만든 종이 주보를 손에 쥔 느낌 — 크림색 종이 위에 명조로 찍힌 말씀, 단정한 네이비 잉크, 금박 한 줄. 방문자를 환대하되 외치지 않는다. 색으로 경쟁하지 않고 여백·서체·한 줄의 골드로 위계를 만든다. 다크 모드는 같은 주보를 저녁 예배당 조명 아래에서 보는 미드나잇 네이비다.",
+    "keyCharacteristics": [
+      "크림(#faf8f3) 바탕 + 딥네이비(#1f2a44) 잉크 + 골드(#c9a227) 한 줄 액센트",
+      "제목·성경구절은 명조(Noto Serif KR 600), 본문은 산세리프(Noto Sans KR)",
+      "색은 CSS 토큰으로만 — dark ? 삼항 금지",
+      "모션은 ScrollReveal/StaggerItem 공통 컴포넌트 재사용, reduced-motion 대안 필수"
+    ],
+    "rules": [
+      { "name": "골드 한 줄 규칙", "body": "골드는 라벨·아이콘·구분선·포커스 링에만 허용된다. 골드로 면을 칠하는 순간 금박이 도금이 된다. (예외: 다크 모드 CTA 배경 단 하나.)", "section": "colors" },
+      { "name": "토큰 단일 규칙", "body": "색은 globals.css 의 CSS 토큰으로만 표현한다. 컴포넌트 안의 dark ? 색 삼항은 금지.", "section": "colors" },
+      { "name": "명조는 말씀에", "body": "명조는 제목과 성경 구절의 서체다. 버튼·입력·본문에 명조를 쓰면 장식이 된다.", "section": "typography" },
+      { "name": "섹션 개시 규칙", "body": "공개 페이지의 섹션은 골드 헤어라인 한 줄(1px × 3rem, --accent)로 열고 명조 제목이 뒤따른다. 영문 uppercase eyebrow를 대체한 문법. 센터 섹션은 mx-auto, 섹션당 헤어라인은 하나만.", "section": "typography" },
+      { "name": "단일 킥커 규칙", "body": "히어로의 '교회명 · 영문 교회명'(10px·tracking 0.42em)은 사이트 유일의 브랜드 킥커다. 다른 표면에 킥커·와이드 트래킹 라벨을 복제하지 않는다.", "section": "typography" },
+      { "name": "그림자는 어둡게 규칙", "body": "hover 그림자는 테마와 무관하게 검정 기반 — 다크 모드에서 잉크색(크림)을 그림자에 쓰면 글로우가 된다.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do 골드는 라벨·아이콘·구분선·포커스 링 등 \"한 줄\"에만 — 밝은 배경 위 소형 텍스트는 #7c6110.",
+      "Do 색은 항상 globals.css 토큰으로 — 새 색이 필요하면 토큰을 추가하고 라이트/다크 짝을 함께 정의.",
+      "Do 제목·성경구절은 .font-display(Noto Serif KR 600), 본문은 --font-body.",
+      "Do 클릭형 카드 hover 는 .card-lift, CTA 는 .cta-solid 공통 클래스 재사용.",
+      "Do 본문 대비 AA 이상 유지(크림 위 #1a2235), 보조 텍스트도 4.5:1 사수.",
+      "Do 아이콘·배지는 lucide 라인 아이콘 + 골드/잉크 텍스트 라벨로 — 한 스트로크 패밀리를 유지한다."
+    ],
+    "donts": [
+      "Don't 골드로 큰 면을 칠하지 마라 — 배너·카드·섹션 배경의 골드 채움은 절대 금지(다크 CTA 단 하나가 예외).",
+      "Don't 그라디언트 텍스트·글래스모피즘 장식·네온 액센트 금지 — 차가운 SaaS 랜딩 문법은 이 브랜드의 정반대다.",
+      "Don't 클립아트식 종교 상징(비둘기·십자가 아이콘)·자동재생 배너 슬라이더 금지.",
+      "Don't 컴포넌트에 dark ? 색 삼항을 재도입하지 마라. useTheme 도 색 용도로는 금지.",
+      "Don't side-stripe 보더(2px+ border-left 액센트), hero-metric 템플릿, 섹션마다 붙는 uppercase eyebrow 금지 — eyebrow 자리는 골드 헤어라인이 대체, 유일한 예외는 히어로의 단일 브랜드 킥커.",
+      "Don't 이모지를 아이콘·배지 대용으로 쓰지 마라 — 컬러 이모지는 '종이 주보' 인쇄 톤을 깬다."
+    ]
+  }
+}
