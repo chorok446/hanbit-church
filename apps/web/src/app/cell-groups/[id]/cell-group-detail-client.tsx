@@ -232,17 +232,17 @@ function InfoCard({ detail, onChanged }: { detail: CellGroupDetail; onChanged: (
             <dt style={{ color: "var(--foreground-muted)" }}>리더</dt>
             <dd>{detail.leaderName ?? "미지정"}</dd>
           </div>
-          {detail.description ? (
-            <p className="pt-1 leading-7" style={{ color: "var(--foreground-muted)" }}>
-              {detail.description}
-            </p>
-          ) : null}
-          {!detail.active ? (
-            <p className="pt-1 text-[13px]" style={{ color: "var(--danger)" }}>
-              비활성 목장 — 일반 목록에서는 숨겨집니다.
-            </p>
-          ) : null}
         </dl>
+        {detail.description ? (
+          <p className="pt-3 text-[14px] leading-7" style={{ color: "var(--foreground-muted)" }}>
+            {detail.description}
+          </p>
+        ) : null}
+        {!detail.active ? (
+          <p className="pt-3 text-[13px]" style={{ color: "var(--danger)" }}>
+            비활성 목장 — 일반 목록에서는 숨겨집니다.
+          </p>
+        ) : null}
       </CellCard>
     );
   }
