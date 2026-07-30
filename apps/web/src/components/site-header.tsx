@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, LogOut, Search, ShieldCheck, UserRound } from "lucide-react";
+import { Bell, LogOut, Menu, Search, ShieldCheck, UserRound, X } from "lucide-react";
 import { useAuthSession } from "@/lib/use-auth-session";
 import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
 import { useNotificationUnread } from "@/lib/use-unread-badges";
 import { MAIN_NAV_ITEMS } from "@/lib/nav-items";
 import { CurrentUserAvatar } from "@/components/current-user-avatar";
+import { ThemeToggleMenuRow } from "@/components/theme-toggle";
 import { CHURCH } from "@/data/church";
 import { isStaffRole } from "@/app/admin/permissions";
 
@@ -123,6 +125,85 @@ function ProfileMenu({
   );
 }
 
+/** 모바일(<lg) 전체 메뉴 시트 — 데스크톱 주 메뉴 11개가 숨는 구간의 상시 내비게이션. */
+function MobileMenuSheet({ open, onClose, pathname }: { open: boolean; onClose: () => void; pathname: string }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    panelRef.current?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    // 시트가 열린 동안 배경 스크롤을 잠근다.
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+  // 헤더의 backdrop-filter 가 fixed 자손의 containing block 이 되어 시트가 헤더 높이로 잘린다 — body 포털로 탈출.
+  return createPortal(
+    <div className="fixed inset-0 z-50 lg:hidden">
+      <div className="fade-in absolute inset-0 bg-black/45" onClick={onClose} aria-hidden />
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="전체 메뉴"
+        tabIndex={-1}
+        className="sheet-panel-in absolute right-0 top-0 flex h-full w-[300px] max-w-[85vw] flex-col overflow-y-auto border-l p-5 outline-none"
+        style={{
+          background: "var(--panel)",
+          borderColor: "var(--border)",
+          paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))",
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-[15px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
+            메뉴
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="메뉴 닫기"
+            className="flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-[rgba(var(--ink-rgb),0.1)]"
+            style={{ background: "rgba(var(--ink-rgb), 0.06)", color: "var(--heading)" }}
+          >
+            <X size={18} aria-hidden />
+          </button>
+        </div>
+        <nav aria-label="전체 메뉴" className="mt-4 flex flex-col">
+          {MAIN_NAV_ITEMS.map((it) => {
+            const isActive = pathname === it.href || (it.href !== "/" && pathname.startsWith(it.href));
+            return (
+              <Link
+                key={it.href}
+                href={it.href}
+                onClick={onClose}
+                aria-current={isActive ? "page" : undefined}
+                className="flex min-h-12 items-center justify-between rounded-xl px-3 text-[15px] transition-colors hover:bg-[rgba(var(--ink-rgb),0.06)]"
+                style={{ color: "var(--heading)", fontWeight: isActive ? 600 : 400 }}
+              >
+                {it.label}
+                {isActive && <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--accent)" }} aria-hidden />}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--border)" }}>
+          <ThemeToggleMenuRow />
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
@@ -132,6 +213,12 @@ export function SiteHeader() {
   const { profile } = useCurrentUserProfile();
   const isAdmin = isStaffRole(profile?.role);
   const unread = useNotificationUnread(token);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const closeMenu = () => {
+    setMenuOpen(false);
+    menuButtonRef.current?.focus();
+  };
 
   const onLogout = () => {
     void logout().finally(() => {
@@ -151,12 +238,13 @@ export function SiteHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
         <Link href="/" className="flex shrink-0 items-center gap-2 whitespace-nowrap" style={{ color: "var(--accent-secondary)" }}>
           <span className="text-[17px] sm:text-[21px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{CHURCH.name}</span>
-          <span className="hidden text-[10px] tracking-[0.3em] opacity-90 lg:inline">{CHURCH.nameEn}</span>
+          <span className="hidden text-[10px] tracking-[0.3em] opacity-90 xl:inline">{CHURCH.nameEn}</span>
         </Link>
-        <nav className="hidden md:flex items-center gap-2" aria-label="주요 메뉴">
+        {/* 11개 항목 + 로고·아이콘이 max-w-7xl 안에서 줄바꿈 없이 맞아야 한다 — md 태블릿은 모바일 하단 내비로. */}
+        <nav className="hidden lg:flex items-center gap-1" aria-label="주요 메뉴">
           {MAIN_NAV_ITEMS.map((it) => {
             const isActive = pathname === it.href || (it.href !== "/" && pathname.startsWith(it.href));
-            const className = "relative rounded-lg px-4 py-2 text-[14px] transition-opacity hover:opacity-100";
+            const className = "relative whitespace-nowrap rounded-lg px-2.5 py-2 text-[14px] transition-opacity hover:opacity-100";
             const style = { color: "var(--heading)", opacity: isActive ? 1 : 0.7 };
             {/* 활성 nav 점 — layoutId 슬라이드 대신 활성 링크에 즉시 페이드 등장(.indicator-fade). */}
             const dot = isActive && (
@@ -184,8 +272,8 @@ export function SiteHeader() {
             }}
             aria-label="검색 페이지로 이동"
           >
-            <Search size={16} />
-            <span className="hidden xl:inline text-[12px]">검색</span>
+            <Search size={16} className="shrink-0" />
+            <span className="hidden whitespace-nowrap text-[12px] xl:inline">검색</span>
           </Link>
           <Link
             href="/notifications"
@@ -230,8 +318,21 @@ export function SiteHeader() {
               </Link>
             </>
           )}
+          <button
+            ref={menuButtonRef}
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-label="전체 메뉴 열기"
+            aria-haspopup="dialog"
+            aria-expanded={menuOpen}
+            className="flex h-11 w-11 items-center justify-center rounded-full transition-[background-color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none lg:hidden"
+            style={{ background: "rgba(var(--ink-rgb), 0.07)", color: "var(--heading)" }}
+          >
+            <Menu size={18} aria-hidden />
+          </button>
         </div>
       </div>
+      <MobileMenuSheet open={menuOpen} onClose={closeMenu} pathname={pathname} />
     </header>
   );
 }

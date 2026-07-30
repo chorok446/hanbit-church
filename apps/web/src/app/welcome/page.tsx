@@ -78,9 +78,7 @@ export default function WelcomePage() {
           style={{ background: "var(--accent)" }}
         />
         <div className="relative mx-auto max-w-5xl">
-          <p className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent)" }}>
-            Welcome
-          </p>
+          <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
           <h1
             className="text-[34px] sm:text-[40px] text-[var(--on-banner)]"
             style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}
@@ -99,7 +97,7 @@ export default function WelcomePage() {
               예배 시간 보기
             </Link>
             <Link
-              href="/about"
+              href="/about#location"
               className="inline-flex min-h-11 items-center rounded-full border px-6 py-2.5 text-[14px] font-medium text-[var(--on-banner)] transition-colors hover:bg-white/10"
               style={{ borderColor: "rgba(var(--on-banner-rgb), 0.4)" }}
             >
@@ -111,10 +109,8 @@ export default function WelcomePage() {
 
       <section className="px-6 py-24" style={{ background: "var(--surface)" }}>
         <div className="mx-auto max-w-5xl">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-            Steps
-          </p>
-          <h2 className="mt-2 text-[28px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
+          <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
+          <h2 className="text-[28px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
             이렇게 함께 걸어요
           </h2>
           <ol className="mt-11 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -145,10 +141,7 @@ export default function WelcomePage() {
       <section className="px-6 py-24" style={{ background: "var(--surface-muted)" }}>
         <div className="mx-auto grid max-w-5xl grid-cols-1 items-start gap-14 lg:grid-cols-[5fr_7fr] lg:gap-16">
           <div>
-            <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-              Register
-            </p>
-            <h2 className="mt-2 text-[28px] leading-[1.45]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
+            <h2 className="text-[28px] leading-[1.45]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
               새가족 등록 신청
             </h2>
             <span aria-hidden className="mt-5 block h-px w-12" style={{ background: "var(--accent)" }} />
@@ -167,19 +160,16 @@ export default function WelcomePage() {
       <section className="px-6 py-24" style={{ background: "var(--surface)" }}>
         <div className="mx-auto grid max-w-5xl grid-cols-1 items-start gap-14 lg:grid-cols-[5fr_7fr] lg:gap-16">
           <div>
-            <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-              Visit
-            </p>
-            <h2 className="mt-2 text-[28px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
+            <h2 className="text-[28px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
               오시는 길과 안내
             </h2>
             <span aria-hidden className="mt-5 block h-px w-12" style={{ background: "var(--accent)" }} />
             <div className="mt-6 flex flex-wrap gap-2.5">
-              <Link href="/about" className={outlineCtaClass} style={outlineCtaStyle}>
+              <Link href="/about#location" className={outlineCtaClass} style={outlineCtaStyle}>
                 오시는 길 보기
               </Link>
               <Link href="/worship" className={outlineCtaClass} style={outlineCtaStyle}>
-                예배안내 보기
+                예배 안내 보기
               </Link>
             </div>
           </div>
@@ -210,10 +200,8 @@ export default function WelcomePage() {
 
       <section className="px-6 pb-24" style={{ background: "var(--surface)" }}>
         <div className="mx-auto max-w-[820px]">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-            FAQ
-          </p>
-          <h2 className="mt-2 mb-6 text-[28px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
+          <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
+          <h2 className="mb-6 text-[28px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
             자주 묻는 질문
           </h2>
           <div className="border-t" style={{ borderColor: "var(--border)" }}>
@@ -260,7 +248,7 @@ export default function WelcomePage() {
               예배 안내 보기
             </Link>
             <Link
-              href="/about"
+              href="/about#location"
               className="inline-flex min-h-12 items-center rounded-full border px-8 py-3.5 text-[15px] font-medium text-[var(--on-banner)] transition-colors hover:bg-white/10"
               style={{ borderColor: "rgba(212, 176, 74, 0.6)" }}
             >

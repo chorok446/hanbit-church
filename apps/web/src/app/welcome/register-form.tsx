@@ -57,17 +57,22 @@ export function NewFamilyRegisterForm() {
     event.preventDefault();
     if (submitting) return;
 
+    // 검증 실패 시 문제 필드로 포커스를 옮긴다 — 키보드·스크린리더 사용자가 오류 지점을 바로 찾도록.
+    const fail = (fieldId: string, text: string) => {
+      setStatus({ type: "error", text });
+      document.getElementById(fieldId)?.focus();
+    };
     if (!fields.name.trim()) {
-      setStatus({ type: "error", text: "이름을 입력해 주세요." });
+      fail("nf-name", "이름을 입력해 주세요.");
       return;
     }
     const trimmedPhone = fields.phone.trim();
     if (!/^[0-9+\-() ]{7,20}$/.test(trimmedPhone)) {
-      setStatus({ type: "error", text: "연락처를 숫자와 - 로 입력해 주세요. (예: 010-1234-5678)" });
+      fail("nf-phone", "연락처를 숫자와 - 로 입력해 주세요. (예: 010-1234-5678)");
       return;
     }
     if (!consent) {
-      setStatus({ type: "error", text: "개인정보 수집·이용에 동의해 주셔야 신청할 수 있습니다." });
+      fail("nf-consent", "개인정보 수집·이용에 동의해 주셔야 신청할 수 있습니다.");
       return;
     }
 
@@ -210,7 +215,7 @@ export function NewFamilyRegisterForm() {
           />
           <span>
             새가족 안내를 위해 이름과 연락처를 수집·이용하는 것에 동의합니다.{" "}
-            <span className="text-[12.5px]" style={{ color: "var(--foreground-muted)" }}>
+            <span className="whitespace-nowrap text-[12.5px]" style={{ color: "var(--foreground-muted)" }}>
               (필수)
             </span>
           </span>

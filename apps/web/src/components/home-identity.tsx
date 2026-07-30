@@ -14,9 +14,6 @@ export function HomeIdentity() {
     <section className="px-6 pb-20 transition-colors" style={{ background: "var(--surface)" }}>
       <div className="mx-auto max-w-5xl">
         <div className="text-center">
-          <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-            Our Church
-          </p>
           <h2
             className="text-[26px] sm:text-[30px]"
             style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}

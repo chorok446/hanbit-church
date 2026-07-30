@@ -5,9 +5,7 @@ export function ServantsSection() {
   return (
     <section className="px-6 py-24">
       <div className="mx-auto max-w-5xl">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-          Servants
-        </p>
+        <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
         <h2
           className="mt-2 text-[28px]"
           style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}

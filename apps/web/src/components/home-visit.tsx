@@ -11,9 +11,7 @@ export function HomeVisit() {
           className="flex flex-col rounded-3xl border p-8 sm:p-10"
           style={{ background: "var(--card)", borderColor: "var(--border)" }}
         >
-          <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-            Visit
-          </p>
+          <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
           <h2
             className="text-[24px] sm:text-[28px]"
             style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
