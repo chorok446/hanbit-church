@@ -11,7 +11,7 @@ export function HomeDevotion({ devotion }: { devotion: Devotion | null }) {
   const excerpt =
     devotion.meditation.length > 140 ? `${devotion.meditation.slice(0, 140)}…` : devotion.meditation;
   return (
-    <section className="px-6 py-20" style={{ background: "var(--surface)" }}>
+    <section className="px-6 pt-20 pb-10" style={{ background: "var(--surface)" }}>
       <div className="mx-auto max-w-3xl">
         <Link
           href={`/devotion/${devotion.id}`}

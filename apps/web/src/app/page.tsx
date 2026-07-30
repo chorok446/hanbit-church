@@ -12,7 +12,7 @@ import { WorshipSummary } from "@/components/worship-summary";
 import { HomeWeeklySchedule } from "@/components/home-weekly-schedule";
 import { HomeVisit } from "@/components/home-visit";
 import { HomeIdentity } from "@/components/home-identity";
-import { HomePhotos } from "@/components/home-photos";
+import { HomeGreeting } from "@/components/home-greeting";
 import { HomeNews } from "@/components/home-news";
 import { HomeCommunity } from "@/components/home-community";
 import { HomeDevotion } from "@/components/home-devotion";
@@ -51,7 +51,7 @@ export default async function Home() {
       <ScrollReveal><HomeWeeklySchedule initialEvents={upcomingEvents} initialManual={initialManual} /></ScrollReveal>
       <ScrollReveal><HomeVisit /></ScrollReveal>
       <ScrollReveal><HomeIdentity /></ScrollReveal>
-      <ScrollReveal><HomePhotos /></ScrollReveal>
+      <ScrollReveal><HomeGreeting /></ScrollReveal>
       <ScrollReveal><HomeNews initialPosts={initialNews} /></ScrollReveal>
       <ScrollReveal><HomeCommunity /></ScrollReveal>
     </>

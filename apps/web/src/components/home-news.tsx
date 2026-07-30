@@ -53,7 +53,7 @@ function NewsRow({ post, highlighted }: { post: Post; highlighted: boolean }) {
             className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium"
             style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}
           >
-            <span aria-hidden>{badge.emoji}</span> {badge.label}
+            {badge.label}
           </span>
           <p className="line-clamp-1 min-w-0 flex-1 text-[15px] font-medium leading-6" style={{ color: "var(--heading)" }}>
             {title}
