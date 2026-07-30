@@ -39,30 +39,32 @@ export function HomeWeeklySchedule({
 
   useEffect(() => {
     let cancelled = false;
+    const buildItems = (events: Event[], extra: CalendarEvent[]) =>
+      getEventsForWeek(events, new Date(), extra)
+        .flatMap(({ dateKey, events }) =>
+          events
+            // 홈 요약은 교회 일정만 — 공휴일은 캘린더 보기에서만 노출한다.
+            .filter((event) => event.type !== "holiday")
+            .map((event) => ({ dateKey, event })),
+        )
+        .slice(0, MAX_ITEMS);
+
     const eventsP =
       initialEvents !== null ? Promise.resolve(initialEvents) : fetchUpcomingEvents().catch(() => [] as Event[]);
     const manualP =
       initialManual !== null ? Promise.resolve(initialManual) : fetchManualCalendarEvents().catch(() => [] as CalendarEvent[]);
-    // 찬양팀 일정 — 서버가 요청자별 범위(비로그인 PUBLIC / 로그인 CHURCH+PUBLIC / 멤버 전체)로 좁혀 준다.
-    const praiseP = fetchPublicPraiseSchedules().catch(() => []);
-    Promise.all([eventsP, praiseP, manualP])
-      .then(([events, praiseSchedules, manualEvents]) => {
-        if (cancelled) return;
-        const week = getEventsForWeek(events, new Date(), [
-          ...mapPraiseScheduleToCalendarEvents(praiseSchedules),
-          ...manualEvents,
-        ]);
-        setItems(
-          week
-            .flatMap(({ dateKey, events }) =>
-              events
-                // 홈 요약은 교회 일정만 — 공휴일은 캘린더 보기에서만 노출한다.
-                .filter((event) => event.type !== "holiday")
-                .map((event) => ({ dateKey, event })),
-            )
-            .slice(0, MAX_ITEMS),
-        );
-      });
+    // 1차: 시드된 행사·수동 일정만으로 즉시 렌더 — 찬양팀 응답을 기다리며 섹션이 통째로 늦게 등장하지 않게.
+    Promise.all([eventsP, manualP]).then(([events, manualEvents]) => {
+      if (cancelled) return;
+      setItems(buildItems(events, manualEvents));
+      // 2차: 찬양팀 일정(서버가 요청자별 범위로 좁혀 줌) 도착 시 병합 갱신.
+      fetchPublicPraiseSchedules()
+        .catch(() => [])
+        .then((praiseSchedules) => {
+          if (cancelled || praiseSchedules.length === 0) return;
+          setItems(buildItems(events, [...mapPraiseScheduleToCalendarEvents(praiseSchedules), ...manualEvents]));
+        });
+    });
     return () => {
       cancelled = true;
     };
