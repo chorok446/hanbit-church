@@ -135,6 +135,13 @@ body {
   overflow-wrap: break-word;
 }
 
+/* 제목 고아 줄바꿈 방지 — "…소중히 여기는 / 것" 같은 한 단어 낙오를 줄인다. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
 /* 제목 서체 헬퍼 — 기존 인라인 fontFamily("Black Han Sans") 사용처를 대체한다. */
 .font-display {
   font-family: var(--font-display, "Noto Serif KR", serif);

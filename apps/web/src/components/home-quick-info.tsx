@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { BookOpen, Clock, HeartHandshake, MapPin } from "lucide-react";
-import { CHURCH, WORSHIP_SERVICES, verseOfMonth } from "@/data/church";
+import { CHURCH, WORSHIP_SERVICES } from "@/data/church";
 
 /**
  * 히어로 직하단 핵심 정보 스트립 — 스크롤 전에 보이는 4개 퀵카드
  * (이달의 말씀 · 예배 시간 · 오시는 길 · 새가족 안내).
  */
 export function HomeQuickInfo() {
-  const verse = verseOfMonth();
   const sundayService = WORSHIP_SERVICES[0];
 
   const items = [
-    { href: "/sermons", icon: BookOpen, label: "이달의 말씀", value: verse.ref, sub: "설교 다시 보기" },
+    // 히어로가 이미 이달의 말씀을 크게 보여주므로 구절 반복 대신 '오늘의 묵상'으로 연결한다(라벨=목적지 일치).
+    { href: "/devotion", icon: BookOpen, label: "오늘의 묵상", value: "말씀 한 구절, 묵상 한 편", sub: "오늘의 말씀 읽기" },
     { href: "/worship", icon: Clock, label: "예배 시간", value: sundayService.time, sub: "전체 예배 안내" },
     { href: "/about", icon: MapPin, label: "오시는 길", value: CHURCH.address, sub: "지도·주차 안내" },
     { href: "/welcome", icon: HeartHandshake, label: "새가족 안내", value: "처음 오셨나요?", sub: "환영 안내 보기" },

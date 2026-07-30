@@ -5,7 +5,7 @@ import { WORSHIP_SERVICES } from "@/data/church";
 /** 홈 예배 시간 요약 — 상세는 /worship. */
 export function WorshipSummary() {
   return (
-    <section className="px-6 py-20 transition-colors" style={{ background: "var(--surface)" }}>
+    <section className="px-6 pt-14 pb-20 transition-colors" style={{ background: "var(--surface)" }}>
       <div className="mx-auto max-w-5xl">
         <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
         <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
