@@ -7,9 +7,7 @@ export function WorshipSummary() {
   return (
     <section className="px-6 py-20 transition-colors" style={{ background: "var(--surface)" }}>
       <div className="mx-auto max-w-5xl">
-        <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-          Worship
-        </p>
+        <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
         <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
           <h2
             className="text-[26px] sm:text-[30px]"

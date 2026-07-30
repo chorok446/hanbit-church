@@ -11,6 +11,29 @@ function useHydrated() {
   return useSyncExternalStore(noopSubscribe, () => true, () => false);
 }
 
+/** 모바일 시트 메뉴 안의 테마 전환 행 — 플로팅 pill 은 데스크톱 전용이라 모바일은 이 행이 담당한다. */
+export function ThemeToggleMenuRow() {
+  const { theme, toggle } = useTheme();
+  const hydrated = useHydrated();
+  const dark = hydrated && theme === "dark";
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      className="flex min-h-12 w-full items-center justify-between rounded-xl px-3 text-[15px] transition-colors hover:bg-[rgba(var(--ink-rgb),0.06)]"
+      style={{ color: "var(--heading)" }}
+    >
+      <span className="flex items-center gap-2.5">
+        {dark ? <Moon size={16} aria-hidden /> : <Sun size={16} aria-hidden />}
+        화면 모드
+      </span>
+      <span className="text-[13px]" style={{ color: "var(--foreground-muted)" }}>
+        {dark ? "다크" : "라이트"}
+      </span>
+    </button>
+  );
+}
+
 export function ThemeToggle() {
   const { theme, toggle } = useTheme();
   const hydrated = useHydrated();
@@ -21,7 +44,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="fixed bottom-20 right-6 z-50 h-9 w-16 rounded-full border p-1 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.35)] backdrop-blur-md transition-colors md:bottom-6"
+      className="fixed bottom-6 right-6 z-50 hidden h-9 w-16 rounded-full border p-1 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.35)] backdrop-blur-md transition-colors lg:block"
       style={{
         // 네이비 푸터 위에서도 묻히지 않도록 불투명 패널 배경 + 그림자.
         background: "var(--panel)",

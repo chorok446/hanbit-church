@@ -65,9 +65,7 @@ export default function PrayerClient() {
       {/* 컴팩트 네이비 밴드 — 커뮤니티/앱 페이지 공통 헤더(마케팅 히어로 아님). */}
       <section className="px-6 pb-11 pt-[124px]" style={{ background: "var(--banner-bg)" }}>
         <div className="mx-auto max-w-3xl">
-          <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent)" }}>
-            Prayer Wall
-          </p>
+          <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
           <h1
             className="text-[32px] text-[var(--on-banner)] sm:text-[38px]"
             style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}

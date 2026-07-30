@@ -127,9 +127,12 @@ body {
   background: var(--surface-dark);
 }
 
-/* 본문 서체. next/font(--font-body) 미주입 환경(테스트 등)은 시스템 스택으로 fallback. */
+/* 본문 서체. next/font(--font-body) 미주입 환경(테스트 등)은 시스템 스택으로 fallback.
+   한글 조판: keep-all 로 어절 단위 줄바꿈("새가족 안/내를" 방지), 넘치는 긴 토큰(URL 등)만 break-word 로 강제 분리. */
 body {
   font-family: var(--font-body, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif);
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 /* 제목 서체 헬퍼 — 기존 인라인 fontFamily("Black Han Sans") 사용처를 대체한다. */
@@ -303,6 +306,17 @@ body {
   animation: dialog-enter 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* 모바일 전체 메뉴 시트 — 우측에서 슬라이드 인. 모션 축소는 공통 블록이 처리. */
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+.sheet-panel-in {
+  animation: sheet-in 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* ── Motion: CSS 마이그레이션 (framer-motion 대체) ─────────────────────────
    등장 리빌·스태거·팝·틸트·활성 표식을 CSS keyframes/transition 으로 구현한다.
    트리거는 IntersectionObserver(스크롤 리빌) 또는 상태 클래스 토글이 담당하고,
@@ -340,10 +354,9 @@ body {
   }
 }
 
-/* 스크롤 진입 리빌(ScrollReveal) — IntersectionObserver 가 .is-visible 을 붙이면 재생. */
-.reveal {
-  opacity: 0;
-}
+/* 스크롤 진입 리빌(ScrollReveal) — IntersectionObserver 가 .is-visible 을 붙이면 재생.
+   기본 상태는 '보임': 정적 opacity:0 은 JS 실패·저속 회선에서 섹션을 백지로 만든다(리빌은 강화일 뿐).
+   등장 모션은 reveal-up keyframe 의 from(opacity 0)이 담당하므로 시각 결과는 동일하다. */
 .reveal.is-visible {
   animation: reveal-up var(--reveal-dur, 600ms) cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms) both;
 }

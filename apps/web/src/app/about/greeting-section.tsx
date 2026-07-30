@@ -6,9 +6,7 @@ export function GreetingSection() {
   return (
     <section className="px-6 py-24" style={{ background: "var(--surface)" }}>
       <div className="mx-auto max-w-[820px] text-center">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-          Greeting
-        </p>
+        <span aria-hidden className="mx-auto mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
         <h2
           className="mt-2 text-[26px]"
           style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}

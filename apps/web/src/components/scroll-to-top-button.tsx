@@ -27,7 +27,7 @@ export function ScrollToTopButton() {
       type="button"
       aria-label="맨 위로"
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      className="rise-pop fixed right-6 bottom-32 z-50 flex h-9 w-9 items-center justify-center rounded-full border shadow-[0_8px_24px_-8px_rgba(0,0,0,0.35)] backdrop-blur-md md:bottom-18 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+      className="rise-pop fixed right-6 bottom-20 z-50 flex h-9 w-9 items-center justify-center rounded-full border shadow-[0_8px_24px_-8px_rgba(0,0,0,0.35)] backdrop-blur-md lg:bottom-18 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
       style={{
         background: "rgba(var(--surface-rgb), 0.85)",
         borderColor: "var(--border)",

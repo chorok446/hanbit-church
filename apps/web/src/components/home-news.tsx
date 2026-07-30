@@ -84,6 +84,8 @@ function NewsRow({ post, highlighted }: { post: Post; highlighted: boolean }) {
  * initialPosts: 서버 컴포넌트(ISR)가 선주입한 목록 — 있으면 클라이언트 재요청을 생략한다. */
 export function HomeNews({ initialPosts = null }: { initialPosts?: Post[] | null }) {
   const [posts, setPosts] = useState<Post[] | null>(initialPosts);
+  // 요청 실패를 '소식 없음'과 구분한다 — 같은 문구면 사용자·운영자 모두 오판한다(silent failure).
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     // SSR 선주입이 있으면 첫 마운트 재요청 생략(내용 갱신은 ISR 재검증 주기가 담당).
@@ -92,10 +94,16 @@ export function HomeNews({ initialPosts = null }: { initialPosts?: Post[] | null
     const fetchCategory = (category: string) =>
       apiGet<PostSearchResponse>(`/api/posts/search?category=${category}&sort=latest&page=0&size=${PREVIEW_SIZE}`)
         .then((data) => data.content)
-        .catch(() => [] as Post[]);
+        .catch(() => null);
 
     Promise.all([fetchCategory("NOTICE"), fetchCategory("BULLETIN")]).then(([notices, bulletins]) => {
-      if (!cancelled) setPosts([...notices, ...bulletins].slice(0, PREVIEW_SIZE));
+      if (cancelled) return;
+      if (notices === null && bulletins === null) {
+        setLoadFailed(true);
+        setPosts([]);
+        return;
+      }
+      setPosts([...(notices ?? []), ...(bulletins ?? [])].slice(0, PREVIEW_SIZE));
     });
     return () => {
       cancelled = true;
@@ -105,9 +113,7 @@ export function HomeNews({ initialPosts = null }: { initialPosts?: Post[] | null
   return (
     <section className="px-6 pb-20 transition-colors" style={{ background: "var(--surface)" }}>
       <div className="mx-auto max-w-5xl">
-        <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-          News
-        </p>
+        <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
         <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
           <h2
             className="text-[26px] sm:text-[30px]"
@@ -133,7 +139,7 @@ export function HomeNews({ initialPosts = null }: { initialPosts?: Post[] | null
             className="rounded-2xl border py-10 text-center text-[14px]"
             style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground-muted)" }}
           >
-            아직 등록된 소식이 없어요.
+            {loadFailed ? "소식을 불러오지 못했어요. 잠시 후 다시 확인해 주세요." : "아직 등록된 소식이 없어요."}
           </p>
         ) : (
           // 카드 박스 대신 구분선 리스트 — 주변 카드 섹션들과 형태를 달리해 반복감을 줄인다.

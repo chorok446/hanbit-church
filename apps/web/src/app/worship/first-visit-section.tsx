@@ -6,9 +6,7 @@ export function FirstVisitSection() {
     <section className="px-6 py-24" style={{ background: "var(--banner-bg)" }}>
       <div className="mx-auto grid max-w-5xl grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_auto]">
         <div>
-          <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent)" }}>
-            First Visit
-          </p>
+          <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
           <h2
             className="mt-2 text-[28px] text-[var(--on-banner)] sm:text-[30px]"
             style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}

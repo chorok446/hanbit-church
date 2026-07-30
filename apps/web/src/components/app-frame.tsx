@@ -17,7 +17,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
     // 모션은 전부 CSS(globals.css)로 구현 — 모션 축소는 prefers-reduced-motion 미디어쿼리가 일괄 처리한다.
     <ConfirmProvider>
       {/* min-h-screen flex-col + 본문 flex-1 — 콘텐츠가 짧아도 푸터가 뷰포트 하단 이하에 붙는다. */}
-      <div className="relative flex min-h-screen w-full flex-col transition-colors pb-14 md:pb-0" style={{ background: "var(--surface)" }}>
+      <div className="relative flex min-h-screen w-full flex-col transition-colors pb-14 lg:pb-0" style={{ background: "var(--surface)" }}>
         {/* 키보드 사용자용: 고정 헤더의 링크들을 건너뛰고 본문으로 이동 */}
         <a
           href="#main-content"

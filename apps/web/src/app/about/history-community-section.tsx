@@ -21,9 +21,7 @@ export function HistoryCommunitySection() {
     <section className="px-6 py-24" style={{ background: "var(--surface)" }}>
       <div className="mx-auto grid max-w-5xl grid-cols-1 gap-14 lg:grid-cols-[5fr_7fr] lg:gap-[72px]">
         <div>
-          <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-            History
-          </p>
+          <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
           <h2
             className="mt-2 mb-8 text-[26px]"
             style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
@@ -58,9 +56,7 @@ export function HistoryCommunitySection() {
           </ol>
         </div>
         <div>
-          <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-            Community
-          </p>
+          <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
           <h2
             className="mt-2 mb-6 text-[26px]"
             style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}

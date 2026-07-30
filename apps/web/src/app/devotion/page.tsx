@@ -26,9 +26,7 @@ export default async function DevotionPage() {
         <div className="relative mx-auto max-w-5xl">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent)" }}>
-                Daily Devotion
-              </p>
+              <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
               <h1
                 className="text-[34px] sm:text-[40px] text-[var(--on-banner)]"
                 style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}

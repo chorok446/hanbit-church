@@ -30,9 +30,7 @@ export function HomeCommunity() {
   return (
     <section className="px-6 pb-24 transition-colors" style={{ background: "var(--surface)" }}>
       <div className="mx-auto max-w-5xl">
-        <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-          Community
-        </p>
+        <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
         <h2
           className="mb-8 text-[26px] sm:text-[30px]"
           style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}

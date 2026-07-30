@@ -2,21 +2,34 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LayoutList, Flag, User } from "lucide-react";
+import { Home, LayoutList, Flag, User, Clock, MapPin, HeartHandshake } from "lucide-react";
+import { useAuthSession } from "@/lib/use-auth-session";
 
-const tabs = [
+/** 교인(로그인) 탭 — 일상 도구 중심. */
+const memberTabs = [
   { label: "홈", href: "/", icon: Home, match: (path: string) => path === "/" },
   { label: "교제", href: "/feed", icon: LayoutList, match: (path: string) => path.startsWith("/feed") || path.startsWith("/posts") },
   { label: "행사", href: "/events", icon: Flag, match: (path: string) => path.startsWith("/events") },
   { label: "마이", href: "/mypage", icon: User, match: (path: string) => path.startsWith("/mypage") || path.startsWith("/profile") },
 ];
 
+/** 방문자(비로그인) 탭 — 1순위 사용자의 과업(예배 확인·방문·새가족) 중심.
+ *  서버 스냅샷은 항상 비로그인이라 방문자 탭으로 hydration 후 교인 탭으로 갱신된다(헤더와 동일 패턴). */
+const visitorTabs = [
+  { label: "홈", href: "/", icon: Home, match: (path: string) => path === "/" },
+  { label: "예배안내", href: "/worship", icon: Clock, match: (path: string) => path.startsWith("/worship") },
+  { label: "오시는길", href: "/about#location", icon: MapPin, match: (path: string) => path.startsWith("/about") },
+  { label: "새가족", href: "/welcome", icon: HeartHandshake, match: (path: string) => path.startsWith("/welcome") },
+];
+
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const { isLoggedIn } = useAuthSession();
+  const tabs = isLoggedIn ? memberTabs : visitorTabs;
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur-xl md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur-xl lg:hidden"
       style={{
         background: "color-mix(in srgb, var(--surface) 93%, transparent)",
         borderColor: "var(--border)",
@@ -44,7 +57,7 @@ export function MobileBottomNav() {
                 />
               ) : null}
               <Icon size={20} aria-hidden />
-              <span className="truncate text-[10px] font-medium">{label}</span>
+              <span className="truncate text-[11px] font-medium">{label}</span>
             </Link>
           );
         })}

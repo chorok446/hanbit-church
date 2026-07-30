@@ -13,9 +13,7 @@ export function AboutHero() {
         style={{ background: "var(--accent)" }}
       />
       <div className="relative mx-auto max-w-5xl">
-        <p className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent)" }}>
-          About
-        </p>
+        <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
         <h1
           className="text-[34px] sm:text-[40px] text-[var(--on-banner)]"
           style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}

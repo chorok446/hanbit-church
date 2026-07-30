@@ -497,9 +497,7 @@ export function EventCalendarView({ urlState }: { urlState?: EventListUrlState }
         {/* ── 이번 주 일정 (모바일에선 캘린더보다 먼저) ── */}
         <section aria-label="이번 주 일정" className="order-1 lg:order-2">
           <div className="rounded-2xl border p-5" style={{ background: "var(--panel)", borderColor: "var(--border)" }}>
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-              This Week
-            </p>
+            <span aria-hidden className="mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
             <h3 className="mb-4 text-[18px]" style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}>
               이번 주 일정
             </h3>

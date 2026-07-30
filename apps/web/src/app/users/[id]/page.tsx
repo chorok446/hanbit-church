@@ -35,11 +35,9 @@ function LoginRequired({ userId }: { userId: string }) {
   return (
     <section className="flex min-h-screen items-center justify-center px-6 py-32">
       <div className="max-w-md text-center">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--accent-strong)" }}>
-          Members Only
-        </p>
+        <span aria-hidden className="mx-auto mb-4 block h-px w-12" style={{ background: "var(--accent)" }} />
         <h1
-          className="mt-3 text-[26px]"
+          className="text-[26px]"
           style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
         >
           교우 프로필은 로그인 후 볼 수 있어요
