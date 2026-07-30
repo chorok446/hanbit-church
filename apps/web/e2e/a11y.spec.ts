@@ -24,8 +24,8 @@ async function expectNoSevereViolations(page: Page) {
  * (Lighthouse 수동 측정에서만 잡히던 a11y 회귀를 CI 에서 즉시 잡는다 — 푸터 대비·목록 구조 회귀 전례)
  * 실행: pnpm --filter web e2e a11y.spec.ts
  */
-// 시드 상세(p1 게시글·c1 행사) 포함 — 목록만 검사하면 댓글·상호작용 UI 가 사각이 된다.
-const PAGES = ["/", "/sermons", "/news", "/events", "/feed", "/login", "/signup", "/about", "/worship", "/welcome", "/giving", "/privacy", "/posts/p1", "/events/c1"];
+// 시드 상세(p1 게시글·c1 행사·dv-seed-1 묵상) 포함 — 목록만 검사하면 댓글·상호작용 UI 가 사각이 된다.
+const PAGES = ["/", "/sermons", "/news", "/events", "/feed", "/login", "/signup", "/about", "/worship", "/welcome", "/giving", "/privacy", "/posts/p1", "/events/c1", "/prayer", "/bulletin", "/devotion", "/devotion/dv-seed-1"];
 
 for (const path of PAGES) {
   test(`a11y: ${path} 에 serious/critical 위반이 없다`, async ({ page }) => {
@@ -93,6 +93,26 @@ test("다크모드 a11y: 관리자 영역(대시보드·회원 관리)", async (
     await expectNoSevereViolations(page);
   }
 });
+
+// 목장 영역 — 로그인 전용이라 공개 스위트가 못 덮는다. 관리자(스태프)는 디렉터리·상세 열람이
+// 가능하므로 픽스처 생성 없이 시드 목장(cg-seed-jub-eun)으로 순회한다.
+for (const dark of [false, true]) {
+  test(`a11y: 목장 영역 (${dark ? "다크" : "라이트"})`, async ({ page }) => {
+    if (dark) await page.addInitScript(() => localStorage.setItem("theme", "dark"));
+    await login(page, { email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
+    // 404 폴백 위 axe 통과 헛검사 방지 — 실제 콘텐츠 텍스트를 페이지별로 확인한다.
+    const targets: Array<[path: string, marker: string]> = [
+      ["/cell-groups", "목장 목록"],
+      ["/cell-groups/cg-seed-jub-eun", "주은 목장"],
+    ];
+    for (const [path, marker] of targets) {
+      await page.goto(path);
+      await page.waitForLoadState("networkidle");
+      await expect(page.getByText(marker).first()).toBeVisible();
+      await expectNoSevereViolations(page);
+    }
+  });
+}
 
 // 찬양팀 영역 — 멤버 전용이라 공개 스위트가 못 덮는다. 관리자에게 리더 역할을 부여(멱등)해 순회하고,
 // 콘티 상세(참석 체크·배정 UI)는 API 로 콘티를 만들어 검사한 뒤 정리한다.
