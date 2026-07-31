@@ -28,7 +28,7 @@ export function HomeQuickInfo() {
               style={{ background: "var(--card)", borderColor: "var(--border)" }}
             >
               <p
-                className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.16em]"
+                className="flex items-center gap-1.5 text-[12px] font-semibold"
                 style={{ color: "var(--accent-strong)" }}
               >
                 <Icon size={13} aria-hidden style={{ color: "var(--accent)" }} />

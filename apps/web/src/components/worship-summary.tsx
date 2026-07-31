@@ -15,7 +15,7 @@ export function WorshipSummary() {
           >
             예배로 초대합니다
           </h2>
-          <Link href="/worship" className="text-[13px] underline underline-offset-4" style={{ color: "var(--foreground-muted)" }}>
+          <Link href="/worship" className="flex min-h-11 items-center text-[13px] underline underline-offset-4" style={{ color: "var(--foreground-muted)" }}>
             예배 안내 전체 보기
           </Link>
         </div>

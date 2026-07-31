@@ -37,7 +37,7 @@ export function HomeVisit() {
           </div>
           <Link
             href="/about"
-            className="mt-auto inline-block pt-6 text-[13px] font-medium underline-offset-4 hover:underline"
+            className="mt-auto inline-flex min-h-11 items-center pt-6 text-[13px] font-medium underline-offset-4 hover:underline"
             style={{ color: "var(--accent-strong)" }}
           >
             지도와 주차 안내 보기 →
