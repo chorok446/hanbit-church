@@ -81,7 +81,7 @@ object EventSeed {
         "궁금한 점은 담당 교역자 또는 부서 임원에게 문의해 주세요.",
     )
 
-    val events: List<Event> = listOf(
+    fun events(churchName: String = "한빛교회"): List<Event> = listOf(
         Event("c1", "open", "여름 청년 수련회",
             "말씀 안에서 쉼과 회복을 누리는 2박 3일 청년 수련회.", community[1],
             "2026-06-18", "2026-07-18", "2026-07-22", "2026-07-24", 40, 39, "21일 남음",
@@ -101,7 +101,7 @@ object EventSeed {
         Event("c4", "upcoming", "가을 전교인 야외 예배",
             "온 성도가 함께 드리는 야외 예배와 친교.", community[5],
             "2026-07-15", "2026-08-05", "2026-08-15", "2026-08-15", 100, 0, "12일 후 모집 시작",
-            Author("한빛교회", true),
+            Author(churchName, true),
             EventBody("행사 소개", longBody, listOf(community[2], community[0]))),
         Event("c5", "closed", "봄 학기 성경공부반",
             "로마서를 함께 읽은 8주 과정이 은혜 가운데 마쳤습니다.", bible[0],

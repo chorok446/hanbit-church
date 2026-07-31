@@ -137,16 +137,16 @@ object PostSeed {
     private val serve = Photos.serve
     private val children = Photos.children
 
-    val posts: List<Post> = listOf(
-        Post("p1", Author("한빛교회", true), "2시간 전",
+    fun posts(churchName: String = "한빛교회"): List<Post> = listOf(
+        Post("p1", Author(churchName, true), "2시간 전",
             "이번 주일 오후, 여름 청년 수련회 사전 모임이 있습니다. 신청하신 분들은 본당 앞으로 모여주세요.",
             listOf("#공지", "#청년부"), listOf(community[0]), 42, 0, "c1",
             category = PostCategory.NOTICE),
-        Post("p2", Author("한빛교회", true), "5시간 전",
+        Post("p2", Author(churchName, true), "5시간 전",
             "7월 둘째 주 주보입니다. 예배 순서와 교회 소식을 확인해 주세요.",
             listOf("#주보"), listOf(worship[0]), 18, 0,
             category = PostCategory.BULLETIN),
-        Post("p3", Author("한빛교회", true), "어제",
+        Post("p3", Author(churchName, true), "어제",
             "주일 설교 — \"항상 기뻐하라\" (데살로니가전서 5:16-18). 지난 주일 말씀의 요약과 나눔 질문을 함께 올립니다.",
             listOf("#설교", "#주일예배"), emptyList(), 96, 0,
             category = PostCategory.SERMON),
@@ -166,7 +166,7 @@ object PostSeed {
             "새가족 등록하고 첫 목장 모임에 다녀왔습니다. 따뜻하게 맞아주셔서 감사했어요.",
             listOf("#새가족", "#목장"), listOf(fellowship[0]), 29, 0,
             category = PostCategory.SHARING),
-        Post("p8", Author("한빛교회", true), "1주 전",
+        Post("p8", Author(churchName, true), "1주 전",
             "주일 설교 — \"선한 목자\" (시편 23편). 말씀 요약과 함께 한 주간 묵상 구절을 나눕니다.",
             listOf("#설교", "#주일예배"), emptyList(), 71, 0,
             category = PostCategory.SERMON),

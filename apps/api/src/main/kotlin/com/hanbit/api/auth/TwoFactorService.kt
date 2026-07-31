@@ -25,6 +25,8 @@ class TwoFactorService(
     private val authService: AuthService,
     private val denylist: TokenDenylistStore,
     private val clock: Clock,
+    // 인증 앱에 표시되는 발급자명 — 배포 교회명(env)을 따라간다. 기존 등록분의 앱 표기는 바뀌지 않는다.
+    @org.springframework.beans.factory.annotation.Value("\${app.church.name:한빛교회}") private val issuer: String,
 ) {
     @Transactional
     fun setup(userId: Long): TwoFactorSetupResponse {
@@ -37,7 +39,7 @@ class TwoFactorService(
         user.totpEnabledAt = null
         return TwoFactorSetupResponse(
             secret = secret,
-            otpauthUrl = Totp.otpauthUrl(secret, user.email, ISSUER),
+            otpauthUrl = Totp.otpauthUrl(secret, user.email, issuer),
         )
     }
 
@@ -109,9 +111,5 @@ class TwoFactorService(
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "invalid challenge")
         }
         return authService.issueTokensFor(user)
-    }
-
-    private companion object {
-        const val ISSUER = "한빛교회"
     }
 }
