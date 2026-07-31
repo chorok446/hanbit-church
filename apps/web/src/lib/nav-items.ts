@@ -31,5 +31,7 @@ export const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
 
 export const HOME_NAV_ITEM: NavItem = { label: "홈", href: "/" };
 
-/** 평면 목록이 필요한 소비자(활성 판정 등)용 — 그룹 순서를 그대로 편다. */
-export const MAIN_NAV_ITEMS: NavItem[] = [HOME_NAV_ITEM, ...NAV_GROUPS.flatMap((g) => g.items)];
+/** 내비 활성 판정 — 데스크톱 링크·모바일 시트가 공유한다(한쪽만 고치면 표시가 어긋난다). */
+export function isNavActive(pathname: string, href: string): boolean {
+  return pathname === href || (href !== "/" && pathname.startsWith(href));
+}

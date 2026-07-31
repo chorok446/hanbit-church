@@ -8,7 +8,7 @@ import { Bell, LogOut, Menu, Search, ShieldCheck, UserRound, X } from "lucide-re
 import { useAuthSession } from "@/lib/use-auth-session";
 import { useCurrentUserProfile } from "@/lib/use-current-user-profile";
 import { useNotificationUnread } from "@/lib/use-unread-badges";
-import { HOME_NAV_ITEM, NAV_GROUPS, type NavItem } from "@/lib/nav-items";
+import { HOME_NAV_ITEM, NAV_GROUPS, isNavActive, type NavItem } from "@/lib/nav-items";
 import { CurrentUserAvatar } from "@/components/current-user-avatar";
 import { ThemeToggleMenuRow } from "@/components/theme-toggle";
 import { CHURCH } from "@/data/church";
@@ -126,7 +126,7 @@ function ProfileMenu({
 }
 
 function renderDesktopLink(it: NavItem, pathname: string) {
-  const isActive = pathname === it.href || (it.href !== "/" && pathname.startsWith(it.href));
+  const isActive = isNavActive(pathname, it.href);
   return (
     <Link
       key={it.href}
@@ -149,7 +149,7 @@ function renderDesktopLink(it: NavItem, pathname: string) {
 }
 
 function renderSheetLink(it: NavItem, pathname: string, onClose: () => void) {
-  const isActive = pathname === it.href || (it.href !== "/" && pathname.startsWith(it.href));
+  const isActive = isNavActive(pathname, it.href);
   return (
     <Link
       key={it.href}
