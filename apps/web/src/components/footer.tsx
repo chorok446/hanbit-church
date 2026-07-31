@@ -82,9 +82,13 @@ export function Footer() {
           <p className="mt-3 text-[13px] leading-6">
             {CHURCH.address}
             <br />
-            <a href={`tel:${CHURCH.phone.replace(/[^0-9+]/g, "")}`} className="underline-offset-4 hover:underline">
-              {CHURCH.phone}
-            </a>
+            {CHURCH.phoneTel ? (
+              <a href={`tel:${CHURCH.phoneTel}`} className="underline-offset-4 hover:underline">
+                {CHURCH.phone}
+              </a>
+            ) : (
+              CHURCH.phone
+            )}
             <br />
             {CHURCH.email}
           </p>

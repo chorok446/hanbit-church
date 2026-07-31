@@ -60,7 +60,7 @@ const visitInfoItems: { label: string; value: string; href?: string }[] = [
   { label: "주소", value: CHURCH.address },
   { label: "주차", value: "교회 주차장을 이용하실 수 있습니다." },
   { label: "안내 데스크", value: "본당 로비 새가족 안내 데스크에서 도와드립니다." },
-  { label: "문의 전화", value: CHURCH.phone, href: `tel:${CHURCH.phone.replace(/[^0-9+]/g, "")}` },
+  { label: "문의 전화", value: CHURCH.phone, href: CHURCH.phoneTel ? `tel:${CHURCH.phoneTel}` : undefined },
 ];
 
 const outlineCtaClass =

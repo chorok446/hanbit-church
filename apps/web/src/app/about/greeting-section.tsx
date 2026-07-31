@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CHURCH } from "@/data/church";
+import { CHURCH_GREETING } from "@/data/church";
 
 /** 인사말 — 크림 밴드, 에디토리얼 중앙 정렬. 리드 문장(명조 대형) + 본문 + 담임목사 서명 + CTA. */
 export function GreetingSection() {
@@ -17,7 +17,7 @@ export function GreetingSection() {
           className="mx-auto mt-9 max-w-[26ch] text-[24px] leading-[1.7]"
           style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)", textWrap: "balance", wordBreak: "keep-all" }}
         >
-          하나님의 사랑 안에서, 이곳을 찾아주신 여러분을 기쁨으로 환영합니다.
+          {CHURCH_GREETING.lead}
         </p>
         {/* TODO(교회 확인): 인사말 본문 실제 내용으로 교체 */}
         <div className="mx-auto mt-7 max-w-[58ch] space-y-4 text-left text-[15px] leading-[30px]" style={{ color: "var(--foreground)" }}>
@@ -27,7 +27,7 @@ export function GreetingSection() {
           </p>
           <p>처음 오시는 분도, 오랜 성도님도 언제나 환영합니다. 주님 안에서 만나 뵙기를 소망합니다.</p>
           <p className="pt-1 text-right" style={{ color: "var(--foreground-muted)" }}>
-            {`${CHURCH.name} 담임목사${CHURCH.pastor ? ` ${CHURCH.pastor}` : ""} 드림`}
+            {CHURCH_GREETING.signature}
           </p>
         </div>
         <div className="mt-9 flex flex-wrap justify-center gap-3">

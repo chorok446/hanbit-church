@@ -26,9 +26,13 @@ export function HomeVisit() {
             <p className="flex items-center gap-2 text-[14px]" style={{ color: "var(--foreground)" }}>
               <Phone size={15} aria-hidden className="shrink-0" style={{ color: "var(--accent)" }} />
               {/* 방문 결심의 마지막 1미터 — 모바일에서 바로 전화 걸기. */}
-              <a href={`tel:${CHURCH.phone.replace(/[^0-9+]/g, "")}`} className="underline-offset-4 hover:underline">
-                {CHURCH.phone}
-              </a>
+              {CHURCH.phoneTel ? (
+                <a href={`tel:${CHURCH.phoneTel}`} className="underline-offset-4 hover:underline">
+                  {CHURCH.phone}
+                </a>
+              ) : (
+                CHURCH.phone
+              )}
             </p>
           </div>
           <Link
