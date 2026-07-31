@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // dev 서버를 같은 공유기(사설망)의 실기기(폰)로 접속해 확인할 때 필요 — Next 16은 localhost 외
+  // 오리진의 dev 요청(HMR·RSC)을 403으로 차단해 하이드레이션이 죽는다(링크만 되고 버튼 무반응).
+  // dev 전용 옵션이라 프로덕션 동작에는 영향 없다.
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*"],
   // React Compiler 자동 메모이제이션 — 수동 useMemo/useCallback 없이 리렌더를 줄인다.
   // 빌드 시 babel-plugin-react-compiler(devDependency) 를 사용한다.
   reactCompiler: true,
