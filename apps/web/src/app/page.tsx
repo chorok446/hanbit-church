@@ -11,7 +11,6 @@ import { HomeQuickInfo } from "@/components/home-quick-info";
 import { WorshipSummary } from "@/components/worship-summary";
 import { HomeWeeklySchedule } from "@/components/home-weekly-schedule";
 import { HomeVisit } from "@/components/home-visit";
-import { HomeIdentity } from "@/components/home-identity";
 import { HomeGreeting } from "@/components/home-greeting";
 import { HomeNews } from "@/components/home-news";
 import { HomeCommunity } from "@/components/home-community";
@@ -23,7 +22,9 @@ import { ScrollReveal } from "@/components/scroll-reveal";
 // API 미가용(CI 빌드)이면 null 로 두고 기존 클라이언트 fetch 경로가 동작한다.
 export const revalidate = 60;
 
-// 홈 내러티브: 말씀(Hero) → 핵심 정보 스트립 → 예배 → 이번 주 일정 → 오시는길·새가족 → 교회 정체성·사진 → 최신 소식 → 교제·행사
+// 홈 내러티브: 말씀(Hero) → 핵심 정보 스트립 → 예배 → 이번 주 일정 → 오시는길·새가족 → 담임목사 인사 → 최신 소식 → 교제·행사
+// 정체성 4카드(git 히스토리 home-identity.tsx)는 자리표시 문구뿐이라 내렸다 — 교회가 실제 비전 문안을
+// 확정하면 복원을 검토한다(빈 확신보다 인사말의 실제 목소리가 힘이 세다 — 4차 critique P2).
 export default async function Home() {
   const previewQuery = (category: string) =>
     apiGetIsr<PostSearchResponse>(`/api/posts/search?category=${category}&sort=latest&page=0&size=${HOME_NEWS_PREVIEW_SIZE}`);
@@ -50,7 +51,6 @@ export default async function Home() {
       <ScrollReveal><WorshipSummary /></ScrollReveal>
       <ScrollReveal><HomeWeeklySchedule initialEvents={upcomingEvents} initialManual={initialManual} /></ScrollReveal>
       <ScrollReveal><HomeVisit /></ScrollReveal>
-      <ScrollReveal><HomeIdentity /></ScrollReveal>
       <ScrollReveal><HomeGreeting /></ScrollReveal>
       <ScrollReveal><HomeNews initialPosts={initialNews} /></ScrollReveal>
       <ScrollReveal><HomeCommunity /></ScrollReveal>
