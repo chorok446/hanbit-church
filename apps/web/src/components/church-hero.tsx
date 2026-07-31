@@ -15,12 +15,13 @@ export function ChurchHero() {
       </div>
 
       <div className="relative mx-auto max-w-4xl">
-        <p
+        {/* 교회명 킥커가 곧 페이지 주제 — 홈의 유일한 h1(스크린리더·SEO 랜드마크). 시각은 킥커 그대로. */}
+        <h1
           className="mb-8 text-[12px] font-semibold tracking-[0.42em] sm:text-[13px]"
           style={{ color: "var(--accent-strong)" }}
         >
           {CHURCH.name} · {CHURCH.nameEn}
-        </p>
+        </h1>
 
         <blockquote className="m-0">
           <p
