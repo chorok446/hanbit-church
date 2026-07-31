@@ -107,7 +107,7 @@ export function NewFamilyRegisterForm() {
       style={{ background: "var(--card)", borderColor: "var(--border)" }}
     >
       <div>
-        <label htmlFor="nf-name" className="mb-1.5 block text-[12px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
+        <label htmlFor="nf-name" className="mb-1.5 block text-[13px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
           이름 <span className="normal-case tracking-normal" style={{ color: "var(--accent-strong)" }}>(필수)</span>
         </label>
         <input
@@ -124,7 +124,7 @@ export function NewFamilyRegisterForm() {
       </div>
 
       <div>
-        <label htmlFor="nf-phone" className="mb-1.5 block text-[12px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
+        <label htmlFor="nf-phone" className="mb-1.5 block text-[13px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
           연락처 <span className="normal-case tracking-normal" style={{ color: "var(--accent-strong)" }}>(필수)</span>
         </label>
         <input
@@ -143,7 +143,7 @@ export function NewFamilyRegisterForm() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="nf-visit" className="mb-1.5 block text-[12px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
+          <label htmlFor="nf-visit" className="mb-1.5 block text-[13px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
             방문 예정 예배 <span className="normal-case tracking-normal">(선택)</span>
           </label>
           <select
@@ -164,7 +164,7 @@ export function NewFamilyRegisterForm() {
         </div>
 
         <div>
-          <label htmlFor="nf-companion" className="mb-1.5 block text-[12px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
+          <label htmlFor="nf-companion" className="mb-1.5 block text-[13px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
             함께 오시는 분 <span className="normal-case tracking-normal">(선택)</span>
           </label>
           <select
@@ -186,7 +186,7 @@ export function NewFamilyRegisterForm() {
       </div>
 
       <div>
-        <label htmlFor="nf-note" className="mb-1.5 block text-[12px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
+        <label htmlFor="nf-note" className="mb-1.5 block text-[13px] tracking-[0.2em] uppercase" style={{ color: "var(--foreground-muted)" }}>
           남기고 싶은 말 <span className="normal-case tracking-normal">(선택)</span>
         </label>
         <textarea
@@ -215,12 +215,12 @@ export function NewFamilyRegisterForm() {
           />
           <span>
             새가족 안내를 위해 이름과 연락처를 수집·이용하는 것에 동의합니다.{" "}
-            <span className="whitespace-nowrap text-[12.5px]" style={{ color: "var(--foreground-muted)" }}>
+            <span className="whitespace-nowrap text-[13px]" style={{ color: "var(--foreground-muted)" }}>
               (필수)
             </span>
           </span>
         </label>
-        <p className="mt-1.5 pl-8 text-[12.5px] leading-5" style={{ color: "var(--foreground-muted)" }}>
+        <p className="mt-1.5 pl-8 text-[13px] leading-5" style={{ color: "var(--foreground-muted)" }}>
           수집된 정보는 새가족 안내와 연락 목적으로만 사용됩니다.{" "}
           <Link href="/privacy" className="underline underline-offset-2 hover:opacity-80" style={{ color: "var(--accent-strong)" }}>
             개인정보처리방침

@@ -89,8 +89,12 @@ export function Footer() {
             ) : (
               CHURCH.phone
             )}
-            <br />
-            {CHURCH.email}
+            {CHURCH.email ? (
+              <>
+                <br />
+                {CHURCH.email}
+              </>
+            ) : null}
           </p>
         </div>
 

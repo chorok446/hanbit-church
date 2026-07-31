@@ -5,7 +5,8 @@ const VISION_ITEMS: Array<{ title: string; body: string }> = [
   { title: "섬김", body: "지역과 이웃을 향해 복음의 사랑을 실천합니다." },
 ];
 
-/** 우리 교회의 비전 — 웜크림 밴드, 상단 구분선 + 번호 + 명조 제목의 4열(반응형). */
+/** 우리 교회의 비전 — 웜크림 밴드, 상단 구분선 + 명조 제목의 4열(반응형).
+ *  4가치는 순서 개념이 없어 번호(01~04)를 붙이지 않는다 — 번호 시퀀스는 /welcome 방문 여정처럼 실제 순서가 있을 때만. */
 export function VisionSection() {
   return (
     <section className="px-6 py-24" style={{ background: "var(--surface-muted)" }}>
@@ -18,17 +19,10 @@ export function VisionSection() {
           우리 교회의 비전
         </h2>
         <ul className="mt-11 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-          {VISION_ITEMS.map((item, index) => (
+          {VISION_ITEMS.map((item) => (
             <li key={item.title} className="border-t pt-5" style={{ borderColor: "rgba(var(--ink-rgb), 0.25)" }}>
-              <p
-                aria-hidden
-                className="text-[13px] font-semibold tracking-[0.2em]"
-                style={{ fontFamily: "var(--font-display)", color: "var(--accent-strong)" }}
-              >
-                {String(index + 1).padStart(2, "0")}
-              </p>
               <h3
-                className="mt-2.5 text-[21px]"
+                className="text-[21px]"
                 style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--heading)" }}
               >
                 {item.title}

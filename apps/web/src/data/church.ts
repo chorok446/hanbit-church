@@ -14,7 +14,8 @@ export const CHURCH = {
   /** tel: 링크용 정규화 번호 — 전 소비처가 이 값 하나만 쓴다. env 미설정이면 빈 값:
    *  자리표시 번호로 실제 전화가 걸리지 않도록 소비처는 링크 대신 일반 텍스트로 렌더한다. */
   phoneTel: phoneEnv.replace(/[^0-9+]/g, ""),
-  email: process.env.NEXT_PUBLIC_CHURCH_EMAIL ?? "hanbit@church.kr",
+  /** env 미설정이면 빈 값 — 자리표시 이메일이 푸터·연락처 같은 신뢰 표면에 노출되지 않도록 소비처는 줄을 숨긴다. */
+  email: process.env.NEXT_PUBLIC_CHURCH_EMAIL ?? "",
 } as const;
 
 /** 담임목사 인사 — 홈 인사(home-greeting)와 교회소개 인사말(greeting-section)이 공유하는 단일 소스.
