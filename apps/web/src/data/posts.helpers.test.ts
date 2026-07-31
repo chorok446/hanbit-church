@@ -44,9 +44,9 @@ describe("postCategoryLabel / postCategoryBadge", () => {
   it("알 수 없는 카테고리는 '나눔' 으로 폴백", () => {
     expect(postCategoryLabel("BOGUS")).toBe("나눔");
   });
-  it("배지는 이모지+라벨, 알 수 없으면 SHARING 폴백", () => {
-    expect(postCategoryBadge("SERMON")).toEqual({ emoji: "📖", label: "설교" });
-    expect(postCategoryBadge("BOGUS")).toEqual({ emoji: "🌱", label: "나눔" });
+  it("배지는 라벨 전용, 알 수 없으면 SHARING 폴백", () => {
+    expect(postCategoryBadge("SERMON")).toEqual({ label: "설교" });
+    expect(postCategoryBadge("BOGUS")).toEqual({ label: "나눔" });
   });
 });
 
