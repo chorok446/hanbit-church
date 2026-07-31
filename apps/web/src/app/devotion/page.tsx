@@ -6,8 +6,8 @@ import { DEVOTION_PAGE_SIZE, devotionListPath, type DevotionPageResponse } from 
 import { DevotionList } from "./devotion-list";
 
 export const metadata: Metadata = {
-  title: "큐티 · 오늘의 말씀",
-  description: `${CHURCH.name} 데일리 큐티 — 매일의 말씀과 묵상, 은혜나눔`,
+  title: "묵상 · 오늘의 말씀",
+  description: `${CHURCH.name} 데일리 묵상 — 매일의 말씀과 묵상글, 은혜나눔`,
 };
 
 // ISR: 첫 페이지 목록을 서버에서 선주입(60초 재검증). API 미가용(CI 빌드)이면 null → 클라이언트 fetch 폴백.
@@ -34,7 +34,7 @@ export default async function DevotionPage() {
                 오늘의 말씀
               </h1>
             </div>
-            <StaffWriteButton href="/devotion/write" label="큐티 등록" />
+            <StaffWriteButton href="/devotion/write" label="묵상 등록" />
           </div>
           <p className="mt-3.5 max-w-[52ch] text-[15px] leading-[30px]" style={{ color: "rgba(var(--on-banner-rgb), 0.78)" }}>
             매일의 말씀 한 구절과 짧은 묵상입니다. 글을 열어 함께 은혜를 나눠 보세요.
