@@ -20,7 +20,7 @@ export function HomeDevotion({ devotion }: { devotion: Devotion | null }) {
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p
-              className="text-[11px] font-semibold uppercase tracking-[0.3em]"
+              className="text-[12px] font-semibold"
               style={{ color: "var(--accent-strong)" }}
             >
               오늘의 말씀

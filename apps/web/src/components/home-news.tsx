@@ -71,9 +71,12 @@ function NewsRow({ post, highlighted }: { post: Post; highlighted: boolean }) {
           <span className="truncate">{post.author.name}</span>
           <span aria-hidden>·</span>
           <span className="shrink-0">{postTimeLabel(post)}</span>
-          <span className="ml-auto flex shrink-0 items-center gap-1">
-            <MessageCircle size={12} aria-hidden /> {post.comments}
-          </span>
+          {/* 댓글 0 은 숨긴다 — 조용한 공식 채널에서 '0'은 빈약함만 증폭한다(home-devotion 과 동일 규칙). */}
+          {post.comments > 0 && (
+            <span className="ml-auto flex shrink-0 items-center gap-1">
+              <MessageCircle size={12} aria-hidden /> {post.comments}
+            </span>
+          )}
         </div>
       </Link>
     </li>

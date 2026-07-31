@@ -28,7 +28,7 @@ export function PostBoardList({ posts, showCategory = true }: { posts: Post[]; s
                   className="hidden shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium sm:inline"
                   style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}
                 >
-                  <span aria-hidden>{badge.emoji}</span> {badge.label}
+                  {badge.label}
                 </span>
               );
             })() : null}

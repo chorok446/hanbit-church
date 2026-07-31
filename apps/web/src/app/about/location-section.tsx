@@ -26,10 +26,12 @@ export function LocationSection() {
                 <Phone size={15} aria-hidden className="shrink-0" style={{ color: "var(--accent)" }} />
                 {CHURCH.phone}
               </p>
-              <p className="flex items-center gap-2.5 text-[14.5px]" style={{ color: "var(--foreground)" }}>
-                <Mail size={15} aria-hidden className="shrink-0" style={{ color: "var(--accent)" }} />
-                {CHURCH.email}
-              </p>
+              {CHURCH.email ? (
+                <p className="flex items-center gap-2.5 text-[14.5px]" style={{ color: "var(--foreground)" }}>
+                  <Mail size={15} aria-hidden className="shrink-0" style={{ color: "var(--accent)" }} />
+                  {CHURCH.email}
+                </p>
+              ) : null}
             </div>
 
             <LocationActions address={CHURCH.address} />

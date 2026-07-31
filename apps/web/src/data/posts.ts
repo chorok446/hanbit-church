@@ -64,16 +64,17 @@ export function postCategoryLabel(category: string): string {
   return POST_CATEGORIES.find((item) => item.value === category)?.label ?? "나눔";
 }
 
-/** 교회 특화 카테고리 배지(이모지 + 라벨). 카드·게시판 리스트의 카테고리 pill 에서 공용. */
-const POST_CATEGORY_BADGES: Record<PostCategory, { emoji: string; label: string }> = {
-  NOTICE: { emoji: "📢", label: "공지" },
-  BULLETIN: { emoji: "📅", label: "주보" },
-  SERMON: { emoji: "📖", label: "설교" },
-  PRAYER: { emoji: "🙏", label: "기도요청" },
-  SHARING: { emoji: "🌱", label: "나눔" },
+/** 교회 특화 카테고리 배지 라벨. 카드·게시판 리스트의 카테고리 pill 에서 공용.
+ *  DESIGN.md: 이모지를 아이콘·배지 대용으로 쓰지 않는다 — 라벨 전용. */
+const POST_CATEGORY_BADGES: Record<PostCategory, { label: string }> = {
+  NOTICE: { label: "공지" },
+  BULLETIN: { label: "주보" },
+  SERMON: { label: "설교" },
+  PRAYER: { label: "기도요청" },
+  SHARING: { label: "나눔" },
 };
 
-export function postCategoryBadge(category: string): { emoji: string; label: string } {
+export function postCategoryBadge(category: string): { label: string } {
   return POST_CATEGORY_BADGES[category as PostCategory] ?? POST_CATEGORY_BADGES.SHARING;
 }
 

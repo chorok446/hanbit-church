@@ -54,12 +54,12 @@ describe("postCategoryLabel", () => {
 });
 
 describe("postCategoryBadge", () => {
-  it("알려진 카테고리는 이모지+라벨", () => {
-    expect(postCategoryBadge("BULLETIN")).toEqual({ emoji: "📅", label: "주보" });
-    expect(postCategoryBadge("PRAYER")).toEqual({ emoji: "🙏", label: "기도요청" });
+  it("알려진 카테고리는 라벨 전용(이모지 없음)", () => {
+    expect(postCategoryBadge("BULLETIN")).toEqual({ label: "주보" });
+    expect(postCategoryBadge("PRAYER")).toEqual({ label: "기도요청" });
   });
 
   it("알 수 없는 값은 나눔(SHARING) 배지로 폴백", () => {
-    expect(postCategoryBadge("UNKNOWN")).toEqual({ emoji: "🌱", label: "나눔" });
+    expect(postCategoryBadge("UNKNOWN")).toEqual({ label: "나눔" });
   });
 });

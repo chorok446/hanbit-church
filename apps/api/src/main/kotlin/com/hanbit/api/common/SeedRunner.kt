@@ -36,13 +36,15 @@ class SeedRunner(
     @Value("\${app.admin.email}") private val adminEmail: String,
     @Value("\${app.admin.password}") private val adminPassword: String,
     @Value("\${app.admin.name}") private val adminName: String,
+    // 시드의 공식 계정 표시명 — 배포 교회명(env)을 따라간다(리브랜드 잔재가 신뢰 표면에 노출되지 않게).
+    @Value("\${app.church.name:한빛교회}") private val churchName: String,
 ) : CommandLineRunner {
     override fun run(vararg args: String) {
         if (posts.count() == 0L) {
-            posts.saveAll(PostSeed.posts.reversed().onEachIndexed { i, p -> p.seq = (i + 1).toLong() })
+            posts.saveAll(PostSeed.posts(churchName).reversed().onEachIndexed { i, p -> p.seq = (i + 1).toLong() })
         }
         if (events.count() == 0L) {
-            events.saveAll(EventSeed.events.reversed().onEachIndexed { i, c -> c.seq = (i + 1).toLong() })
+            events.saveAll(EventSeed.events(churchName).reversed().onEachIndexed { i, c -> c.seq = (i + 1).toLong() })
         }
         if (praiseSetlists.count() == 0L) {
             praiseSetlists.saveAll(PraiseSeed.setlists(java.time.Instant.now()))

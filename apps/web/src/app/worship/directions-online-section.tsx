@@ -33,9 +33,13 @@ export function DirectionsOnlineSection() {
               <Phone size={15} aria-hidden className="mt-1.5 shrink-0" style={{ color: "var(--accent)" }} />
               <span className="leading-7">
                 문의 전화{" "}
-                <a href={`tel:${CHURCH.phone.replace(/[^0-9+]/g, "")}`} className="underline underline-offset-4">
-                  {CHURCH.phone}
-                </a>
+                {CHURCH.phoneTel ? (
+                  <a href={`tel:${CHURCH.phoneTel}`} className="underline underline-offset-4">
+                    {CHURCH.phone}
+                  </a>
+                ) : (
+                  CHURCH.phone
+                )}
               </span>
             </li>
           </ul>

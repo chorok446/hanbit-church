@@ -61,7 +61,7 @@ const CHANNELS = [
 
 function ColumnTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[11px] font-medium tracking-[0.25em] uppercase" style={{ color: "var(--accent)" }}>
+    <p className="text-[12px] font-medium" style={{ color: "var(--accent)" }}>
       {children}
     </p>
   );
@@ -82,11 +82,19 @@ export function Footer() {
           <p className="mt-3 text-[13px] leading-6">
             {CHURCH.address}
             <br />
-            <a href={`tel:${CHURCH.phone.replace(/[^0-9+]/g, "")}`} className="underline-offset-4 hover:underline">
-              {CHURCH.phone}
-            </a>
-            <br />
-            {CHURCH.email}
+            {CHURCH.phoneTel ? (
+              <a href={`tel:${CHURCH.phoneTel}`} className="underline-offset-4 hover:underline">
+                {CHURCH.phone}
+              </a>
+            ) : (
+              CHURCH.phone
+            )}
+            {CHURCH.email ? (
+              <>
+                <br />
+                {CHURCH.email}
+              </>
+            ) : null}
           </p>
         </div>
 
@@ -141,7 +149,7 @@ export function Footer() {
       </div>
       {/* lg:pr-24 — 우하단 고정 위젯(테마 토글·위로가기)이 개인정보처리방침 링크를 덮지 않도록 확보하는 여백. */}
       <div className="mx-auto mt-10 flex max-w-7xl flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-6 lg:pr-24">
-        <p className="text-[11px] tracking-[0.25em] uppercase opacity-80">© 2026 {CHURCH.nameEn}</p>
+        <p className="text-[11px] uppercase opacity-80">© 2026 {CHURCH.nameEn}</p>
         <p className="flex gap-4 text-[12px]">
           <Link href="/privacy" className="font-medium opacity-85 transition-opacity hover:opacity-100">
             개인정보처리방침

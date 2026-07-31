@@ -99,7 +99,7 @@ class EventControllerTest(
     fun `목록은 시드 전체를 반환한다`() {
         mvc.get("/api/events").andExpect {
             status { isOk() }
-            jsonPath("$.content.length()") { value(EventSeed.events.size) }
+            jsonPath("$.content.length()") { value(EventSeed.events().size) }
             jsonPath("$.content[0].id") { value("c1") }
         }
     }

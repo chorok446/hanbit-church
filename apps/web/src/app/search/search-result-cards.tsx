@@ -128,7 +128,7 @@ export function PostResultCard({ post, highlight }: { post: Post; highlight?: st
           className="shrink-0 rounded-full px-2 py-0.5 text-[11px]"
           style={{ background: "var(--accent-soft)", color: "var(--accent-strong)" }}
         >
-          {badge.emoji} {badge.label}
+          {badge.label}
         </span>
         {post.bookmarkedByMe ? <Bookmark size={15} fill="var(--accent)" className="shrink-0 text-[var(--accent)]" /> : null}
       </div>

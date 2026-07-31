@@ -153,7 +153,7 @@ export function NewsWriteClient() {
                           : { background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground-muted)" }
                       }
                     >
-                      <span aria-hidden>{badge.emoji}</span> {badge.label}
+                      {badge.label}
                     </button>
                   );
                 })}

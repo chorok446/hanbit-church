@@ -3,13 +3,26 @@
  * apps/web/.env.local 의 NEXT_PUBLIC_CHURCH_* 로 관리한다 — 키 목록은 .env.example 참고.
  * env 미설정 시 아래 자리표시 값으로 렌더링된다.
  */
+const phoneEnv = process.env.NEXT_PUBLIC_CHURCH_PHONE ?? "";
+
 export const CHURCH = {
   name: process.env.NEXT_PUBLIC_CHURCH_NAME ?? "한빛교회",
   nameEn: process.env.NEXT_PUBLIC_CHURCH_NAME_EN ?? "HANBIT CHURCH",
   pastor: process.env.NEXT_PUBLIC_CHURCH_PASTOR ?? "",
   address: process.env.NEXT_PUBLIC_CHURCH_ADDRESS ?? "서울특별시 한빛구 한빛로 1",
-  phone: process.env.NEXT_PUBLIC_CHURCH_PHONE ?? "051-000-0000",
-  email: process.env.NEXT_PUBLIC_CHURCH_EMAIL ?? "hanbit@church.kr",
+  phone: phoneEnv || "051-000-0000",
+  /** tel: 링크용 정규화 번호 — 전 소비처가 이 값 하나만 쓴다. env 미설정이면 빈 값:
+   *  자리표시 번호로 실제 전화가 걸리지 않도록 소비처는 링크 대신 일반 텍스트로 렌더한다. */
+  phoneTel: phoneEnv.replace(/[^0-9+]/g, ""),
+  /** env 미설정이면 빈 값 — 자리표시 이메일이 푸터·연락처 같은 신뢰 표면에 노출되지 않도록 소비처는 줄을 숨긴다. */
+  email: process.env.NEXT_PUBLIC_CHURCH_EMAIL ?? "",
+} as const;
+
+/** 담임목사 인사 — 홈 인사(home-greeting)와 교회소개 인사말(greeting-section)이 공유하는 단일 소스.
+ *  TODO(교회 확인): 실제 인사말 확정 시 여기 한 곳만 바꾸면 두 화면에 함께 반영된다. */
+export const CHURCH_GREETING = {
+  lead: "하나님의 사랑 안에서, 이곳을 찾아주신 여러분을 기쁨으로 환영합니다.",
+  signature: `${CHURCH.name} 담임목사${CHURCH.pastor ? ` ${CHURCH.pastor}` : ""} 드림`,
 } as const;
 
 /** SNS·채널 링크. env 미설정(빈 값)이면 푸터에서 해당 아이콘을 숨긴다. */

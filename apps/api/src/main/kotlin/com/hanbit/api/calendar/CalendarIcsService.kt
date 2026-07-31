@@ -16,6 +16,7 @@ class CalendarIcsService(
     private val manualEvents: ManualCalendarEventRepository,
     private val events: EventRepository,
     private val clock: Clock,
+    @org.springframework.beans.factory.annotation.Value("\${app.church.name:한빛교회}") private val churchName: String,
 ) {
     @Transactional(readOnly = true)
     fun buildFeed(): String {
@@ -24,7 +25,7 @@ class CalendarIcsService(
             "VERSION:2.0",
             "PRODID:-//hanbit-church//calendar//KO",
             "CALSCALE:GREGORIAN",
-            "X-WR-CALNAME:한빛교회 일정",
+            "X-WR-CALNAME:$churchName 일정",
         )
 
         manualEvents.findAllByOrderByStartDateAscIdAsc().forEach { item ->

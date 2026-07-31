@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const devotion = await getDevotion(id);
   if (!devotion) return {};
-  const title = `${devotionDateLabel(devotion.date)} 큐티`;
+  const title = `${devotionDateLabel(devotion.date)} 묵상`;
   const description = `${devotion.verseRef} — ${devotion.verseText}`;
   return { title, description, openGraph: { title, description } };
 }
@@ -34,7 +34,7 @@ export default async function DevotionDetailPage({ params }: { params: Promise<{
           className="inline-flex items-center gap-1.5 text-[13px] font-medium"
           style={{ color: "var(--foreground-muted)" }}
         >
-          <ArrowLeft size={14} aria-hidden /> 큐티 목록
+          <ArrowLeft size={14} aria-hidden /> 묵상 목록
         </Link>
 
         <header className="mt-6">

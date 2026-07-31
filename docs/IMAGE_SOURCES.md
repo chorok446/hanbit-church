@@ -5,16 +5,7 @@
 
 ## 적용된 이미지
 
-### images/seed/serve/food-packing-pexels-6995260.webp
-
-- 원본 플랫폼: Pexels
-- 원본 사진 페이지: https://www.pexels.com/photo/people-packing-food-6995260/
-- 사진 ID: 6995260
-- 사진가: Julia M Cameron (https://www.pexels.com/@julia-m-cameron/)
-- 다운로드·확인 날짜: 2026-07-16
-- 사용 위치: 홈 `HomePhotos` 오른쪽 사진 (캡션 "지역과 이웃을 향한 섬김")
-- 라이선스: Pexels License (자유 사용, 저작자 표시 불요 — https://www.pexels.com/license/ 2026-07-16 확인)
-- 처리: 1600×1067 원본 비율 유지, cwebp q80 재인코딩(EXIF/XMP 미포함 — VP8 단일 청크 확인)
+(현재 없음 — `HomePhotos` 삭제와 함께 로컬 시드 이미지도 제거했다. 2026-07-31)
 
 ## 검토했지만 적용하지 않은 후보 (2026-07-16)
 

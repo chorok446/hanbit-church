@@ -68,7 +68,7 @@ class PostSearchControllerTest(
             status { isOk() }
             jsonPath("$.page") { value(0) }
             jsonPath("$.size") { value(10) }
-            jsonPath("$.totalElements") { value(PostSeed.posts.size + 2) }
+            jsonPath("$.totalElements") { value(PostSeed.posts().size + 2) }
             jsonPath("$.totalPages") { value(2) }
             jsonPath("$.content.length()") { value(10) }
             jsonPath("$.content[0].id") { value(newest) }

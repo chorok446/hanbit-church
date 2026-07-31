@@ -66,7 +66,7 @@ export function DevotionForm({ id }: { id?: string }) {
   if (!canManage) {
     return (
       <p className="py-16 text-center text-[14px]" style={{ color: "var(--foreground-muted)" }}>
-        큐티를 등록할 권한이 없습니다.
+        묵상을 등록할 권한이 없습니다.
       </p>
     );
   }
