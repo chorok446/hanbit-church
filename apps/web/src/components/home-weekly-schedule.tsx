@@ -122,6 +122,9 @@ export function HomeWeeklySchedule({
                       <Clock size={12} aria-hidden style={{ color: "var(--accent)" }} />
                       {event.startTime}
                     </span>
+                  ) : !event.location ? (
+                    // 시간·장소가 둘 다 없는 행사(일 단위 진행)는 빈 칸 대신 '종일' — 기도회 행과의 정보 밀도 불균형 완화.
+                    <span>종일</span>
                   ) : null}
                   {event.location ? (
                     <span className="flex items-center gap-1">

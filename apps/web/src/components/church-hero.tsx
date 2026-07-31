@@ -10,17 +10,15 @@ export function ChurchHero() {
       className="relative overflow-hidden px-6 pb-24 pt-44 text-center transition-colors sm:pb-32 sm:pt-52"
       style={{ backgroundImage: "var(--page-gradient)" }}
     >
-      <div className="pointer-events-none absolute inset-0 opacity-15">
-        <div className="absolute -top-24 left-1/4 h-[420px] w-[420px] rounded-full bg-[var(--accent)] blur-[150px]" />
-      </div>
-
       <div className="relative mx-auto max-w-4xl">
         {/* 교회명 킥커가 곧 페이지 주제 — 홈의 유일한 h1(스크린리더·SEO 랜드마크). 시각은 킥커 그대로. */}
         <h1
           className="mb-8 text-[12px] font-semibold tracking-[0.42em] sm:text-[13px]"
           style={{ color: "var(--accent-strong)" }}
         >
-          {CHURCH.name} · {CHURCH.nameEn}
+          {CHURCH.name}
+          {/* 영문 병기는 sm 미만에서 숨긴다 — 0.42em 트래킹 영문이 390px 에서 어색한 2줄로 꺾인다. */}
+          <span className="hidden sm:inline"> · {CHURCH.nameEn}</span>
         </h1>
 
         <blockquote className="m-0">
