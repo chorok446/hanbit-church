@@ -53,17 +53,12 @@ export function HomeWeeklySchedule({
       initialEvents !== null ? Promise.resolve(initialEvents) : fetchUpcomingEvents().catch(() => [] as Event[]);
     const manualP =
       initialManual !== null ? Promise.resolve(initialManual) : fetchManualCalendarEvents().catch(() => [] as CalendarEvent[]);
-    // 1차: 시드된 행사·수동 일정만으로 즉시 렌더 — 찬양팀 응답을 기다리며 섹션이 통째로 늦게 등장하지 않게.
-    Promise.all([eventsP, manualP]).then(([events, manualEvents]) => {
+    // 찬양팀 일정(서버가 요청자별 범위로 좁혀 줌)은 항상 클라이언트 조회 — 세 요청을 병렬로 띄우고
+    // 한 번만 그린다. 2단계 병합 렌더는 이미 보이는 행을 뒤늦게 교체·밀어내 클릭 타깃이 바뀌었다.
+    const praiseP = fetchPublicPraiseSchedules().catch(() => []);
+    Promise.all([eventsP, manualP, praiseP]).then(([events, manualEvents, praiseSchedules]) => {
       if (cancelled) return;
-      setItems(buildItems(events, manualEvents));
-      // 2차: 찬양팀 일정(서버가 요청자별 범위로 좁혀 줌) 도착 시 병합 갱신.
-      fetchPublicPraiseSchedules()
-        .catch(() => [])
-        .then((praiseSchedules) => {
-          if (cancelled || praiseSchedules.length === 0) return;
-          setItems(buildItems(events, [...mapPraiseScheduleToCalendarEvents(praiseSchedules), ...manualEvents]));
-        });
+      setItems(buildItems(events, [...mapPraiseScheduleToCalendarEvents(praiseSchedules), ...manualEvents]));
     });
     return () => {
       cancelled = true;
