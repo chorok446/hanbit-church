@@ -278,13 +278,42 @@ export function SiteHeader() {
           {renderDesktopLink(HOME_NAV_ITEM, pathname)}
           {NAV_GROUPS.map((group) => (
             <Fragment key={group.title}>
-              {/* 그룹 구분자 — 11개 평면 나열의 인지 부하를 방문자/콘텐츠/교인 3덩이로 나눈다. */}
-              <span aria-hidden className="mx-0.5 h-3.5 w-px shrink-0" style={{ background: "var(--border)" }} />
+              {/* 그룹 구분자 — 11개 평면 나열의 인지 부하를 방문자/콘텐츠/교인 3덩이로 나눈다.
+                  xl 미만(1024~1280px)에서는 숨긴다 — 구분자 3개(~40px)가 lg 한 줄 폭 예산을 침식한다. */}
+              <span aria-hidden className="mx-0.5 hidden h-3.5 w-px shrink-0 xl:block" style={{ background: "var(--border)" }} />
               {group.items.map((it) => renderDesktopLink(it, pathname))}
             </Fragment>
           ))}
         </nav>
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* 알림 벨은 로그인 사용자에게만 — 방문자 표면에서는 로그인 요구로 이어지는 무의미한 타깃이다.
+              서버 스냅샷(로그아웃)에서 hydration 후 뒤늦게 마운트되므로 클러스터 맨 앞에 둔다 —
+              우측 정렬 클러스터는 맨 앞 삽입 시 기존 버튼(검색·프로필)의 위치가 움직이지 않는다. */}
+          {isLoggedIn && (
+            <Link
+              href="/notifications"
+              className="relative flex h-11 w-11 items-center justify-center rounded-full transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none"
+              style={{
+                background: onNotifications
+                  ? "var(--accent-soft)"
+                  : "rgba(var(--ink-rgb), 0.07)",
+                color: onNotifications ? "var(--accent-strong)" : "var(--heading)",
+              }}
+              aria-label={unread > 0 ? `알림, 읽지 않음 ${unread > 99 ? "99+" : unread}개` : "알림"}
+              aria-current={onNotifications ? "page" : undefined}
+            >
+              <Bell size={18} aria-hidden />
+              {unread > 0 && (
+                <span
+                  className="badge-pop absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center text-[10px] font-semibold leading-none"
+                  style={{ background: "var(--danger-solid)", color: "var(--on-danger)" }}
+                  aria-hidden
+                >
+                  {unread > 99 ? "99+" : unread}
+                </span>
+              )}
+            </Link>
+          )}
           <Link
             href="/search"
             className="flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none"
@@ -297,32 +326,6 @@ export function SiteHeader() {
             <Search size={16} className="shrink-0" />
             <span className="hidden whitespace-nowrap text-[12px] xl:inline">검색</span>
           </Link>
-          {/* 알림 벨은 로그인 사용자에게만 — 방문자 표면에서는 로그인 요구로 이어지는 무의미한 타깃이다. */}
-          {isLoggedIn && (
-          <Link
-            href="/notifications"
-            className="relative flex h-11 w-11 items-center justify-center rounded-full transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 motion-reduce:transform-none"
-            style={{
-              background: onNotifications
-                ? "var(--accent-soft)"
-                : "rgba(var(--ink-rgb), 0.07)",
-              color: onNotifications ? "var(--accent-strong)" : "var(--heading)",
-            }}
-            aria-label={unread > 0 ? `알림, 읽지 않음 ${unread > 99 ? "99+" : unread}개` : "알림"}
-            aria-current={onNotifications ? "page" : undefined}
-          >
-            <Bell size={18} aria-hidden />
-            {isLoggedIn && unread > 0 && (
-              <span
-                className="badge-pop absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center text-[10px] font-semibold leading-none"
-                style={{ background: "var(--danger-solid)", color: "var(--on-danger)" }}
-                aria-hidden
-              >
-                {unread > 99 ? "99+" : unread}
-              </span>
-            )}
-          </Link>
-          )}
           {/* 서버 스냅샷은 항상 로그아웃 상태 → 비로그인 뷰로 hydration, 이후 클라이언트에서 갱신. */}
           {isLoggedIn ? (
             <ProfileMenu name={name ?? "사용자"} isAdmin={isAdmin} onLogout={onLogout} />
