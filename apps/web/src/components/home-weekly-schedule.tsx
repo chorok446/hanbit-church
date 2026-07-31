@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock, MapPin } from "lucide-react";
 import { fetchUpcomingEvents, type Event } from "@/data/events";
-import { fetchPublicPraiseSchedules } from "@/data/praise-team";
+import { fetchPublicPraiseSchedules, type PraiseSchedule } from "@/data/praise-team";
 import {
   eventTypeLabel,
   eventTypeStyle,
@@ -20,42 +20,48 @@ const MAX_ITEMS = 5;
 
 type WeeklyItem = { dateKey: string; event: CalendarEvent };
 
+const buildItems = (events: Event[], extra: CalendarEvent[]): WeeklyItem[] =>
+  getEventsForWeek(events, new Date(), extra)
+    .flatMap(({ dateKey, events }) =>
+      events
+        // 홈 요약은 교회 일정만 — 공휴일은 캘린더 보기에서만 노출한다.
+        .filter((event) => event.type !== "holiday")
+        .map((event) => ({ dateKey, event })),
+    )
+    .slice(0, MAX_ITEMS);
+
 /**
  * 홈 "이번 주 교회 일정" 요약 — 예배 반복 일정 + 행사 중 앞선 3~5건.
  * 전체 캘린더는 /events?view=calendar. 일정이 없으면 섹션 자체를 숨긴다.
  *
- * 행사(다가오는)·수동 일정은 서버가 ISR(60s)로 선주입한 시드를 우선 쓰고, 없으면(빌드 시 API 미가용)
- * 클라이언트로 폴백 조회한다 — 홈의 다른 목록과 같은 패턴으로 useEffect 워터폴을 없앤다.
- * 찬양팀 일정만 요청자별 노출 범위(쿠키 스코프)라 항상 클라이언트에서 조회한다.
+ * 세 소스(행사·수동·찬양팀 공개분) 모두 서버가 ISR(60s)로 선주입한다 — 시드가 있으면 첫 페인트(SSR)에
+ * 바로 그려 섹션 pop-in(아래 콘텐츠 밀림)이 없고, 늦은 병합이 없어 보이는 행이 교체되지도 않는다.
+ * 찬양팀은 쿠키 없는 ISR fetch 라 PUBLIC 스코프만 실린다(교인 스코프는 찬양팀 페이지에서).
+ * 시드가 하나라도 없으면(빌드 시 API 미가용) 클라이언트에서 병렬 조회해 한 번만 그린다.
  */
 export function HomeWeeklySchedule({
   initialEvents = null,
   initialManual = null,
+  initialPraise = null,
 }: {
   initialEvents?: Event[] | null;
   initialManual?: CalendarEvent[] | null;
+  initialPraise?: PraiseSchedule[] | null;
 } = {}) {
-  const [items, setItems] = useState<WeeklyItem[] | null>(null);
+  const seeded = initialEvents !== null && initialManual !== null && initialPraise !== null;
+  const [items, setItems] = useState<WeeklyItem[] | null>(() =>
+    seeded ? buildItems(initialEvents, [...mapPraiseScheduleToCalendarEvents(initialPraise), ...initialManual]) : null,
+  );
 
   useEffect(() => {
+    if (seeded) return;
     let cancelled = false;
-    const buildItems = (events: Event[], extra: CalendarEvent[]) =>
-      getEventsForWeek(events, new Date(), extra)
-        .flatMap(({ dateKey, events }) =>
-          events
-            // 홈 요약은 교회 일정만 — 공휴일은 캘린더 보기에서만 노출한다.
-            .filter((event) => event.type !== "holiday")
-            .map((event) => ({ dateKey, event })),
-        )
-        .slice(0, MAX_ITEMS);
-
     const eventsP =
       initialEvents !== null ? Promise.resolve(initialEvents) : fetchUpcomingEvents().catch(() => [] as Event[]);
     const manualP =
       initialManual !== null ? Promise.resolve(initialManual) : fetchManualCalendarEvents().catch(() => [] as CalendarEvent[]);
-    // 찬양팀 일정(서버가 요청자별 범위로 좁혀 줌)은 항상 클라이언트 조회 — 세 요청을 병렬로 띄우고
-    // 한 번만 그린다. 2단계 병합 렌더는 이미 보이는 행을 뒤늦게 교체·밀어내 클릭 타깃이 바뀌었다.
-    const praiseP = fetchPublicPraiseSchedules().catch(() => []);
+    const praiseP =
+      initialPraise !== null ? Promise.resolve(initialPraise) : fetchPublicPraiseSchedules().catch(() => [] as PraiseSchedule[]);
     Promise.all([eventsP, manualP, praiseP]).then(([events, manualEvents, praiseSchedules]) => {
       if (cancelled) return;
       setItems(buildItems(events, [...mapPraiseScheduleToCalendarEvents(praiseSchedules), ...manualEvents]));
@@ -63,7 +69,7 @@ export function HomeWeeklySchedule({
     return () => {
       cancelled = true;
     };
-  }, [initialEvents, initialManual]);
+  }, [seeded, initialEvents, initialManual, initialPraise]);
 
   // 로딩 중이거나 이번 주 일정이 없으면 섹션 숨김(레이아웃 점프 최소화).
   if (!items || items.length === 0) return null;
