@@ -39,7 +39,7 @@ dependencies {
 	// OpenAPI 3 문서 자동 생성 + Swagger UI.
 	// [spike] Boot 4.1(Spring 7) 대응으로 springdoc 3.x 라인으로 상향. springdoc 3.0.3 은
 	// Spring Framework 7 / Servlet 6.1 기준이며, 이전 2.8.x 는 Boot 3.5 기준이었다.
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.0")
 	implementation("io.github.openfeign.querydsl:querydsl-jpa:7.5")
 	kapt("io.github.openfeign.querydsl:querydsl-apt:7.5:jpa")
 	kapt("jakarta.persistence:jakarta.persistence-api")
