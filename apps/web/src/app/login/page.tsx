@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { AuthShell, FieldInput } from "@/components/auth-shell";
 import { apiPost, ApiError, apiErrorMessage } from "@/lib/api";
 import { REMEMBER_EMAIL_KEY, setSession } from "@/lib/auth";
+import { isInternalHref } from "@/lib/internal-href";
 import { CHURCH } from "@/data/church";
 
 type AuthResponse = { token: string; name: string; verified: boolean; passwordChangeRequired?: boolean };
@@ -49,7 +50,7 @@ export default function LoginPage() {
     }
     // 보호 페이지에서 넘어온 경우 복귀(open redirect 방지: 내부 경로만 허용).
     const next = new URLSearchParams(window.location.search).get("next");
-    router.push(next && next.startsWith("/") ? next : "/feed");
+    router.push(isInternalHref(next) ? next : "/feed");
   };
 
   const submit = async () => {

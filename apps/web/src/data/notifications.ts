@@ -1,5 +1,6 @@
 // 알림은 백엔드(/api/notifications, 인증 필수)가 source of truth. 사용자별 데이터.
 import { apiDelete, apiGet, apiPost } from "@/lib/api";
+import { isInternalHref } from "@/lib/internal-href";
 
 export type NotificationItem = {
   id: string;
@@ -141,6 +142,5 @@ export function notificationTypeLabel(type: string): string {
 }
 
 export function isNotificationNavigable(href: string): boolean {
-  const trimmed = href.trim();
-  return trimmed.startsWith("/") && trimmed.length > 1;
+  return isInternalHref(href) && href.length > 1;
 }
