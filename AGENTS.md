@@ -4,6 +4,8 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 > **Source of truth**: `CLAUDE.md` is the continuously maintained project guide (Korean) with the full, current gotcha list. This file is a condensed English mirror — when they disagree, `CLAUDE.md` wins.
 
+> **커밋·PR 언어 (사용자 지시)**: 커밋 제목·본문, PR 제목·본문, 변경 요약은 가급적 한국어로 작성한다. `fix:`·`feat:`·`chore:` 등 Conventional Commits 접두사와 기술 식별자는 유지하고 설명 부분을 한글로 쓴다. 기존 커밋 이력은 언어 변경만을 위해 재작성하지 않는다.
+
 > **Branch naming (user instruction)**: Do not use the `codex/` prefix. Follow the Git workflow convention: `feature/`, `fix/`, `chore/`, or `refactor/` plus a short kebab-case description, unless the user specifies an exact name. Branch from `origin/develop` and target `develop` in development PRs.
 
 ## Project
