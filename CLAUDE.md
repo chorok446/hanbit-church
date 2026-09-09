@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 > **PR 베이스: 개발 중 작업은 항상 `develop` 으로 PR 한다.** (사용자 지시 — `main` 은 배포 스냅샷용 스테일 브랜치라 개발 PR 베이스로 쓰지 않는다. 새 작업 브랜치도 `origin/develop` 에서 딴다.)
 
+> **브랜치 이름: `codex/` 접두사를 사용하지 않는다.** (사용자 지시 — Git 워크플로 지침에 따라 `feature/<설명>`, `fix/<설명>`, `chore/<설명>`, `refactor/<설명>` 중 작업 유형에 맞는 접두사와 짧은 영문 kebab-case 설명을 쓴다. 사용자가 이름을 지정하면 그 이름을 따른다.)
+
 ## Project
 
 **한빛교회 홈페이지** — 다시다(dasida) 커뮤니티 플랫폼을 포크해 교회 홈페이지로 리스킨한 프로젝트. pnpm + Gradle monorepo. upstream 리모트가 원본(dasida)을 가리키며, 필요한 개선만 체리픽한다.
