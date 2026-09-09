@@ -47,6 +47,7 @@ Backend directly (from `apps/api/`): `./gradlew bootRun`, `./gradlew test`, `./g
 
 ## Gotchas
 
+- **관리자 부트스트랩은 신규 생성 전용**: `SeedRunner`는 `ADMIN_PASSWORD`가 비면 기존 계정도 조회·변경하지 않는다. 설정되어도 같은 이메일의 기존 ADMIN은 그대로 두고, 비관리자면 기동 실패로 충돌을 알린다(자동 승격·승인·비밀번호 덮어쓰기 금지). 생성 후 `ADMIN_PASSWORD`를 제거한다. 기존 권한/계정 복구는 별도 승인된 관리 절차로 처리한다. 회귀 가드: `SeedRunnerTest`.
 - **JDK toolchain**: backend targets **JDK 21** via a Gradle toolchain. If the dev machine has a different JDK, the `foojay-resolver-convention` plugin in `apps/api/settings.gradle.kts` auto-downloads JDK 21 — don't change the target to match a local JDK.
 - **pnpm build approvals**: `sharp` and `unrs-resolver` are pre-approved under `allowBuilds:` in `pnpm-workspace.yaml`. New deps with install scripts will be blocked until added there.
 - **Health endpoint**: Spring Actuator is included → `/actuator/health`(show-details=never). **actuator 노출은 기본 `health` 만** — prometheus 는 메트릭이 실려 **기본 비공개**이고, 스크레이프 환경만 `MANAGEMENT_ENDPOINTS=health,prometheus` 로 opt-in(그 경우에도 리버스 프록시·네트워크 격리로 보호). 테스트 리소스는 prometheus 테스트 위해 health,prometheus 고정. 기본 비공개 회귀 가드: `ActuatorPrometheusDefaultTest`.
