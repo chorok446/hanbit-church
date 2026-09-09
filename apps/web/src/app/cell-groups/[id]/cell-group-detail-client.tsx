@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   CalendarPlus,
@@ -154,6 +155,7 @@ export function CellGroupDetailClient({ groupId }: { groupId: string }) {
 // ─── 정보 ───
 
 function InfoCard({ detail, onChanged }: { detail: CellGroupDetail; onChanged: () => void }) {
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(detail.name);
   const [district, setDistrict] = useState(detail.district ?? "");
@@ -193,7 +195,7 @@ function InfoCard({ detail, onChanged }: { detail: CellGroupDetail; onChanged: (
     try {
       await deleteCellGroup(detail.id);
       toast.success("목장을 삭제했습니다.");
-      window.location.href = "/cell-groups";
+      router.push("/cell-groups");
     } catch (e) {
       toast.error(e instanceof ApiError ? apiErrorMessage(e, "삭제에 실패했습니다.") : "삭제에 실패했습니다.");
     }
