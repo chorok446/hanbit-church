@@ -3,7 +3,7 @@ plugins {
 	kotlin("kapt") version "2.4.10"
 	kotlin("plugin.spring") version "2.4.10"
 	kotlin("plugin.jpa") version "2.4.10"
-	id("org.springframework.boot") version "4.1.0"
+	id("org.springframework.boot") version "4.1.1"
 	id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -19,6 +19,10 @@ java {
 repositories {
 	mavenCentral()
 }
+
+// Boot 4.1.1의 Tomcat 11.0.24에 남은 보안 패치(CVE-2026-65182 등).
+// embed-core/el/websocket을 함께 정렬한다. Boot BOM이 11.0.25 이상이면 재감사 후 제거.
+extra["tomcat.version"] = "11.0.25"
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -49,7 +53,7 @@ dependencies {
 	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
 	// 리치 본문 HTML 서버측 정화(저장 시점). 프론트 DOMPurify 와 이중 방어.
-	implementation("org.jsoup:jsoup:1.22.2")
+	implementation("org.jsoup:jsoup:1.23.1")
 	// Sentry 에러 추적. SENTRY_DSN 미설정(기본)이면 SDK 비활성 — 로컬/CI 무영향.
 	// sentry-spring-boot-4 는 Boot 4(Spring 7) 전용 모듈(starter-jakarta 는 Boot 3 용).
 	implementation(platform("io.sentry:sentry-bom:8.50.1"))

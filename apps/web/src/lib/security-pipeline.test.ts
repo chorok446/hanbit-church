@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const ci = readFileSync(new URL("../../../../.github/workflows/ci.yml", import.meta.url), "utf8");
 const workspace = readFileSync(new URL("../../../../pnpm-workspace.yaml", import.meta.url), "utf8");
+const gradleWrapper = readFileSync(new URL("../../../api/gradle/wrapper/gradle-wrapper.properties", import.meta.url), "utf8");
 const job = (name: string) => ci.split(`\n  ${name}:\n`)[1]?.split(/\n  [\w-]+:\n/)[0] ?? "";
 
 describe("의존성 보안 게이트", () => {
@@ -21,5 +22,10 @@ describe("의존성 보안 게이트", () => {
     expect(job("security")).toContain("pnpm install --frozen-lockfile");
     expect(workspace).toMatch(/^strictDepBuilds: true$/m);
     expect(workspace).not.toMatch(/^dangerouslyAllowAllBuilds: true$/m);
+  });
+
+  it("Gradle 배포 파일은 SHA-256 체크섬을 검증한다", () => {
+    expect(gradleWrapper).toMatch(/^distributionSha256Sum=[a-f0-9]{64}$/m);
+    expect(gradleWrapper).toMatch(/^validateDistributionUrl=true$/m);
   });
 });

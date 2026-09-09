@@ -35,7 +35,7 @@
 ### Backend
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.4.10-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1.0-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1.1-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
 ![Java](https://img.shields.io/badge/Java-21-437291?style=for-the-badge&logo=openjdk&logoColor=white)
 ![QueryDSL](https://img.shields.io/badge/QueryDSL-7.4.0-4479A1?style=for-the-badge)
 ![JJWT](https://img.shields.io/badge/JJWT-0.13.0-black?style=for-the-badge&logo=jsonwebtokens)

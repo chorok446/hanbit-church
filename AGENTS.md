@@ -4,6 +4,8 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 > **Source of truth**: `CLAUDE.md` is the continuously maintained project guide (Korean) with the full, current gotcha list. This file is a condensed English mirror — when they disagree, `CLAUDE.md` wins.
 
+> **Branch naming (user instruction)**: Do not use the `codex/` prefix. Follow the Git workflow convention: `feature/`, `fix/`, `chore/`, or `refactor/` plus a short kebab-case description, unless the user specifies an exact name. Branch from `origin/develop` and target `develop` in development PRs.
+
 ## Project
 
 **한빛교회 홈페이지** — a Korean church website (Hanbit First Church) forked from the **다시,다 (Dasida)** community platform and re-skinned as a church site. pnpm + Gradle monorepo. The `upstream` remote points at the original (dasida); only needed improvements are cherry-picked.
