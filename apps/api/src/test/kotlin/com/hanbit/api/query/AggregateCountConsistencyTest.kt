@@ -5,6 +5,7 @@ import com.hanbit.api.auth.User
 import com.hanbit.api.event.Event
 import com.hanbit.api.event.EventBody
 import com.hanbit.api.event.EventRepository
+import com.hanbit.api.event.FixedClockTestConfiguration
 import com.hanbit.api.post.Author
 import com.hanbit.api.post.Post
 import com.hanbit.api.post.PostRepository
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
@@ -34,6 +36,8 @@ import java.util.UUID
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+// 행사 fixture의 모집 기간 안으로 도메인 시계를 고정한다. 운영 시계/모집 정책은 바꾸지 않는다.
+@Import(FixedClockTestConfiguration::class)
 class AggregateCountConsistencyTest(
     @param:Autowired private val mvc: MockMvc,
     @param:Autowired private val mapper: JsonMapper,
@@ -84,10 +88,17 @@ class AggregateCountConsistencyTest(
         val id = savePost()
 
         mvc.post("/api/posts/$id/like") {
-            headers { add("Authorization", "Bearer $token") }
+            headers {
+                add("Authorization", "Bearer $token")
+                // 공유 Spring 컨텍스트의 다른 테스트가 소비한 rate-limit 버킷과 격리한다.
+                add("X-Forwarded-For", "198.51.100.41")
+            }
         }.andExpect { status { isOk() } }
         mvc.post("/api/posts/$id/comments") {
-            headers { add("Authorization", "Bearer $token") }
+            headers {
+                add("Authorization", "Bearer $token")
+                add("X-Forwarded-For", "198.51.100.41")
+            }
             contentType = MediaType.APPLICATION_JSON
             content = """{"text":"댓글"}"""
         }.andExpect { status { isCreated() } }
@@ -105,7 +116,10 @@ class AggregateCountConsistencyTest(
         val id = saveJoinableEvent()
 
         mvc.post("/api/events/$id/join") {
-            headers { add("Authorization", "Bearer $token") }
+            headers {
+                add("Authorization", "Bearer $token")
+                add("X-Forwarded-For", "198.51.100.42")
+            }
         }.andExpect { status { isOk() } }
 
         val detailJoined = detailField("/api/events/$id", "joined")

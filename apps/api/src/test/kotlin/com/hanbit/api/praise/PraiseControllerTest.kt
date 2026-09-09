@@ -4,6 +4,7 @@ import com.hanbit.api.auth.PraiseRole
 import com.hanbit.api.auth.User
 import com.hanbit.api.auth.UserRepository
 import com.hanbit.api.auth.UserRole
+import com.hanbit.api.event.FixedClockTestConfiguration
 import com.hanbit.api.security.JwtService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
@@ -31,6 +33,8 @@ import java.util.UUID
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+// 일정 fixture와 서비스의 '오늘'을 함께 고정해 실제 실행 날짜에 영향을 받지 않는다.
+@Import(FixedClockTestConfiguration::class)
 class PraiseControllerTest(
     @param:Autowired private val mvc: MockMvc,
     @param:Autowired private val jwt: JwtService,
@@ -459,7 +463,7 @@ class PraiseControllerTest(
 
     @Test
     fun `includePast 는 과거 일정까지 startAt 오름차순으로 돌려준다`() {
-        // 과거·미래 각각 하나. 실제 clock 기준 확실한 과거 시각을 쓴다.
+        // 고정 Clock(2026-07-15) 기준 과거·미래 각각 하나.
         mvc.post("/api/praise/schedules") {
             headers { add("Authorization", "Bearer $leaderToken") }
             contentType = MediaType.APPLICATION_JSON

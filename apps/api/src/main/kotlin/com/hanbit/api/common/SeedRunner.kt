@@ -61,41 +61,35 @@ class SeedRunner(
     /**
      * 부트스트랩 관리자 계정. ADMIN_PASSWORD 가 설정된 경우에만 생성한다
      * (기본 비밀번호를 내장하면 운영에서 그대로 노출될 수 있어 명시적 주입을 요구).
-     * 이미 존재하는 계정이면 role 승격만 보장하고 비밀번호는 건드리지 않는다.
+     * 신규 생성 전용이다. 기존 계정은 권한·승인·자격 증명을 바꾸지 않으며,
+     * 비관리자가 같은 이메일을 사용 중이면 운영자가 충돌을 해결하도록 시작을 거부한다.
      */
     private fun seedAdmin() {
-        val existing = users.findByEmail(adminEmail.trim().lowercase())
-        if (existing != null) {
-            // 부트스트랩 관리자는 승인제와 무관하게 로그인 가능해야 한다 — role 승격 + 미승인 시 승인 처리.
-            var changed = false
-            if (!existing.isAdmin) {
-                existing.role = UserRole.ADMIN.name
-                changed = true
-            }
-            if (existing.approvedAt == null) {
-                existing.approvedAt = java.time.Instant.now()
-                changed = true
-            }
-            if (changed) {
-                users.save(existing)
-                log.info("ensured bootstrap ADMIN (role/approval): {}", adminEmail)
-            }
-            return
-        }
         if (adminPassword.isBlank()) {
             log.info("admin seed skipped: ADMIN_PASSWORD not set")
             return
         }
+        val email = adminEmail.trim().lowercase()
+        val existing = users.findByEmail(email)
+        if (existing != null) {
+            // 이메일 일치만으로 일반 가입자를 신뢰하지 않는다. 강등·승인 취소도 부팅이 되돌리면 안 된다.
+            check(existing.isAdmin) {
+                "Bootstrap admin email belongs to an existing non-admin account; " +
+                    "use an unused ADMIN_EMAIL or unset ADMIN_PASSWORD and manage roles through an authorized administrator."
+            }
+            return
+        }
+        val now = java.time.Instant.now(clock)
         users.save(
             User(
-                email = adminEmail.trim().lowercase(),
+                email = email,
                 passwordHash = encoder.encode(adminPassword)!!,
                 name = adminName,
                 verified = true,
                 role = UserRole.ADMIN.name,
-                createdAt = java.time.Instant.now(),
+                createdAt = now,
                 // 승인제(app.signup.require-approval=true) 에서도 부트스트랩 관리자는 즉시 로그인 가능해야 한다.
-                approvedAt = java.time.Instant.now(),
+                approvedAt = now,
             ),
         )
         log.info("admin account seeded: {}", adminEmail)

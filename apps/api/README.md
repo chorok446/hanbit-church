@@ -54,6 +54,16 @@ JWT secret(`JWT_SECRET`), DB 접속 정보, CORS origin 등 민감 설정은 운
 
 프론트엔드(env) 목록은 `apps/web/.env.example` 참고.
 
+### 초기 관리자 생성과 재시작
+
+`ADMIN_PASSWORD`가 비어 있으면 관리자 초기화는 계정 조회·변경 없이 건너뛴다. 처음 만들 때만 미사용 `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME`을 환경변수/secret manager로 주입한다. 생성 후에는 `ADMIN_PASSWORD`를 제거한다.
+
+- 같은 이메일의 계정이 없으면 비밀번호를 해시한 새 ADMIN 계정을 만들고 즉시 승인한다.
+- 같은 이메일의 ADMIN이 있으면 아무것도 변경하지 않는다. 비밀번호·승인·정지·탈퇴·2FA 상태를 재시작으로 복구하지 않는다.
+- 같은 이메일의 비관리자가 있으면 시작을 거부한다. 다른 미사용 `ADMIN_EMAIL`로 신규 생성하거나, `ADMIN_PASSWORD`를 해제하고 기존 관리자의 권한 관리 절차로 해결한다. 이메일 일치나 비밀번호 설정만으로 기존 일반 계정을 승격하지 않는다.
+
+이 절차는 기존 계정의 비밀번호 초기화나 관리자 권한 복구 기능이 아니다. 회귀 테스트는 `SeedRunnerTest`에서 일반 가입 → 초기화 재실행 → 승인 대기 유지, 역할 충돌, 반복 생성 방지를 검증한다.
+
 ## API 문서 (OpenAPI / Swagger)
 
 API 명세는 `springdoc-openapi` 로 코드에서 자동 생성된다. Controller/DTO 를 그대로 반영하므로 별도 수기 문서와 어긋나지 않는다.
