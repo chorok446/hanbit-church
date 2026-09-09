@@ -39,7 +39,28 @@ jobs:
           - app: web
             context: .
             file: apps/web/Dockerfile.prod
-            build-args: NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://ci-build-placeholder.invalid' }}
+            # 공개 값만 사용. 누락은 Dockerfile의 검증에서 실패하며 :main 승격도 차단된다.
+            build-args: |
+              WEB_BUILD_MODE=production
+              NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+              NEXT_PUBLIC_SITE_URL=${{ vars.NEXT_PUBLIC_SITE_URL }}
+              NEXT_PUBLIC_CHURCH_NAME=${{ vars.NEXT_PUBLIC_CHURCH_NAME }}
+              NEXT_PUBLIC_CHURCH_NAME_EN=${{ vars.NEXT_PUBLIC_CHURCH_NAME_EN }}
+              NEXT_PUBLIC_CHURCH_PASTOR=${{ vars.NEXT_PUBLIC_CHURCH_PASTOR }}
+              NEXT_PUBLIC_CHURCH_ADDRESS=${{ vars.NEXT_PUBLIC_CHURCH_ADDRESS }}
+              NEXT_PUBLIC_CHURCH_PHONE=${{ vars.NEXT_PUBLIC_CHURCH_PHONE }}
+              NEXT_PUBLIC_CHURCH_EMAIL=${{ vars.NEXT_PUBLIC_CHURCH_EMAIL }}
+              NEXT_PUBLIC_KAKAO_MAP_KEY=${{ vars.NEXT_PUBLIC_KAKAO_MAP_KEY }}
+              NEXT_PUBLIC_CHURCH_YOUTUBE=${{ vars.NEXT_PUBLIC_CHURCH_YOUTUBE }}
+              NEXT_PUBLIC_CHURCH_INSTAGRAM=${{ vars.NEXT_PUBLIC_CHURCH_INSTAGRAM }}
+              NEXT_PUBLIC_CHURCH_KAKAO=${{ vars.NEXT_PUBLIC_CHURCH_KAKAO }}
+              NEXT_PUBLIC_CHURCH_BANK=${{ vars.NEXT_PUBLIC_CHURCH_BANK }}
+              NEXT_PUBLIC_CHURCH_ACCOUNT=${{ vars.NEXT_PUBLIC_CHURCH_ACCOUNT }}
+              NEXT_PUBLIC_CHURCH_ACCOUNT_HOLDER=${{ vars.NEXT_PUBLIC_CHURCH_ACCOUNT_HOLDER }}
+              NEXT_PUBLIC_CHURCH_KAKAOPAY=${{ vars.NEXT_PUBLIC_CHURCH_KAKAOPAY }}
+              NEXT_PUBLIC_CHURCH_TOSS=${{ vars.NEXT_PUBLIC_CHURCH_TOSS }}
+              NEXT_PUBLIC_SENTRY_DSN=${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+              NEXT_PUBLIC_SENTRY_ENVIRONMENT=${{ vars.NEXT_PUBLIC_SENTRY_ENVIRONMENT }}
     env:
       DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
     steps:
@@ -87,7 +108,7 @@ jobs:
             elif [ "$RESULT" = "cancelled" ]; then
               echo "🚫 취소됨 — 새 실행으로 대체되었거나 타임아웃입니다. 빌드 오류가 아닙니다."
             else
-              echo "❌ 이미지 빌드/푸시 실패 — 위 build-push 스텝 로그를 확인하세요. CI 를 통과한 커밋만 트리거되므로 대부분 Dockerfile·레지스트리 인증 문제입니다."
+              echo "❌ 이미지 빌드/푸시 실패 — 위 build-push 로그에서 필수 공개 설정·Dockerfile·레지스트리 인증을 확인하세요."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 

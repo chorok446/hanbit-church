@@ -47,6 +47,7 @@ Backend directly (from `apps/api/`): `./gradlew bootRun`, `./gradlew test`, `./g
 
 ## Gotchas
 
+- **운영 웹 이미지 공개 설정**: `Dockerfile.prod`는 `WEB_BUILD_MODE=production` 기본, `scripts/validate-build-config.mjs`로 필수 `NEXT_PUBLIC_API_URL/SITE_URL/CHURCH_NAME/CHURCH_ADDRESS/CHURCH_PHONE` 누락·자리표시 값을 거부한다. CD는 같은 이름의 Repository Variables를 모든 공개 build arg로 전달한다(`.env.local` 자동 전달/런타임 변경 불가). `verification`은 push 없는 `image-verify.yml` fixture 전용이다. 새 공개 변수는 `.env.example`·Docker ARG/ENV·CD를 함께 갱신한다(`build-config.test.ts`가 누락 검사).
 - **관리자 부트스트랩은 신규 생성 전용**: `SeedRunner`는 `ADMIN_PASSWORD`가 비면 기존 계정도 조회·변경하지 않는다. 설정되어도 같은 이메일의 기존 ADMIN은 그대로 두고, 비관리자면 기동 실패로 충돌을 알린다(자동 승격·승인·비밀번호 덮어쓰기 금지). 생성 후 `ADMIN_PASSWORD`를 제거한다. 기존 권한/계정 복구는 별도 승인된 관리 절차로 처리한다. 회귀 가드: `SeedRunnerTest`.
 - **JDK toolchain**: backend targets **JDK 21** via a Gradle toolchain. If the dev machine has a different JDK, the `foojay-resolver-convention` plugin in `apps/api/settings.gradle.kts` auto-downloads JDK 21 — don't change the target to match a local JDK.
 - **pnpm build approvals**: `sharp` and `unrs-resolver` are pre-approved under `allowBuilds:` in `pnpm-workspace.yaml`. New deps with install scripts will be blocked until added there.

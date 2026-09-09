@@ -31,7 +31,14 @@ jobs:
           - app: web
             context: .
             file: apps/web/Dockerfile.prod
-            build-args: NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://ci-build-placeholder.invalid' }}
+            # 운영 Variables/Secrets를 읽지 않는 fixture. 이 이미지는 push하지 않는다.
+            build-args: |
+              WEB_BUILD_MODE=verification
+              NEXT_PUBLIC_API_URL=https://ci-build-placeholder.invalid
+              NEXT_PUBLIC_SITE_URL=https://ci-site-placeholder.invalid
+              NEXT_PUBLIC_CHURCH_NAME=빌드 검증 교회
+              NEXT_PUBLIC_CHURCH_ADDRESS=서울특별시 한빛구 한빛로 1
+              NEXT_PUBLIC_CHURCH_PHONE=051-000-0000
     env:
       DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME || 'hanbit-ci-placeholder' }}
     steps:
