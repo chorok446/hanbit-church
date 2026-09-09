@@ -54,4 +54,12 @@ npm run build -- --outDir /private/tmp/hanbit-design-reference-security-20260909
 
 설치 시 Recharts 2의 지원 종료 안내, Node 26 빌드 시 `module.register()` 사용 중단 예정 경고가 남는다. 이 작업에서는 관련 메이저 업그레이드나 참고 화면 재설계를 하지 않았다.
 
-운영 웹·API 코드는 변경하지 않아 해당 전체 테스트와 브라우저 E2E는 재실행하지 않았다. Linux·Windows 설치 및 참고 화면 수동 조작도 미검증이다. 현재 루트 pnpm 보안 CI는 이 독립 npm 프로젝트를 검사하지 않으므로, 후속으로 참고 프로젝트용 설치·감사·빌드 게이트를 검토할 수 있다.
+의존성 패치 커밋에서는 운영 웹·API 코드를 변경하지 않아 해당 전체 테스트와 브라우저 E2E는 재실행하지 않았다. Linux·Windows 설치 및 참고 화면 수동 조작도 미검증이다.
+
+## 후속 CI 게이트
+
+루트 pnpm 감사만으로는 이 프로젝트를 검사할 수 없어 `CI`에 독립 `design-reference (npm)` 잡을 추가했다. Node 22·npm 11.19.0에서 `npm ci --ignore-scripts` → `npm audit` → `npm run build`를 실행한다. npm 캐시는 이 디렉터리의 잠금 파일을 키로 사용하고 체크아웃 토큰은 보존하지 않는다. 실행 결과물은 배포하지 않는다.
+
+모든 기존 CI 트리거에서 실행하며, 자동 머지의 `needs`에 포함해 설치·보안 감사(개발 의존성 포함)·빌드 중 하나라도 실패하면 자동 머지를 차단한다. `security-pipeline.test.ts`가 npm 버전 일치, 설치 경계, 스크립트 차단, 감사·빌드 명령, 자동 머지 의존 관계를 회귀 검사한다. 원격 CI 실행과 수동 머지에 대한 GitHub 브랜치 보호 설정 검증은 푸시 후 별도로 확인해야 한다.
+
+로컬에서 `actionlint .github/workflows/ci.yml`, 보안 파이프라인 테스트 8개, `npm ci --ignore-scripts`, `npm audit`(0건), 참고 프로젝트 빌드를 검증했다. npm 고정 버전은 로컬 11.19.0과 일치한다. 새 Ubuntu/Node 22 잡 자체는 아직 원격에서 실행하지 않았다.
