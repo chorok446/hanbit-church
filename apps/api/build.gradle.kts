@@ -56,7 +56,7 @@ dependencies {
 	implementation("org.jsoup:jsoup:1.23.1")
 	// Sentry 에러 추적. SENTRY_DSN 미설정(기본)이면 SDK 비활성 — 로컬/CI 무영향.
 	// sentry-spring-boot-4 는 Boot 4(Spring 7) 전용 모듈(starter-jakarta 는 Boot 3 용).
-	implementation(platform("io.sentry:sentry-bom:8.50.1"))
+	implementation(platform("io.sentry:sentry-bom:8.51.0"))
 	implementation("io.sentry:sentry-spring-boot-4")
 	implementation("io.sentry:sentry-logback")
 	runtimeOnly("com.mysql:mysql-connector-j")
