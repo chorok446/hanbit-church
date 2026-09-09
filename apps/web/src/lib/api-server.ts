@@ -14,13 +14,17 @@ const ACCESS_COOKIE = "hanbit_token";
 
 export async function apiGetOrNullWithCookies<T>(path: string): Promise<T | null> {
   // 브라우저의 모든 쿠키(분석·서드파티 등)를 API 로 넘기지 않고 access 토큰만 화이트리스트해 전달한다(최소권한).
-  // refresh(hanbit_refresh)는 /api/auth 전용이라 SSR GET 에 불필요하다.
+  // refresh는 /api/auth 전용이며 RSC에서는 Set-Cookie를 전달할 수 없다.
+  // 만료 시 공개 GET으로 폴백하고, 보호된 상세는 SessionDetail이 브라우저에서 복구한다.
   const token = (await cookies()).get(ACCESS_COOKIE)?.value;
   const cookieHeader = token ? `${ACCESS_COOKIE}=${token}` : "";
-  const res = await fetch(`${getServerApiBaseUrl()}${path}`, {
+  let res = await fetch(`${getServerApiBaseUrl()}${path}`, {
     cache: "no-store",
     headers: cookieHeader ? { cookie: cookieHeader } : undefined,
   });
+  if (res.status === 401 && token) {
+    res = await fetch(`${getServerApiBaseUrl()}${path}`, { cache: "no-store" });
+  }
   if (res.status === 404) return null;
   if (!res.ok) throw new ApiError(res.status, path);
   return res.json() as Promise<T>;
