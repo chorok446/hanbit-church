@@ -86,7 +86,10 @@ describe("운영 웹 빌드 설정", () => {
 describe("공개 설정의 빌드 전달 경로", () => {
   const docker = readFileSync(new URL("../../Dockerfile.prod", import.meta.url), "utf8");
   const cd = readFileSync(new URL("../../../../.github/workflows/cd.yml", import.meta.url), "utf8");
-  const verify = readFileSync(new URL("../../../../.github/workflows/image-verify.yml", import.meta.url), "utf8");
+  const verificationWorkflows = ["image-verify.yml", "image-verify-develop.yml"].map((file) => [
+    file,
+    readFileSync(new URL(`../../../../.github/workflows/${file}`, import.meta.url), "utf8"),
+  ] as const);
   const example = readFileSync(new URL("../../.env.example", import.meta.url), "utf8");
   const source = new URL("../", import.meta.url);
   const usedKeys = new Set(
@@ -116,9 +119,25 @@ describe("공개 설정의 빌드 전달 경로", () => {
     expect(cd).not.toContain("WEB_BUILD_MODE=verification");
   });
 
-  it("PR 검증은 공개 fixture만 쓰고 이미지를 푸시하지 않는다", () => {
+  it.each(verificationWorkflows)("%s는 공개 fixture만 쓰고 이미지를 푸시하지 않는다", (_file, verify) => {
     expect(verify).toContain("WEB_BUILD_MODE=verification");
     expect(verify).toContain("push: false");
     expect(verify).not.toContain("vars.NEXT_PUBLIC_");
+  });
+
+  it.each(verificationWorkflows)("%s의 실제 build args가 설정 검증을 통과한다", (_file, verify) => {
+    const args = Object.fromEntries(
+      [...verify.matchAll(/^\s+(WEB_BUILD_MODE|NEXT_PUBLIC_[A-Z_]+)=(.+)$/gm)]
+        .map((match) => [match[1], match[2].trim()]),
+    );
+    const result = validate(args);
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+  });
+
+  it("develop 검증은 사전 검사 스크립트와 공개 설정 계약 변경에도 실행한다", () => {
+    const develop = verificationWorkflows.find(([file]) => file === "image-verify-develop.yml")![1];
+    expect(develop).toContain('"apps/web/scripts/validate-build-config.mjs"');
+    expect(develop).toContain('"apps/web/.env.example"');
   });
 });

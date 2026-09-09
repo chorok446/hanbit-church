@@ -13,6 +13,8 @@ on:
       - "apps/web/Dockerfile*"
       - "apps/web/next.config.ts"
       - "apps/web/package.json"
+      - "apps/web/scripts/validate-build-config.mjs"
+      - "apps/web/.env.example"
       - "pnpm-workspace.yaml"
       - "pnpm-lock.yaml"
       - "apps/api/build.gradle.kts"
@@ -42,7 +44,14 @@ jobs:
           - app: web
             context: .
             file: apps/web/Dockerfile.prod
-            build-args: NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://ci-build-placeholder.invalid' }}
+            # main 검증과 같은 공개 fixture. 운영 Variables/Secrets 없이 push하지 않는 이미지에만 사용한다.
+            build-args: |
+              WEB_BUILD_MODE=verification
+              NEXT_PUBLIC_API_URL=https://ci-build-placeholder.invalid
+              NEXT_PUBLIC_SITE_URL=https://ci-site-placeholder.invalid
+              NEXT_PUBLIC_CHURCH_NAME=빌드 검증 교회
+              NEXT_PUBLIC_CHURCH_ADDRESS=서울특별시 한빛구 한빛로 1
+              NEXT_PUBLIC_CHURCH_PHONE=051-000-0000
     env:
       DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME || 'hanbit-ci-placeholder' }}
     steps:
