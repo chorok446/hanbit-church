@@ -47,6 +47,7 @@ Backend directly (from `apps/api/`): `./gradlew bootRun`, `./gradlew test`, `./g
 
 ## Gotchas
 
+- **백엔드 의존성 패치 기준**: Boot 4.1.1 BOM을 기본으로 쓰되 Tomcat은 `tomcat.version=11.0.25`로 core·el·websocket을 정렬한다(BOM이 안전한 버전을 관리하면 재감사·전체 테스트 후 override 제거). Gradle Wrapper 버전 변경 시 공식 `distributionSha256Sum`도 함께 갱신한다. JVM 의존성 감사 범위·재현 근거·미검증 항목은 `docs/security-backend-dependencies-2026-09-09.md` 참조.
 - **의존성 보안 게이트**: `pnpm audit --audit-level=high`는 차단 게이트이며 자동 머지도 `security` 성공을 기다린다. 실패 무시/취약점 allowlist로 우회하지 않는다. pnpm 11의 `strictDepBuilds: true`와 승인된 설치 스크립트 목록을 유지한다. PostCSS·js-yaml override의 근거와 제거 시 확인 사항은 `docs/security-dependencies-2026-09-09.md` 참조(상위 제약 해소 + audit·OpenAPI 타입 생성 검증 후 제거). Tiptap StarterKit의 Link는 끄고 앱 전용 Link를 한 번만 등록한다.
 - **시간 의존 통합 테스트**: 고정 날짜 fixture로 모집 가능·미래 일정 여부를 검증할 때는 `FixedClockTestConfiguration`(2026-07-15, Asia/Seoul)을 import해 서비스의 도메인 시계도 함께 고정한다. 날짜를 먼 미래로 미루거나 운영 시간 검증을 완화하지 않는다. `PraiseControllerTest`·`AggregateCountConsistencyTest`도 같은 설정을 사용한다. 공유 Spring 컨텍스트의 메모리 rate-limit 버킷은 트랜잭션 롤백으로 초기화되지 않으므로, 집계 테스트처럼 무관한 요청 한도에 걸리는 경우 테스트별 클라이언트 IP로 격리한다(운영 한도/필터 완화 금지).
 - **SSR 인증 복구**: 상세 GET의 access 쿠키가 만료되면 `api-server.ts`는 쿠키 없는 공개 GET을 1회 시도한다(서버 refresh 금지). 게시글·행사 상세의 404 경계와 교우 프로필의 401 안내는 `SessionDetail`이 브라우저에서 `/api/auth/me` → 기존 single-flight refresh → 상세 재조회로 복구한다. API 전용 host-only 쿠키도 동작하며 cookie Domain/Path를 넓히거나 토큰을 JS로 전달하지 않는다. 비공개 상세는 같은 경계를 사용해 로그아웃·계정 변경 시 내용을 제거하고 이전 응답을 무시한다. 실제 없는 페이지는 서버 notFound/noindex를 유지하며, 비공개 상세는 메타데이터·JSON-LD에 내용을 싣지 않는다. 회귀 가드: `api-server.test.ts`, `session-detail*.test.tsx`.
