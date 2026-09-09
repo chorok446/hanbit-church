@@ -163,7 +163,7 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
-  # 의존성/파일시스템 취약점 스캔. 초기에는 비차단(continue-on-error)으로 리포트만 남긴다.
+  # 의존성 취약점 게이트: high 이상 발견 또는 감사 오류 시 실패하고 자동 머지를 차단한다.
   security:
     name: security (deps scan)
     runs-on: ubuntu-latest
@@ -177,11 +177,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # pnpm audit runs over the whole JS workspace (web + packages); it has no --filter form.
-      # 비차단(continue-on-error): 취약점을 리포트만 하고 빌드는 막지 않는다.
       # (컨테이너 이미지 스캔은 외부 액션 버전 드리프트로 잡이 통째로 실패할 수 있어 후속 과제로 분리)
       - name: pnpm audit (JS workspace, high+)
         id: audit
-        continue-on-error: true
         run: pnpm audit --audit-level=high
       - name: 한국어 잡 요약
         if: always()
@@ -194,7 +192,7 @@ jobs:
             if [ "$AUDIT" = "success" ]; then
               echo "✅ high 이상 알려진 취약점 없음."
             elif [ "$AUDIT" = "failure" ]; then
-              echo "⚠️ audit 이 비정상 종료했습니다(비차단 — 빌드는 계속됩니다). 위 로그에서 **취약점 리포트**인지 **레지스트리/네트워크 오류**인지 확인하세요."
+              echo "❌ 보안 감사 실패 — 자동 머지가 차단됩니다. 위 로그에서 **high 이상 취약점**인지 **레지스트리/네트워크 오류**인지 확인하고 해결 후 다시 실행하세요."
             else
               echo "⏭️ audit 이 실행되지 않았습니다 ($AUDIT) — 앞 단계(checkout/install) 실패 여부를 확인하세요."
             fi
@@ -267,7 +265,7 @@ jobs:
 
   automerge:
     name: auto-merge
-    needs: [web, api, e2e]
+    needs: [web, api, e2e, security]
     if: >-
       github.event_name == 'pull_request' &&
       github.event.pull_request.draft == false &&
@@ -296,7 +294,7 @@ jobs:
             echo "## 🔀 자동 머지"
             echo ""
             if [ "$MERGE" = "success" ]; then
-              echo "✅ web·api·e2e 전부 통과 — PR #$PR 을 develop 에 머지하고 브랜치를 정리했습니다."
+              echo "✅ web·api·e2e·security 전부 통과 — PR #$PR 을 develop 에 머지하고 브랜치를 정리했습니다."
             else
               echo "❌ 머지 실패 ($MERGE) — 브랜치 보호 규칙·머지 충돌·동시 머지 경합 여부를 확인하세요. CI 는 통과했으므로 해결 후 수동 머지하면 됩니다."
             fi

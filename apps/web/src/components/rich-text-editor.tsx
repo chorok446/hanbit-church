@@ -94,7 +94,8 @@ export function RichTextEditor({
     immediatelyRender: false,
     editable: !disabled,
     extensions: [
-      StarterKit.configure({ heading: false }),
+      // 링크는 아래의 앱 전용 설정으로 한 번만 등록한다.
+      StarterKit.configure({ heading: false, link: false }),
       Link.configure({
         openOnClick: false,
         autolink: true,
