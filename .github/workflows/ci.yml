@@ -198,6 +198,55 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
+  # 루트 pnpm 워크스페이스 밖의 참고 프로젝트도 별도 잠금 파일로 검증한다.
+  design-reference:
+    name: design-reference (npm)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: design-reference
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: design-reference/package-lock.json
+      # packageManager와 함께 갱신한다(security-pipeline.test.ts가 일치 여부 검사).
+      - name: Pin npm version
+        run: npm install --global npm@11.19.0 --ignore-scripts --no-fund
+      - name: Install locked dependencies without lifecycle scripts
+        id: install
+        run: npm ci --ignore-scripts
+      - name: Audit all dependencies (including dev tools)
+        id: audit
+        run: npm audit
+      - name: Build reference only (not deployed)
+        id: build
+        run: npm run build
+      - name: 한국어 잡 요약
+        if: always()
+        env:
+          INSTALL: ${{ steps.install.outcome }}
+          AUDIT: ${{ steps.audit.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          icon() { case "$1" in success) echo "✅ 성공";; failure) echo "❌ 실패";; cancelled) echo "🚫 취소";; *) echo "⏭️ 건너뜀";; esac; }
+          {
+            echo "## 📐 디자인 참고 프로젝트 (운영 배포 제외)"
+            echo ""
+            echo "| 단계 | 결과 |"
+            echo "| --- | --- |"
+            echo "| 잠금 파일 설치 (스크립트 차단) | $(icon "$INSTALL") |"
+            echo "| 전체 의존성 보안 감사 | $(icon "$AUDIT") |"
+            echo "| 참고 프로젝트 빌드 | $(icon "$BUILD") |"
+            echo ""
+            echo "설치·감사·빌드 중 하나라도 실패하면 자동 머지를 차단합니다."
+          } >> "$GITHUB_STEP_SUMMARY"
+
   api:
     name: api (Spring Boot)
     runs-on: ubuntu-latest
@@ -237,7 +286,7 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
-  # develop 대상 Ready PR은 web/api/e2e 검사 통과 후 자동 머지한다.
+  # develop 대상 Ready PR은 web/api/e2e/security/design-reference 검사 통과 후 자동 머지한다.
   # main 대상 PR은 release/deploy gate 이므로 자동 머지하지 않는다(CI + image build 검증만).
   #   main merge 는 수동 승인 후 수행하고, main push CI 성공 시 CD(cd.yml)가 image push 를 수행한다.
   # Dependabot PR은 의존성 검증을 CI에서 돌리되 자동 머지는 하지 않는다(수동 검증 후 처리).
@@ -265,7 +314,7 @@ jobs:
 
   automerge:
     name: auto-merge
-    needs: [web, api, e2e, security]
+    needs: [web, api, e2e, security, design-reference]
     if: >-
       github.event_name == 'pull_request' &&
       github.event.pull_request.draft == false &&
@@ -294,7 +343,7 @@ jobs:
             echo "## 🔀 자동 머지"
             echo ""
             if [ "$MERGE" = "success" ]; then
-              echo "✅ web·api·e2e·security 전부 통과 — PR #$PR 을 develop 에 머지하고 브랜치를 정리했습니다."
+              echo "✅ web·api·e2e·security·design-reference 전부 통과 — PR #$PR 을 develop 에 머지하고 브랜치를 정리했습니다."
             else
               echo "❌ 머지 실패 ($MERGE) — 브랜치 보호 규칙·머지 충돌·동시 머지 경합 여부를 확인하세요. CI 는 통과했으므로 해결 후 수동 머지하면 됩니다."
             fi

@@ -13,6 +13,7 @@ const JOB_LABELS = {
   "api (Spring Boot)": "백엔드 빌드·테스트 (Spring Boot)",
   "e2e (smoke)": "브라우저 스모크 테스트 (Playwright)",
   "security (deps scan)": "의존성 보안 스캔",
+  "design-reference (npm)": "디자인 참고 프로젝트 설치·보안·빌드",
   "main PR source gate": "main 브랜치 보호 게이트",
   "auto-merge": "자동 머지",
   "api image": "도커 이미지 검증 (api)",
