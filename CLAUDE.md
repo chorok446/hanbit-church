@@ -2,7 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **응답 언어: 항상 한국어로 답변한다.** (사용자 지시 — 코드/식별자/커밋 메시지 컨벤션은 그대로 두되, 설명·요약·질문 등 사용자에게 보이는 산문은 한국어로.)
+> **응답 언어: 항상 한국어로 답변한다.** (사용자 지시 — 코드/식별자는 기존 컨벤션을 유지하되, 설명·요약·질문 등 사용자에게 보이는 산문은 한국어로.)
+
+> **커밋·PR 언어: 가급적 한국어로 작성한다.** (사용자 지시 — 커밋 제목·본문, PR 제목·본문, 변경 요약은 한글을 기본으로 한다. `fix:`·`feat:`·`chore:` 등 Conventional Commits 접두사와 기술 식별자는 유지하고 설명 부분을 한국어로 쓴다. 예: `fix: 목장 삭제 후 내부 페이지 이동 수정`. 기존 커밋 이력은 언어 변경만을 위해 재작성하지 않는다.)
 
 > **PR 베이스: 개발 중 작업은 항상 `develop` 으로 PR 한다.** (사용자 지시 — `main` 은 배포 스냅샷용 스테일 브랜치라 개발 PR 베이스로 쓰지 않는다. 새 작업 브랜치도 `origin/develop` 에서 딴다.)
 
@@ -49,6 +51,7 @@ Backend directly (from `apps/api/`): `./gradlew bootRun`, `./gradlew test`, `./g
 
 ## Gotchas
 
+- **내부 이동 URL 검증**: 로그인 `next`·알림 `href` 같은 외부 입력은 `lib/internal-href.ts`의 `isInternalHref`로 검사한 원문만 `router.push`·`Link`에 전달한다. `startsWith("/")`만으로 판정하거나 검증 후 trim/decode를 추가하면 안 된다. `//`·역슬래시·제어문자·정규화 후 `//` 경로는 거부하고, 로그인은 `/feed`로 폴백한다. 일반 로그인·2FA 완료가 같은 검증을 사용하며 임시 비밀번호 변경 안내는 우선한다. 근거·검증 범위는 `docs/security-internal-navigation-2026-09-09.md` 참조.
 - **백엔드 의존성 패치 기준**: Boot 4.1.1 BOM을 기본으로 쓰되 Tomcat은 `tomcat.version=11.0.25`로 core·el·websocket을 정렬한다(BOM이 안전한 버전을 관리하면 재감사·전체 테스트 후 override 제거). Gradle Wrapper 버전 변경 시 공식 `distributionSha256Sum`도 함께 갱신한다. JVM 의존성 감사 범위·재현 근거·미검증 항목은 `docs/security-backend-dependencies-2026-09-09.md` 참조.
 - **의존성 보안 게이트**: `pnpm audit --audit-level=high`는 차단 게이트이며 자동 머지도 `security` 성공을 기다린다. 실패 무시/취약점 allowlist로 우회하지 않는다. pnpm 11의 `strictDepBuilds: true`와 승인된 설치 스크립트 목록을 유지한다. PostCSS·js-yaml override의 근거와 제거 시 확인 사항은 `docs/security-dependencies-2026-09-09.md` 참조(상위 제약 해소 + audit·OpenAPI 타입 생성 검증 후 제거). Tiptap StarterKit의 Link는 끄고 앱 전용 Link를 한 번만 등록한다.
 - **시간 의존 통합 테스트**: 고정 날짜 fixture로 모집 가능·미래 일정 여부를 검증할 때는 `FixedClockTestConfiguration`(2026-07-15, Asia/Seoul)을 import해 서비스의 도메인 시계도 함께 고정한다. 날짜를 먼 미래로 미루거나 운영 시간 검증을 완화하지 않는다. `PraiseControllerTest`·`AggregateCountConsistencyTest`도 같은 설정을 사용한다. 공유 Spring 컨텍스트의 메모리 rate-limit 버킷은 트랜잭션 롤백으로 초기화되지 않으므로, 집계 테스트처럼 무관한 요청 한도에 걸리는 경우 테스트별 클라이언트 IP로 격리한다(운영 한도/필터 완화 금지).
